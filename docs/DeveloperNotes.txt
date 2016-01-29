@@ -1,4 +1,4 @@
-SQLab = Laboratory  (and the Alchemist)
+SQLab = Laboratory  (as the Alchemist)
 
 
 ********************** SQLab framework on Github
