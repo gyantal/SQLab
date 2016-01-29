@@ -1,0 +1,25 @@
+SQLab = Laboratory  (and the Alchemist)
+
+
+********************** SQLab framework on Github
+
+SQLab:  (we may have only 1 website, and many Server programs, so Healthmonitor topic cannot aggregate)
+/3rdParty
+/docs
+/src is this
+	/Common
+	/UICommon
+	/Matlab		(things that are not C#)
+	/Java
+	/R
+	/Server
+		/HealthMonitor(Server)
+		/Overmind(Server is not needed in the name) (market watcher, email sender for birthday, rent)
+		/Crawlers
+		/VBroker
+	/Client  (all is Website based)
+		/HealthMonitorClientFrontEndWebsite (because this should be in another serverFarm than the othe)
+		/UserHelperWebsite (CurrentLeverageCalculator + OvermindClient+VBrokerClient+all other Clients)
+	/Tools  (not really resident, always running server apps, only small exe tools needed for something)
+	 
+ 
