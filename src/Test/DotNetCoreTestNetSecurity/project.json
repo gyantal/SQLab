@@ -1,0 +1,44 @@
+﻿{
+  "version": "1.0.0-*",
+  "description": "DotNetCoreTestNetSecurity Console Application",
+  "authors": [ "gyantal" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+
+  "compilationOptions": {
+    "emitEntryPoint": true
+  },
+
+  "dependencies": {
+
+  },
+
+  "commands": {
+    "DotNetCoreTestNetSecurity": "DotNetCoreTestNetSecurity"
+  },
+
+
+  "//": [
+    "Previous errors:",
+    "4.0.0-rc3-23728 (2016-01-29): 'Server-6: 535-5.7.8 Username and Password not accepted.', because SslStream",
+    "4.0.0-rc3-23808 (2016-02-09): 'Unable to find an entry point named 'GlobalizationNative_ToAscii' in DLL 'System.Globalization.Native",
+    "4.0.0-rc3-* :  leave the * there for restoring the latest for testing."
+  ],
+
+  "frameworks": {
+    "dnxcore50": {
+      "dependencies": {
+        "NETStandard.Library": "1.0.0-rc3-*",
+        "System.Net.Security": "4.0.0-rc3-*",
+        "System.Net.Sockets": "4.1.0-rc3-*",
+        "System.Runtime.InteropServices": "4.1.0-rc3-*",
+        "System.Diagnostics.Process": "4.1.0-rc3-*"
+      }
+    },
+    "dnx451": {
+      "dependencies": {
+      }
+    }
+  }
+}

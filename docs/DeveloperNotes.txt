@@ -22,4 +22,15 @@ SQLab:  (we may have only 1 website, and many Server programs, so Healthmonitor 
 		/UserHelperWebsite (CurrentLeverageCalculator + OvermindClient+VBrokerClient+all other Clients)
 	/Tools  (not really resident, always running server apps, only small exe tools needed for something)
 	 
- 
+ **************************
+
+-Do the installation exactly how it is set here on a brand new Linux 14.04: https://dotnet.github.io/getting-started/
+
+-see the dotnet-nightly packages and version numbers (you want the biggest version number, that is the latest)
+http://apt-mo.trafficmanager.net/repos/dotnet/pool/main/d/dotnet-nightly/
+
+-see currently installed version number
+dpkg -s dotnet-nightly		// The apt-get utilities are simply a front-end to the debian dpkg utility
+
+- see the latest daily DotNetCore NuGet packages:
+https://dotnet.myget.org/gallery/dotnet-core

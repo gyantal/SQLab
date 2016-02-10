@@ -1,4 +1,4 @@
-﻿#if DNXCORE50
+﻿//#if DNXCORE50
 
 using System;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Overmind
+namespace DotNetCoreTestNetSecurity
 {
     // Option 1.
     //Mail support is not trivial, they are working on it.
@@ -38,7 +38,7 @@ namespace Overmind
 
         public static string SenderName;
         public static string SenderPwd;
-
+        
         internal void Send(bool p_enableSsl)
         {
             if (Environment.NewLine == "\n")
@@ -46,7 +46,7 @@ namespace Overmind
             else
                 SendWithSystemNetSecuritySslStream(p_enableSsl);   // "\r\n" for non-Unix platforms
         }
-
+        
         internal void SendLinuxCommandLine(bool p_enableSsl)
         {
             Console.WriteLine("SendLinuxCommandLine()");
@@ -163,7 +163,7 @@ namespace Overmind
                                 //http://www.samlogic.net / articles / smtp - commands - reference.htm
                                 // This command can be repeated multiple times for a given e-mail message in order to deliver a single e-mail message to multiple recipients. 
                                 secureWriter.WriteLine("RCPT TO:<" + ToAddresses + ">");
-                                outputString += "Client: " + "RCPT TO:<" + ToAddresses + ">" + Environment.NewLine;
+                                outputString += "Client: " + "RCPT TO:<" + ToAddresses +  ">" + Environment.NewLine;
                                 outputString += "Server-8: " + secureReader.ReadLine() + Environment.NewLine;
 
                                 secureWriter.WriteLine("DATA");
@@ -209,7 +209,7 @@ namespace Overmind
                             }
                             throw;
                         }
-
+                        
                     }
                 }
             }
@@ -221,5 +221,5 @@ namespace Overmind
 
     }
 }
-#endif
+//#endif
 

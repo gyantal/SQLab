@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using System.Text;
+using System.IO;
+using System.Xml;
 
 namespace Overmind
 {
@@ -16,47 +18,45 @@ namespace Overmind
         public static Logger gLogger = null;
         public static void Main(string[] args)
         {
-            if (Controller.RunningPlatform() == Platform.Windows)
-                gLogger = LogManager.GetCurrentClassLogger();   //https://github.com/nlog/NLog/wiki/Configuration-file
-            else
-            {
-                // other solution to read the Nlog.config file manually (at least that way after it is modified, no C# recompile is needed)
-                //https://github.com/NLog/NLog/issues/641
-                //var reader = XmlTextReader.Create(streamToConfig); //stream preferred above byte[] / string.
-                //var config = new XmlLoggingConfiguration(reader, null); //filename is not required.
-                //LogManager.Configuration = config;
+            //    // on Windows the NLog.Config near the project.json is found by Nlog, but on Linux, there is problem
+            //    //var nLogConfigPath = NLog.LogFactory.CurrentAppDomain.BaseDirectory + "NLog.config";
+            //    //Console.WriteLine("NLog file: " + nLogConfigPath);
 
-                // on Windows the NLog.Config near the project.json is found by Nlog, but on Linux, there is problem
-                //var nLogConfigPath = NLog.LogFactory.CurrentAppDomain.BaseDirectory + "NLog.config";
-                //Console.WriteLine("NLog file: " + nLogConfigPath);
+            /* NLog. Solution 1:  (doesn't yet work on DotNetCore runtime, only DNX451/maybe Mono runtime) */
+            gLogger = LogManager.GetCurrentClassLogger();   //https://github.com/nlog/NLog/wiki/Configuration-file
 
-                //gLogger = LogManager.GetCurrentClassLogger();   //https://github.com/nlog/NLog/wiki/Configuration-file
+            /* NLog. Solution 2: (doesn't yet work on DotNetCore runtime, only DNX451/maybe Mono runtime)
+           // 2016-02-09: even on Windows, NLog doesn't doesn't do log file with the DotNetCore runtime, only with the DNX451 runtime
+           // it is probably best to wait until Nlog team fixes the problems and release new nuget package
+           // https://github.com/NLog/NLog/issues/641
+           //FileStream file = File.OpenRead("NLog.config");
+           //var reader = XmlReader.Create(file); //stream preferred above byte[] / string.
+           //var configNlog = new XmlLoggingConfiguration(reader, null); //filename is not required.
+           //LogManager.Configuration = configNlog;
+           //gLogger = LogManager.GetCurrentClassLogger();   //https://github.com/nlog/NLog/wiki/Configuration-file
+           */
 
-                // Step 1. Create configuration object 
-                var config = new LoggingConfiguration();
+            /* NLog. Solution 3: (doesn't yet work on DotNetCore runtime, only DNX451/maybe Mono runtime)
+            // 2016-02-09: even on Windows, NLog doesn't doesn't do log file with the DotNetCore runtime, only with the DNX451 runtime
+            // it is probably best to wait until Nlog team fixes the problems and release new nuget package
+            var config = new LoggingConfiguration();
+            var fileTarget = new FileTarget();
+            config.AddTarget("file", fileTarget);
+            // Step 3. Set target properties 
+            //fileTarget.FileName = "${basedir}/nLogOvermind${shortdate}.log";
+            fileTarget.FileName = "g:/temp/nLogOvermind.log";
+            //fileTarget.FileName = "logs/nLogOvermind${shortdate}.log";
+            fileTarget.Layout = "${longdate}|${level:uppercase=true}|${logger}|${event-context:item=EventId}|${message}|${ndc}";
+            // Step 4. Define rules
+            var rule2 = new LoggingRule("*", LogLevel.Debug, fileTarget);
+            config.LoggingRules.Add(rule2);
+            // Step 5. Activate the configuration
+            LogManager.Configuration = config;
+            // Example usage
+            gLogger = LogManager.GetLogger("Program");
+            */
 
-                var fileTarget = new FileTarget();
-                config.AddTarget("file", fileTarget);
 
-                // Step 3. Set target properties 
-                //fileTarget.FileName = "${basedir}/nLogOvermind${shortdate}.log";
-                //fileTarget.FileName = "nLogOvermind.log";
-                fileTarget.FileName = "logs/nLogOvermind${shortdate}.log";
-                fileTarget.Layout = "${longdate}|${level:uppercase=true}|${logger}|${event-context:item=EventId}|${message}|${ndc}";
-
-                // Step 4. Define rules
-                var rule2 = new LoggingRule("*", LogLevel.Debug, fileTarget);
-                config.LoggingRules.Add(rule2);
-
-                // Step 5. Activate the configuration
-                LogManager.Configuration = config;
-
-                // Example usage
-                gLogger = LogManager.GetLogger("Program");
-            }
-
-            
-            
             gLogger.Info("****** Main() START");
             //NLog.LogFactory nlogLogFactory = new global::NLog.LogFactory();
 
@@ -64,15 +64,16 @@ namespace Overmind
             var builder = new ConfigurationBuilder()
                //.AddJsonFile("appsettings.json")
                //.AddJsonFile("../../../SQHealthMonitorNoGitHubConfig.json", optional: true)       // that file will not go to GIT source control
-               .AddJsonFile("../SQOvermindNoGitHubConfig.json", optional: true)    // for the Production server
+               //.AddJsonFile("../SQOvermindNoGitHubConfig.json", optional: true)    // for the Production server
+               .AddJsonFile("/home/ubuntu/SQ/Server/Overmind/SQOvermindNoGitHubConfig.json", optional: true)    // for the Production server
                .AddJsonFile("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQOvermindNoGitHubConfig.json", optional: true); // for the development PC
-            // that file will not go to GIT source control
-            // AddEnvironmentVariables();           // adds settings from the Azure WebSite config, needed package : Microsoft.Extensions.Configuration.EnvironmentVariables
+                                                                                                                                                               // that file will not go to GIT source control
+                                                                                                                                                               // AddEnvironmentVariables();           // adds settings from the Azure WebSite config, needed package : Microsoft.Extensions.Configuration.EnvironmentVariables
             IConfigurationRoot configuration = builder.Build();
             var configItemTest = configuration.GetSection("EmailGyantal").Value;
             gLogger.Info("Test item from config.json: " + configItemTest);
             Console.WriteLine("Test item from config.json: " + configItemTest);
-            
+
             // Decode all from Base64 encoding, so later the code don't have to do it all the times
             foreach (var item in configuration.GetChildren())
             {
@@ -83,9 +84,13 @@ namespace Overmind
             Console.WriteLine("Test from config.json after decoding: " + configuration.GetSection("EmailGyantal").Value);
             if (String.IsNullOrEmpty(configuration.GetSection("EmailGyantal").Value))
             {
-                gLogger.Info("ERROR!!!: item in config.json was not found.");
-                Console.WriteLine("ERROR!!!: item in config.json was not found.");
+                gLogger.Info("ERROR!!!: test item from SQOvermindNoGitHubConfig.json was not found.");
+                Console.WriteLine("ERROR!!!: test item from SQOvermindNoGitHubConfig.json was not found.");
             }
+
+            HQEmail.SenderName = configuration.GetSection("EmailHQServer").Value;
+            HQEmail.SenderPwd = configuration.GetSection("EmailHQServerPwd").Value;
+
 
             Controller.g_controller.Start(configuration);
 

@@ -19,6 +19,9 @@ namespace Overmind
         public string Body;
         public bool IsBodyHtml;
 
+        public static string SenderName;
+        public static string SenderPwd;
+
         //const string aTo = "To", aSubject = "Subject", aIsBodyHtml = "IsBodyHtml";
         //const string tBody = "Body", tAttachment = "Attachment", tEmail = "HQEmail";
 
@@ -35,28 +38,32 @@ namespace Overmind
         //Settings/Pop was not enabled for a**666@gm**l.com(that was the reason it didn't work)
         internal void SendOnMono(bool p_enableSsl)
         {
-            MailMessage mail = new MailMessage();
+          /*  MailMessage mail = new MailMessage();
 
-            mail.From = new MailAddress(Controller.g_controller.g_configuration.GetSection("EmailHQServer").Value);
+            mail.From = new MailAddress(SenderName);
             mail.To.Add(Controller.g_controller.g_configuration.GetSection("EmailGyantal").Value);
             mail.Subject = "Test Mail";
             mail.Body = "This is for testing SMTP mail from GMAIL";
 
             SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
             smtpServer.Port = 587;
-            smtpServer.Credentials = new System.Net.NetworkCredential(Controller.g_controller.g_configuration.GetSection("EmailHQServer").Value, Controller.g_controller.g_configuration.GetSection("EmailHQServerPwd").Value);
+            smtpServer.Credentials = new System.Net.NetworkCredential(SenderName, SenderPwd);
             smtpServer.EnableSsl = true;
             ServicePointManager.ServerCertificateValidationCallback =
                 delegate (object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
                 { return true; };
-            smtpServer.Send(mail);
+            smtpServer.Send(mail); */
 
         }
 
         // works under Mono, the X509Certificate certificate thing is not required
         internal void Send(bool p_enableSsl)
         {
-            Program.gLogger.Info("HQEmail.Send() BEGIN");
+            Console.WriteLine("HQEmail.Send(), nonCoreClr BEGIN... but it is commented out.");
+            Program.gLogger.Info("HQEmail.Send(), nonCoreClr BEGIN... but it is commented out.");
+
+
+/*
             using (MailMessage message = new MailMessage())
             {
                 foreach (string toAddress in ToAddresses.Split(new char[] { ';', ',' },
@@ -70,7 +77,7 @@ namespace Overmind
                     throw new Exception("No addressee");
                 }
 
-                message.From = new System.Net.Mail.MailAddress(Controller.g_controller.g_configuration.GetSection("EmailHQServer").Value); // gmail will not use this, because it authenticates the user 'HedgeQuantServer'
+                message.From = new System.Net.Mail.MailAddress(SenderName); // gmail will not use this, because it authenticates the user 'HedgeQuantServer'
                 message.Subject = Subject ?? String.Empty;
                 message.IsBodyHtml = IsBodyHtml;
                 message.Body = Body;
@@ -80,7 +87,7 @@ namespace Overmind
                 // Google requires SSL, so I cannot disable it.
                 smtpClient.EnableSsl = p_enableSsl;    // to reduce SmtpExceptions (still remains some) ("The SMTP server requires a secure connection or the client was not authenticated")
                 //smtpClient.UseDefaultCredentials = false;   // do not use current windows username/pwd. (The default would be 'false', too)
-                smtpClient.Credentials = new NetworkCredential(Controller.g_controller.g_configuration.GetSection("EmailHQServer").Value, Controller.g_controller.g_configuration.GetSection("EmailHQServerPwd").Value);    // 'username' should end with @gmail.com (according to http://j.mp/rZ9l6I and http://j.mp/t1P6WK)
+                smtpClient.Credentials = new NetworkCredential(SenderName, SenderPwd);    // 'username' should end with @gmail.com (according to http://j.mp/rZ9l6I and http://j.mp/t1P6WK)
                 smtpClient.Timeout = 120000;    // default is 100 000 msec (but it was timed out once)
 
                 // exceptions are handled in the caller SafeSendEmail()
@@ -90,7 +97,7 @@ namespace Overmind
                 //if (new Random().Next(10) >= 4)
                 //    throw new Exception("Testing exception handling in " + Utils.GetCurrentMethodName());
             }
-            Program.gLogger.Info("HQEmail.Send() END");
+            Program.gLogger.Info("HQEmail.Send() END"); */
         }
 
 

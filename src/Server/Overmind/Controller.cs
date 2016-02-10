@@ -405,6 +405,7 @@ namespace Overmind
             {
                 new HQEmail { ToAddresses = g_configuration.GetSection("EmailGyantal").Value, Subject = "OvermindServer: BIDU price % move", Body = "BIDU price % move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.Send(true);
 
+                Console.WriteLine("Email was sent.");
                 Program.gLogger.Info("Email was sent.");
 
                 var call = new PhoneCall
@@ -414,6 +415,7 @@ namespace Overmind
                     Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in the ticker B I D U. ... I repeat the ticker: B I D U.",
                     NRepeatAll = 2
                 };
+                // skipped temporarily
                 bool phoneCallSuccess = call.MakeTheCall();
                 Console.WriteLine("Phonecall success: " + phoneCallSuccess);
                 Program.gLogger.Info("Phonecall success: " + phoneCallSuccess);
