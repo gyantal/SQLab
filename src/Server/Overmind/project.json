@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "1.0.0-*",
   "description": "Overmind Console Application",
   "authors": [ "gyantal" ],
@@ -14,7 +14,8 @@
     "NLog": "4.4.0-alpha1",
     "Microsoft.Extensions.Configuration": "1.0.0-rc2-15952",
     "Microsoft.Extensions.Configuration.Json": "1.0.0-rc2-15952",
-    "System.Net.Http": "4.0.1-rc3-23803"
+    "System.Net.Http": "4.0.1-rc3-23803",
+    "SQLab.Common": "1.0.0-*"
   },
 
   "commands": {
@@ -26,6 +27,7 @@
   "frameworks": {
     "dnxcore50": {
       "dependencies": {
+        "System.Runtime": "4.1.0-rc3-23803",
         "NETStandard.Library": "1.0.0-rc3-23803",
         "System.Net.Security": "4.0.0-rc3-23803",
         "System.Runtime.InteropServices": "4.1.0-rc3-23803",

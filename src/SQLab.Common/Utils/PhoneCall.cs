@@ -9,19 +9,22 @@ using System.Xml;
 namespace Overmind
 {
     public enum Caller { Gyantal, Robin, RobinLL }
-    public static class CallerExtensions
-    {
-        public static string AsString(this Caller p_id)
-        {
-            switch (p_id)
-            {
-                case Caller.Gyantal: return Controller.g_controller.g_configuration.GetSection("PhoneNumberGyantal").Value;
-                case Caller.Robin: return Controller.g_controller.g_configuration.GetSection("PhoneNumberRobin").Value;
-                case Caller.RobinLL: return Controller.g_controller.g_configuration.GetSection("PhoneNumberRobinLL").Value;
-                default: return null;
-            }
-        }
-    }
+
+    
+
+    //public static class CallerExtensions
+    //{
+    //    public static string AsString(this Caller p_id)
+    //    {
+    //        switch (p_id)
+    //        {
+    //            case Caller.Gyantal: return Controller.g_controller.g_configuration.GetSection("PhoneNumberGyantal").Value;
+    //            case Caller.Robin: return Controller.g_controller.g_configuration.GetSection("PhoneNumberRobin").Value;
+    //            case Caller.RobinLL: return Controller.g_controller.g_configuration.GetSection("PhoneNumberRobinLL").Value;
+    //            default: return null;
+    //        }
+    //    }
+    //}
 
 
 
@@ -33,6 +36,10 @@ namespace Overmind
     // works under Mono, because it is a simple REST API call
     public class PhoneCall
     {
+        public static Dictionary<Caller, string> PhoneNumbers = new Dictionary<Caller, string>();
+        public static string TwilioSid;
+        public static string TwilioToken;
+
         public string ToNumber;
         public string Message = "Default message";
         public Caller FromNumber = Caller.Gyantal;
@@ -48,7 +55,7 @@ namespace Overmind
 
         async System.Threading.Tasks.Task<bool> MakeTheCallAsync()
         {
-            string caller = CallerExtensions.AsString(FromNumber);
+            string caller = PhoneNumbers[FromNumber];
             if (caller == null)
                 throw new ArgumentException(FromNumber.ToString(), "FromNumber");
             if (String.IsNullOrEmpty(ToNumber))
@@ -63,13 +70,11 @@ namespace Overmind
             }
 
             var client = new System.Net.Http.HttpClient();  // System.Net.Http.dll
-            var sid = Controller.g_controller.g_configuration.GetSection("TwilioSid").Value;
-            var token = Controller.g_controller.g_configuration.GetSection("TwilioToken").Value;
-            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes(sid + ":" + token)));
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes(TwilioSid + ":" + TwilioToken)));
             try
             {
                 System.Net.Http.HttpResponseMessage response = await client.PostAsync(
-                    "https://api.twilio.com/2010-04-01/Accounts/" + sid + "/Calls.json",  // could be .csv as well, see https://www.twilio.com/docs/api/rest/tips
+                    "https://api.twilio.com/2010-04-01/Accounts/" + TwilioSid + "/Calls.json",  // could be .csv as well, see https://www.twilio.com/docs/api/rest/tips
                     new System.Net.Http.FormUrlEncodedContent(new Dictionary<string, string>() {
                         { "From", caller },
                         { "To",   ToNumber },
@@ -92,7 +97,7 @@ namespace Overmind
             catch (Exception e)
             {
                 Error = ToStringWithoutStackTrace(e);
-                Program.gLogger.Info("Error: " + Error);
+                //Program.gLogger.Info("Error: " + Error);
                 Console.WriteLine("Error: " + Error);
             }
             return Error == null;

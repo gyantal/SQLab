@@ -1,4 +1,4 @@
-﻿#if DNXCORE50
+﻿#if DNXCORE50 || DOTNET5_5
 
 using System;
 using System.IO;
@@ -39,7 +39,7 @@ namespace Overmind
         public static string SenderName;
         public static string SenderPwd;
 
-        internal void Send(bool p_enableSsl)
+        public void Send(bool p_enableSsl)
         {
             if (Environment.NewLine == "\n")
                 SendLinuxCommandLine(p_enableSsl);

@@ -1,4 +1,4 @@
-﻿#if !DNXCORE50
+﻿#if !DNXCORE50 && !DOTNET5_5
 
 using System;
 using System.Collections.Generic;
@@ -57,10 +57,10 @@ namespace Overmind
         }
 
         // works under Mono, the X509Certificate certificate thing is not required
-        internal void Send(bool p_enableSsl)
+        public void Send(bool p_enableSsl)
         {
             Console.WriteLine("HQEmail.Send(), nonCoreClr BEGIN... but it is commented out.");
-            Program.gLogger.Info("HQEmail.Send(), nonCoreClr BEGIN... but it is commented out.");
+            //Program.gLogger.Info("HQEmail.Send(), nonCoreClr BEGIN... but it is commented out.");
 
 
 /*

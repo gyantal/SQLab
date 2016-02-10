@@ -360,7 +360,7 @@ namespace Overmind
                     var call = new PhoneCall
                     {
                         FromNumber = Caller.Gyantal,
-                        ToNumber = Caller.Gyantal.AsString(),
+                        ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
                         Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in the ticker B I D U. ... I repeat the ticker: B I D U.",
                         NRepeatAll = 2
                     };
@@ -411,7 +411,7 @@ namespace Overmind
                 var call = new PhoneCall
                 {
                     FromNumber = Caller.Gyantal,
-                    ToNumber = Caller.Gyantal.AsString(),
+                    ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
                     Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in the ticker B I D U. ... I repeat the ticker: B I D U.",
                     NRepeatAll = 2
                 };

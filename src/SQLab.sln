@@ -5,10 +5,6 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{E980518C-4F9E-4FB4-87D4-87729C4D7171}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{75ADBD3C-AE6B-4F9B-95D2-2764F9C491D4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{604FA558-53B4-4EFA-9A33-FE3714483B84}"
-EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Overmind", "Server\Overmind\Overmind.xproj", "{CA0CA5B9-6B47-4B41-9106-56B2890E1BFA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{501176FF-A4EB-4339-827F-395A76F40DE4}"
@@ -28,8 +24,11 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DotNetCoreTestNetSecurity",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{28C8C86C-DB10-44DA-99AC-288CA6871A34}"
 	ProjectSection(SolutionItems) = preProject
-		Server\Overmind\global.json = Server\Overmind\global.json
+		global.json = global.json
+		NuGet.Config = NuGet.Config
 	EndProjectSection
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SQLab.Common", "SQLab.Common\SQLab.Common.xproj", "{069B56DF-F0F8-4132-848A-8344A3E4C4B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,10 +36,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{604FA558-53B4-4EFA-9A33-FE3714483B84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{604FA558-53B4-4EFA-9A33-FE3714483B84}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{604FA558-53B4-4EFA-9A33-FE3714483B84}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{604FA558-53B4-4EFA-9A33-FE3714483B84}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CA0CA5B9-6B47-4B41-9106-56B2890E1BFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CA0CA5B9-6B47-4B41-9106-56B2890E1BFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA0CA5B9-6B47-4B41-9106-56B2890E1BFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -53,12 +48,15 @@ Global
 		{C75AA513-BDA1-4E24-A458-B2736A560916}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C75AA513-BDA1-4E24-A458-B2736A560916}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C75AA513-BDA1-4E24-A458-B2736A560916}.Release|Any CPU.Build.0 = Release|Any CPU
+		{069B56DF-F0F8-4132-848A-8344A3E4C4B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{069B56DF-F0F8-4132-848A-8344A3E4C4B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{069B56DF-F0F8-4132-848A-8344A3E4C4B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{069B56DF-F0F8-4132-848A-8344A3E4C4B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{604FA558-53B4-4EFA-9A33-FE3714483B84} = {75ADBD3C-AE6B-4F9B-95D2-2764F9C491D4}
 		{CA0CA5B9-6B47-4B41-9106-56B2890E1BFA} = {E980518C-4F9E-4FB4-87D4-87729C4D7171}
 		{EB9EDE8C-E4BA-4D6A-BAAF-6FC4A7503CDC} = {501176FF-A4EB-4339-827F-395A76F40DE4}
 		{C75AA513-BDA1-4E24-A458-B2736A560916} = {501176FF-A4EB-4339-827F-395A76F40DE4}

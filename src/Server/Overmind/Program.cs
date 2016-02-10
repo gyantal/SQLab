@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using System.Text;
 using System.IO;
 using System.Xml;
+using SQCommon;
 
 namespace Overmind
 {
@@ -18,6 +19,11 @@ namespace Overmind
         public static Logger gLogger = null;
         public static void Main(string[] args)
         {
+
+            if (SQCommon.Utils.RunningPlatform() == SQCommon.Platform.Windows)
+                Console.WriteLine("Hello Windows.");
+            else
+                Console.WriteLine("Hello Linux.");
             //    // on Windows the NLog.Config near the project.json is found by Nlog, but on Linux, there is problem
             //    //var nLogConfigPath = NLog.LogFactory.CurrentAppDomain.BaseDirectory + "NLog.config";
             //    //Console.WriteLine("NLog file: " + nLogConfigPath);
@@ -91,6 +97,11 @@ namespace Overmind
             HQEmail.SenderName = configuration.GetSection("EmailHQServer").Value;
             HQEmail.SenderPwd = configuration.GetSection("EmailHQServerPwd").Value;
 
+            PhoneCall.PhoneNumbers[Caller.Gyantal] = configuration.GetSection("PhoneNumberGyantal").Value;
+            PhoneCall.PhoneNumbers[Caller.Robin] = configuration.GetSection("PhoneNumberRobin").Value;
+            PhoneCall.PhoneNumbers[Caller.RobinLL] = configuration.GetSection("PhoneNumberRobinLL").Value;
+            PhoneCall.TwilioSid = configuration.GetSection("TwilioSid").Value;
+            PhoneCall.TwilioToken = configuration.GetSection("TwilioToken").Value;
 
             Controller.g_controller.Start(configuration);
 

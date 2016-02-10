@@ -1,6 +1,6 @@
 $projectBaseDir = "g:\work\Archi-data\GitHubRepos\SQLab\src\Test\DotNetCoreTestNetSecurity\";
 $remoteBaseDir = "/home/ubuntu/SQ/Server/Test/TestNetSecurity/src/";
-$fixFiles = "project.json", "NuGet.Config";
+$fixFiles = "project.json", "..\..\NuGet.Config";
 
 
 write-host "Start deploying." -foreground "magenta";
