@@ -7,7 +7,9 @@
   "licenseUrl": "",
 
   "dependencies": {
-    "System.Net.Http": "4.0.1-rc3-23803"
+    "System.Net.Http": "4.0.1-rc3-23811",
+    "System.Runtime.Serialization.Primitives": "4.1.0-rc2-23811",
+    "System.Runtime.Serialization.Json": "4.0.1-rc2-23811"
   },
 
   "frameworks": {
@@ -15,19 +17,21 @@
       "dependencies": {
       },
       "frameworkAssemblies": {
+        "System.Runtime.Serialization": "4.0.0.0",
         "System.XML": "4.0.0.0"
       }
     },
     "dotnet55": {
       "dependencies": {
-        "System.Runtime": "4.1.0-rc3-23803",
-        "NETStandard.Library": "1.0.0-rc3-23803",
-        "System.Runtime.Extensions": "4.1.0-rc3-23803",
-        "System.Net.Security": "4.0.0-rc3-23803",
-        "System.Runtime.InteropServices": "4.1.0-rc3-23803",
-        "System.Diagnostics.Process": "4.1.0-rc3-23803",
-        "System.Xml.XmlDocument": "4.0.1-rc3-23803",
-        "System.Xml.ReaderWriter": "4.0.11-rc3-23803"
+        "NETStandard.Library": "1.0.0-rc3-23811",
+        "System.Runtime": "4.1.0-rc3-23811",
+        "System.Runtime.Extensions": "4.1.0-rc3-23811",
+        "System.Runtime.InteropServices": "4.1.0-rc3-23811",
+        "System.Threading.Thread": "4.0.0-rc3-23811",
+        "System.Net.Security": "4.0.0-rc3-23811",
+        "System.Diagnostics.Process": "4.1.0-rc3-23811",
+        "System.Xml.XmlDocument": "4.0.1-rc3-23811",
+        "System.Xml.ReaderWriter": "4.0.11-rc3-23811"
       }
     }
   }

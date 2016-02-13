@@ -1,4 +1,4 @@
-﻿#if DNXCORE50 || DOTNET5_5
+﻿//#if DNXCORE50 || DOTNET5_5
 
 using System;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Overmind
+namespace SQCommon
 {
     // Option 1.
     //Mail support is not trivial, they are working on it.
@@ -29,7 +29,7 @@ namespace Overmind
     //For anyone interested in MailMessage / SmtpClient equivalent support, I've just finished porting MimeKit and MailKit over to CoreCLR.
     // nugets are available now.
     //Thanks @jstedfast - Really appreciate your contribution here! We will continue to keep System.Net.Mail for .NET Core in our plans, but it's really nice to see .NET Core developers unblocked thanks to you :)
-    public class HQEmail
+    public class SQEmail
     {
         public string ToAddresses;
         public string Subject;
@@ -39,17 +39,17 @@ namespace Overmind
         public static string SenderName;
         public static string SenderPwd;
 
-        public void Send(bool p_enableSsl)
+        public void Send()
         {
-            if (Environment.NewLine == "\n")
-                SendLinuxCommandLine(p_enableSsl);
+            if (Utils.RunningPlatform() == Platform.Linux)
+                SendLinuxCommandLine();
             else
-                SendWithSystemNetSecuritySslStream(p_enableSsl);   // "\r\n" for non-Unix platforms
+                SendWithSystemNetSecuritySslStream();   // "\r\n" for non-Unix platforms
         }
 
-        internal void SendLinuxCommandLine(bool p_enableSsl)
+        internal void SendLinuxCommandLine()
         {
-            Console.WriteLine("SendLinuxCommandLine()");
+            Console.WriteLine("HQEmail.SendLinuxCommandLine(). Subject: " + Subject + " Body: " + Body);
 
             //You should use the -c option to execute a command.Furthermore, you should quote the command itself so that it gets passed as a single argument. Something like this should work:
             //var processStartInfo = new ProcessStartInfo { FileName = "/bin/bash", Arguments = "-c \"echo test | sudo -S shutdown -r +1\"" };
@@ -64,7 +64,8 @@ namespace Overmind
             //string argumentsStr = "-c \"echo \"This is message body from Linux\" | mail -s \"This is Subject1 from Linux\" \"ToAddresses\"\"";  
             //string argumentsStr = "-c \"echo \"This_is_message_body_from_Linux_Temporary_No_space\" | mail -s \"This_is_Subject1_from_Linux\" \"ToAddresses\"\"";
             // use ' instead of " and you can have space in the text too new ProcessStartInfo("/bin/bash", argumentsStr);
-            string argumentsStr = "-c \"echo 'This is message body from Linux Temporary (with_space_working)' | mail -s 'This is Subject1 from Linux command line' \"" + ToAddresses + "\"\"";
+            //string argumentsStr = "-c \"echo 'This is message body from Linux Temporary (with_space_working)' | mail -s 'This is Subject1 from Linux command line' \"" + ToAddresses + "\"\"";
+            string argumentsStr = "-c \"echo '" + Body + "' | mail -s '" + Subject + "' \"" + ToAddresses + "\"\"";
             Console.WriteLine("Arguments: " + argumentsStr);
             ProcessStartInfo procStartInfo = new ProcessStartInfo("/bin/bash", argumentsStr);
             procStartInfo.RedirectStandardOutput = true;
@@ -80,7 +81,7 @@ namespace Overmind
             Console.WriteLine("Executed bash: " + result);
         }
 
-        internal void SendWithSystemNetSecuritySslStream(bool p_enableSsl)
+        internal void SendWithSystemNetSecuritySslStream()
         {
             Console.WriteLine("SendWithSystemNetSecuritySslStream()");
 
@@ -221,5 +222,5 @@ namespace Overmind
 
     }
 }
-#endif
+//#endif
 

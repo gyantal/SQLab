@@ -1,6 +1,6 @@
-{
+﻿{
   "version": "1.0.0-*",
-  "description": "Overmind Console Application",
+  "description": "HealthMonitor Console Application",
   "authors": [ "gyantal" ],
   "tags": [ "" ],
   "projectUrl": "",
@@ -17,7 +17,7 @@
   },
 
   "commands": {
-    "Overmind": "Overmind"
+    "Overmind": "HealthMonitor"
   },
 
   "content": [ "NLog.config" ],
@@ -25,10 +25,12 @@
   "frameworks": {
     "dnxcore50": {
       "dependencies": {
-        "System.Runtime": "4.1.0-rc3-23811",
         "NETStandard.Library": "1.0.0-rc3-23811",
-        "System.Net.Security": "4.0.0-rc3-23811",
+        "System.Runtime": "4.1.0-rc3-23811",
+        "System.Runtime.Loader": "4.0.0-rc3-23811",
         "System.Runtime.InteropServices": "4.1.0-rc3-23811",
+        "System.Reflection": "4.1.0-rc3-23811",
+        "System.Net.Security": "4.0.0-rc3-23811",
         "System.Diagnostics.Process": "4.1.0-rc3-23811",
         "System.Xml.ReaderWriter": "4.0.11-rc3-23811"
       }

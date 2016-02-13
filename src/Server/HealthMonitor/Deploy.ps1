@@ -1,5 +1,5 @@
 $RootLocalDir = "g:\work\Archi-data\GitHubRepos\SQLab\src\";
-$RootRemoteDir = "/home/ubuntu/SQ/Server/Overmind/src/";
+$RootRemoteDir = "/home/ubuntu/SQ/Server/HealthMonitor/src/";
 $RootFixFiles = "global.json", "NuGet.Config";
 
 $CommonLibraryDir = "SQLab.Common";
@@ -7,7 +7,7 @@ $CommonLibrarySubDirs = "Utils";
 $CommonLibraryFixFiles = "project.json";
 
 $ServerAppDir = "Server";
-$AppDir = "Overmind";
+$AppDir = "HealthMonitor";
 $AppFixFiles = "project.json", "NLog.config";
 
 write-host "Start deploying." -foreground "magenta";
@@ -42,7 +42,7 @@ try
 		# 1. Send Root folder
 		foreach ($filename in $RootFixFiles)
         {
-			write-host "Sending:"$fileName  -foreground "cyan";
+			write-host "Sending:" + $fileName  -foreground "cyan";
 			$transferResult = $session.PutFiles($RootLocalDir + $fileName, $RootRemoteDir, $False, $transferOptions)
 			# Throw on any error
 			$transferResult.Check()

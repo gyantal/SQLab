@@ -6,28 +6,12 @@ using System.Threading.Tasks;
 using System.Xml;
 
 
-namespace Overmind
+namespace SQCommon
 {
     public enum Caller { Gyantal, Robin, RobinLL }
 
     
-
-    //public static class CallerExtensions
-    //{
-    //    public static string AsString(this Caller p_id)
-    //    {
-    //        switch (p_id)
-    //        {
-    //            case Caller.Gyantal: return Controller.g_controller.g_configuration.GetSection("PhoneNumberGyantal").Value;
-    //            case Caller.Robin: return Controller.g_controller.g_configuration.GetSection("PhoneNumberRobin").Value;
-    //            case Caller.RobinLL: return Controller.g_controller.g_configuration.GetSection("PhoneNumberRobinLL").Value;
-    //            default: return null;
-    //        }
-    //    }
-    //}
-
-
-
+    
     // Twilio docs/examples in Azure documentation:
     // http://www.windowsazure.com/en-us/documentation/articles/twilio-dotnet-how-to-use-for-voice-sms/
     // Official API docs:

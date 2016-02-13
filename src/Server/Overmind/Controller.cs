@@ -12,19 +12,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Net.Http;
 using NLog;
-using Microsoft.Extensions.Configuration;
+using SQCommon;
 
 // System.Timers.Timer is geared towards multithreaded applications and is therefore thread-safe via its SynchronizationObject property, whereas System.Threading.Timer is ironically not thread-safe out-of-the-box.
 // but we dont' have it in coreClr, so use System.Threading.Timers
 namespace Overmind
 {
-    public enum Platform
-    {
-        Windows,
-        Linux,
-        Mac
-    }
-
+    
     public class PeriodicTask
     {
         public static async Task Run(Action action, TimeSpan period, CancellationToken cancellationToken)
@@ -53,7 +47,6 @@ namespace Overmind
     class Controller
     {
         static public Controller g_controller = new Controller();
-        public IConfigurationRoot g_configuration = null;
         Timer m_dailyTimer = null;
         Timer m_dailyMarketWatcherTimer = null;
 
@@ -64,9 +57,8 @@ namespace Overmind
         Thread gThreadDailyMarketWatchTimer = null;
         ManualResetEventSlim gMainThreadExitsResetEvent = null;
 
-        internal void Start(IConfigurationRoot p_configuration)
+        internal void Start()
         {
-            g_configuration = p_configuration;
             gMainThreadExitsResetEvent = new ManualResetEventSlim(false);
             ScheduleDailyTimers();
         }
@@ -77,21 +69,7 @@ namespace Overmind
         }
 
 
-        // see discussion here in CoreCLR (they are not ready) https://github.com/dotnet/corefx/issues/1017
-        public static Platform RunningPlatform()
-        {
-            switch (Environment.NewLine)
-            {
-                case "\n":
-                        return Platform.Linux;
-
-                case "\r\n":
-                    return Platform.Windows;
-
-                default:
-                    throw new Exception("RunningPlatform() not recognized");
-            }
-        }
+        
 
         // http://mono.1490590.n4.nabble.com/Cross-platform-time-zones-td1507630.html
         //In windows the timezones have a descriptive name such as "Eastern 
@@ -119,7 +97,7 @@ namespace Overmind
             //string londonZoneId = "GMT Standard Time";      // Linux: "Europe/London"
 
             string londonZoneId = String.Empty;
-            if (RunningPlatform() == Platform.Windows)
+            if (Utils.RunningPlatform() == Platform.Windows)
                 londonZoneId = "GMT Standard Time";
             else
                 londonZoneId = "Europe/London";
@@ -169,17 +147,16 @@ namespace Overmind
         public void NewThreadDailyTimer()
         {
             Console.WriteLine("NewThreadDailyTimer()");
-            Program.gLogger.Info("NewThreadDailyTimer()");
+            Utils.Logger.Info("NewThreadDailyTimer()");
             while (!gMainThreadExitsResetEvent.IsSet)
             {
                 //DateTime m_DailyTimerTimeTestLT = DateTime.UtcNow.AddSeconds(20);     // Date part is not used, only the time part
                 //double mSecUntilDailyTimer = GetNextDailyTimerIntervalMsec(m_DailyTimerTimeTestLT);
                 double mSecUntilDailyTimer = GetNextDailyTimerIntervalMsec(g_DailyTimerTime);
-                Program.gLogger.Info("wait for secUntilDailyTimer: " + mSecUntilDailyTimer / 1000.0);
+                Utils.Logger.Info("wait for secUntilDailyTimer: " + mSecUntilDailyTimer / 1000.0);
 
                 gMainThreadExitsResetEvent.Wait(TimeSpan.FromMilliseconds(mSecUntilDailyTimer));
                 //Thread.Sleep(TimeSpan.FromMilliseconds(mSecUntilDailyTimer));
-                Program.gLogger.Info("NewThreadDailyTimer.Sleep() END");
                 if (!gMainThreadExitsResetEvent.IsSet)
                     DailyTimer_Elapsed(null);
             }
@@ -201,14 +178,14 @@ namespace Overmind
         public void NewThreadDailyMarketWatchTimer()
         {
             Console.WriteLine("NewThreadDailyMarketWatchTimer()");
-            Program.gLogger.Info("NewThreadDailyMarketWatchTimer()");
+            Utils.Logger.Info("NewThreadDailyMarketWatchTimer()");
             while (!gMainThreadExitsResetEvent.IsSet)
             {
                 double mSecUntilDailyMarketWatcherTimer = GetNextDailyTimerIntervalMsec(g_DailyMarketWatcherTimerTime);
-                Program.gLogger.Info("wait for secUntilDailyMarketWatchTimer: " + mSecUntilDailyMarketWatcherTimer / 1000.0);
+                Utils.Logger.Info("wait for secUntilDailyMarketWatchTimer: " + mSecUntilDailyMarketWatcherTimer / 1000.0);
                 //Thread.Sleep(TimeSpan.FromMilliseconds(mSecUntilDailyMarketWatcherTimer));
                 gMainThreadExitsResetEvent.Wait(TimeSpan.FromMilliseconds(mSecUntilDailyMarketWatcherTimer));
-                Program.gLogger.Info("NewThreadDailyMarketWatchTimer.Sleep() END");
+                Utils.Logger.Info("NewThreadDailyMarketWatchTimer.Sleep() END");
                 if (!gMainThreadExitsResetEvent.IsSet)
                     DailyMarketWatchTimer_Elapsed(null);
             }
@@ -227,7 +204,7 @@ namespace Overmind
             // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Threading/Timer.cs/
             try
             {
-                Program.gLogger.Info("ScheduleDailyTimers() BEGIN");
+                Utils.Logger.Info("ScheduleDailyTimers() BEGIN");
 
                 gThreadDailyTimer = new Thread(new ThreadStart(this.NewThreadDailyTimer));
                 gThreadDailyTimer.Start();
@@ -241,13 +218,13 @@ namespace Overmind
                 //// dueTime: Specify negative one (-1) milliseconds to prevent the timer from starting
                 ////double mSecUntilDailyTimer = GetNextDailyTimerIntervalMsec(g_DailyTimerTime);
                 //double mSecUntilDailyTimer = GetNextDailyTimerIntervalMsec(m_DailyTimerTimeTestLT);
-                //Program.gLogger.Info("secUntilDailyTimer: " + mSecUntilDailyTimer / 1000.0);
+                //Utils.Logger.Info("secUntilDailyTimer: " + mSecUntilDailyTimer / 1000.0);
                 ////m_dailyTimer = new System.Threading.Timer(new TimerCallback(DailyTimer_Elapsed), null, TimeSpan.FromMilliseconds(mSecUntilDailyTimer), TimeSpan.FromMilliseconds(-1.0));
                 //m_dailyTimer = new System.Threading.Timer(new TimerCallback(DailyTimer_Elapsed), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(-1.0));
 
                 //PeriodicTask.Run(() =>
                 //{
-                //    Program.gLogger.Info("PeriodicTask.Run(()");
+                //    Utils.Logger.Info("PeriodicTask.Run(()");
                 //    Console.WriteLine("PeriodicTask.Run(()");
                 //}, TimeSpan.FromMilliseconds(mSecUntilDailyTimer));
 
@@ -261,7 +238,7 @@ namespace Overmind
                 //m_dailyTimer.Enabled = true;
 
                 //double mSecUntilDailyMarketWatcherTimer = GetNextDailyTimerIntervalMsec(g_DailyMarketWatcherTimerTime);
-                //Program.gLogger.Info("secUntilDailyMarketWatcherTimer: " + mSecUntilDailyMarketWatcherTimer / 1000.0);
+                //Utils.Logger.Info("secUntilDailyMarketWatcherTimer: " + mSecUntilDailyMarketWatcherTimer / 1000.0);
                 //m_dailyMarketWatcherTimer = new System.Threading.Timer(new TimerCallback(DailyMarketWatchTimer_Elapsed), null, TimeSpan.FromMilliseconds(mSecUntilDailyMarketWatcherTimer), TimeSpan.FromMilliseconds(-1.0));
 
                 //m_dailyMarketWatcherTimer = new Timer();
@@ -273,10 +250,10 @@ namespace Overmind
             }
             catch (Exception e)
             {
-                Program.gLogger.Info("ScheduleDailyTimers() Exception: " + e.Message);
+                Utils.Logger.Info("ScheduleDailyTimers() Exception: " + e.Message);
                 Console.WriteLine(e.Message, "Exception!");
             }
-            Program.gLogger.Info("ScheduleDailyTimers() END");
+            Utils.Logger.Info("ScheduleDailyTimers() END");
         }
 
 
@@ -284,8 +261,8 @@ namespace Overmind
         //public void DailyTimer_Elapsed(object p_sender, ElapsedEventArgs p_e)
         public void DailyTimer_Elapsed(object p_sender)
         {
-            Program.gLogger.Info("DailyTimer_Elapsed() BEGIN");
-            Console.WriteLine("DailyTimer_Elapsed() BEGIN");
+            Utils.Logger.Info("DailyTimer_Elapsed() BEGIN");
+            Console.WriteLine(DateTime.UtcNow.ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture) + " : DailyTimer_Elapsed() BEGIN");
             try
             {
                 if (m_dailyTimer != null)
@@ -302,33 +279,33 @@ namespace Overmind
 
                 if (todayMonthAndDayStr == "10-05")        // Orsi's birthday
                 {
-                    new HQEmail { ToAddresses = g_configuration.GetSection("EmailGyantal").Value, Subject = "OvermindServer: Orsi's birthday", Body = "Orsi's birthday is on 1976-10-09.", IsBodyHtml = false }.Send(true);
+                    new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Orsi's birthday", Body = "Orsi's birthday is on 1976-10-09.", IsBodyHtml = false }.Send();
                 }
 
-                Program.gLogger.Info("DailyTimer_Elapsed(): Checking first day of the month");
+                Utils.Logger.Info("DailyTimer_Elapsed(): Checking first day of the month");
                 if (DateTime.UtcNow.AddDays(0).Day == 1)
                 {
                     // Balazs Lukucz asked me that never send salaries on 30th or 31st of previous month. 
                     // So I will report to Barbara only on 1st day of every month, and maybe they got salaries later. 
                     // And this has an advantage that as I don't send the holidays report earlier, if they forget to tell me their 'last minute' day-offs, it is not reported to Barbara too early.
                     // So less headache overall.
-                    new HQEmail { ToAddresses = g_configuration.GetSection("EmailGyantal").Value, Subject = "OvermindServer: send holidays, bank report to accountant", Body = "Send holidays, bank report to accountant. In 3 days, it is the 1st day of the month. ", IsBodyHtml = false }.Send(true);
+                    new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: send holidays, bank report to accountant", Body = "Send holidays, bank report to accountant. In 3 days, it is the 1st day of the month. ", IsBodyHtml = false }.Send();
                 }
             }
             catch (Exception e)
             {
-                Program.gLogger.Error(e.Message);
-                new HQEmail { ToAddresses = g_configuration.GetSection("EmailGyantal").Value, Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send(true);
+                Utils.Logger.Error(e.Message);
+                new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
             }
 
-            Program.gLogger.Info("DailyTimer_Elapsed() END");
+            Utils.Logger.Info("DailyTimer_Elapsed() END");
         }
 
         //public void DailyMarketWatchTimer_Elapsed(object p_sender, ElapsedEventArgs p_e)
         public void DailyMarketWatchTimer_Elapsed(object p_sender)
         {
-            Program.gLogger.Info("DailyMarketWatchTimer_Elapsed() BEGIN");
-            Console.WriteLine("DailyMarketWatchTimer_Elapsed() BEGIN");
+            Utils.Logger.Info("DailyMarketWatchTimer_Elapsed() BEGIN");
+            Console.WriteLine(DateTime.UtcNow.ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture) + " : DailyMarketWatchTimer_Elapsed() BEGIN");
             try
             {
                 if (m_dailyMarketWatcherTimer != null)
@@ -341,21 +318,21 @@ namespace Overmind
                 Console.WriteLine("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV.Length);
                 Console.WriteLine("Downloaded string: " + biduDelayedPriceCSV);
 
-                Program.gLogger.Info("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV.Length);
-                Program.gLogger.Info("Downloaded string: " + biduDelayedPriceCSV);
+                Utils.Logger.Info("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV.Length);
+                Utils.Logger.Info("Downloaded string: " + biduDelayedPriceCSV);
 
                 //string biduDelayedPriceCSV = new WebClient().DownloadString("http://download.finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv");
                 string[] biduDelayedPriceSplit = biduDelayedPriceCSV.Split(new char[] { ',', ' ' });
                 double realTimePrice = Double.Parse(biduDelayedPriceSplit[1]);
 
-                Program.gLogger.Info("DailyMarketWatchTimer_Elapsed()-2");
+                Utils.Logger.Info("DailyMarketWatchTimer_Elapsed()-2");
                 double dailyChange = Double.Parse(biduDelayedPriceSplit[4]);
                 double yesterdayClose = realTimePrice - dailyChange;
                 double todayPercentChange = realTimePrice / yesterdayClose - 1;
-                Program.gLogger.Info("DailyMarketWatchTimer_Elapsed()-3. TodayPctChange: " + todayPercentChange);
+                Utils.Logger.Info("DailyMarketWatchTimer_Elapsed()-3. TodayPctChange: " + todayPercentChange);
                 if (Math.Abs(todayPercentChange) >= 0.04)
                 {
-                    new HQEmail { ToAddresses = g_configuration.GetSection("EmailGyantal").Value, Subject = "OvermindServer: BIDU price warning: bigger than 5% move", Body = "BIDU price warning: bigger than 5% move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.Send(true);
+                    new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: BIDU price warning: bigger than 5% move", Body = "BIDU price warning: bigger than 5% move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.Send();
 
                     var call = new PhoneCall
                     {
@@ -367,16 +344,16 @@ namespace Overmind
                     Console.WriteLine(call.MakeTheCall());
                 }
 
-                Program.gLogger.Info("DailyMarketWatchTimer_Elapsed()-4");
+                Utils.Logger.Info("DailyMarketWatchTimer_Elapsed()-4");
             }
             catch (Exception e)
             {
-                Program.gLogger.Info("DailyMarketWatchTimer_Elapsed() in Exception");
+                Utils.Logger.Info("DailyMarketWatchTimer_Elapsed() in Exception");
                 Console.WriteLine("DailyMarketWatchTimer_Elapsed() in Exception");
-                Program.gLogger.Error(e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
-                new HQEmail { ToAddresses = g_configuration.GetSection("EmailGyantal").Value, Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send(true);
+                Utils.Logger.Error(e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
+                new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
             }
-            Program.gLogger.Info("DailyMarketWatchTimer_Elapsed() END");
+            Utils.Logger.Info("DailyMarketWatchTimer_Elapsed() END");
         }
 
 
@@ -386,7 +363,7 @@ namespace Overmind
         internal void TestSendingEmailAndPhoneCall()
         {
             Console.WriteLine("TestSendingEmail started.");
-            Program.gLogger.Info("TestSendingEmail() START");
+            Utils.Logger.Info("TestSendingEmail() START");
             DailyTimer_Elapsed(null);
 
             //string biduDelayedPriceCSV = new WebClient().DownloadString("http://download.finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv");
@@ -399,14 +376,14 @@ namespace Overmind
             double yesterdayClose = realTimePrice - dailyChange;
             double todayPercentChange = realTimePrice / yesterdayClose - 1;
             Console.WriteLine("BIDU %change: " + (todayPercentChange * 100).ToString("0.00") + @"%");
-            Program.gLogger.Info("BIDU %change: " + (todayPercentChange * 100).ToString("0.00") + @"%");
+            Utils.Logger.Info("BIDU %change: " + (todayPercentChange * 100).ToString("0.00") + @"%");
             //if (Math.Abs(todayPercentChange) >= 0.04)
             if (Math.Abs(todayPercentChange) >= 0.00)
             {
-                new HQEmail { ToAddresses = g_configuration.GetSection("EmailGyantal").Value, Subject = "OvermindServer: BIDU price % move", Body = "BIDU price % move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.Send(true);
+                new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: BIDU price % move", Body = "BIDU price % move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.Send();
 
                 Console.WriteLine("Email was sent.");
-                Program.gLogger.Info("Email was sent.");
+                Utils.Logger.Info("Email was sent.");
 
                 var call = new PhoneCall
                 {
@@ -418,11 +395,11 @@ namespace Overmind
                 // skipped temporarily
                 bool phoneCallSuccess = call.MakeTheCall();
                 Console.WriteLine("Phonecall success: " + phoneCallSuccess);
-                Program.gLogger.Info("Phonecall success: " + phoneCallSuccess);
+                Utils.Logger.Info("Phonecall success: " + phoneCallSuccess);
             }
 
             Console.WriteLine("TestSendingEmail Finished.");
-            Program.gLogger.Info("TestSendingEmail() END");
+            Utils.Logger.Info("TestSendingEmail() END");
         }
     }
 }

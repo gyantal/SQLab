@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using System.Text;
 using System.IO;
 using System.Xml;
@@ -16,20 +15,39 @@ namespace Overmind
 {
     public class Program
     {
-        public static Logger gLogger = null;
         public static void Main(string[] args)
         {
+            //var y = typeof(Program).GetTypeInfo().Assembly;
+            // 		(only in Dnx451, not DotNetCore) CodeBase	"file:///C:/Users/gyantal/.dnx/runtimes/dnx-clr-win-x64.1.0.0-rc2-16357/bin/Microsoft.Dnx.Loader.dll"	string
+            //AssemblyLoadContext.GetAssemblyName.GetLoadContext.args;
+            //var x = typeof(Program).GetType(); //.GetTypeInfo().Assembly;  // Using type.GetTypeInfo() helps with this issue for obtaining an Assembly
+            //Console.WriteLine(y.GetManifestResourceInfo.);
+            // or thin under Webserver: var libs = PlatformServices.Default.LibraryManager.GetReferencingLibraries("myLib")
+            //.SelectMany(info => info.Assemblies)
+            //.Select(info => Assembly.Load(new AssemblyName(info.Name)));
 
-            if (SQCommon.Utils.RunningPlatform() == SQCommon.Platform.Windows)
-                Console.WriteLine("Hello Windows.");
-            else
-                Console.WriteLine("Hello Linux.");
+            Console.WriteLine("Hello Overmind, v1.0.7");
+            var currDir = Directory.GetCurrentDirectory();  // where the project.json is G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor
+            var currProject = Path.Combine(currDir, "project.json"); // we can open it and read its contents later
+            if (!File.Exists(currProject))
+            {
+                Console.WriteLine("!Error. We assume Current Directory is where project.json is. Cannot find: " + currProject);
+                return;
+            }
+            string logFilePath = Path.Combine(currDir, typeof(Program).Namespace + ".sq.log");
+            Console.WriteLine("Log file: " + logFilePath);
+            Utils.Logger = new SQLogger(logFilePath);
+            Utils.Logger.Info("****** Main() START");
+
+            Utils.Configuration = Utils.BuildConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Overmind.NoGitHub.json", "/home/ubuntu/SQ/Server/Overmind/SQLab.Overmind.NoGitHub.json");
+
+
             //    // on Windows the NLog.Config near the project.json is found by Nlog, but on Linux, there is problem
             //    //var nLogConfigPath = NLog.LogFactory.CurrentAppDomain.BaseDirectory + "NLog.config";
             //    //Console.WriteLine("NLog file: " + nLogConfigPath);
 
             /* NLog. Solution 1:  (doesn't yet work on DotNetCore runtime, only DNX451/maybe Mono runtime) */
-            gLogger = LogManager.GetCurrentClassLogger();   //https://github.com/nlog/NLog/wiki/Configuration-file
+            //Utils.Logger = LogManager.GetCurrentClassLogger();   //https://github.com/nlog/NLog/wiki/Configuration-file
 
             /* NLog. Solution 2: (doesn't yet work on DotNetCore runtime, only DNX451/maybe Mono runtime)
            // 2016-02-09: even on Windows, NLog doesn't doesn't do log file with the DotNetCore runtime, only with the DNX451 runtime
@@ -39,7 +57,7 @@ namespace Overmind
            //var reader = XmlReader.Create(file); //stream preferred above byte[] / string.
            //var configNlog = new XmlLoggingConfiguration(reader, null); //filename is not required.
            //LogManager.Configuration = configNlog;
-           //gLogger = LogManager.GetCurrentClassLogger();   //https://github.com/nlog/NLog/wiki/Configuration-file
+           //Utils.Logger = LogManager.GetCurrentClassLogger();   //https://github.com/nlog/NLog/wiki/Configuration-file
            */
 
             /* NLog. Solution 3: (doesn't yet work on DotNetCore runtime, only DNX451/maybe Mono runtime)
@@ -59,51 +77,11 @@ namespace Overmind
             // Step 5. Activate the configuration
             LogManager.Configuration = config;
             // Example usage
-            gLogger = LogManager.GetLogger("Program");
+            Utils.Logger = LogManager.GetLogger("Program");
             */
 
 
-            gLogger.Info("****** Main() START");
-            //NLog.LogFactory nlogLogFactory = new global::NLog.LogFactory();
-
-            // Microsoft.Framework.* has been renamed to Microsoft.Extensions.*
-            var builder = new ConfigurationBuilder()
-               //.AddJsonFile("appsettings.json")
-               //.AddJsonFile("../../../SQHealthMonitorNoGitHubConfig.json", optional: true)       // that file will not go to GIT source control
-               //.AddJsonFile("../SQOvermindNoGitHubConfig.json", optional: true)    // for the Production server
-               .AddJsonFile("/home/ubuntu/SQ/Server/Overmind/SQOvermindNoGitHubConfig.json", optional: true)    // for the Production server
-               .AddJsonFile("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQOvermindNoGitHubConfig.json", optional: true); // for the development PC
-                                                                                                                                                               // that file will not go to GIT source control
-                                                                                                                                                               // AddEnvironmentVariables();           // adds settings from the Azure WebSite config, needed package : Microsoft.Extensions.Configuration.EnvironmentVariables
-            IConfigurationRoot configuration = builder.Build();
-            var configItemTest = configuration.GetSection("EmailGyantal").Value;
-            gLogger.Info("Test item from config.json: " + configItemTest);
-            Console.WriteLine("Test item from config.json: " + configItemTest);
-
-            // Decode all from Base64 encoding, so later the code don't have to do it all the times
-            foreach (var item in configuration.GetChildren())
-            {
-                if (item.Value != null)
-                    item.Value = Encoding.UTF8.GetString(Convert.FromBase64String(item.Value));
-            }
-            gLogger.Info("Test from config.json after decoding: " + configuration.GetSection("EmailGyantal").Value);
-            Console.WriteLine("Test from config.json after decoding: " + configuration.GetSection("EmailGyantal").Value);
-            if (String.IsNullOrEmpty(configuration.GetSection("EmailGyantal").Value))
-            {
-                gLogger.Info("ERROR!!!: test item from SQOvermindNoGitHubConfig.json was not found.");
-                Console.WriteLine("ERROR!!!: test item from SQOvermindNoGitHubConfig.json was not found.");
-            }
-
-            HQEmail.SenderName = configuration.GetSection("EmailHQServer").Value;
-            HQEmail.SenderPwd = configuration.GetSection("EmailHQServerPwd").Value;
-
-            PhoneCall.PhoneNumbers[Caller.Gyantal] = configuration.GetSection("PhoneNumberGyantal").Value;
-            PhoneCall.PhoneNumbers[Caller.Robin] = configuration.GetSection("PhoneNumberRobin").Value;
-            PhoneCall.PhoneNumbers[Caller.RobinLL] = configuration.GetSection("PhoneNumberRobinLL").Value;
-            PhoneCall.TwilioSid = configuration.GetSection("TwilioSid").Value;
-            PhoneCall.TwilioToken = configuration.GetSection("TwilioToken").Value;
-
-            Controller.g_controller.Start(configuration);
+            Controller.g_controller.Start();
 
             string userInput = String.Empty;
             do
@@ -118,18 +96,20 @@ namespace Overmind
                     case "2":
                         //new HQEmail().SendOnMono(true);
                         Console.WriteLine("Hello. I am not crashed yet! :)");
-                        gLogger.Info("Hello. I am not crashed yet! :)");
+                        Utils.Logger.Info("Hello. I am not crashed yet! :)");
                         break;
                 }
 
             } while (userInput != "3");
 
-            gLogger.Info("****** Main() END");
+            Utils.Logger.Info("****** Main() END");
             Controller.g_controller.Exit();
+            Utils.Logger.Exit();
+
             //nlogLogFactory.Flush();
-            var resetEvent = new ManualResetEventSlim(false);
-            LogManager.Flush(ex => resetEvent.Set(), TimeSpan.FromSeconds(15));
-            resetEvent.Wait(TimeSpan.FromSeconds(15));
+            //var resetEvent = new ManualResetEventSlim(false);
+            //LogManager.Flush(ex => resetEvent.Set(), TimeSpan.FromSeconds(15));
+            //resetEvent.Wait(TimeSpan.FromSeconds(15));
         }
 
         static bool gHasBeenCalled = false;
