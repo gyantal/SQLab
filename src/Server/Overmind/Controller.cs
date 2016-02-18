@@ -1,61 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Net;
-//using System.Timers;
-//using Timer = System.Timers.Timer;
-using Timer = System.Threading.Timer;
-using System.Diagnostics;
+﻿using SQCommon;
+using System;
 using System.Globalization;
 using System.Net.Http;
-using NLog;
-using SQCommon;
+using System.Threading;     // this is the only timer available under DotNetCore
 
-// System.Timers.Timer is geared towards multithreaded applications and is therefore thread-safe via its SynchronizationObject property, whereas System.Threading.Timer is ironically not thread-safe out-of-the-box.
-// but we dont' have it in coreClr, so use System.Threading.Timers
 namespace Overmind
 {
-    
-    public class PeriodicTask
-    {
-        public static async Task Run(Action action, TimeSpan period, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(period, cancellationToken);
-
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    action();
-                    //  Agy: only do it once now
-                    break;
-                }
-            }
-        }
-
-        public static Task Run(Action action, TimeSpan period)
-        {
-            return Run(action, period, CancellationToken.None);
-        }
-    }
-
     // send Calendar emails (about Birthday (orsi), Pay-Rent, Accountant), 
     // it can do other things like: watch BIDU price and send SMS if it fell more than 5%;
     class Controller
     {
         static public Controller g_controller = new Controller();
-        Timer m_dailyTimer = null;
-        Timer m_dailyMarketWatcherTimer = null;
 
-        readonly DateTime g_DailyTimerTime = new DateTime(2000, 1, 1, 9, 05, 0);      // the date part is not used only the time part. Activate every day 9:05
-        readonly DateTime g_DailyMarketWatcherTimerTime = new DateTime(2000, 1, 1, 18, 0, 0);      // the date part is not used only the time part, Activate every day: 18:00
-
-        Thread gThreadDailyTimer = null;
-        Thread gThreadDailyMarketWatchTimer = null;
         ManualResetEventSlim gMainThreadExitsResetEvent = null;
+
+        //Your timer object goes out of scope and gets erased by Garbage Collector after some time, which stops callbacks from firing. Save reference to it in a member of class.
+        long m_nHeartbeat = 0;
+        Timer m_heartbeatTimer = null;
+        Timer m_dailyMorningTimer = null;
+        Timer m_dailyMiddayTimer = null;
+
+        readonly DateTime g_DailyMorningTimerTime = new DateTime(2000, 1, 1, 9, 05, 0);      // the date part is not used only the time part. Activate every day 9:05
+        readonly DateTime g_DailyMiddayTimerTime = new DateTime(2000, 1, 1, 18, 0, 0);      // the date part is not used only the time part, Activate every day: 18:00
+        const int cHeartbeatTimerFrequencyMinutes = 5;
 
         internal void Start()
         {
@@ -68,8 +35,35 @@ namespace Overmind
             gMainThreadExitsResetEvent.Set();
         }
 
+        internal void ScheduleDailyTimers()
+        {
+            try
+            {
+                Utils.Logger.Info("ScheduleDailyTimers() BEGIN");
 
-        
+                TimeSpan untilDailyTimer = GetNextDailyTimerIntervalMsec(g_DailyMorningTimerTime);
+                m_dailyMorningTimer = new System.Threading.Timer(new TimerCallback(DailyMorningTimer_Elapsed), null, untilDailyTimer, TimeSpan.FromMilliseconds(-1.0));
+                Utils.Logger.Info("m_dailyTimer is scheduled at " + (DateTime.UtcNow + untilDailyTimer).ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture));
+
+                TimeSpan untilDailyMarketWatcherTimer = GetNextDailyTimerIntervalMsec(g_DailyMiddayTimerTime);
+                m_dailyMiddayTimer = new System.Threading.Timer(new TimerCallback(DailyMiddayTimer_Elapsed), null, untilDailyMarketWatcherTimer, TimeSpan.FromMilliseconds(-1.0));
+                Utils.Logger.Info("m_dailyMarketWatcherTimer is scheduled at " + (DateTime.UtcNow + untilDailyMarketWatcherTimer).ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture));
+
+                m_heartbeatTimer = new System.Threading.Timer((e) =>    // Heartbeat log is useful to find out when VM was shut down, or when the App crashed
+                {
+                    Utils.Logger.Info(String.Format("**m_nHeartbeat: {0} (at every {1} minutes)", m_nHeartbeat, cHeartbeatTimerFrequencyMinutes));
+                    m_nHeartbeat++;
+                }, null, TimeSpan.FromMinutes(0.5), TimeSpan.FromMinutes(cHeartbeatTimerFrequencyMinutes));
+
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Info(e, "ScheduleDailyTimers() Exception.");
+            }
+            Utils.Logger.Info("ScheduleDailyTimers() END");
+        }
+
+
 
         // http://mono.1490590.n4.nabble.com/Cross-platform-time-zones-td1507630.html
         //In windows the timezones have a descriptive name such as "Eastern 
@@ -90,7 +84,7 @@ namespace Overmind
         //Hawaiian Standard Time => GMT - 10 w/DST            => US/Hawaii
 
 
-        static double GetNextDailyTimerIntervalMsec(DateTime p_targetDateTimeLT)  // LT: LondonTime
+        static TimeSpan GetNextDailyTimerIntervalMsec(DateTime p_targetDateTimeLT)  // LT: LondonTime
         {
             //http://www.mcnearney.net/blog/windows-timezoneinfo-olson-mapping/
             //http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
@@ -101,8 +95,6 @@ namespace Overmind
                 londonZoneId = "GMT Standard Time";
             else
                 londonZoneId = "Europe/London";
-
-            //string utcZoneId = String.Empty;
             //if (Common.Utils.RunningPlatform() == Common.Platform.Windows)
             //    utcZoneId = "UTC";
             //else
@@ -132,7 +124,7 @@ namespace Overmind
                     proposedTimerStartLT = new DateTime(tomorrowLT.Year, tomorrowLT.Month, tomorrowLT.Day, p_targetDateTimeLT.Hour, p_targetDateTimeLT.Minute, p_targetDateTimeLT.Second); // next day
                     scheduleStartTimerInMsec = (proposedTimerStartLT - nowLT).TotalMilliseconds;
                 }
-                return scheduleStartTimerInMsec;
+                return TimeSpan.FromMilliseconds(scheduleStartTimerInMsec);
             }
             
             catch (InvalidTimeZoneException)
@@ -140,149 +132,36 @@ namespace Overmind
                 Console.WriteLine("Registry data on the {0} zone has been corrupted.", londonZoneId);
             }
 
-            return 24 * 60 * 60 * 1000;  // let it be the next 24 hour
+            return TimeSpan.FromHours(24);  // let it be the next 24 hour
         }
 
-        //// This method that will be called when the thread is started
-        public void NewThreadDailyTimer()
+     
+
+
+        public void DailyMorningTimer_Elapsed(object p_sender)
         {
-            Console.WriteLine("NewThreadDailyTimer()");
-            Utils.Logger.Info("NewThreadDailyTimer()");
-            while (!gMainThreadExitsResetEvent.IsSet)
-            {
-                //DateTime m_DailyTimerTimeTestLT = DateTime.UtcNow.AddSeconds(20);     // Date part is not used, only the time part
-                //double mSecUntilDailyTimer = GetNextDailyTimerIntervalMsec(m_DailyTimerTimeTestLT);
-                double mSecUntilDailyTimer = GetNextDailyTimerIntervalMsec(g_DailyTimerTime);
-                Utils.Logger.Info("wait for secUntilDailyTimer: " + mSecUntilDailyTimer / 1000.0);
-
-                gMainThreadExitsResetEvent.Wait(TimeSpan.FromMilliseconds(mSecUntilDailyTimer));
-                //Thread.Sleep(TimeSpan.FromMilliseconds(mSecUntilDailyTimer));
-                if (!gMainThreadExitsResetEvent.IsSet)
-                    DailyTimer_Elapsed(null);
-            }
-
-            //while (!cancellationToken.IsCancellationRequested)
-            //while (!cancellationToken.IsCancellationRequested)
-            //{
-            //    await Task.Delay(period, cancellationToken);
-
-            //    if (!cancellationToken.IsCancellationRequested)
-            //    {
-            //        action();
-            //        //  Agy: only do it once now
-            //        break;
-            //    }
-            //}
-        }
-
-        public void NewThreadDailyMarketWatchTimer()
-        {
-            Console.WriteLine("NewThreadDailyMarketWatchTimer()");
-            Utils.Logger.Info("NewThreadDailyMarketWatchTimer()");
-            while (!gMainThreadExitsResetEvent.IsSet)
-            {
-                double mSecUntilDailyMarketWatcherTimer = GetNextDailyTimerIntervalMsec(g_DailyMarketWatcherTimerTime);
-                Utils.Logger.Info("wait for secUntilDailyMarketWatchTimer: " + mSecUntilDailyMarketWatcherTimer / 1000.0);
-                //Thread.Sleep(TimeSpan.FromMilliseconds(mSecUntilDailyMarketWatcherTimer));
-                gMainThreadExitsResetEvent.Wait(TimeSpan.FromMilliseconds(mSecUntilDailyMarketWatcherTimer));
-                Utils.Logger.Info("NewThreadDailyMarketWatchTimer.Sleep() END");
-                if (!gMainThreadExitsResetEvent.IsSet)
-                    DailyMarketWatchTimer_Elapsed(null);
-            }
-        }
-
-        
-
-
-        // Linux Timer problem (2016-01-22, CoreCLR): it seems: Timer is called only after Main Exits. Until the main thread is not finished the other threads don't run or what.
-        // even the Console message is only written after we exit the program.
-        // 1. new Thread().Start() :  only this works on Linux properly
-        // 2. new System.Threading.Timer(): this is only called when program exits
-        // 3. PeriodicTask.Run((): only called when program exits
-        private void ScheduleDailyTimers()
-        {
-            // https://github.com/dotnet/coreclr/blob/master/src/mscorlib/src/System/Threading/Timer.cs/
+            Utils.Logger.Info("DailyMorningTimer_Elapsed() BEGIN");
+            Console.WriteLine(DateTime.UtcNow.ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture) + " : DailyMorningTimer_Elapsed() BEGIN");
             try
             {
-                Utils.Logger.Info("ScheduleDailyTimers() BEGIN");
-
-                gThreadDailyTimer = new Thread(new ThreadStart(this.NewThreadDailyTimer));
-                gThreadDailyTimer.Start();
-
-                gThreadDailyMarketWatchTimer = new Thread(new ThreadStart(this.NewThreadDailyMarketWatchTimer));
-                gThreadDailyMarketWatchTimer.Start();
-
-
-
-                //DateTime m_DailyTimerTimeTestLT = DateTime.UtcNow.AddSeconds(20);     // Date part is not used, only the time part
-                //// dueTime: Specify negative one (-1) milliseconds to prevent the timer from starting
-                ////double mSecUntilDailyTimer = GetNextDailyTimerIntervalMsec(g_DailyTimerTime);
-                //double mSecUntilDailyTimer = GetNextDailyTimerIntervalMsec(m_DailyTimerTimeTestLT);
-                //Utils.Logger.Info("secUntilDailyTimer: " + mSecUntilDailyTimer / 1000.0);
-                ////m_dailyTimer = new System.Threading.Timer(new TimerCallback(DailyTimer_Elapsed), null, TimeSpan.FromMilliseconds(mSecUntilDailyTimer), TimeSpan.FromMilliseconds(-1.0));
-                //m_dailyTimer = new System.Threading.Timer(new TimerCallback(DailyTimer_Elapsed), null, TimeSpan.Zero, TimeSpan.FromMilliseconds(-1.0));
-
-                //PeriodicTask.Run(() =>
-                //{
-                //    Utils.Logger.Info("PeriodicTask.Run(()");
-                //    Console.WriteLine("PeriodicTask.Run(()");
-                //}, TimeSpan.FromMilliseconds(mSecUntilDailyTimer));
-
-
-
-
-                //m_dailyTimer = new Timer();
-                //m_dailyTimer.Elapsed += new ElapsedEventHandler(DailyTimer_Elapsed);
-                //m_dailyTimer.AutoReset = true;      // so it will repeat
-                //m_dailyTimer.Interval = GetNextDailyTimerIntervalMsec(g_DailyTimerTime);
-                //m_dailyTimer.Enabled = true;
-
-                //double mSecUntilDailyMarketWatcherTimer = GetNextDailyTimerIntervalMsec(g_DailyMarketWatcherTimerTime);
-                //Utils.Logger.Info("secUntilDailyMarketWatcherTimer: " + mSecUntilDailyMarketWatcherTimer / 1000.0);
-                //m_dailyMarketWatcherTimer = new System.Threading.Timer(new TimerCallback(DailyMarketWatchTimer_Elapsed), null, TimeSpan.FromMilliseconds(mSecUntilDailyMarketWatcherTimer), TimeSpan.FromMilliseconds(-1.0));
-
-                //m_dailyMarketWatcherTimer = new Timer();
-                //m_dailyMarketWatcherTimer.Elapsed += new ElapsedEventHandler(DailyMarketWatchTimer_Elapsed);
-                //m_dailyMarketWatcherTimer.AutoReset = true;      // so it will repeat
-                //m_dailyMarketWatcherTimer.Interval = GetNextDailyTimerIntervalMsec(g_DailyMarketWatcherTimerTime);
-                //m_dailyMarketWatcherTimer.Enabled = true;
-                //                Console.WriteLine("The date and time are {0} UTC.", TimeZoneInfo.ConvertTimeToUtc(easternTime, easternZone));
-            }
-            catch (Exception e)
-            {
-                Utils.Logger.Info("ScheduleDailyTimers() Exception: " + e.Message);
-                Console.WriteLine(e.Message, "Exception!");
-            }
-            Utils.Logger.Info("ScheduleDailyTimers() END");
-        }
-
-
-
-        //public void DailyTimer_Elapsed(object p_sender, ElapsedEventArgs p_e)
-        public void DailyTimer_Elapsed(object p_sender)
-        {
-            Utils.Logger.Info("DailyTimer_Elapsed() BEGIN");
-            Console.WriteLine(DateTime.UtcNow.ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture) + " : DailyTimer_Elapsed() BEGIN");
-            try
-            {
-                if (m_dailyTimer != null)
-                    m_dailyTimer.Change(TimeSpan.FromMilliseconds(GetNextDailyTimerIntervalMsec(g_DailyTimerTime)), TimeSpan.FromMilliseconds(-1.0));
-
-                //m_dailyTimer.Interval = GetNextDailyTimerIntervalMsec(g_DailyTimerTime);
+                if (m_dailyMorningTimer != null)
+                {
+                    TimeSpan ts = GetNextDailyTimerIntervalMsec(g_DailyMorningTimerTime);
+                    m_dailyMorningTimer.Change(ts, TimeSpan.FromMilliseconds(-1.0));
+                    Utils.Logger.Info("m_dailyMorningTimer is scheduled at " + (DateTime.UtcNow + ts).ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture));
+                }
+                    
 
                 DateTime utcToday = DateTime.UtcNow.Date;
-
                 string todayDateStr = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd", CultureInfo.InvariantCulture);
                 string todayMonthAndDayStr = DateTime.UtcNow.ToString("MM'-'dd", CultureInfo.InvariantCulture);
-
-                Trace.WriteLine(@"DailyTimer_Elapsed(), UtcTime: " + DateTime.UtcNow.ToString("yyyy'-'MM'-'dd H:mm:ss", CultureInfo.InvariantCulture));
 
                 if (todayMonthAndDayStr == "10-05")        // Orsi's birthday
                 {
                     new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Orsi's birthday", Body = "Orsi's birthday is on 1976-10-09.", IsBodyHtml = false }.Send();
                 }
 
-                Utils.Logger.Info("DailyTimer_Elapsed(): Checking first day of the month");
+                Utils.Logger.Info("DailyMorningTimer_Elapsed(): Checking first day of the month");
                 if (DateTime.UtcNow.AddDays(0).Day == 1)
                 {
                     // Balazs Lukucz asked me that never send salaries on 30th or 31st of previous month. 
@@ -298,19 +177,28 @@ namespace Overmind
                 new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
             }
 
-            Utils.Logger.Info("DailyTimer_Elapsed() END");
+            Utils.Logger.Info("DailyMorningTimer_Elapsed() END");
         }
 
-        //public void DailyMarketWatchTimer_Elapsed(object p_sender, ElapsedEventArgs p_e)
-        public void DailyMarketWatchTimer_Elapsed(object p_sender)
+        public void DailyMiddayTimer_Elapsed(object p_sender)
         {
-            Utils.Logger.Info("DailyMarketWatchTimer_Elapsed() BEGIN");
-            Console.WriteLine(DateTime.UtcNow.ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture) + " : DailyMarketWatchTimer_Elapsed() BEGIN");
+            Utils.Logger.Info("DailyMiddayTimer_Elapsed() BEGIN");
+            Console.WriteLine(DateTime.UtcNow.ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture) + " : DailyMiddayTimer_Elapsed() BEGIN");
             try
             {
-                if (m_dailyMarketWatcherTimer != null)
-                    m_dailyMarketWatcherTimer.Change(TimeSpan.FromMilliseconds(GetNextDailyTimerIntervalMsec(g_DailyMarketWatcherTimerTime)), TimeSpan.FromMilliseconds(-1.0));
-                //m_dailyMarketWatcherTimer.Interval = GetNextDailyTimerIntervalMsec(g_DailyMarketWatcherTimerTime);
+                if (m_dailyMiddayTimer != null)
+                {
+                    TimeSpan ts = GetNextDailyTimerIntervalMsec(g_DailyMiddayTimerTime);
+                    m_dailyMiddayTimer.Change(ts, TimeSpan.FromMilliseconds(-1.0));
+                    Utils.Logger.Info("m_dailyMarketWatcherTimer is scheduled at " + (DateTime.UtcNow + ts).ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture));
+                }
+                
+                // TODO: if market holiday: it shouldn't process anything either
+                if (DateTime.UtcNow.DayOfWeek == DayOfWeek.Saturday || DateTime.UtcNow.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    Utils.Logger.Debug("DailyMiddayTimer_Elapsed(). Weekend is detected. Don't do a thing.");
+                    return;
+                }
 
                 var biduDelayedPriceCSV = new HttpClient().GetStringAsync("http://download.finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv").Result;
 
@@ -325,11 +213,11 @@ namespace Overmind
                 string[] biduDelayedPriceSplit = biduDelayedPriceCSV.Split(new char[] { ',', ' ' });
                 double realTimePrice = Double.Parse(biduDelayedPriceSplit[1]);
 
-                Utils.Logger.Info("DailyMarketWatchTimer_Elapsed()-2");
+                Utils.Logger.Info("DailyMiddayTimer_Elapsed()-2");
                 double dailyChange = Double.Parse(biduDelayedPriceSplit[4]);
                 double yesterdayClose = realTimePrice - dailyChange;
                 double todayPercentChange = realTimePrice / yesterdayClose - 1;
-                Utils.Logger.Info("DailyMarketWatchTimer_Elapsed()-3. TodayPctChange: " + todayPercentChange);
+                Utils.Logger.Info("DailyMiddayTimer_Elapsed()-3. TodayPctChange: " + todayPercentChange);
                 if (Math.Abs(todayPercentChange) >= 0.04)
                 {
                     new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: BIDU price warning: bigger than 5% move", Body = "BIDU price warning: bigger than 5% move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.Send();
@@ -344,16 +232,16 @@ namespace Overmind
                     Console.WriteLine(call.MakeTheCall());
                 }
 
-                Utils.Logger.Info("DailyMarketWatchTimer_Elapsed()-4");
+                Utils.Logger.Info("DailyMiddayTimer_Elapsed()-4");
             }
             catch (Exception e)
             {
-                Utils.Logger.Info("DailyMarketWatchTimer_Elapsed() in Exception");
-                Console.WriteLine("DailyMarketWatchTimer_Elapsed() in Exception");
+                Utils.Logger.Info("DailyMiddayTimer_Elapsed() in Exception");
+                Console.WriteLine("DailyMiddayTimer_Elapsed() in Exception");
                 Utils.Logger.Error(e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
                 new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
             }
-            Utils.Logger.Info("DailyMarketWatchTimer_Elapsed() END");
+            Utils.Logger.Info("DailyMiddayTimer_Elapsed() END");
         }
 
 
@@ -364,7 +252,7 @@ namespace Overmind
         {
             Console.WriteLine("TestSendingEmail started.");
             Utils.Logger.Info("TestSendingEmail() START");
-            DailyTimer_Elapsed(null);
+            DailyMorningTimer_Elapsed(null);
 
             //string biduDelayedPriceCSV = new WebClient().DownloadString("http://download.finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv");
             //string biduDelayedPriceCSV = new WebClient().DownloadString("http://finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv");

@@ -39,7 +39,7 @@ try
 		$csFiles = get-childitem $projectBaseDir | where {$_.extension -eq ".cs"}
 		foreach ($filename in $fixFiles + $csFiles)
         {
-			write-host "Sending:"$fileName  -foreground "cyan";
+			write-host "Sending: "$fileName  -foreground "cyan";
 			$transferResult = $session.PutFiles($projectBaseDir + $fileName, $remoteBaseDir, $False, $transferOptions)
 			# Throw on any error
 			$transferResult.Check()

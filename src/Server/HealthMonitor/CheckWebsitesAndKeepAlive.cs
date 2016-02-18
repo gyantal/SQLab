@@ -15,7 +15,7 @@ namespace HealthMonitor
             "http://strategysniffer.azurewebsites.net" };
 
         bool m_isCheckWebsitesServiceOutageEmailWasSent = false;  // to avoid sending the same warning email every 9 minutes; send only once
-
+        
         public void CheckWebsitesAndKeepAliveTimer_Elapsed(object p_sender)
         {
             Utils.Logger.Info("CheckWebsitesAndKeepAliveTimer_Elapsed() BEGIN");

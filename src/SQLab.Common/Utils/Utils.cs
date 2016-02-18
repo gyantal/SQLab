@@ -100,8 +100,12 @@ namespace SQCommon
 
     public static partial class Utils
     {
+        public static readonly System.Globalization.CultureInfo InvCult = System.Globalization.CultureInfo.InvariantCulture;
+
         public static SQLogger Logger = null;
         public static IConfigurationRoot Configuration = null;
+
+        public static bool IsShowingDatePart { get; set; } = true;
 
         // see discussion here in CoreCLR (they are not ready) https://github.com/dotnet/corefx/issues/1017
         public static Platform RunningPlatform()
@@ -147,6 +151,38 @@ namespace SQCommon
         //}
         //}
 
+        public static string FormatInvCult(this string p_fmt, params object[] p_args)
+        {
+            if (p_fmt == null || p_args == null || p_args.Length == 0)
+                return p_fmt;
+            return String.Format(InvCult, p_fmt, p_args);
+        }
+
+        /// <summary> Formats the string using InvariantCulture and inserts a 
+        /// "time[#threadID]" prefix at the beginning. </summary>
+        public static string FormatMessageWithTimestamp(string p_fmt, params object[] p_args)
+        {
+            return String.Format("{0}#{1:d2} {2}", FormatNow(), Thread.CurrentThread.ManagedThreadId, Utils.FormatInvCult(p_fmt, p_args));
+        }
+        public static string FormatNow()
+        {
+            return FormatDateTime(DateTime.UtcNow);
+        }
+        public static string FormatDateTime(DateTime p_timeUtc)
+        {
+            return IsShowingDatePart ? String.Format("{1:x}{0:dd}{2}{0:HH':'mm':'ss.fff}", p_timeUtc, p_timeUtc.Month, p_timeUtc.DayOfWeek.ToString().Substring(0, 2))
+                : p_timeUtc.ToString("HH\\:mm\\:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        /// <summary> Tip: use src\Server\Azure\maintenance\viewst.cmd a Tcl/Tk GUI tool to read such gzip+base64 encoded stack traces,
+        /// or src/Tools/decodeB64*.cmd is a Powershell command-line tool for the same </summary>
+        public static string DbgAbbrev(string p_stackTrace/*, uint p_minLines = 8*/)
+        {
+            return p_stackTrace;
+            //string result = MarkMsgLogged(g_abbreviateStackTraces ? FirstFewLinesThenGz(p_stackTrace, p_minLines, 768) : p_stackTrace, "strace");
+            //return String.IsNullOrEmpty(result) ? "(empty)" : result;
+        }
+
         public static bool DownloadStringWithRetry(out string p_webpage, string p_url, int p_nRetry, TimeSpan p_sleepBetweenRetries, bool p_throwExceptionIfUnsuccesfull)
         {
             p_webpage = String.Empty;
@@ -155,6 +191,7 @@ namespace SQCommon
             {
                 try
                 {
+                    nDownload++;
                     p_webpage = new HttpClient().GetStringAsync(p_url).Result;
                     Utils.Logger.Debug(String.Format("DownloadStringWithRetry()__{0}, nDownload-{1}, Length of reply:{2}", p_url, nDownload, p_webpage.Length));
                     return true;
@@ -169,8 +206,7 @@ namespace SQCommon
                     if ((nDownload >= p_nRetry) && p_throwExceptionIfUnsuccesfull)
                         throw;  // if exception still persist after many tries, rethrow it to caller
                 }
-                nDownload++;
-            } while (nDownload <= p_nRetry);
+            } while (nDownload < p_nRetry);
 
             return false;
         }

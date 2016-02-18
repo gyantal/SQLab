@@ -1,7 +1,7 @@
 SQLab = Laboratory  (as the Alchemist)
 
 
-********************** SQLab framework on Github
+********************** SQLab framework on Github Folder structure
 
 SQLab:  (we may have only 1 website, and many Server programs, so Healthmonitor topic cannot aggregate)
 /3rdParty
@@ -22,7 +22,7 @@ SQLab:  (we may have only 1 website, and many Server programs, so Healthmonitor 
 		/UserHelperWebsite (CurrentLeverageCalculator + OvermindClient+VBrokerClient+all other Clients)
 	/Tools  (not really resident, always running server apps, only small exe tools needed for something)
 	 
- **************************
+ ************************** How to install DotNetCore in Brief
 
 -Do the installation exactly how it is set here on a brand new Linux 14.04: https://dotnet.github.io/getting-started/
 
@@ -34,3 +34,31 @@ dpkg -s dotnet-nightly		// The apt-get utilities are simply a front-end to the d
 
 - see the latest daily DotNetCore NuGet packages:
 https://dotnet.myget.org/gallery/dotnet-core
+
+
+*************************** Server topology
+When the Linux based VBroker is ready, we will have 2 Linux servers:
+
+1. Free 1GB Linux, Developer machine, so GUI is needed (Xubuntu again).
+-Overmind.exe is there
+-the real-time price service CAN be there (not necessarily) with a paper account of drCharmat/wife (gives real-time REAL prices. Demo account gives mockup price data, not real)
+That realtime price data should be separated anyway from the TradingServer VirtualBroker, and that could go to a free Linux Nano instance.
+the real-time price service should use a paper account of somebody (probably Wife), that gives real-time data.
+-HealthMonitor.exe should not be there (in the long term. Temporarily, it is ok.)
+-can be used for Dev, not production
+
+2. A 2GB Linux, VBrokerAgent Server, Runs 2 or 3 IB Gateways + VBrokers.
+>There can me many users: Charmat, Agy, Balazs, Laci, T, so many IBGateways are required
+>2 IBGateways require: 2*320GB=640GB just itself. I tried to run 2 IBGateways on the 1GB Linux
+and it virtually frozen. After 10 minutes inactivity (Out-of-memory exceptions I guess), one IBGateway crashed. Luckyliy.
+Ony after the first IBGateway crashed, was there enough memory than the system revived. (if it doesn't crash, I cannot even soft-reboot the VM)
+When the 2 IBGateway runs: at start the system consumes: 940MB of 991MB memory. (Overmind 100MB is not run in this case.)
+
+******************
+
+
+
+
+
+
+
