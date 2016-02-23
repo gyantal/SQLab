@@ -192,7 +192,7 @@ namespace Overmind
                     m_dailyMiddayTimer.Change(ts, TimeSpan.FromMilliseconds(-1.0));
                     Utils.Logger.Info("m_dailyMarketWatcherTimer is scheduled at " + (DateTime.UtcNow + ts).ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture));
                 }
-                
+
                 // TODO: if market holiday: it shouldn't process anything either
                 if (DateTime.UtcNow.DayOfWeek == DayOfWeek.Saturday || DateTime.UtcNow.DayOfWeek == DayOfWeek.Sunday)
                 {
@@ -200,33 +200,32 @@ namespace Overmind
                     return;
                 }
 
-                var biduDelayedPriceCSV = new HttpClient().GetStringAsync("http://download.finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv").Result;
+                string emailInnerlStr = String.Empty;
+                string phoneCallInnerStr = String.Empty;
 
-
-                Console.WriteLine("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV.Length);
-                Console.WriteLine("Downloaded string: " + biduDelayedPriceCSV);
-
-                Utils.Logger.Info("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV.Length);
-                Utils.Logger.Info("Downloaded string: " + biduDelayedPriceCSV);
-
-                //string biduDelayedPriceCSV = new WebClient().DownloadString("http://download.finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv");
-                string[] biduDelayedPriceSplit = biduDelayedPriceCSV.Split(new char[] { ',', ' ' });
-                double realTimePrice = Double.Parse(biduDelayedPriceSplit[1]);
-
-                Utils.Logger.Info("DailyMiddayTimer_Elapsed()-2");
-                double dailyChange = Double.Parse(biduDelayedPriceSplit[4]);
-                double yesterdayClose = realTimePrice - dailyChange;
-                double todayPercentChange = realTimePrice / yesterdayClose - 1;
-                Utils.Logger.Info("DailyMiddayTimer_Elapsed()-3. TodayPctChange: " + todayPercentChange);
-                if (Math.Abs(todayPercentChange) >= 0.04)
+                double biduTodayPctChange = GetTodayPctChange("BIDU");
+                if (Math.Abs(biduTodayPctChange) >= 0.04)
                 {
-                    new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: BIDU price warning: bigger than 5% move", Body = "BIDU price warning: bigger than 5% move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.Send();
+                    emailInnerlStr += "BIDU price warning: bigger than 4% move. In percentage: " + (biduTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                    phoneCallInnerStr += "the ticker B I D U, ";
+                }
+                double vxxTodayPctChange = GetTodayPctChange("VXX");
+                if (Math.Abs(vxxTodayPctChange) >= 0.06)
+                {
+                    emailInnerlStr += "VXX price warning: bigger than 6% move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
+                    phoneCallInnerStr += "the ticker V X X ";
+                }
 
+
+
+                if (!String.IsNullOrEmpty(emailInnerlStr))
+                {
+                    new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer Price Warning", Body = emailInnerlStr, IsBodyHtml = false }.Send();
                     var call = new PhoneCall
                     {
                         FromNumber = Caller.Gyantal,
                         ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
-                        Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in the ticker B I D U. ... I repeat the ticker: B I D U.",
+                        Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + phoneCallInnerStr +  " ... I repeat " + phoneCallInnerStr,
                         NRepeatAll = 2
                     };
                     Console.WriteLine(call.MakeTheCall());
@@ -244,9 +243,17 @@ namespace Overmind
             Utils.Logger.Info("DailyMiddayTimer_Elapsed() END");
         }
 
-
-
-
+        private static double GetTodayPctChange(string p_ticker)
+        {
+            var biduDelayedPriceCSV = new HttpClient().GetStringAsync("http://download.finance.yahoo.com/d/quotes.csv?s=" + p_ticker + "&f=sl1d1t1c1ohgv&e=.csv").Result;
+            Utils.Logger.Info("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV);
+            string[] biduDelayedPriceSplit = biduDelayedPriceCSV.Split(new char[] { ',', ' ' });
+            double realTimePrice = Double.Parse(biduDelayedPriceSplit[1]);
+            double dailyChange = Double.Parse(biduDelayedPriceSplit[4]);
+            double yesterdayClose = realTimePrice - dailyChange;
+            double todayPercentChange = realTimePrice / yesterdayClose - 1;
+            return todayPercentChange;
+        }
 
         internal void TestSendingEmailAndPhoneCall()
         {

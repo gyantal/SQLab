@@ -91,7 +91,10 @@ namespace HealthMonitor
             // be URL-encoded (space=%20). The parameters must be sorted by name.
             string canonical_querystring = "Action=" + p_actionWithParams + "&Version=2015-10-01";
             canonical_querystring += "&X-Amz-Algorithm=AWS4-HMAC-SHA256";
-            canonical_querystring += "&X-Amz-Credential=" + System.Text.Encodings.Web.UrlEncoder.Default.Encode(access_key + "/" + credential_scope);
+            string accKeyPlusScope = access_key + "/" + credential_scope;
+			var encoder = System.Text.Encodings.Web.UrlEncoder.Default;
+			string encAccKeyPlusScope = encoder.Encode(accKeyPlusScope);
+            canonical_querystring += "&X-Amz-Credential=" + encAccKeyPlusScope;
             canonical_querystring += "&X-Amz-Date=" + amz_date;
             canonical_querystring += "&X-Amz-Expires=604800";
             canonical_querystring += "&X-Amz-SignedHeaders=" + signed_headers;

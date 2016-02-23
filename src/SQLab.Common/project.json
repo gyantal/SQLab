@@ -7,21 +7,29 @@
   "licenseUrl": "",
 
   "dependencies": {
-    "System.Net.Http": "4.0.1-rc3-23811",
-    "System.Runtime.Serialization.Primitives": "4.1.0-rc2-23811",
-    "System.Runtime.Serialization.Json": "4.0.1-rc2-23811"
+    
   },
 
+  "//": [
+    "Comments:",
+    "NETStandard.Library: 1.0.0-rc3-23811, it is required in every project. Without it dotnet restore fails. 'but there is no run-time assembly compatible with win7-x64.' All the other libraries reference this as runtime.",
+    "in the framework section: 'dnxcore50' or dotnet50 or dotnet55 should be before the dnx451,net451, because 'dotnet run' will execute the first framework that it finds"
+  ],
+
   "frameworks": {
-    "net451": {
+    "dnx451": {
       "dependencies": {
+        "System.Net.Http": "4.0.0.0",
+        "System.Runtime.Serialization.Primitives": "4.0.0.0",
+        "System.Runtime.Serialization.Json": "4.0.0.0"
       },
       "frameworkAssemblies": {
         "System.Runtime.Serialization": "4.0.0.0",
-        "System.XML": "4.0.0.0"
+        "System.Xml": "4.0.0.0"
+
       }
     },
-    "dotnet55": {
+    "dotnet5.4": {
       "dependencies": {
         "NETStandard.Library": "1.0.0-rc3-23811",
         "System.Runtime": "4.1.0-rc3-23811",
@@ -31,7 +39,10 @@
         "System.Net.Security": "4.0.0-rc3-23811",
         "System.Diagnostics.Process": "4.1.0-rc3-23811",
         "System.Xml.XmlDocument": "4.0.1-rc3-23811",
-        "System.Xml.ReaderWriter": "4.0.11-rc3-23811"
+        "System.Xml.ReaderWriter": "4.0.11-rc3-23811",
+        "System.Net.Http": "4.0.1-rc3-23811",
+        "System.Runtime.Serialization.Primitives": "4.1.0-rc3-23811",
+        "System.Runtime.Serialization.Json": "4.0.1-rc3-23811"
       }
     }
   }

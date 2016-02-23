@@ -56,8 +56,29 @@ When the 2 IBGateway runs: at start the system consumes: 940MB of 991MB memory. 
 
 ******************
 
+- Verbose tracing of dotnet.   (a useful command!!!)
+"dotnet restore -v Debug"	// verbose
+"dotnet restore --runtime win7-x64"   //DNXCore,Version=v5.0 (win7-x64)
+"dotnet restore --runtime win7-x86"   //DNXCore,Version=v5.0 (win7-x86)
+"dotnet restore --runtime ubuntu.14.04-x64" 
 
 
+"dotnet -v run"		// verbose
+dotnet run -f net45   //it works
+dotnet run -f dnx451
+dotnet run -f dnxcore50	// 
+
+"dotnet compile"	// compile only the project (for the 2 runtimes)
+"dotnet build"		// compile all the projects in the solution (for the 2 runtimes)
+
+
+
+*****************************
+
+- "'dotnet5.4' is library TFM (Target Framework), use dnxcore50 for App projects with "emitEntryPoint": true. "
+- I should use 'net45' or 'net451' for non DotNetCore runtime, but VisualStudio will not run it.
+VS2015 gives message :please make sure the Debug Runtime Current Runtive framework = dnx451. that matches the runtime in project.json.
+So, I have to use dnx451 in Visual studio.
 
 
 

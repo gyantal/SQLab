@@ -1,0 +1,31 @@
+﻿{
+  "version": "1.0.0-*",
+  "description": "TestReactiveExtensions Console Application",
+  "authors": [ "gyantal" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+
+  "compilationOptions": {
+    "emitEntryPoint": true
+  },
+
+  "dependencies": {
+    "System.Reactive.Linq": "3.0.0-*"
+  },
+
+  "commands": {
+    "TestReactiveExtensions": "TestReactiveExtensions"
+  },
+
+  "frameworks": {
+    "dnxcore50": {
+      "dependencies": {
+        "NETStandard.Library": "1.0.0-rc3-23811",
+        "Microsoft.NETCore.Platforms": "1.0.1-rc3-23811",
+        "System.Console": "4.0.0-rc3-23811"
+      }
+    },
+    "dnx451": { }
+  }
+}
