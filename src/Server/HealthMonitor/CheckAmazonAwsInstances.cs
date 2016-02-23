@@ -14,7 +14,7 @@ namespace HealthMonitor
     {
         bool m_isCheckAmazonAwsInstancesEmailWasSent = false;  // to avoid sending the same warning email many times; send only once
 
-        //# Key derivation functions. See:
+        //# Key derivation functions. See: 
         //# http://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html#signature-v4-examples-python
         internal byte[] sign(byte[] key, string msg)
         {
