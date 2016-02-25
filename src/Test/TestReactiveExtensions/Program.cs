@@ -2,6 +2,8 @@
 using System.Reactive.Disposables;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Concurrency;
+using System.Threading;
 
 namespace TestReactiveExtensions
 {
@@ -12,6 +14,26 @@ namespace TestReactiveExtensions
     {
         public static void Main(string[] args)
         {
+            //IScheduler s = Scheduler.NewThread;  //obsolate
+
+            IScheduler s = NewThreadScheduler.Default;
+
+
+
+            Action<Action> work = (Action self) =>
+            {
+                Console.WriteLine($"Running on {Thread.CurrentThread.ManagedThreadId}" ); self();
+            };
+            var token = s.Schedule(work);
+            Console.ReadLine();
+            Console.WriteLine($"Cancelling on {Thread.CurrentThread.ManagedThreadId}");
+            token.Dispose();
+            Console.WriteLine($"Cancelled on {Thread.CurrentThread.ManagedThreadId}");
+
+
+
+            int x = 5, y = 6;
+            string b = $"Adding {x} and {y} equals { x + y }";  // C# 6.0 feauture from 2015-07
             //IObservable<int> source = Observable.Empty<int>();
             //IObservable<int> source = Observable.Throw<int>(new Exception("Oops"));
             //IObservable<int> source = Observable.Return(42);
@@ -20,7 +42,7 @@ namespace TestReactiveExtensions
             // GenerateWithTime is now just an overload of Generate.
             // Observable.GenerateWithTime have disappeared in RX 2.0, but the PDF hand-on labs is not updated
             //IObservable<int> source = Observable.FromEvent()
-            
+
             //.Throttle(TimeSpan.FromSeconds(1))  // if new messages comes within 1 sec, it resets the timer!!!
             IObservable<int> source = Observable.Generate(0, 
                 i => i < 5, 
@@ -32,7 +54,7 @@ namespace TestReactiveExtensions
                 .Select(r => r.Value);    // it is the RX printf() debugging
 
             using (source2.Subscribe(
-                x => Console.WriteLine("OnNext: {0}", x),
+                a => Console.WriteLine("OnNext: {0}", a),
                 ex => Console.WriteLine("OnError: {0}", ex.Message),
                 () => Console.WriteLine("OnCompleted")))
             {
