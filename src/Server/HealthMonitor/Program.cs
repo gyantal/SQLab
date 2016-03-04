@@ -22,22 +22,14 @@ namespace HealthMonitor
             //.Select(info => Assembly.Load(new AssemblyName(info.Name)));
 
             Console.WriteLine("Hello HealthMonitor, v1.0.8");
-            var currDir = Directory.GetCurrentDirectory();  // where the project.json is G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor
-            var currProject = Path.Combine(currDir, "project.json"); // we can open it and read its contents later
-            if (!File.Exists(currProject))
-            {
-                Console.WriteLine("!Error. We assume Current Directory is where project.json is. Cannot find: " + currProject);
-                return;
-            }
-            string logFilePath = Path.Combine(currDir, typeof(Program).Namespace + ".sq.log");
-            Console.WriteLine("Log file: " + logFilePath);
-            Utils.Logger = new SQLogger(logFilePath);
+            if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
+                return; // if we cannot create logger, terminate app
             Utils.Logger.Info("****** Main() START");
 
-            Utils.Configuration = Utils.BuildConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.HealthMonitor.NoGitHub.json", "/home/ubuntu/SQ/Server/HealthMonitor/SQLab.HealthMonitor.NoGitHub.json");
+            Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.HealthMonitor.NoGitHub.json", "/home/ubuntu/SQ/Server/HealthMonitor/SQLab.HealthMonitor.NoGitHub.json");
             StrongAssert.g_strongAssertEvent += StrongAssertEmailSendingEventHandler;
 
-            Controller.g_controller.Start();
+            HealthMonitor.g_healthMonitor.Init();
 
             string userInput = String.Empty;
             do
@@ -49,10 +41,9 @@ namespace HealthMonitor
                     case "1":
                         Console.WriteLine("Hello. I am not crashed yet! :)");
                         Utils.Logger.Info("Hello. I am not crashed yet! :)");
-                        
                         break;
                     case "2":
-                        Controller.g_controller.CheckAmazonAwsInstances_Elapsed(null);
+                        HealthMonitor.g_healthMonitor.CheckAmazonAwsInstances_Elapsed(null);
                         break;
                     case "3":
                         //Controller.g_controller.TestSendingEmailAndPhoneCall();
@@ -62,7 +53,7 @@ namespace HealthMonitor
             } while (userInput != "4");
 
             Utils.Logger.Info("****** Main() END");
-            Controller.g_controller.Exit();
+            HealthMonitor.g_healthMonitor.Exit();
             Utils.Logger.Exit();
         }
 
@@ -73,7 +64,7 @@ namespace HealthMonitor
             Utils.Logger.Info("StrongAssertEmailSendingEventHandler()");
             if ((DateTime.UtcNow - gLastStrongAssertEmailTime).TotalMinutes > 30)   // don't send it in every minute, just after 30 minutes
             {
-                new SQEmail
+                new Email
                 {
                     ToAddresses = Utils.Configuration["EmailGyantal"],
                     Subject = "SQ HealthMonitor: StrongAssert failed.",

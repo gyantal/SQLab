@@ -16,7 +16,7 @@
   },
 
   "commands": {
-    "Overmind": "HealthMonitor"
+    "HealthMonitor": "HealthMonitor"
   },
 
   "content": [ "NLog.config" ],

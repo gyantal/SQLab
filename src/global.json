@@ -1,10 +1,10 @@
 {
   "projects": [
-    "Server/Overmind",
-    "SQLab.Common",
-    "Test/DotNetCoreTest",
-    "Test/DotNetCoreTestNetSecurity",
-    "."
+    ".",
+    "ThirdParty/Reactive",
+    "ThirdParty",
+    "Server",
+    "Test"
   ],
   "sdk": {
     "version": "1.0.0-rc2-16357"

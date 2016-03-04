@@ -29,7 +29,7 @@ namespace SQCommon
     //For anyone interested in MailMessage / SmtpClient equivalent support, I've just finished porting MimeKit and MailKit over to CoreCLR.
     // nugets are available now.
     //Thanks @jstedfast - Really appreciate your contribution here! We will continue to keep System.Net.Mail for .NET Core in our plans, but it's really nice to see .NET Core developers unblocked thanks to you :)
-    public class SQEmail
+    public class Email
     {
         public string ToAddresses;
         public string Subject;

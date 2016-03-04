@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HealthMonitor
 {
-    public partial class Controller
+    public partial class HealthMonitor
     {
         // You can't create a 'const' array because arrays are objects and can only be created at runtime and const entities are resolved at compile time.
         public readonly string[] cWebsitesToCheck = {
@@ -43,7 +43,7 @@ namespace HealthMonitor
                     if (!m_isCheckWebsitesServiceOutageEmailWasSent)
                     {
                         Utils.Logger.Info("CheckWebsitesAndKeepAliveTimer(). Sending Warning email.");
-                        new SQEmail
+                        new Email
                         {
                             ToAddresses = Utils.Configuration["EmailGyantal"],
                             Subject = "SQ HealthMonitor: WARNING! CheckWebsites was NOT successfull.",
@@ -58,7 +58,7 @@ namespace HealthMonitor
                     Utils.Logger.Info("CheckWebsitesAndKeepAliveTimer(): isOK.");
                     if (m_isCheckWebsitesServiceOutageEmailWasSent)
                     {  // it was bad, but now it is correct somehow
-                        new SQEmail
+                        new Email
                         {
                             ToAddresses = Utils.Configuration["EmailGyantal"],
                             Subject = "SQ HealthMonitor: OK! CheckWebsites was successfull again.",

@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Runtime.Serialization.Json;
+using System.Net.Sockets;
 
 namespace SQCommon
 {
@@ -102,7 +103,7 @@ namespace SQCommon
     {
         public static readonly System.Globalization.CultureInfo InvCult = System.Globalization.CultureInfo.InvariantCulture;
 
-        public static SQLogger Logger = null;
+        public static ILogger Logger = null;
         public static IConfigurationRoot Configuration = null;
 
         public static bool IsShowingDatePart { get; set; } = true;
@@ -150,6 +151,40 @@ namespace SQCommon
         //        return Platform.Windows;
         //}
         //}
+
+        public static void TcpClientDispose(TcpClient p_tcpClient)
+        {
+            if (p_tcpClient == null)
+                return;
+#if DNX451 || NET451
+            p_tcpClient.Close();
+#else
+            p_tcpClient.Dispose();
+#endif
+        }
+
+        public static bool InitDefaultLogger(string p_filenameWithoutExt)
+        {
+            try
+            {
+                var currDir = Directory.GetCurrentDirectory();  // where the project.json is G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor
+                var currProject = Path.Combine(currDir, "project.json"); // we can open it and read its contents later
+                if (!File.Exists(currProject))
+                {
+                    Console.WriteLine($"!Error. We assume Current Directory is where project.json is. Cannot find: {currProject}");
+                    return false;
+                }
+                string logFilePath = Path.Combine(currDir, p_filenameWithoutExt + ".sq.log");
+                Console.WriteLine("Log file: " + logFilePath);
+                Logger = new SQLogger(logFilePath);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"!Error. Exception: {e.Message}");
+                return false;
+            }
+        }
 
         public static string FormatInvCult(this string p_fmt, params object[] p_args)
         {
@@ -237,7 +272,7 @@ namespace SQCommon
             }
         }
 
-        public static IConfigurationRoot BuildConfigurationAndInitUtils(string p_configJsonPathWin, string p_configJsonPathLinux)
+        public static IConfigurationRoot InitConfigurationAndInitUtils(string p_configJsonPathWin, string p_configJsonPathLinux)
         {
             // "Microsoft.Extensions.Configuration": "1.0.0-rc2-16054", is based on ASP.NET. It is updated less frequently, it consumes more memory. 
             // there was a problem that "Microsoft.Extensions.Configuration" uses Newtonsoft.Json 8.0.2, that doesn't support "dotnet55" or "dotnet54", it only supports DNXCORE50
@@ -266,15 +301,15 @@ namespace SQCommon
                 configuration[item.Key] = Encoding.UTF8.GetString(Convert.FromBase64String(item.Value));
             }
 
-            Utils.Logger.Info(@"Test from config.json after decoding, configuration[""EmailGyantal""]: " + configuration["EmailGyantal"]);
+            //Utils.Logger.Info(@"Test from config.json after decoding, configuration[""EmailGyantal""]: " + configuration["EmailGyantal"]);
             if (String.IsNullOrEmpty(configuration["EmailGyantal"]))
             {
                 Utils.Logger.Info("ERROR!!!: Test item from *.json config was not found.");
                 Console.WriteLine("ERROR!!!: Test item from *.json config was not found.");
             }
 
-            SQEmail.SenderName = configuration["EmailHQServer"];
-            SQEmail.SenderPwd = configuration["EmailHQServerPwd"];
+            Email.SenderName = configuration["EmailHQServer"];
+            Email.SenderPwd = configuration["EmailHQServerPwd"];
 
             PhoneCall.PhoneNumbers[Caller.Gyantal] = configuration["PhoneNumberGyantal"];
             PhoneCall.PhoneNumbers[Caller.Robin] = configuration["PhoneNumberRobin"];

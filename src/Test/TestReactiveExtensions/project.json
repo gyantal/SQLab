@@ -11,7 +11,7 @@
   },
 
   "dependencies": {
-    "System.Reactive.PlatformServices": "3.0.0-*"
+    "System.Reactive.PlatformServices": { "version": "3.0.0-*", "target": "project" }
   },
 
   "commands": {

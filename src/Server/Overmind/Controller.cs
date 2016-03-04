@@ -158,7 +158,7 @@ namespace Overmind
 
                 if (todayMonthAndDayStr == "10-05")        // Orsi's birthday
                 {
-                    new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Orsi's birthday", Body = "Orsi's birthday is on 1976-10-09.", IsBodyHtml = false }.Send();
+                    new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Orsi's birthday", Body = "Orsi's birthday is on 1976-10-09.", IsBodyHtml = false }.Send();
                 }
 
                 Utils.Logger.Info("DailyMorningTimer_Elapsed(): Checking first day of the month");
@@ -168,13 +168,13 @@ namespace Overmind
                     // So I will report to Barbara only on 1st day of every month, and maybe they got salaries later. 
                     // And this has an advantage that as I don't send the holidays report earlier, if they forget to tell me their 'last minute' day-offs, it is not reported to Barbara too early.
                     // So less headache overall.
-                    new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: send holidays, bank report to accountant", Body = "Send holidays, bank report to accountant. In 3 days, it is the 1st day of the month. ", IsBodyHtml = false }.Send();
+                    new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: send holidays, bank report to accountant", Body = "Send holidays, bank report to accountant. In 3 days, it is the 1st day of the month. ", IsBodyHtml = false }.Send();
                 }
             }
             catch (Exception e)
             {
                 Utils.Logger.Error(e.Message);
-                new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
+                new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
             }
 
             Utils.Logger.Info("DailyMorningTimer_Elapsed() END");
@@ -220,7 +220,7 @@ namespace Overmind
 
                 if (!String.IsNullOrEmpty(emailInnerlStr))
                 {
-                    new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer Price Warning", Body = emailInnerlStr, IsBodyHtml = false }.Send();
+                    new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer Price Warning", Body = emailInnerlStr, IsBodyHtml = false }.Send();
                     var call = new PhoneCall
                     {
                         FromNumber = Caller.Gyantal,
@@ -238,7 +238,7 @@ namespace Overmind
                 Utils.Logger.Info("DailyMiddayTimer_Elapsed() in Exception");
                 Console.WriteLine("DailyMiddayTimer_Elapsed() in Exception");
                 Utils.Logger.Error(e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
-                new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
+                new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
             }
             Utils.Logger.Info("DailyMiddayTimer_Elapsed() END");
         }
@@ -275,7 +275,7 @@ namespace Overmind
             //if (Math.Abs(todayPercentChange) >= 0.04)
             if (Math.Abs(todayPercentChange) >= 0.00)
             {
-                new SQEmail { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: BIDU price % move", Body = "BIDU price % move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.Send();
+                new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: BIDU price % move", Body = "BIDU price % move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.Send();
 
                 Console.WriteLine("Email was sent.");
                 Utils.Logger.Info("Email was sent.");

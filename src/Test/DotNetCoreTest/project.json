@@ -10,9 +10,14 @@
     "emitEntryPoint": true
   },
 
+  "//": [
+    "Comments:",
+    "Later, put back the * dependency as latest. rc3-23823 works, but from rc3-23824: 'package System.Net.Http does'nt support dnxcore50'. Maybe a bug now. Wait a month and fix it."
+  ],
+
   "dependencies": {
-	"NETStandard.Library": "1.0.0-rc3-*",
-    "System.Net.Http": "4.0.1-rc3-*"
+    "NETStandard.Library": "1.0.0-rc3-23823",
+    "System.Net.Http": "4.0.1-rc3-23823"
   },
 
   "commands": {

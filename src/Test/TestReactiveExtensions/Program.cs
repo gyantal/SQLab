@@ -22,13 +22,13 @@ namespace TestReactiveExtensions
 
             Action<Action> work = (Action self) =>
             {
-                Console.WriteLine($"Running on {Thread.CurrentThread.ManagedThreadId}" ); self();
+                Console.WriteLine($"Press Enter to Cancel this. Running on Thread {Thread.CurrentThread.ManagedThreadId}" ); self();
             };
             var token = s.Schedule(work);
             Console.ReadLine();
-            Console.WriteLine($"Cancelling on {Thread.CurrentThread.ManagedThreadId}");
+            Console.WriteLine($"Cancelling on Thread {Thread.CurrentThread.ManagedThreadId}");
             token.Dispose();
-            Console.WriteLine($"Cancelled on {Thread.CurrentThread.ManagedThreadId}");
+            Console.WriteLine($"Cancelled on Thread {Thread.CurrentThread.ManagedThreadId}");
 
 
 

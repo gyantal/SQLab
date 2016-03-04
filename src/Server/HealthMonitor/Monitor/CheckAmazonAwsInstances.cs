@@ -10,7 +10,7 @@ using System.Xml;
 
 namespace HealthMonitor
 {
-    public partial class Controller
+    public partial class HealthMonitor
     {
         bool m_isCheckAmazonAwsInstancesEmailWasSent = false;  // to avoid sending the same warning email many times; send only once
 
@@ -222,7 +222,7 @@ namespace HealthMonitor
                     if (!m_isCheckAmazonAwsInstancesEmailWasSent)
                     {
                         Utils.Logger.Info("CheckAmazonAwsInstances(). Sending Warning email.");
-                        new SQEmail
+                        new Email
                         {
                             ToAddresses = Utils.Configuration["EmailGyantal"],
                             Subject = "SQ HealthMonitor: WARNING! CheckAmazonAwsInstances was NOT successfull. ",
@@ -237,7 +237,7 @@ namespace HealthMonitor
                     Utils.Logger.Info("CheckAmazonAwsInstances(): isOK.");
                     if (m_isCheckAmazonAwsInstancesEmailWasSent)
                     {  // it was bad, but now it is correct somehow
-                        new SQEmail
+                        new Email
                         {
                             ToAddresses = Utils.Configuration["EmailGyantal"],
                             Subject = "SQ HealthMonitor: OK! CheckAmazonAwsInstances was successfull again.",

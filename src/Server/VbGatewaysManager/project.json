@@ -1,0 +1,49 @@
+﻿{
+  "version": "1.0.0-*",
+  "description": "VbGatewaysManager Console Application",
+  "authors": [ "gyantal" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+
+  "compilationOptions": {
+    "emitEntryPoint": true
+  },
+
+  "dependencies": {
+    "SQLab.Common": { "version": "1.0.0-*", "target": "project" },
+    "SQLab.RxCommon": { "version": "1.0.0-*", "target": "project" },
+    "IbApiSocketClient": { "version": "1.0.0-*", "target": "project" }
+  },
+
+  "commands": {
+    "VbGatewaysManager": "VbGatewaysManager"
+  },
+
+  "frameworks": {
+    "dnxcore50": {
+      "dependencies": {
+        "NETStandard.Library": "1.0.0-rc3-23811",
+        "System.Runtime": "4.1.0-rc3-23811",
+        "System.Runtime.Loader": "4.0.0-rc3-23811",
+        "System.Runtime.InteropServices": "4.1.0-rc3-23811",
+        "System.Reflection": "4.1.0-rc3-23811",
+        "System.Net.Security": "4.0.0-rc3-23811",
+        "System.Diagnostics.Process": "4.1.0-rc3-23811",
+        "System.Xml.ReaderWriter": "4.0.11-rc3-23811",
+        "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-23302",
+        "System.Text.Encodings.Web": "4.0.0-rc3-23811",
+        "System.Net.Http": "4.0.1-rc3-23811"
+      }
+    },
+    "dnx451": {
+      "dependencies": {
+        "System.Net.Http": "4.0.0.0",
+        "System.Text.Encodings.Web": "4.0.0-rc3-23811",
+        "System.Runtime": "4.0.0.0"
+      },
+      "frameworkAssemblies": {
+      }
+    }
+  }
+}

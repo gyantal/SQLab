@@ -7,7 +7,10 @@ SQLab:  (we may have only 1 website, and many Server programs, so Healthmonitor 
 /3rdParty
 /docs
 /src is this
+	/ThirdParty
+		/IB TWS 
 	/Common
+	/RxCommon
 	/UICommon
 	/Matlab		(things that are not C#)
 	/Java
@@ -20,6 +23,7 @@ SQLab:  (we may have only 1 website, and many Server programs, so Healthmonitor 
 	/Client  (all is Website based)
 		/HealthMonitorClientFrontEndWebsite (because this should be in another serverFarm than the othe)
 		/UserHelperWebsite (CurrentLeverageCalculator + OvermindClient+VBrokerClient+all other Clients)
+	/Test	Tools for testing small things (HttpConnection, Rx, EmailSending), like HelloWorld
 	/Tools  (not really resident, always running server apps, only small exe tools needed for something)
 	 
  ************************** How to install DotNetCore in Brief
@@ -57,6 +61,7 @@ When the 2 IBGateway runs: at start the system consumes: 940MB of 991MB memory. 
 ******************
 
 - Verbose tracing of dotnet.   (a useful command!!!)
+"dotnet --version"	// shows the commit number now
 "dotnet restore -v Debug"	// verbose
 "dotnet restore --runtime win7-x64"   //DNXCore,Version=v5.0 (win7-x64)
 "dotnet restore --runtime win7-x86"   //DNXCore,Version=v5.0 (win7-x86)
@@ -80,6 +85,8 @@ dotnet run -f dnxcore50	//
 VS2015 gives message :please make sure the Debug Runtime Current Runtive framework = dnx451. that matches the runtime in project.json.
 So, I have to use dnx451 in Visual studio.
 
-
+- proper schemas for project.json and global.json
+http://json.schemastore.org/global
+http://json.schemastore.org/project
 
 

@@ -27,20 +27,11 @@ namespace Overmind
             //.Select(info => Assembly.Load(new AssemblyName(info.Name)));
 
             Console.WriteLine("Hello Overmind, v1.0.7");
-            var currDir = Directory.GetCurrentDirectory();  // where the project.json is G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor
-            var currProject = Path.Combine(currDir, "project.json"); // we can open it and read its contents later
-            if (!File.Exists(currProject))
-            {
-                Console.WriteLine("!Error. We assume Current Directory is where project.json is. Cannot find: " + currProject);
-                return;
-            }
-            string logFilePath = Path.Combine(currDir, typeof(Program).Namespace + ".sq.log");
-            Console.WriteLine("Log file: " + logFilePath);
-            Utils.Logger = new SQLogger(logFilePath);
+            if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
+                return; // if we cannot create logger, terminate app
             Utils.Logger.Info("****** Main() START");
-
-            Utils.Configuration = Utils.BuildConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Overmind.NoGitHub.json", "/home/ubuntu/SQ/Server/Overmind/SQLab.Overmind.NoGitHub.json");
-
+            Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Overmind.NoGitHub.json", "/home/ubuntu/SQ/Server/Overmind/SQLab.Overmind.NoGitHub.json");
+            //StrongAssert.g_strongAssertEvent += StrongAssertEmailSendingEventHandler;     // HealthMonitor StrongAssert should send an email, but all other programs should inform HealthMonitor instead. HealthMonitor is the gatekeeper that assures that users don't receive too many emails.
 
             //    // on Windows the NLog.Config near the project.json is found by Nlog, but on Linux, there is problem
             //    //var nLogConfigPath = NLog.LogFactory.CurrentAppDomain.BaseDirectory + "NLog.config";
