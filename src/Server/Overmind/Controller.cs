@@ -1,4 +1,4 @@
-﻿using SQCommon;
+﻿using SqCommon;
 using System;
 using System.Globalization;
 using System.Net.Http;
@@ -64,56 +64,12 @@ namespace Overmind
         }
 
 
-
-        // http://mono.1490590.n4.nabble.com/Cross-platform-time-zones-td1507630.html
-        //In windows the timezones have a descriptive name such as "Eastern 
-        //Standard Time" but in linux the same timezone has the name 
-        //"US/Eastern". 
-        //Is there a cross platform way of running
-        //TimeZoneInfo.FindSystemTimeZoneById that can be used both in linux and
-        //windows, or would i have to add additional code to check what platform
-        //i am running before getting the time zone.
-        //WINDOWS TIMEZONE ID DESCRIPTION                UNIX TIMEZONE ID
-        //Eastern Standard Time => GMT - 5 w/DST             => US/Eastern
-        //Central Standard Time => GMT - 6 w/DST             => US/Central
-        //US Central Standard Time  => GMT-6 w/o DST(Indiana) => US / Indiana - Stark
-        //Mountain Standard Time    => GMT-7 w/DST             => US/Mountain
-        //US Mountain Standard Time => GMT-7 w/o DST(Arizona) => US / Arizona
-        //Pacific Standard Time     => GMT-8 w/DST             => US/Pacific
-        //Alaskan Standard Time => GMT - 9 w/DST             => US/Alaska
-        //Hawaiian Standard Time => GMT - 10 w/DST            => US/Hawaii
-
-
         static TimeSpan GetNextDailyTimerIntervalMsec(DateTime p_targetDateTimeLT)  // LT: LondonTime
         {
-            //http://www.mcnearney.net/blog/windows-timezoneinfo-olson-mapping/
-            //http://unicode.org/repos/cldr/trunk/common/supplemental/windowsZones.xml
-            //string londonZoneId = "GMT Standard Time";      // Linux: "Europe/London"
-
-            string londonZoneId = String.Empty;
-            if (Utils.RunningPlatform() == Platform.Windows)
-                londonZoneId = "GMT Standard Time";
-            else
-                londonZoneId = "Europe/London";
-            //if (Common.Utils.RunningPlatform() == Common.Platform.Windows)
-            //    utcZoneId = "UTC";
-            //else
-            //    utcZoneId = "Etc/GMT";
-
             try
             {
                 TimeZoneInfo utcZone = TimeZoneInfo.Utc;
-
-                TimeZoneInfo londonZone = null;
-                try
-                {
-                    londonZone = TimeZoneInfo.FindSystemTimeZoneById(londonZoneId);  // that is London time. != UTC
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("ERROR: Unable to find the {0} zone in the registry. {1}", londonZoneId, e.Message);
-                }
-
+                TimeZoneInfo londonZone = Utils.FindSystemTimeZoneById(TimeZoneId.London);
                 DateTime nowLT = TimeZoneInfo.ConvertTime(DateTime.UtcNow, utcZone, londonZone);  // LT: London time
                 //DateTime nowLT = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, londonZone);  // LT: London time
                 DateTime proposedTimerStartLT = new DateTime(nowLT.Year, nowLT.Month, nowLT.Day, p_targetDateTimeLT.Hour, p_targetDateTimeLT.Minute, p_targetDateTimeLT.Second);
@@ -126,10 +82,9 @@ namespace Overmind
                 }
                 return TimeSpan.FromMilliseconds(scheduleStartTimerInMsec);
             }
-            
-            catch (InvalidTimeZoneException)
+            catch (Exception e)
             {
-                Console.WriteLine("Registry data on the {0} zone has been corrupted.", londonZoneId);
+                Utils.Logger.Error(e, "Error in GetNextDailyTimerIntervalMsec().");
             }
 
             return TimeSpan.FromHours(24);  // let it be the next 24 hour
@@ -153,8 +108,8 @@ namespace Overmind
                     
 
                 DateTime utcToday = DateTime.UtcNow.Date;
-                string todayDateStr = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd", CultureInfo.InvariantCulture);
-                string todayMonthAndDayStr = DateTime.UtcNow.ToString("MM'-'dd", CultureInfo.InvariantCulture);
+                string todayDateStr = DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                string todayMonthAndDayStr = DateTime.UtcNow.ToString("MM-dd", CultureInfo.InvariantCulture);
 
                 if (todayMonthAndDayStr == "10-05")        // Orsi's birthday
                 {

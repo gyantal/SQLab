@@ -6,10 +6,10 @@
 import os
 from subprocess import call
 print('Python3: Change Directory')
-os.chdir("/home/ubuntu/SQ/Server/VbGatewaysManager/src")
+os.chdir("/home/ubuntu/SQ/Server/VirtualBroker/src")
 print('dotnet restore')
 call(["dotnet", "restore"])
-os.chdir("/home/ubuntu/SQ/Server/VbGatewaysManager/src/Server/VbGatewaysManager")
+os.chdir("/home/ubuntu/SQ/Server/VirtualBroker/src/Server/VirtualBroker")
 print('dotnet run')
 call(["dotnet", "run"])
 k = input("Press ENTER...")       # raw_input is built but waiting for Enter key 

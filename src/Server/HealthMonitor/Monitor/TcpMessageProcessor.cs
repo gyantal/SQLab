@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
-using SQCommon;
+using SqCommon;
 
 namespace HealthMonitor
 {
@@ -21,11 +21,11 @@ namespace HealthMonitor
             {
                 case HealthMonitorMessageID.TestHardCash:
                     throw new Exception("Testing Hard Crash by Throwing this Exception");
-                case HealthMonitorMessageID.ReportErrorFromVbGatewaysManager:
-                    ErrorFromVbGatewaysManager(p_tcpClient, p_message);
+                case HealthMonitorMessageID.ReportErrorFromVirtualBroker:
+                    ErrorFromVirtualBroker(p_tcpClient, p_message);
                     break;
-                case HealthMonitorMessageID.ReportOkFromVbGatewaysManager:
-                    OkFromVbGatewaysManager(p_tcpClient, p_message);
+                case HealthMonitorMessageID.ReportOkFromVirtualBroker:
+                    OkFromVirtualBroker(p_tcpClient, p_message);
                     break;
 
             }
@@ -35,7 +35,7 @@ namespace HealthMonitor
 
 
         // this is called every time the VbGatewaysManager send OK or Error emails to the user
-        private void OkFromVbGatewaysManager(TcpClient p_tcpClient, HealthMonitorMessage p_message)
+        private void OkFromVirtualBroker(TcpClient p_tcpClient, HealthMonitorMessage p_message)
         {
             if (!m_persistedState.IsProcessingVbGatewaysManagerMessagesEnabled)
                 return;
@@ -47,7 +47,7 @@ namespace HealthMonitor
             // "Error. A transaction was not executed. p_brokerAPI.GetExecutionData = null for Sell VXX Volume: 266. Check that it was not executed and if not, perform it manually then enter into the DB.
             bool isError = (p_message.ParamStr.IndexOf("Error", StringComparison.CurrentCultureIgnoreCase) != -1);  // in DotNetCore, there is no StringComparison.InvariantCultureIgnoreCase
             if (isError)
-                ErrorFromVbGatewaysManager(p_tcpClient, p_message);   // this will add it to m_VbGatewaysManagerReportWasError list
+                ErrorFromVirtualBroker(p_tcpClient, p_message);   // this will add it to m_VbGatewaysManagerReportWasError list
             else {
                 lock (m_VbGatewaysManagerReportWasOk)
                     m_VbGatewaysManagerReportWasOk.Add(new Tuple<DateTime, bool, HealthMonitorMessage>(DateTime.UtcNow, true, p_message));
@@ -56,7 +56,7 @@ namespace HealthMonitor
             }
         }
 
-        private void ErrorFromVbGatewaysManager(TcpClient p_tcpClient, HealthMonitorMessage p_message)
+        private void ErrorFromVirtualBroker(TcpClient p_tcpClient, HealthMonitorMessage p_message)
         {
             if (!m_persistedState.IsProcessingVbGatewaysManagerMessagesEnabled)
                 return;

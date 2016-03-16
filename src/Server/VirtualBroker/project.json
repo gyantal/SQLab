@@ -1,6 +1,6 @@
 ﻿{
   "version": "1.0.0-*",
-  "description": "VbGatewaysManager Console Application",
+  "description": "VirtualBroker Console Application",
   "authors": [ "gyantal" ],
   "tags": [ "" ],
   "projectUrl": "",
@@ -10,14 +10,15 @@
     "emitEntryPoint": true
   },
 
-  "dependencies": {
-    "SQLab.Common": { "version": "1.0.0-*", "target": "project" },
-    "SQLab.RxCommon": { "version": "1.0.0-*", "target": "project" },
-    "IbApiSocketClient": { "version": "1.0.0-*", "target": "project" }
+  "commands": {
+    "VirtualBroker": "VirtualBroker"
   },
 
-  "commands": {
-    "VbGatewaysManager": "VbGatewaysManager"
+   "dependencies": {
+    "SQLab.Common": { "version": "1.0.0-*", "target": "project" },
+    "SQLab.RxCommon": { "version": "1.0.0-*", "target": "project" },
+    "SQLab.DbCommon": { "version": "1.0.0-*", "target": "project" },
+    "IbApiSocketClient": { "version": "1.0.0-*", "target": "project" }
   },
 
   "frameworks": {
@@ -33,7 +34,8 @@
         "System.Xml.ReaderWriter": "4.0.11-rc3-23811",
         "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-23302",
         "System.Text.Encodings.Web": "4.0.0-rc3-23811",
-        "System.Net.Http": "4.0.1-rc3-23811"
+        "System.Net.Http": "4.0.1-rc3-23811",
+        "System.Data.SqlClient": "4.0.0-rc3-23811"
       }
     },
     "dnx451": {
@@ -43,6 +45,7 @@
         "System.Runtime": "4.0.0.0"
       },
       "frameworkAssemblies": {
+        "System.Data": "4.0.0.0"
       }
     }
   }

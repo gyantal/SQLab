@@ -219,7 +219,7 @@ namespace IBApi
 
         public override string ToString()
         {
-            return SecType + " " + Symbol + " " + Currency + " " + Exchange;
+            return Symbol + ": " + SecType + " " + Currency + " " + Exchange;
         }
     }
 }

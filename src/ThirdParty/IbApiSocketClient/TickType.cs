@@ -87,6 +87,7 @@ namespace IBApi
         public const int DELAYED_VOLUME = 74;
         public const int DELAYED_CLOSE = 75;
         public const int DELAYED_OPEN = 76;
+        public const int MID = 201;     // custom defined for VirtualBroker; not an Official IB value
 
         public static String getField( int tickType) {
             switch( tickType) {

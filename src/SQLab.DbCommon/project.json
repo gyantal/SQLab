@@ -1,0 +1,44 @@
+﻿{
+  "version": "1.0.0-*",
+  "description": "SQLab.DbCommon Class Library",
+  "authors": [ "gyantal" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+
+  "dependencies": {
+    "SQLab.Common": "1.0.0-*"
+  },
+
+  "frameworks": {
+    "dnx451": {
+      "dependencies": {
+        "System.Net.Http": "4.0.0.0",
+        "System.Runtime.Serialization.Primitives": "4.0.0.0",
+        "System.Runtime.Serialization.Json": "4.0.0.0"
+      },
+      "frameworkAssemblies": {
+        "System.Runtime.Serialization": "4.0.0.0",
+        "System.Xml": "4.0.0.0",
+        "System.Data": "4.0.0.0"
+      }
+    },
+    "dotnet5.4": {
+      "dependencies": {
+        "NETStandard.Library": "1.0.0-rc3-23811",
+        "System.Runtime": "4.1.0-rc3-23811",
+        "System.Runtime.Extensions": "4.1.0-rc3-23811",
+        "System.Runtime.InteropServices": "4.1.0-rc3-23811",
+        "System.Threading.Thread": "4.0.0-rc3-23811",
+        "System.Net.Security": "4.0.0-rc3-23811",
+        "System.Diagnostics.Process": "4.1.0-rc3-23811",
+        "System.Xml.XmlDocument": "4.0.1-rc3-23811",
+        "System.Xml.ReaderWriter": "4.0.11-rc3-23811",
+        "System.Net.Http": "4.0.1-rc3-23811",
+        "System.Runtime.Serialization.Primitives": "4.1.0-rc3-23811",
+        "System.Runtime.Serialization.Json": "4.0.1-rc3-23811",
+        "System.Data.SqlClient": "4.0.0-rc3-23811"
+      }
+    }
+  }
+}

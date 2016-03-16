@@ -90,3 +90,13 @@ http://json.schemastore.org/global
 http://json.schemastore.org/project
 
 
+******************************** How to run the latest IBGateway
+If 'IB Error. Id: 0, Code: 506, Msg: Unsupported version' this is how to get the latest version:
+1. On Windows: go
+https://www.interactivebrokers.com/en/index.php?f=14099#tws-software
+-Download the TWS Beta, "Windows: 64 bit | File Size: 4MB | Version 9560"  (not the offline version)
+-Delete c:/JTS completely and install
+-latest TWS can be run by c:\Jts\tws.exe 
+-latest IBGateway can be run by c:\Jts\ibgateway\952\ibgateway.exe 
+2. On Linux
+?

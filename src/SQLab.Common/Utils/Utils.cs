@@ -8,7 +8,7 @@ using System.Threading;
 using System.Runtime.Serialization.Json;
 using System.Net.Sockets;
 
-namespace SQCommon
+namespace SqCommon
 {
     public enum Platform
     {
@@ -105,6 +105,7 @@ namespace SQCommon
 
         public static ILogger Logger = null;
         public static IConfigurationRoot Configuration = null;
+        public static ManualResetEventSlim MainThreadIsExiting = null;  // some Tools, Apps do not require this, so don't initiate this for them automatically
 
         public static bool IsShowingDatePart { get; set; } = true;
 

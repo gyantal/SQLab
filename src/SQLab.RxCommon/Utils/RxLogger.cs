@@ -1,4 +1,4 @@
-﻿using SQCommon;
+﻿using SqCommon;
 using System;
 using System.Collections.Generic;
 using System.Reactive.Concurrency;
@@ -95,7 +95,26 @@ namespace RxCommon
 
         public void Info(Exception p_ex, string p_message)
         {
-            throw new NotImplementedException();
+            // this was an Exception. That is important. Write it to the Console too, not only the log file.
+            string str = $"{p_message} : EXCEPTION - INFO: {p_ex.Message}";
+            Console.WriteLine(str);
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Info, Timestamp = DateTime.UtcNow, Message = str });
+        }
+
+        public void Warn(string p_message)
+        {
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Warn, Timestamp = DateTime.UtcNow, Message = p_message });
+        }
+
+        public void Warn(Exception p_ex, string p_message)
+        {
+            // this was an Exception. That is important. Write it to the Console too, not only the log file. Warn level logs are listened by the ConsoleObserver
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Warn, Timestamp = DateTime.UtcNow, Message = $"{p_message} : EXCEPTION - INFO: {p_ex.Message}" });
+        }
+
+        public void Warn(string p_fmt, params object[] p_args)
+        {
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Warn, Timestamp = DateTime.UtcNow, Message = String.Format(p_fmt, p_args) });
         }
 
         public void Error(string p_message)
@@ -103,9 +122,31 @@ namespace RxCommon
             m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Error, Timestamp = DateTime.UtcNow, Message = p_message });
         }
 
+        public void Error(Exception p_ex, string p_message)
+        {
+            // this was an Exception. That is important. Write it to the Console too, not only the log file. Warn level logs are listened by the ConsoleObserver
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Error, Timestamp = DateTime.UtcNow, Message = $"{p_message} : EXCEPTION - INFO: {p_ex.Message}" });
+        }
+
         public void Error(string p_fmt, params object[] p_args)
         {
-            throw new NotImplementedException();
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Error, Timestamp = DateTime.UtcNow, Message = String.Format(p_fmt, p_args) });
+        }
+
+        public void Fatal(string p_message)
+        {
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Fatal, Timestamp = DateTime.UtcNow, Message = p_message });
+        }
+
+        public void Fatal(Exception p_ex, string p_message)
+        {
+            // this was an Exception. That is important. Write it to the Console too, not only the log file. Warn level logs are listened by the ConsoleObserver
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Fatal, Timestamp = DateTime.UtcNow, Message = $"{p_message} : EXCEPTION - INFO: {p_ex.Message}" });
+        }
+
+        public void Fatal(string p_fmt, params object[] p_args)
+        {
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Fatal, Timestamp = DateTime.UtcNow, Message = String.Format(p_fmt, p_args) });
         }
 
 

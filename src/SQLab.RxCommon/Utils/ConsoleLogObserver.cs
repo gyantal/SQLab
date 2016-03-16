@@ -1,4 +1,4 @@
-﻿using SQCommon;
+﻿using SqCommon;
 using System;
 using System.Threading;
 

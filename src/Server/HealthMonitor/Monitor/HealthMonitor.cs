@@ -1,4 +1,4 @@
-﻿using SQCommon;
+﻿using SqCommon;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,10 +23,9 @@ namespace HealthMonitor
 
     public partial class HealthMonitor
     {
-        SavedState m_persistedState = null;
-
         static public HealthMonitor g_healthMonitor = new HealthMonitor();
 
+        SavedState m_persistedState = null;
         ManualResetEventSlim m_mainThreadExitsResetEvent = null;
 
         //Your timer object goes out of scope and gets erased by Garbage Collector after some time, which stops callbacks from firing. Save reference to it in a member of class.
@@ -60,9 +59,6 @@ namespace HealthMonitor
             m_mainThreadExitsResetEvent = new ManualResetEventSlim(false);
             ScheduleTimers();
 
-            // If you're using C# 5, consider replacing t.Wait() with await t. Wait doesn't really fit with the philosophy of TPL. 
-            //	e.g. if you "force" a new thread to be created(i.e.not a threadpool thread) then you won't see any inlining from Wait: 
-            //Task.Factory.StartNew(Launch, TaskCreationOptions.LongRunning).Wait() 
             StartTcpMessageListenerThreads();
             
 

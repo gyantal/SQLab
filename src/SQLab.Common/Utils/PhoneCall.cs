@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Xml;
 
 
-namespace SQCommon
+namespace SqCommon
 {
     public enum Caller { Gyantal, Robin, RobinLL }
 

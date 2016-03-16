@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SQCommon
+namespace SqCommon
 {
     public enum Severity
     {
@@ -64,6 +64,15 @@ namespace SQCommon
                 Fail_core(p_severity, p_message, p_args);
         }
 
+        // http://stackoverflow.com/questions/814878/c-sharp-difference-between-and-equals
+        // When == is used on an expression of type object, it'll resolve to System.Object.ReferenceEquals.
+        // Equals is just a virtual method and behaves as such, so the overridden version will be used(which, for string type compares the contents).
+        public static void Equal<T>(T p_obj1, T p_obj2, Severity p_severity, string p_message, params object[] p_args)
+        {
+            if (!p_obj1.Equals(p_obj2))
+                Fail_core(p_severity, p_message, p_args);
+        }
+
 
 
         public static void Fail(Severity p_severity = Severity.ThrowException)
@@ -89,7 +98,16 @@ namespace SQCommon
                 + (p_message == null ? null : ": " + Utils.FormatInvCult(p_message, p_args));
 
             string sTrace = Environment.StackTrace;
-            Utils.Logger.Error("*** {1}{0}Stack trace:{0}{2}", Environment.NewLine, msg, Utils.DbgAbbrev(sTrace.ToString()));
+            switch (p_severity)
+            {
+                //case Severity.NoException:        // not sure, it is safer if it is an Error, and HealthMonitor is always warned
+                //    Utils.Logger.Warn("*** {1}{0}Stack trace:{0}{2}", Environment.NewLine, msg, Utils.DbgAbbrev(sTrace.ToString()));    // this will not send message to HealthMonitor, only log the Warning
+                //    break;
+                default:
+                    Utils.Logger.Error("*** {1}{0}Stack trace:{0}{2}", Environment.NewLine, msg, Utils.DbgAbbrev(sTrace.ToString()));   // Errors will be sent to HealthMonitor
+                    break;
+            }
+            
             //#if DNXCORE50 || DOTNET5_5
 #if DNX451  || NET451
             Debug.Fail(msg);        // this will offer VisualStudio to capture the execution. But on DotNetCore Windows or Linux, it halts further execution, so eventListeners were not called

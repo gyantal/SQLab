@@ -1,35 +1,33 @@
 ﻿using IBApi;
-using SQCommon;
+using SqCommon;
 using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;     // this is the only timer available under DotNetCore
 using System.Threading.Tasks;
 
-namespace VbGatewaysManager
+namespace VirtualBroker
 {
     public partial class Controller
     {
-        static public Controller g_controller = new Controller();
 
-        ManualResetEventSlim m_mainThreadExitsResetEvent = null;
-
-        //Your timer object goes out of scope and gets erased by Garbage Collector after some time, which stops callbacks from firing. Save reference to it in a member of class.
-        //long m_nHeartbeat = 0;
-        //Timer m_heartbeatTimer = null;
-        //Timer m_checkWebsitesAndKeepAliveTimer = null;
-        //Timer m_checkAmazonAwsInstancesTimer = null;
-
-        const int cHeartbeatTimerFrequencyMinutes = 5;
-
-        internal void Start()
+        internal void TestElapseFirstTaskFirstTriggerWithSimulation()
         {
-            m_mainThreadExitsResetEvent = new ManualResetEventSlim(false);
-        }
-
-        internal void Exit()
-        {
-            m_mainThreadExitsResetEvent.Set();
+            foreach (var taskSchema in g_taskSchemas)
+            {
+                foreach (var trigger in taskSchema.Triggers)
+                {
+                    object isSimulationObj;
+                    if (trigger.TriggerSettings.TryGetValue(BrokerTaskSetting.IsSimulatedTrades, out isSimulationObj))
+                    {
+                        if ((bool)isSimulationObj)
+                        {
+                            trigger.Timer_Elapsed(null);
+                            break;  // just elapse the first one
+                        }
+                    }
+                }
+            }
         }
 
 
@@ -45,17 +43,17 @@ namespace VbGatewaysManager
             // 2. Or don't do Wait(), but protect locally   (for ThreadPool.Worker the only way is to protect locally like this, so maybe get used to this approach)
             Task taskGood2 = Task.Factory.StartNew(x=> {
                 try { throw new Exception("Test Exception in a Task"); }
-                catch (Exception e) { HealthMonitorMessage.SendException("Task1 Thread", e); }
+                catch (Exception e) { HealthMonitorMessage.SendException("Task1 Thread", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker); }
             }, TaskCreationOptions.LongRunning);
         }
 
 
-        internal void TestHealthMonitorListenerBySendingErrorFromGatewaysManager()
+        internal async void TestHealthMonitorListenerBySendingErrorFromVirtualBroker()
         {
             // see HealthMonitorMessage.SendMassage for simpler application that will not read the response
             TcpClient client = new TcpClient();
-            bool isConnectionSuccess = client.ConnectAsync("localhost", 52100).Wait(TimeSpan.FromSeconds(10));
-            if (!isConnectionSuccess)
+            Task task = client.ConnectAsync("localhost", 52100);
+            if (await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10))) != task)
             {
                 Console.WriteLine("Error: client.Connect() timeout.");
                 return;
@@ -63,14 +61,14 @@ namespace VbGatewaysManager
 
             HealthMonitorMessage message = new HealthMonitorMessage()
             {
-                ID = HealthMonitorMessageID.ReportErrorFromVbGatewaysManager,
+                ID = HealthMonitorMessageID.ReportErrorFromVirtualBroker,
                 ParamStr = "Error reason here",
                 ResponseFormat = HealthMonitorMessageResponseFormat.String
             };
 
             BinaryWriter bw = new BinaryWriter(client.GetStream());
             message.SerializeTo(bw);
-            //bw.Write("I am VbGatewaysManager");
+            //bw.Write("I am VirtualBroker");
 
             if (message.ResponseFormat != HealthMonitorMessageResponseFormat.None)
             {
@@ -80,7 +78,7 @@ namespace VbGatewaysManager
             Utils.TcpClientDispose(client);
         }
 
-   
+
         internal void TestVbGatewayConnection()
         {
 
@@ -92,7 +90,7 @@ namespace VbGatewaysManager
 
             // see for samples:  "g:\temp\_programmingTemp\TWS API_972.12(2016-02-26)\samples\CSharp\IBSamples\Program.cs" 
 
-            EWrapperImpl testImpl = new EWrapperImpl();
+            BrokerWrapperIb testImpl = new BrokerWrapperIb();
             EClientSocket client = testImpl.ClientSocket;
             client.eConnect("127.0.0.1", 7496, 0, false);
 

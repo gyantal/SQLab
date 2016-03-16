@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Runtime.Serialization.Json;
-using SQCommon;
+using SqCommon;
 
 namespace RxCommon
 {

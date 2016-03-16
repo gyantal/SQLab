@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SQCommon;
+using SqCommon;
 using System.Reflection;
 using System.IO;
 
@@ -22,6 +22,7 @@ namespace HealthMonitor
             //.Select(info => Assembly.Load(new AssemblyName(info.Name)));
 
             Console.WriteLine("Hello HealthMonitor, v1.0.8");
+            Console.Title = "HealthMonitor v1.0.8";
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info("****** Main() START");

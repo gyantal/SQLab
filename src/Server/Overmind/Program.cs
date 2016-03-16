@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Text;
 using System.IO;
 using System.Xml;
-using SQCommon;
+using SqCommon;
 
 namespace Overmind
 {
@@ -27,6 +27,7 @@ namespace Overmind
             //.Select(info => Assembly.Load(new AssemblyName(info.Name)));
 
             Console.WriteLine("Hello Overmind, v1.0.7");
+            Console.Title = "Overmind v1.0.7";
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info("****** Main() START");

@@ -1,4 +1,4 @@
-﻿using SQCommon;
+﻿using SqCommon;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -65,8 +65,10 @@ namespace HealthMonitor
         {
             try
             {
-                m_tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), 52100);    // largest port number: 65535 
+                int port = 52100;
+                m_tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);    // largest port number: 65535 
                 m_tcpListener.Start();
+                Console.WriteLine($"*TcpListener is listening on port {port}.");
                 while (true)
                 {
                     TcpClient client = m_tcpListener.AcceptTcpClientAsync().Result;        // Task.Result is blocking. OK.
@@ -93,7 +95,7 @@ namespace HealthMonitor
                 string logStr = $"TcpMessageListener: Message ID:'{ message.ID}', ParamStr: '{ message.ParamStr}', ResponseFormat: {message.ResponseFormat}'";
                 Utils.Logger.Info(logStr);
 #if DEBUG
-                Console.WriteLine(logStr);  // temporary only, in Development, not in Release
+                Console.WriteLine(DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + " " + logStr);  // temporary only, in Development, not in Release
 #endif
                 if (message.ResponseFormat == HealthMonitorMessageResponseFormat.None)
                 {

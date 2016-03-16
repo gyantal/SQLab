@@ -5,8 +5,8 @@ from colorama import Fore, Back, Style
 
 # Parameters to change:
 rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
-rootRemoteDir = "/home/ubuntu/SQ/Server/VbGatewaysManager/src"
-acceptedSubTreeRoots = ["Server\\VbGatewaysManager", "SQLab.Common", "SQLab.RxCommon", "ThirdParty\\Reactive\\System.Reactive.Interfaces", "ThirdParty\\Reactive\\System.Reactive.Core", "ThirdParty\\Reactive\\System.Reactive.Linq", "ThirdParty\\Reactive\\System.Reactive.PlatformServices", "ThirdParty\\IbApiSocketClient"]        # everything under these relPaths is traversed: files or folders too
+rootRemoteDir = "/home/ubuntu/SQ/Server/VirtualBroker/src"
+acceptedSubTreeRoots = ["Server\\VirtualBroker", "SQLab.Common", "SQLab.RxCommon", "ThirdParty\\Reactive\\System.Reactive.Interfaces", "ThirdParty\\Reactive\\System.Reactive.Core", "ThirdParty\\Reactive\\System.Reactive.Linq", "ThirdParty\\Reactive\\System.Reactive.PlatformServices", "ThirdParty\\IbApiSocketClient"]        # everything under these relPaths is traversed: files or folders too
 
 excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties"])
 excludeFileExts = set(["sln", "xproj", "log", "ps1", "py", "sh", "user"])

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace SQCommon
+namespace SqCommon
 {
     public enum HealthMonitorMessageID
     {
@@ -13,10 +13,8 @@ namespace SQCommon
         TestHardCash,
         TestSendingEmail,
         TestMakingPhoneCall,
-        ReportErrorFromVbGatewaysManager,
-        ReportOkFromVbGatewaysManager,
-        ReportErrorFromVBroker,
-        ReportOkFromVBroker,
+        ReportErrorFromVirtualBroker,
+        ReportOkFromVirtualBroker,
         SendDailySummaryReportEmail,
         GetHealthMonitorCurrentState
     };
@@ -39,14 +37,14 @@ namespace SQCommon
             TcpServerPort = p_port;
         }
 
-        public static void SendException(string p_locationMsg, Exception e)
+        public static void SendException(string p_locationMsg, Exception e, HealthMonitorMessageID p_healthMonId)
         {
             if (!(new HealthMonitorMessage()
             {
-                ID = HealthMonitorMessageID.ReportErrorFromVbGatewaysManager,
+                ID = p_healthMonId,
                 ParamStr = $"Crash in {p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}",
                 ResponseFormat = HealthMonitorMessageResponseFormat.None
-            }.SendMessage()))
+            }.SendMessage().Result))
             {
                 Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
             }
@@ -68,20 +66,27 @@ namespace SQCommon
             return this;
         }
 
-        public bool SendMessage()
+        public async Task<bool> SendMessage()
         {
-            TcpClient client = new TcpClient();
-            bool isConnectionSuccess = client.ConnectAsync(TcpServerHost, TcpServerPort).Wait(TimeSpan.FromSeconds(10));
-            if (!isConnectionSuccess)
+            try {
+                TcpClient client = new TcpClient();
+                Task task = client.ConnectAsync(TcpServerHost, TcpServerPort);
+                if (await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10))) != task)
+                {
+                    Utils.Logger.Error("Error:HealthMonitor server: client.Connect() timeout.");
+                    return false;
+                }
+
+                BinaryWriter bw = new BinaryWriter(client.GetStream());
+                SerializeTo(bw);
+                Utils.TcpClientDispose(client);
+                return true;
+            }
+            catch (Exception e)
             {
-                Utils.Logger.Error("Error:HealthMonitor server: client.Connect() timeout.");
+                Utils.Logger.Error(e, "Error:HealthMonitorMessage.SendMessage exception.");
                 return false;
             }
-
-            BinaryWriter bw = new BinaryWriter(client.GetStream());
-            SerializeTo(bw);
-            Utils.TcpClientDispose(client);
-            return true;
         }
     }
 

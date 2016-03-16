@@ -80,7 +80,7 @@ namespace DotNetCoreTestNetSecurity
             Console.WriteLine("Executed bash: " + result);
         }
 
-        internal void SendWithSystemNetSecuritySslStream(bool p_enableSsl)
+        internal async void SendWithSystemNetSecuritySslStream(bool p_enableSsl)
         {
             Console.WriteLine("SendWithSystemNetSecuritySslStream()");
 
@@ -95,7 +95,8 @@ namespace DotNetCoreTestNetSecurity
                 Console.WriteLine("[Client] Attempting to Connect to server");
                 //await client.ConnectAsync(server, port);
                 Task connectTask = client.ConnectAsync(server, port);
-                connectTask.Wait();
+                await connectTask;
+                //connectTask.Wait();
                 //Task timeoutTask = Task.Delay(millisecondsDelay: 10000);
                 //if (Task.WhenAny(connectTask, timeoutTask) == timeoutTask)
                 //{
@@ -122,7 +123,8 @@ namespace DotNetCoreTestNetSecurity
                         try
                         {
                             //sslStream.AuthenticateAsClient(server);
-                            sslStream.AuthenticateAsClientAsync(server).Wait();
+                            //sslStream.AuthenticateAsClientAsync(server).Wait();
+                            await sslStream.AuthenticateAsClientAsync(server);
 
                             //X509Certificate2Collection xc = new X509Certificate2Collection();
                             //sslStream.AuthenticateAsClientAsync(server, xc, SslProtocols. Security.Authentication.SslProtocols.Tls, false);
