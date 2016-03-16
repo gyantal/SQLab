@@ -70,7 +70,7 @@ namespace VirtualBroker
 
             //var p_sqlConn = new SqlConnection("ConnectionString");
 
-            List<QuoteData> vxxQuotesFromSqlDB = SqlTools.GetHistoricalQuotesAsync(new[] {
+            List<QuoteData> vxxQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "VXX", nQuotes = lookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
                     Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
 

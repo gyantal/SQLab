@@ -32,7 +32,7 @@ namespace DbCommon
     public static partial class SqlTools
     {
 #if DEBUG
-        public static void GetHistoricalQuotes_example()
+        public static void LoadHistoricalQuotes_example()
         {
             Action<DateTime, IList<object[]>> printResult = (t0, result) => Console.WriteLine("result:{0}{2}{0}this was {1:f0}ms",
                 Environment.NewLine, (DateTime.UtcNow - t0).TotalMilliseconds,
@@ -40,19 +40,19 @@ namespace DbCommon
 
             // I observed ~500-600 msec extra time on the very first execution (JIT compilation!) i.e. the following is 10x faster if moved later in this function
             printResult(DateTime.UtcNow,
-                GetHistoricalQuotesAsync(new[] {
+                LoadHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "SPY" },
                 }, DbCommon.AssetType.Stock).Result);
 
             printResult(DateTime.UtcNow,
-                GetHistoricalQuotesAsync(new[] {
+                LoadHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "VXX", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
                     new QuoteRequest { Ticker = "VXX.SQ", nQuotes = 10, StartDate = new DateTime(2009,1,25) },
                     new QuoteRequest { SubtableID = 6956, nQuotes = 3 },
                 }, DbCommon.AssetType.Stock).Result);
 
             printResult(DateTime.UtcNow,
-                GetHistoricalQuotesAsync(p_at: DbCommon.AssetType.BenchmarkIndex, p_reqs: new[] {
+                LoadHistoricalQuotesAsync(p_at: DbCommon.AssetType.BenchmarkIndex, p_reqs: new[] {
                     new QuoteRequest { Ticker = "^VIX",  nQuotes = 3, EndDate   = new DateTime(2014,2,1) },
                     new QuoteRequest { Ticker = "^GSPC", nQuotes = 2, StartDate = new DateTime(2014,1,1) }
                 }).Result);
@@ -62,12 +62,12 @@ namespace DbCommon
         }
 
         // Under ASP.NET, async/await needs special treatment due to SynchronizationContext (HttpContext). See www.archidata.tk/dev/hj2o for more
-        public static async Task GetHistoricalQuotes_example_underIIS()
+        public static async Task LoadHistoricalQuotes_example_underIIS()
         {
             // Do not block with someOperationAsync().Result because that deadlocks
             // Use 'await' if your method is 'async':
             Console.WriteLine("result:\n" + String.Join(Environment.NewLine,
-                (await GetHistoricalQuotesAsync(new[] {
+                (await LoadHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "VXX", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
                     new QuoteRequest { Ticker = "SPY", nQuotes = 3 }
                 }, DbCommon.AssetType.Stock))
@@ -75,7 +75,7 @@ namespace DbCommon
 
             // If your method cannot be 'async', block with Task.Run().Result. Here Task.Run() is crucial
             Console.WriteLine("result:\n" + String.Join(Environment.NewLine, Task.Run(() =>
-                GetHistoricalQuotesAsync(p_at: DbCommon.AssetType.BenchmarkIndex, p_reqs: new[] {
+                LoadHistoricalQuotesAsync(p_at: DbCommon.AssetType.BenchmarkIndex, p_reqs: new[] {
                     new QuoteRequest { Ticker = "^VIX",  nQuotes = 3, EndDate   = new DateTime(2014,2,1) },
                     new QuoteRequest { Ticker = "^GSPC", nQuotes = 2, StartDate = new DateTime(2014,1,1) }
                 })).Result
@@ -86,7 +86,7 @@ namespace DbCommon
         }
 #endif
 
-        public static async Task<IList<object[]>> GetHistoricalQuotesAsync(IEnumerable<QuoteRequest> p_reqs,
+        public static async Task<IList<object[]>> LoadHistoricalQuotesAsync(IEnumerable<QuoteRequest> p_reqs,
             DbCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
         {
             var sqls = new Dictionary<string, string>(1); bool isSimulated = false;
