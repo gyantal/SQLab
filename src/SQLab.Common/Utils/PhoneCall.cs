@@ -8,7 +8,7 @@ using System.Xml;
 
 namespace SqCommon
 {
-    public enum Caller { Gyantal, Robin, RobinLL }
+    public enum Caller { Gyantal, Robin, RobinLL, Charmat0 }
 
     
     

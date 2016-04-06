@@ -125,8 +125,8 @@ namespace VirtualBroker
         // Exception thrown: System.IO.EndOfStreamException: Unable to read beyond the end of the stream.     (if IBGateways are crashing down.)
         public virtual void error(Exception e)
         {
-            Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e);
-            Utils.Logger.Info("BrokerWrapperIb.error(). Exception: " + e);
+            Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e); 
+            Utils.Logger.Info("BrokerWrapperIb.error(). Exception: " + e);  // exception.ToString() writes the Stacktrace, not only the Message, which is OK.
 
             // when VBroker server restarts every morning, the IBGateways are closed too, and as we were keeping a live TcpConnection, we will get an Exception here.
             // We cannot properly Close our connection in this case, because IBGateways are already shutting down.
@@ -174,8 +174,8 @@ namespace VirtualBroker
                     return;
                 }
             }
-            Console.WriteLine("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
-            Utils.Logger.Error("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
+            Console.WriteLine("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg);
+            Utils.Logger.Error("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg);
         }
 
         public virtual void connectionClosed()
@@ -230,6 +230,9 @@ namespace VirtualBroker
         //>Solution2: or if previous doesn't work, at least, ask mktData again 1 minutes after market Opened.
         //	>this wouldn't work if VBroker started after market Open, because ReSubscribe wouldn't be called.
         //>Solution3: or maybe do both previous ideas.
+        // Good news: Solution1 worked perfectly. After cancelMktData() and reqMktData() again, RUT index data started to come instantly, 
+        // but at 8.a.m CET, only last,lastClose,High/Low prices were given (there was no USA market). So, it was really connected the second time.
+        // However, when USA market opened, at 14:30, RUT lastPrice data poured in at every 5 seconds.
         public void MktDataIsAliveTimer_Elapsed(object p_state)    // Timer is coming on o ThreadPool thread
         {
             MktDataSubscription mktDataSubscr = (MktDataSubscription)p_state;
@@ -377,10 +380,10 @@ namespace VirtualBroker
                 mktDataSubscription.IsAnyPriceArrived = true;
             }
 
-            if (mktDataSubscription.Contract.Symbol == "RUT")   // temporary: for debugging purposes
-            {
-                Console.WriteLine($"RUT: {mktDataSubscription.Contract.Symbol}, {TickType.getField(field)}, {price}");
-            }
+            //if (mktDataSubscription.Contract.Symbol == "RUT")   // temporary: for debugging purposes
+            //{
+            //    Console.WriteLine($"RUT: {mktDataSubscription.Contract.Symbol}, {TickType.getField(field)}, {price}");
+            //}
 
             ConcurrentDictionary<int, PriceAndTime> tickData = mktDataSubscription.Prices;
             lock (tickData)

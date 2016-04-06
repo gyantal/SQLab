@@ -12,10 +12,6 @@ namespace HealthMonitor
         public bool IsDailyEmailReportEnabled { get; set; } = true;
         public bool IsRealtimePriceServiceTimerEnabled { get; set; } = true;
         public bool IsVBrokerTimerEnabled { get; set; } = true;
-        public bool IsVBrokerOldTimerEnabled { get; set; } = true;
-
-        public bool IsProcessingVirtualBrokerMessagesEnabled { get; set; } = true;
-
         public bool IsProcessingVBrokerMessagesEnabled { get; set; } = true;
 
         public bool IsSendErrorEmailAtGracefulShutdown { get; set; } = true;   // switch this off before deployment, and switch it on after deployment; make functionality on the WebSite
@@ -26,6 +22,7 @@ namespace HealthMonitor
     public partial class HealthMonitor
     {
         static public HealthMonitor g_healthMonitor = new HealthMonitor();
+        DateTime m_startTime;
 
         SavedState m_persistedState = null;
         ManualResetEventSlim m_mainThreadExitsResetEvent = null;
@@ -61,6 +58,7 @@ namespace HealthMonitor
         public void Init()
         {
             Utils.Logger.Info("****HealthMonitor:Init()");
+            m_startTime = DateTime.UtcNow;
 
             // 1. Get the Current Parameter state from the AzureTable (in case this WebJob was unloaded and restarted)
             //PersistedState = new SavedState().CreateOrOpenEx();

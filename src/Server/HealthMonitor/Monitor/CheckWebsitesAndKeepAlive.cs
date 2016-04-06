@@ -28,7 +28,7 @@ namespace HealthMonitor
 
                     string hmWebsiteStr = String.Empty;
                     if (Utils.DownloadStringWithRetry(out hmWebsiteStr, website, 5, TimeSpan.FromSeconds(5), false))
-                        Utils.Logger.Info(website + " returned: " + hmWebsiteStr.Substring(0, (hmWebsiteStr.Length > 45) ? 45 : hmWebsiteStr.Length));
+                        Utils.Logger.Info(website + " returned: " + (hmWebsiteStr.Substring(0, (hmWebsiteStr.Length > 45) ? 45 : hmWebsiteStr.Length)).Replace("\r\n", "").Replace("\n", "")); // it is better to see it as one line in the log file
                     else
                     {
                         Utils.Logger.Info("Failed download multiple (5x) times :" + website);

@@ -20,7 +20,7 @@ namespace HealthMonitor
         // this is called every time the VirtualBroker send OK or Error: after every simulated trading
         private void OkFromVirtualBroker(TcpClient p_tcpClient, HealthMonitorMessage p_message)
         {
-            if (!m_persistedState.IsProcessingVirtualBrokerMessagesEnabled)
+            if (!m_persistedState.IsProcessingVBrokerMessagesEnabled)
                 return;
             // sometimes the message seems OK, but if the messageParam contains the word "Error" treat it as error. For example, if this email was sent to the user, with the Message that everything is OK, treat it as error
             // "***Trade: ERROR"   + "*** StrongAssert failed (severity==Exception): BrokerAPI.GetStockMidPoint(VXX,...) failed"
@@ -43,7 +43,7 @@ namespace HealthMonitor
 
         private void ErrorFromVirtualBroker(TcpClient p_tcpClient, HealthMonitorMessage p_message)
         {
-            if (!m_persistedState.IsProcessingVirtualBrokerMessagesEnabled)
+            if (!m_persistedState.IsProcessingVBrokerMessagesEnabled)
                 return;
 
             lock (m_VbReport)

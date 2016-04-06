@@ -16,7 +16,8 @@ namespace SqCommon
         ReportErrorFromVirtualBroker,
         ReportOkFromVirtualBroker,
         SendDailySummaryReportEmail,
-        GetHealthMonitorCurrentState
+        GetHealthMonitorCurrentState,   // not used at the moment
+        GetHealthMonitorCurrentStateToHealthMonitorWebsite
     };
 
     public enum HealthMonitorMessageResponseFormat { None = 0, String, JSON };

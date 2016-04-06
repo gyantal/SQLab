@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Runtime.Serialization.Json;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 
 namespace SqCommon
 {
@@ -262,7 +263,7 @@ namespace SqCommon
 
                 //string p_str = System.IO.File.ReadAllText(p_filePath);
                 MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(p_str));
-                DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings();
+                DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings() { DateTimeFormat = new DateTimeFormat("yyyy-MM-dd'T'HH:mm:ssZ") };    // the 'T' is used by Javascript in HealthMonitor website. 'Z' shows that it is UTC (Zero TimeZone).  That is the reason of the format.
                 settings.UseSimpleDictionaryFormat = true;
                 DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
                 T contract = (T)serializer.ReadObject(ms);
@@ -272,6 +273,31 @@ namespace SqCommon
             catch (System.Exception ex)
             {
                 Utils.Logger.Info(ex, "Cannot deserialize json " + p_str);
+                throw;
+            }
+        }
+
+        public static string SaveToJSON<T>(T p_obj)
+        {
+            try
+            {
+                DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings() { DateTimeFormat = new DateTimeFormat("yyyy-MM-dd'T'HH:mm:ssZ") };
+                settings.UseSimpleDictionaryFormat = true;
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
+
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    serializer.WriteObject(ms, p_obj);
+                    ms.Position = 0;
+                    StreamReader sr = new StreamReader(ms);
+                    return sr.ReadToEnd();
+
+//                    return Encoding.Unicode.GetString(ms.ToArray());  //UTF-16 is used for in-memory strings because it is faster per character to parse and maps directly to unicode character class and other tables. All string functions in Windows use UTF-16 and have for years.
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Utils.Logger.Info(ex, "Cannot serialize object " + p_obj.ToString());
                 throw;
             }
         }
@@ -318,6 +344,7 @@ namespace SqCommon
             PhoneCall.PhoneNumbers[Caller.Gyantal] = configuration["PhoneNumberGyantal"];
             PhoneCall.PhoneNumbers[Caller.Robin] = configuration["PhoneNumberRobin"];
             PhoneCall.PhoneNumbers[Caller.RobinLL] = configuration["PhoneNumberRobinLL"];
+            PhoneCall.PhoneNumbers[Caller.Charmat0] = configuration["PhoneNumberCharmat0"];
             PhoneCall.TwilioSid = configuration["TwilioSid"];
             PhoneCall.TwilioToken = configuration["TwilioToken"];
             return configuration;

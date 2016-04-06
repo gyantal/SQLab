@@ -77,7 +77,7 @@ namespace HealthMonitor
                     TriggeredTaskSchema = uberVxxTaskSchema,
                     TriggerType = TriggerType.DailyOnUsaMarketDay,
                     StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
-                    StartTimeOffset = TimeSpan.FromMinutes(15),
+                    StartTimeOffset = TimeSpan.FromMinutes(20),
                 });
                 uberVxxTaskSchema.Triggers.Add(new TriggerBase()
                 {

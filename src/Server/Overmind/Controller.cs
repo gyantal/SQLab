@@ -20,8 +20,8 @@ namespace Overmind
         Timer m_dailyMorningTimer = null;
         Timer m_dailyMiddayTimer = null;
 
-        readonly DateTime g_DailyMorningTimerTime = new DateTime(2000, 1, 1, 9, 05, 0);      // the date part is not used only the time part. Activate every day 9:05
-        readonly DateTime g_DailyMiddayTimerTime = new DateTime(2000, 1, 1, 18, 0, 0);      // the date part is not used only the time part, Activate every day: 18:00
+        readonly DateTime g_DailyMorningTimerTime = new DateTime(2000, 1, 1, 9, 05, 0);      // the date part is not used only the time part. Activate every day 9:05, London Time Zone
+        readonly DateTime g_DailyMiddayTimerTime = new DateTime(2000, 1, 1, 16, 45, 0);      // the date part is not used only the time part, Activate every day: 16:45, London Time Zone
         const int cHeartbeatTimerFrequencyMinutes = 5;
 
         internal void Start()
@@ -155,32 +155,68 @@ namespace Overmind
                     return;
                 }
 
-                string emailInnerlStr = String.Empty;
-                string phoneCallInnerStr = String.Empty;
+                string gyantalEmailInnerlStr = String.Empty;
+                string gyantalPhoneCallInnerStr = String.Empty;
+                string charmatEmailInnerlStr = String.Empty;
+                string charmatPhoneCallInnerStr = String.Empty;
 
                 double biduTodayPctChange = GetTodayPctChange("BIDU");
                 if (Math.Abs(biduTodayPctChange) >= 0.04)
                 {
-                    emailInnerlStr += "BIDU price warning: bigger than 4% move. In percentage: " + (biduTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
-                    phoneCallInnerStr += "the ticker B I D U, ";
+                    gyantalEmailInnerlStr += "BIDU price warning: bigger than usual move. In percentage: " + (biduTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                    gyantalPhoneCallInnerStr += "the ticker B I D U, ";
                 }
                 double vxxTodayPctChange = GetTodayPctChange("VXX");
                 if (Math.Abs(vxxTodayPctChange) >= 0.06)
                 {
-                    emailInnerlStr += "VXX price warning: bigger than 6% move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
-                    phoneCallInnerStr += "the ticker V X X ";
+                    gyantalEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
+                    gyantalPhoneCallInnerStr += "the ticker V X X ";
+                    charmatEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
+                    charmatPhoneCallInnerStr += "the ticker V X X ";
                 }
 
-
-
-                if (!String.IsNullOrEmpty(emailInnerlStr))
+                double fbTodayPctChange = GetTodayPctChange("FB");
+                if (Math.Abs(fbTodayPctChange) >= 0.04)
                 {
-                    new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer Price Warning", Body = emailInnerlStr, IsBodyHtml = false }.Send();
+                    charmatEmailInnerlStr += "Facebook price warning: bigger than usual move. In percentage: " + (fbTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                    charmatPhoneCallInnerStr += "the ticker Facebook, ";
+                }
+
+                double amznTodayPctChange = GetTodayPctChange("AMZN");
+                if (Math.Abs(amznTodayPctChange) >= 0.04)
+                {
+                    charmatEmailInnerlStr += "Amazon price warning: bigger than usual move. In percentage: " + (amznTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                    charmatPhoneCallInnerStr += "the ticker Amazon, ";
+                }
+
+                double googleTodayPctChange = GetTodayPctChange("FB");
+                if (Math.Abs(googleTodayPctChange) >= 0.04)
+                {
+                    charmatEmailInnerlStr += "Google price warning: bigger than usual move. In percentage: " + (googleTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                    charmatPhoneCallInnerStr += "the ticker Google, ";
+                }
+
+                if (!String.IsNullOrEmpty(gyantalEmailInnerlStr))
+                {
+                    new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "SnifferQuant Price Warning", Body = gyantalEmailInnerlStr, IsBodyHtml = false }.Send();
                     var call = new PhoneCall
                     {
                         FromNumber = Caller.Gyantal,
                         ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
-                        Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + phoneCallInnerStr +  " ... I repeat " + phoneCallInnerStr,
+                        Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + gyantalPhoneCallInnerStr +  " ... I repeat " + gyantalPhoneCallInnerStr,
+                        NRepeatAll = 2
+                    };
+                    Console.WriteLine(call.MakeTheCall());
+                }
+
+                if (!String.IsNullOrEmpty(charmatEmailInnerlStr))
+                {
+                    new Email { ToAddresses = Utils.Configuration["EmailCharmat0"], Subject = "SnifferQuant Price Warning", Body = charmatEmailInnerlStr, IsBodyHtml = false }.Send();
+                    var call = new PhoneCall
+                    {
+                        FromNumber = Caller.Gyantal,
+                        ToNumber = PhoneCall.PhoneNumbers[Caller.Charmat0],
+                        Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + charmatPhoneCallInnerStr + " ... I repeat " + charmatPhoneCallInnerStr,
                         NRepeatAll = 2
                     };
                     Console.WriteLine(call.MakeTheCall());

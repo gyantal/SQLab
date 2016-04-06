@@ -55,7 +55,7 @@ namespace VirtualBroker
                 TriggeredTaskSchema = uberVxxTaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
-                StartTimeOffset = TimeSpan.FromMinutes(15),
+                StartTimeOffset = TimeSpan.FromMinutes(20),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
             uberVxxTaskSchema.Triggers.Add(new VbTrigger()
@@ -98,7 +98,7 @@ namespace VirtualBroker
                 TriggeredTaskSchema = neuralSniffer1TaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
-                StartTimeOffset = TimeSpan.FromMinutes(16),
+                StartTimeOffset = TimeSpan.FromMinutes(15),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
             neuralSniffer1TaskSchema.Triggers.Add(new VbTrigger()
