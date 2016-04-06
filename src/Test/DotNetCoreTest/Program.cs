@@ -28,7 +28,7 @@ namespace DotNetCoreTest
                         break;
                 }
 
-            } while (userInput != "3");
+            } while (userInput != "3" && userInput != "ConsoleIsForcedToShutDown");
         }
 
         static bool gHasBeenCalled = false;
@@ -45,7 +45,15 @@ namespace DotNetCoreTest
             Console.WriteLine("1. Test HttpDownload()");
             Console.WriteLine("2. Say Hello. Don't do anything. Check responsivenes.");
             Console.WriteLine("3. Exit gracefully (Avoid Ctrl-^C).");
-            var result = Console.ReadLine();
+            string result = null;
+            try
+            {
+                result = Console.ReadLine();
+            }
+            catch  // on Linux, of somebody closes the Terminal Window, Console.Readline() will throw an Exception with Message "Input/output error"
+            {
+                return "ConsoleIsForcedToShutDown";
+            }
             return result;
             //return Convert.ToInt32(result);
         }

@@ -48,6 +48,7 @@ namespace IBApi
         private void ProcessConnectAck(byte[] buf)
         {
             serverVersion = ReadInt();
+            Console.WriteLine($"ProcessConnectAck(), serverVersion: {serverVersion}");      // leave only this Console.Writeline, so we can see if IBGateway gives back serverVersion = 14 falsely
 
             if (serverVersion == -1)
             {
@@ -364,7 +365,7 @@ namespace IBApi
 
             //if (isSuccessful)
             //    parent.startApi();
-#warning TODO: implement call to start api in client
+//#warning TODO: implement call to start api in client
 
             eWrapper.verifyCompleted(isSuccessful, errorText);
         }
@@ -385,7 +386,7 @@ namespace IBApi
 
             //if (isSuccessful)
             //    parent.startApi();
-#warning TODO: implement call to start api in client
+//#warning TODO: implement call to start api in client
 
             eWrapper.verifyAndAuthCompleted(isSuccessful, errorText);
         }

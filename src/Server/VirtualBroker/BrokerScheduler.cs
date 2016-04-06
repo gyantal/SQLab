@@ -1,4 +1,5 @@
 ﻿using SqCommon;
+using SQCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,22 +8,21 @@ using System.Threading.Tasks;
 
 namespace VirtualBroker
 {
-
-
-
+    
     public class BrokerScheduler
     {
         internal void Init()
         {
-            Utils.Logger.Info("****BrokerScheduler:Init()");
-            Task tcpListenerTask = Task.Factory.StartNew(SchedulerThreadRun, TaskCreationOptions.LongRunning);  // a separate thread. Not on ThreadPool
+            Utils.Logger.Info("****Scheduler:Init()");
+            Task schedulerTask = Task.Factory.StartNew(SchedulerThreadRun, TaskCreationOptions.LongRunning);  // a separate thread. Not on ThreadPool
         }
 
         private void SchedulerThreadRun()
         {
             try
             {
-                Thread.CurrentThread.Name = "Broker scheduler";
+                Thread.CurrentThread.Name = "VBroker scheduler";
+                Thread.Sleep(TimeSpan.FromSeconds(5));  // wait 5 seconds, so that IBGateways can connect at first
 
                 // maybe loop is not required.
                 // in the past we try to get UsaMarketOpenOrCloseTime() every 30 minutes. It was determined from YFinance intrady. "sleep 30 min for DetermineUsaMarketOpenOrCloseTime()"
@@ -40,7 +40,7 @@ namespace VirtualBroker
                     {
                         foreach (BrokerTaskSchema taskSchema in Controller.g_taskSchemas)
                         {
-                            foreach (Trigger trigger in taskSchema.Triggers)
+                            foreach (VbTrigger trigger in taskSchema.Triggers)
                             {
                                 ScheduleTrigger(trigger, isMarketTradingDay, marketOpenTimeUtc, marketCloseTimeUtc);
                             }
@@ -56,7 +56,7 @@ namespace VirtualBroker
             }
         }
 
-        internal void ScheduleTrigger(Trigger p_trigger, bool p_isMarketTradingDay, DateTime p_marketOpenTimeUtc, DateTime p_marketCloseTimeUtc)
+        internal void ScheduleTrigger(TriggerBase p_trigger, bool p_isMarketTradingDay, DateTime p_marketOpenTimeUtc, DateTime p_marketCloseTimeUtc)
         {
             DateTime? proposedTime = CalcNextTriggerTime(p_trigger, p_isMarketTradingDay, p_marketOpenTimeUtc, p_marketCloseTimeUtc);
             if (proposedTime != null)
@@ -77,10 +77,11 @@ namespace VirtualBroker
                 }
             }
             // Warn() temporarily to show it on Console
-            Utils.Logger.Warn("ScheduleTrigger() '" + p_trigger.BrokerTaskSchema.Name + "': " + ((p_trigger.NextScheduleTimeUtc != null) ? p_trigger.NextScheduleTimeUtc.ToString() : "null"));
+            Console.WriteLine($"{DateTime.UtcNow.ToString("dd'T'HH':'mm':'ss")}: Task '" + p_trigger.TriggeredTaskSchema.Name + "' next time: " + ((p_trigger.NextScheduleTimeUtc != null) ? ((DateTime)p_trigger.NextScheduleTimeUtc).ToString("dd'T'HH':'mm':'ss") : "null"));
+            Utils.Logger.Info("Task '" + p_trigger.TriggeredTaskSchema.Name + "' next time: " + ((p_trigger.NextScheduleTimeUtc != null) ? ((DateTime)p_trigger.NextScheduleTimeUtc).ToString("dd'T'HH':'mm':'ss") : "null"));
         }
 
-        private DateTime? CalcNextTriggerTime(Trigger p_trigger, bool p_isMarketTradingDay, DateTime p_marketOpenTimeUtc, DateTime p_marketCloseTimeUtc)
+        private DateTime? CalcNextTriggerTime(TriggerBase p_trigger, bool p_isMarketTradingDay, DateTime p_marketOpenTimeUtc, DateTime p_marketCloseTimeUtc)
         {
             if (!p_isMarketTradingDay)  // in this case market open and close times are not given
                 return null;
@@ -107,7 +108,6 @@ namespace VirtualBroker
 
         internal void Exit()
         {
-            
         }
     }
 }

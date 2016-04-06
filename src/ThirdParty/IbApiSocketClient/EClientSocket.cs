@@ -23,6 +23,7 @@ namespace IBApi
 
         void EClientMsgSink.serverVersion(int version, string time)
         {
+            //Console.WriteLine($"EClientMsgSink.serverVersion(int '{version}', string '{time}')");
             base.serverVersion = version;
 
             if (!useV100Plus)
@@ -66,6 +67,7 @@ namespace IBApi
         protected virtual Stream createClientStream(string host, int port)
         {
             var client = new TcpClient();
+            //Console.WriteLine($"client.ConnectAsync({host}, {port})");
             Task connectTask = client.ConnectAsync(host, port);
             connectTask.Wait();
             return client.GetStream();
@@ -146,7 +148,10 @@ namespace IBApi
             var buf = new MemoryStream();
             
             request.BaseStream.CopyTo(buf);
-            socketTransport.Send(new EMessage(buf.ToArray()));
+            var byteArray = buf.ToArray();
+            var str = System.Text.Encoding.ASCII.GetString(byteArray);
+            //Console.WriteLine("CloseAndSend: '" + str + "'");
+            socketTransport.Send(new EMessage(byteArray));
         }
 
         public void redirect(string host)

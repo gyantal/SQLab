@@ -47,37 +47,60 @@ namespace VirtualBroker
             Utils.Logger.Info("****GatewaysWatcher:Init()");
             PersistedState = new SavedState();
             
-            Task tcpListenerTask = Task.Factory.StartNew(ReconnectToGateways);  // short running thread on ThreadPool
+            Task reconnectToGatewaysTask = Task.Factory.StartNew(ReconnectToGateways);  // short running thread on ThreadPool
         }
 
         async void ReconnectToGateways()
         {
             try
             {
-                // Customize this section After deployment to Production
-                Gateway gateway1 = new Gateway(GatewayUser.GyantalMain) { VbAccountsList = "U407941", SocketPort = 7301, IsConnected = false };
-                //Gateway gateway2 = new Gateway() { GatewayUser = GatewayUser.CharmatWifeMain, VbAccountsList = "U1034066", SocketPort = 7302, IsConnected = false };
-                Gateway gateway2 = new Gateway(GatewayUser.CharmatSecondary) { VbAccountsList = "U988767", SocketPort = 7303, IsConnected = false };
-                //m_mainGatewayUser = GatewayUser.GyantalMain;
-                m_mainGatewayUser = GatewayUser.CharmatSecondary;
+                Gateway gateway1, gateway2;
+                if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+                {
+                    gateway1 = new Gateway(GatewayUser.GyantalMain) { VbAccountsList = "U407941", SocketPort = 7301, BrokerConnectionClientID = 41};
+                    gateway2 = new Gateway(GatewayUser.CharmatSecondary) { VbAccountsList = "U988767", SocketPort = 7303, BrokerConnectionClientID = 42};
+                    //Gateway gateway2 = new Gateway() { GatewayUser = GatewayUser.CharmatWifeMain, VbAccountsList = "U1034066", SocketPort = 7302 };
+                    m_mainGatewayUser = GatewayUser.CharmatSecondary;
+                }
+                else
+                {
+                    gateway1 = new Gateway(GatewayUser.GyantalMain) { VbAccountsList = "U407941", SocketPort = 7301 };    // correct one
+                    gateway2 = null;
+                    m_mainGatewayUser = GatewayUser.GyantalMain;
+                }
 
                 m_gateways = new List<Gateway>();   // delete previous Gateway connections
                 m_gateways.Add(gateway1);
-                m_gateways.Add(gateway2);
-                Task connectTask1 = Task.Factory.StartNew(ReconnectToGateway, gateway1, TaskCreationOptions.LongRunning);
-                Task connectTask2 = Task.Factory.StartNew(ReconnectToGateway, gateway2, TaskCreationOptions.LongRunning);
+                if (gateway2 != null)   // sometimes (for development), 1 gateway is used only
+                    m_gateways.Add(gateway2);
 
-                await Task.WhenAll(connectTask1, connectTask2); // async. This threadpool thread will return to the threadpool for temporary reuse, and when tasks are ready, it will be recallade
-                //Task.WaitAll(connectTask1, connectTask2);     // blocking wait. This thread will wait forever if needed, but we don't want to starve the threadpool
+                //Task connectTask1 = Task.Factory.StartNew(ReconnectToGateway, gateway1, TaskCreationOptions.LongRunning);
+                //Task connectTask2 = Task.Factory.StartNew(ReconnectToGateway, gateway2, TaskCreationOptions.LongRunning);
+                var reconnectTasks = m_gateways.Select(r => Task.Factory.StartNew(ReconnectToGateway, r, TaskCreationOptions.LongRunning));
+
+                // At the beginning: Linux had a problem to Connect sequentially on 2 separate threads. Maybe Linux DotNetCore 'Beta' implementation synchronization problem. Temporary connect sequentally. maybe doing Connection sequentially, not parallel would help
+                foreach (var task in reconnectTasks)
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(1));  // just for synch safety. However, if Linux has synch problem, we can have problems at order execution...!!
+                    //task.Wait();  // this gives Compiler Warning that the method is async, but there is no await in it
+                    await task; // this doesn't give Compiler Warning.
+                }
+                //await Task.WhenAll(reconnectTasks); // async. This threadpool thread will return to the threadpool for temporary reuse, and when tasks are ready, it will be recallade
+                ////Task.WaitAll(connectTask1, connectTask2);     // blocking wait. This thread will wait forever if needed, but we don't want to starve the threadpool
+
                 m_mainGateway = null;
+                bool isAllConnected = true;
                 foreach (var gateway in m_gateways)
                 {
+                    if (!gateway.IsConnected)
+                        isAllConnected = false;
                     if (gateway.GatewayUser == m_mainGatewayUser)
                     {
                         m_mainGateway = gateway;
-                        break;
                     }
+
                 }
+                StrongAssert.True(isAllConnected, Severity.ThrowException, $"Some Gateways are not connected.");
                 StrongAssert.True(m_mainGateway != null, Severity.ThrowException, $"Gateway for main user { m_mainGatewayUser} is not found.");
 
                 Utils.Logger.Info("GatewaysWatcher is ready. Connections were successful.");
@@ -89,6 +112,10 @@ namespace VirtualBroker
                 // "g:\temp\_programmingTemp\TWS API_972.12(2016-02-26)\samples\CSharp\IBSamples\IBSamples.sln" 
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" });
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SVXY", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL", LocalSymbol="RUT" });
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "UWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "TWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+                
             }
             catch (Exception e)
             {
@@ -98,37 +125,57 @@ namespace VirtualBroker
 
         void ReconnectToGateway(object p_object)
         {
-            try
+            Gateway gateway = (Gateway)p_object;
+            int nMaxRetry = 3;
+            int nConnectionRetry = 0;
+            do
             {
-                Gateway gateway = (Gateway)p_object;
-
-                IBrokerWrapper ibWrapper = new BrokerWrapperIb();
-                //IBrokerWrapper ibWrapper = new BrokerWrapperYF();
-                if (!ibWrapper.Connect(gateway.SocketPort))
+                try
                 {
-                    Utils.Logger.Error($"Timeout or other Error. Cannot connect to IbGateway {gateway.GatewayUser} on port { gateway.SocketPort}.");
+                    nConnectionRetry++;
+                    IBrokerWrapper ibWrapper = null;
+                    if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+                    {
+                        ibWrapper = new BrokerWrapperIb();      // recreate IB wrapper at every Connection try. It is good this way.
+                    }
+                    else
+                    {
+                        ibWrapper = new BrokerWrapperIb();
+                        //ibWrapper = new BrokerWrapperYF();     // switch on !YF broker after Market Closed, so we can have simulated real time price
+                    }
+                    if (!ibWrapper.Connect(gateway.SocketPort, gateway.BrokerConnectionClientID))
+                    {
+                        Utils.Logger.Error($"Timeout or other Error (like serverVersion=14). Cannot connect to IbGateway {gateway.GatewayUser} on port { gateway.SocketPort}. Trials: {nConnectionRetry}/{nMaxRetry}");
+                        continue;
+                    }
+
+                    StrongAssert.Equal(ibWrapper.IbAccountsList, gateway.VbAccountsList, Severity.ThrowException, $"Expected IbAccount {gateway.VbAccountsList} is not found: { ibWrapper.IbAccountsList}.");
+
+                    // after this line, we are really connected
+                    gateway.BrokerWrapper = ibWrapper;
+                    gateway.IsConnected = true;
+
+                    string warnMessage = (ibWrapper is BrokerWrapperIb) ? "" : "!!!WARNING. Fake Broker (YF!). ";
+                    Utils.Logger.Info($"{warnMessage}Gateway {ibWrapper} is connected. User {gateway.GatewayUser} acc {gateway.VbAccountsList}.");
+                    Console.WriteLine($"*{warnMessage}Gateway user {gateway.GatewayUser} acc {gateway.VbAccountsList} connected.");
                     return;
+
+                    //client.reqAccountSummary(9001, "All", AccountSummaryTags.GetAllTags());
+                    /*** Subscribing to an account's information. Only one at a time! ***/
+                    //Thread.Sleep(6000);
+
                 }
-
-                StrongAssert.Equal(ibWrapper.IbAccountsList, gateway.VbAccountsList, Severity.ThrowException, $"Expected IbAccount {gateway.VbAccountsList} is not found: { ibWrapper.IbAccountsList}.");
-
-                // after this line, we are really connected
-                gateway.BrokerWrapper = ibWrapper;
-                gateway.IsConnected = true;
-
-                string warnMessage = (ibWrapper is BrokerWrapperIb) ? "" : "!!!WARNING. Fake Broker. ";
-                Utils.Logger.Info($"{warnMessage}Gateway {ibWrapper} is connected. User {gateway.GatewayUser} acc {gateway.VbAccountsList}.");
-                Console.WriteLine($"{warnMessage}Gateway {ibWrapper} is connected. User {gateway.GatewayUser} acc {gateway.VbAccountsList}.");
-
-                //client.reqAccountSummary(9001, "All", AccountSummaryTags.GetAllTags());
-                /*** Subscribing to an account's information. Only one at a time! ***/
-                //Thread.Sleep(6000);
-
-            }
-            catch (Exception e)
-            {
-                HealthMonitorMessage.SendException("ReConnectToGateway Thread", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
-            }
+                catch (Exception e)
+                {
+                    //If IBGateways doesn't connect: Retry the connection about 3 times, before Exception. So, so this problem is an Expected problem if another try to reconnect solves it.
+                    Utils.Logger.Info(e, $"Exception in ReconnectToGateway()-{gateway.GatewayUser}: {nConnectionRetry} : {e.Message}");
+                    if (nConnectionRetry >= nMaxRetry)
+                    {
+                        //HealthMonitorMessage.SendException($"ReConnectToGateway Thread: nMaxRetry: {nMaxRetry}", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);  // the higher level ReconnectToGateways() will send the Error to HealthMonitor
+                        throw; // without IB connection, we can crash the App. No point to continue. we cannot recover.
+                    }
+                }
+            } while (nConnectionRetry < nMaxRetry);
         }
 
         // at graceful shutdown, it is called
@@ -146,7 +193,10 @@ namespace VirtualBroker
 
         internal bool IsGatewayConnected(GatewayUser p_ibGatewayUserToTrade)
         {
-            return (m_gateways.FirstOrDefault(r => r.GatewayUser == p_ibGatewayUserToTrade) != null);
+            var gateway = m_gateways.FirstOrDefault(r => r.GatewayUser == p_ibGatewayUserToTrade);
+            if (gateway == null)
+                return false;
+            return (gateway.IsConnected);
         }
 
 

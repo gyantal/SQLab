@@ -12,14 +12,23 @@ namespace VirtualBroker
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine($"ThId-{Thread.CurrentThread.ManagedThreadId}: VirtualBroker, v1.0.7");
-            Console.Title = "VirtualBroker v1.0.7";
+            string runtimeConfig = "Unknown";
+#if RELEASE
+            runtimeConfig = "RELEASE";
+# elif DEBUG
+            runtimeConfig = "DEBUG";
+#endif
+            Console.WriteLine($"Hello VirtualBroker, v1.0.12 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+#if DNX451 || NET451
+            Console.Title = "VirtualBroker v1.0.12";   // Exception in DotNetCore in Win (but it runs on Linux, but it doesn't do anything): Unhandled Exception: System.MissingMethodException: Method not found: 'Void System.Console.set_Title(System.String)'.
+#endif
             if (!RxUtils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app
-            Utils.Logger.Info("****** Main() START");
+            Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+
             Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.VirtualBroker.NoGitHub.json", "/home/ubuntu/SQ/Server/VirtualBroker/SQLab.VirtualBroker.NoGitHub.json");
             Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
-            HealthMonitorMessage.InitGlobals("localhost", 52100);       // until HealthMonitor runs on the same Server, "localhost" is OK
+            HealthMonitorMessage.InitGlobals(HealthMonitorMessage.HealthMonitorServerPublicIpForClients, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
             StrongAssert.g_strongAssertEvent += StrongAssertMessageSendingEventHandler;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException; // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
 
@@ -45,14 +54,18 @@ namespace VirtualBroker
                             Controller.g_controller.TestHealthMonitorListenerBySendingErrorFromVirtualBroker();
                             break;
                         case "4":
-                            Controller.g_controller.TestHardCrash();
+                            //Controller.g_controller.TestHardCrash();
+                            Controller.g_controller.EncogXORHelloWorld();
                             break;
                         case "5":
-                            Controller.g_controller.TestElapseFirstTaskFirstTriggerWithSimulation();
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(0);
+                            break;
+                        case "6":
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(1);
                             break;
                     }
 
-                } while (userInput != "6");
+                } while (userInput != "7" && userInput != "ConsoleIsForcedToShutDown");
 
                 Utils.Logger.Info("****** Main() END");
                 Utils.MainThreadIsExiting.Set();
@@ -110,13 +123,24 @@ namespace VirtualBroker
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("----VirtualBroker (type and press Enter)----");
             Console.ForegroundColor = previousForeColour;
-            Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes.");
+            Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes");
             Console.WriteLine("2. Test IbGateway Connection");
-            Console.WriteLine("3. Test HealthMonitor TcpListener Communication by sending ErrorFromVirtualBroker");
-            Console.WriteLine("4. Crash in a Task thread (always Background thread) and let's see if HealthMonitor calls the phone");
-            Console.WriteLine("5. Elapse first BrokerTaskShema First Trigger that is Simulation (not real trade)");
-            Console.WriteLine("6. Exit gracefully (Avoid Ctrl-^C).");
-            var result = Console.ReadLine();
+            Console.WriteLine("3. Test HealthMonitor by sending ErrorFromVirtualBroker");
+            //Console.WriteLine("4. Crash Task Background thread. See if HealthMonitor calls the phone");
+            Console.WriteLine("4. Test Encog");
+            Console.WriteLine("5. Elapse first TaskShema (UberVxx) First Simulation Trigger");
+            Console.WriteLine("6. Elapse second TaskShema (NeuralSniffer1) First Simulation Trigger");
+            Console.WriteLine("7. Exit gracefully (Avoid Ctrl-^C).");
+            string result = null;
+            try
+            {
+                result = Console.ReadLine();
+            }
+            catch (Exception e) // on Linux, if somebody closed the Terminal Window, Console.Readline() will throw an Exception with Message "Input/output error"
+            {
+                Utils.Logger.Info($"Console.ReadLine() Exception. Somebody closed the Terminal Window. Exception message: {e.Message}");
+                return "ConsoleIsForcedToShutDown";
+            }
             return result;
             //return Convert.ToInt32(result);
         }

@@ -1,5 +1,6 @@
 ﻿using DbCommon;
 using SqCommon;
+using SQCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -105,11 +106,9 @@ namespace VirtualBroker
 
     // Schema is like a Class for BrokerTasks. The instances of this class is the BrokerTasks or we called it before: BrokerTaskExecutions
     // If a BrokerTaskSchema specifies a Task that runs every 5 minutes, many parallel BrokerTasks of the same Type/Schema can exist at the same time
-    public class BrokerTaskSchema
+    public class BrokerTaskSchema : TriggeredTaskSchema
     {
-        public string Name { get; set; }
         public Dictionary<object, object> Settings { get; set; } = new Dictionary<object, object>();
-        public List<Trigger> Triggers { get; set; } = new List<Trigger>();
 
         public List<BrokerTask> BrokerTasks { get; set; } = new List<BrokerTask>();      // if we Execute the task every 5 minutes than these 2 executions can live in parallel
 

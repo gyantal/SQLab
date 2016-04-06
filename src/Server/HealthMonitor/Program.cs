@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using SqCommon;
 using System.Reflection;
 using System.IO;
+using System.Threading;
 
 namespace HealthMonitor
 {
@@ -21,11 +22,19 @@ namespace HealthMonitor
             //.SelectMany(info => info.Assemblies)
             //.Select(info => Assembly.Load(new AssemblyName(info.Name)));
 
-            Console.WriteLine("Hello HealthMonitor, v1.0.8");
-            Console.Title = "HealthMonitor v1.0.8";
+            string runtimeConfig = "Unknown";
+#if RELEASE
+            runtimeConfig = "RELEASE";
+# elif DEBUG
+            runtimeConfig = "DEBUG";
+#endif
+            Console.WriteLine($"Hello HealthMonitor, v1.0.12 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+#if DNX451 || NET451
+            Console.Title = "HealthMonitor v1.0.12";   // Exception in DotNetCore in Win (but it runs on Linux, but it doesn't do anything): Unhandled Exception: System.MissingMethodException: Method not found: 'Void System.Console.set_Title(System.String)'.
+#endif
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app
-            Utils.Logger.Info("****** Main() START");
+            Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
 
             Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.HealthMonitor.NoGitHub.json", "/home/ubuntu/SQ/Server/HealthMonitor/SQLab.HealthMonitor.NoGitHub.json");
             StrongAssert.g_strongAssertEvent += StrongAssertEmailSendingEventHandler;
@@ -47,11 +56,15 @@ namespace HealthMonitor
                         HealthMonitor.g_healthMonitor.CheckAmazonAwsInstances_Elapsed(null);
                         break;
                     case "3":
-                        //Controller.g_controller.TestSendingEmailAndPhoneCall();
+                        Console.WriteLine(HealthMonitor.g_healthMonitor.DailySummaryReport(false).ToString());
+                        break;
+                    case "4":
+                        HealthMonitor.g_healthMonitor.DailyReportTimer_Elapsed(null);
+                        Console.WriteLine("DailyReport email was sent.");
                         break;
                 }
 
-            } while (userInput != "4");
+            } while (userInput != "5" && userInput != "ConsoleIsForcedToShutDown");
 
             Utils.Logger.Info("****** Main() END");
             HealthMonitor.g_healthMonitor.Exit();
@@ -94,9 +107,19 @@ namespace HealthMonitor
             Console.ForegroundColor = previousForeColour;
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes.");
             Console.WriteLine("2. Test AmazonAWS API:DescribeInstances()");
-            Console.WriteLine("3. Foo.");
-            Console.WriteLine("4. Exit gracefully (Avoid Ctrl-^C).");
-            var result = Console.ReadLine();
+            Console.WriteLine("3. VirtualBroker Report: show on Console.");
+            Console.WriteLine("4. VirtualBroker Report: send Html email.");
+            Console.WriteLine("5. Exit gracefully (Avoid Ctrl-^C).");
+            string result = null;
+            try
+            {
+                result = Console.ReadLine();
+            }
+            catch (System.IO.IOException e) // on Linux, of somebody closes the Terminal Window, Console.Readline() will throw an Exception with Message "Input/output error"
+            {
+                Utils.Logger.Info($"Console.ReadLine() exception. Somebody closes the Terminal Window: {e.Message}");
+                return "ConsoleIsForcedToShutDown";
+            }
             return result;
             //return Convert.ToInt32(result);
         }

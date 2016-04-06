@@ -1,0 +1,100 @@
+
+
+********************************** why 2 simultan IBGateway connections failed at the beginning (it solved itself): If we have the Timeout or ERROR try to sleep and reconnect.
+Funny enough, after that first experimentation, when IBGatewayCharmat2 always gave back serverVersion=14, later during next weeks it seems working.
+Ideas how to fix it if it comes in the future:
+	- maybe look at the Charmat2 user settings in IB webpage. Is there something to set.
+	- try to google version=14 error
+	- another reason could be that gyantal user is an IB-UK based user, charmat user is an USA user, so they connect to different servers.
+As a safety measurements, and solve the problem at the end: Retry the connection about 3 times, before Exception. So, we Expect the problem.
+
+****************  IB Gateway connection problem
+******* our Client's API message is perfect. The same. in both time. However, second IBGateway gives back serverVersion 14. (but only the first time)
+6. Exit gracefully (Avoid Ctrl-^C).
+ClientSocket.eConnect(127.0.0.1, 7301, 41, false)
+client.ConnectAsync(127.0.0.1, 7301)
+sendConnectRequest()
+CloseAndSend: 'API	v100..103'
+ProcessConnectAck(), serverVersion: 101
+EClientMsgSink.serverVersion(int '101', string '20160324 01:42:47 UTC')
+startApi() with clientID: 41
+CloseAndSend: '	71241'
+connectAck()
+Gateway VirtualBroker.BrokerWrapperIb is connected. User GyantalMain acc U407941.
+ClientSocket.eConnect(127.0.0.1, 7303, 42, false)
+client.ConnectAsync(127.0.0.1, 7303)
+sendConnectRequest()
+CloseAndSend: 'API	v100..103'
+ProcessConnectAck(), serverVersion: 14
+EClientMsgSink.serverVersion(int '14', string '')
+IB Error. Id: 42, Code: 506, Msg: Unsupported version
+24T01:42:47.933#14#4#Error: IB Error. Id: 42, Code: 506, Msg: Unsupported version
+connectAck()
+24T01:42:48.381#7#4#Warn: ScheduleTrigger(). Next schedule time of Task 'UberVXX': 3/24/16 1:45:00 PM
+24T01:42:48.381#7#4#Warn: ScheduleTrigger(). Next schedule time of Task 'UberVXX': 3/24/16 7:29:00 PM
+24T01:42:48.381#7#4#Warn: ScheduleTrigger(). Next schedule time of Task 'UberVXX': 3/24/16 7:59:45 PM
+24T01:42:52.945#14#4#Error: Timeout or other Error. Cannot connect to IbGateway CharmatSecondary on port 7303.
+
+Or maybe. If we have the Timeout or ERROR. Try the connection Again.
+
+**************** even with waiting 20 seconds, 40 seconds, the same error (and it is always with the drcharmat account)
+
+6. Exit gracefully (Avoid Ctrl-^C).
+ClientSocket.eConnect(127.0.0.1, 7301, 41, false)
+client.ConnectAsync(127.0.0.1, 7301)
+sendConnectRequest()
+CloseAndSend: 'API	v100..103'
+ProcessConnectAck(), serverVersion: 101
+EClientMsgSink.serverVersion(int '101', string '20160324 02:02:36 UTC')
+startApi() with clientID: 41
+CloseAndSend: '	71241'
+connectAck()
+Gateway VirtualBroker.BrokerWrapperIb is connected. User GyantalMain acc U407941.
+ClientSocket.eConnect(127.0.0.1, 7303, 42, false)
+client.ConnectAsync(127.0.0.1, 7303)
+sendConnectRequest()
+CloseAndSend: 'API	v100..103'
+ProcessConnectAck(), serverVersion: 14
+EClientMsgSink.serverVersion(int '14', string '')
+IB Error. Id: 42, Code: 506, Msg: Unsupported version
+24T02:02:36.881#14#4#Error: IB Error. Id: 42, Code: 506, Msg: Unsupported version
+connectAck()
+24T02:02:37.354#7#4#Warn: ScheduleTrigger(). Next schedule time of Task 'UberVXX': 3/24/16 1:45:00 PM
+24T02:02:37.354#7#4#Warn: ScheduleTrigger(). Next schedule time of Task 'UberVXX': 3/24/16 7:29:00 PM
+24T02:02:37.354#7#4#Warn: ScheduleTrigger(). Next schedule time of Task 'UberVXX': 3/24/16 7:59:45 PM
+24T02:02:41.893#14#4#Error: Timeout or other Error. Cannot connect to IbGateway CharmatSecondary on port 7303.
+
+because:
+IB 02:02:36:282 JTS-EServerSocket-62: [2147483647:101:101:1:0:0:0:SYS] Server version is 101
+IB 02:02:36:282 JTS-EServerSocket-62: [2147483647:101:101:1:0:0:0:SYS] Client version is 101
+IB 02:02:36:282 JTS-EServerSocket-62: [2147483647:101:101:1:0:0:0:SYS] is 3rdParty true
+IB 02:02:36:287 JTS-EServerSocket-62: [2147483647:101:101:1:0:0:0:INFO] Start processing incoming messages for client {2147483647}.
+and after that, it only started the message. Never send proper things to Client. Or actually, it sends the version 14.
+
+While the second time:
+IB 02:08:12:822 JTS-EServerSocket-66: [2147483647:101:101:1:0:0:0:SYS] Starting new conversation with client on /127.0.0.1
+IB 02:08:12:826 JTS-EServerSocket-66: [2147483647:101:101:1:0:0:0:SYS] Server version is 101
+IB 02:08:12:826 JTS-EServerSocket-66: [2147483647:101:101:1:0:0:0:SYS] Client version is 101
+IB 02:08:12:826 JTS-EServerSocket-66: [2147483647:101:101:1:0:0:0:SYS] is 3rdParty true
+IB 02:08:12:830 JTS-EServerSocket-66: [2147483647:101:101:1:0:0:0:INFO] Start processing incoming messages for client {2147483647}.
+IB 02:08:12:830 JTS-EServerSocketNotifier-67: Starting async queue thread
+IB 02:08:12:833 JTS-EServerSocket-66: [2147483647:101:101:1:0:0:0:INFO] Handling incoming StartApi message.
+IB 02:08:12:834 JTS-EServerSocket-66: [2147483647:101:101:1:0:0:0:DET] Started reading message:
+IB 02:08:12:834 JTS-EServerSocket-66: Start API message, ClientID=42
+
+but, yes, obviously, if Client receives version=14, it will not start API message.
+So, still, it is the problem of the IBGateway.
+What is interesting that it only happens with the second connection. Never with Gyantal user.
+
+-I started IBgateway charmat first, gyantal later: still Charmat Gateway is a problem
+-The VBroker will connect Charmat user first, gyantal later: still Charmat Gateway is a problem
+
+-the IBControllerGyantal2.ini files are the same
+- but G:\temp\Linux-IBController\Jts_gyantal2\jts.ini -s are a bit different
+
+- I deleted the jts.INI, so it has to recreate it: still drcharmat2 gives api version of 14
+- I copied the jts.ini from gyantal2 to drcharmat2: still drcharmat2 gives api version of 14
+
+- I didn't do anything, but next time it work.d after morning reboot at 6:15, VBroker connected to both Gateway succesfully (still sequential)
+Let's wait a week and monitor it.
+

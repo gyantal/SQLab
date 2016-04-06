@@ -159,12 +159,27 @@ namespace SqCommon
 
         }
 
-        public static bool DetermineUsaMarketTradingHours(DateTime p_day, out bool p_isMarketTradingDay, out DateTime p_openTimeUtc, out DateTime p_closeTimeUtc, TimeSpan p_maxAllowedStaleness)
+        // it is important that p_timeUtc can be a Time and it is in UTC. Convert it to ET to work with it.
+        public static bool DetermineUsaMarketTradingHours(DateTime p_timeUtc, out bool p_isMarketTradingDay, out DateTime p_openTimeUtc, out DateTime p_closeTimeUtc, TimeSpan p_maxAllowedStaleness)
         {
             p_openTimeUtc = p_closeTimeUtc = DateTime.MinValue;
-            p_isMarketTradingDay = true;  // we don't know, but true is probable
+            p_isMarketTradingDay = false;
 
-            if (p_day.DayOfWeek == DayOfWeek.Saturday || p_day.DayOfWeek == DayOfWeek.Sunday)
+            TimeZoneInfo utcZone = TimeZoneInfo.Utc;
+            TimeZoneInfo estZone = null;
+            try
+            {
+                estZone = Utils.FindSystemTimeZoneById(TimeZoneId.EST);
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "Exception because of TimeZone conversion ");
+                return false;
+            }
+
+            DateTime timeET = TimeZoneInfo.ConvertTime(p_timeUtc, utcZone, estZone);
+
+            if (timeET.DayOfWeek == DayOfWeek.Saturday || timeET.DayOfWeek == DayOfWeek.Sunday)
             {
                 p_isMarketTradingDay = false;
                 return true;
@@ -177,12 +192,13 @@ namespace SqCommon
                 return false;
             }
 
+            DateTime openInET = new DateTime(timeET.Year, timeET.Month, timeET.Day, 9, 30, 0);
             DateTime closeInET;
-            var todayHoliday = holidaysAndHalfHolidays.FirstOrDefault(r => r.Item1 == p_day.Date);
+            var todayHoliday = holidaysAndHalfHolidays.FirstOrDefault(r => r.Item1 == timeET.Date);
             if (todayHoliday == null)   // it is a normal day, not holiday: "The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET."
             {
                 p_isMarketTradingDay = true;
-                closeInET = new DateTime(p_day.Year, p_day.Month, p_day.Day, 16, 0, 0);
+                closeInET = new DateTime(timeET.Year, timeET.Month, timeET.Day, 16, 0, 0);
             }
             else
             { // if it is a holiday or a half-holiday (that there is trading, but early close)
@@ -201,24 +217,13 @@ namespace SqCommon
 
             if (!p_isMarketTradingDay)
                 return true;
-
-            try
-            {
-                TimeZoneInfo utcZone = TimeZoneInfo.Utc;
-                var tzi = Utils.FindSystemTimeZoneById(TimeZoneId.EST);
-                DateTime openInET = new DateTime(p_day.Year, p_day.Month, p_day.Day, 9, 30, 0);
-                p_openTimeUtc = TimeZoneInfo.ConvertTime(openInET, tzi, utcZone);
-                p_closeTimeUtc = TimeZoneInfo.ConvertTime(closeInET, tzi, utcZone);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Utils.Logger.Error(e, "DetermineUsaMarketTradingHours exception because of TimeZone conversion ");
-                return false;
-            }
+            
+            p_openTimeUtc = TimeZoneInfo.ConvertTime(openInET, estZone, utcZone);
+            p_closeTimeUtc = TimeZoneInfo.ConvertTime(closeInET, estZone, utcZone);
+            return true;
         }
 
-        public static bool IsInRegularTradingHoursNow(TimeSpan p_maxAllowedStaleness)
+        public static bool IsInRegularUsaTradingHoursNow(TimeSpan p_maxAllowedStaleness)
         {
             DateTime utcNow = DateTime.UtcNow;
 
@@ -242,6 +247,53 @@ namespace SqCommon
                 return true;
             }
         }
+
+        /// <summary> Postcondition: result.TimeOfDay == local 00:00 converted to UTC </summary>
+        public static DateTime GetNextUsaMarketOpenDayUtc(this DateTime p_timeUtc, bool p_currentDayTimeAcceptable /* today is Inclusive or not */)
+        {
+            return GetNextOrPrevUsaMarketOpenDayUtc(p_timeUtc, p_currentDayTimeAcceptable, true, TimeSpan.FromDays(3));
+        }
+
+        /// <summary> Postcondition: result.TimeOfDay == local 00:00 converted to UTC </summary>
+        public static DateTime GetPreviousUsaMarketOpenDayUtc(this DateTime p_timeUtc, bool p_currentDayTimeAcceptable /* today is Inclusive or not */)
+        {
+            return GetNextOrPrevUsaMarketOpenDayUtc(p_timeUtc, p_currentDayTimeAcceptable, false, TimeSpan.FromDays(3));
+        }
+
+        /// <summary> Postcondition: result.TimeOfDay == local 00:00 converted to UTC </summary>
+        public static DateTime GetNextOrPrevUsaMarketOpenDayUtc(this DateTime p_timeUtc, bool p_currentDayTimeAcceptable /* Inclusive */, bool p_isNext, TimeSpan p_maxAllowedStaleness) // today is not allowed
+        {
+            DateTime timeToTestUtc = (p_currentDayTimeAcceptable) ? p_timeUtc : ((p_isNext) ? p_timeUtc.AddDays(1) : p_timeUtc.AddDays(-1));
+            int nTry = 0;
+            while (true)
+            {
+                if (nTry++ > 50)
+                {
+                    Utils.Logger.Error($"GetNextUsaMarketOpenDayUtc() nTry is too high: {nTry}.");
+                    return DateTime.MaxValue;
+                }
+                bool isMarketTradingDay;
+                DateTime openTimeUtc, closeTimeUtc;
+                bool isTradingHoursOK = Utils.DetermineUsaMarketTradingHours(timeToTestUtc, out isMarketTradingDay, out openTimeUtc, out closeTimeUtc, p_maxAllowedStaleness);
+                if (!isTradingHoursOK)
+                {
+                    Utils.Logger.Error("DetermineUsaMarketTradingHours() was not ok.");
+                    return DateTime.MaxValue;
+                }
+                else
+                {
+                    if (isMarketTradingDay) // Postcondition: result.TimeOfDay == local 00:00 converted to UTC
+                    {
+                        DateTime resultInET = Utils.ConvertTimeFromUtcToEt(timeToTestUtc).Date; // == local 00:00
+                        return Utils.ConvertTimeFromEtToUtc(resultInET);
+                    }
+                    timeToTestUtc = (p_isNext) ? timeToTestUtc.AddDays(1) : timeToTestUtc.AddDays(-1);
+                }
+            }   // while
+
+
+        }
+
 
     }
 }

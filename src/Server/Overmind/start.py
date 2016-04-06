@@ -10,6 +10,6 @@ os.chdir("/home/ubuntu/SQ/Server/Overmind/src")
 print('dotnet restore')
 call(["dotnet", "restore"])
 os.chdir("/home/ubuntu/SQ/Server/Overmind/src/Server/Overmind")
-print('dotnet run')
-call(["dotnet", "run"])
+print('dotnet run --configuration Release')         # the default is the Debug configuration in the project.json file
+call(['dotnet', 'run', '--configuration', 'Release'])
 k = input("Press ENTER...")       # raw_input is built but waiting for Enter key 

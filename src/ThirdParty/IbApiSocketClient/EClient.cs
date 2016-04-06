@@ -110,6 +110,8 @@ namespace IBApi
         {
             try
             {
+                //Console.WriteLine($"sendConnectRequest()");
+
                 if (useV100Plus)
                 {
                     var paramsList = new BinaryWriter(new MemoryStream());
@@ -140,6 +142,8 @@ namespace IBApi
 
         public void startApi()
         {
+            //Console.WriteLine($"startApi() with clientID: {clientId}");
+
             if (!CheckConnection())
                 return;
 
@@ -2621,7 +2625,11 @@ namespace IBApi
 
         public int ReadInt()
         {
-            return IPAddress.NetworkToHostOrder(new BinaryReader(tcpStream).ReadInt32());
+            //if (((NetworkStream)tcpStream).Socket.Isconneccted... is protected!!!
+
+            // tcpStream.ReadInt() is a blocking call. Execution will wait here forever. To get new messages. However, when Tcp connection is closed, this will raise an Exception. Which is OK.
+            // IOException is expected here after Gateway.Disconnect. We handle it properly already in putMessageToQueue() Exception handler. Just let VisualStudio NOT break here when it occurs in Debugging.
+            return IPAddress.NetworkToHostOrder(new BinaryReader(tcpStream).ReadInt32());   
         }
 
         public byte[] ReadByteArray(int msgSize)

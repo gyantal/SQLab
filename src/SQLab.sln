@@ -54,6 +54,12 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "VirtualBroker", "Server\Vir
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "SQLab.DbCommon", "SQLab.DbCommon\SQLab.DbCommon.xproj", "{EC6161F3-4972-492C-BD6A-B2209A857C6B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VirtualBroker", "VirtualBroker", "{DC7FF5C6-FD61-40FC-B577-C58593D79AE4}"
+	ProjectSection(SolutionItems) = preProject
+		..\docs\VirtualBroker\IbGatewayConnection.txt = ..\docs\VirtualBroker\IbGatewayConnection.txt
+		..\docs\VirtualBroker\IbHistoricalData.txt = ..\docs\VirtualBroker\IbHistoricalData.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,5 +139,6 @@ Global
 		{7DD3DDA0-0B73-4A7F-ACAF-15111AC2EB93} = {5BB36B3D-75BE-4F1A-832C-68E54DE9C9A5}
 		{FAA59F5B-B8EB-4B71-A929-13AB50435C32} = {42505196-C4A8-4D25-801A-39FED1CD4153}
 		{0F633BCF-6C4E-49CB-A6C1-D70D101A65AC} = {E980518C-4F9E-4FB4-87D4-87729C4D7171}
+		{DC7FF5C6-FD61-40FC-B577-C58593D79AE4} = {086CF043-0ECF-46DD-AC47-75BF5344AA80}
 	EndGlobalSection
 EndGlobal

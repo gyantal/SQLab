@@ -14,6 +14,9 @@ namespace HealthMonitor
     public partial class HealthMonitor
     {
         TcpListener m_tcpListener;
+        Task<TcpClient> m_tcpListenerCurrentClientTask;
+        TcpClient m_tcpListenerCurrentClient;
+
         //static Semaphore Go = new Semaphore(0, 1);
         //ConcurrentQueue<Tuple<TcpClient, HealthMonitorMessage>> m_messageQueue = new ConcurrentQueue<Tuple<TcpClient, HealthMonitorMessage>>();
         BlockingCollection<Tuple<TcpClient, HealthMonitorMessage>> m_messageQueue = new BlockingCollection<Tuple<TcpClient, HealthMonitorMessage>>(new ConcurrentQueue<Tuple<TcpClient, HealthMonitorMessage>>());
@@ -56,7 +59,7 @@ namespace HealthMonitor
             catch (Exception e)
             {
                 Utils.Logger.Error("Exception caught in MessageProcessorWorkerLoop. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
-                throw;
+                //throw; Don't allow even Bacgkround threads to crash the App.
             }
         }
 
@@ -65,22 +68,30 @@ namespace HealthMonitor
         {
             try
             {
-                int port = 52100;
-                m_tcpListener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);    // largest port number: 65535 
+                int port = HealthMonitorMessage.DefaultHealthMonitorServerPort;
+                string privateIP = HealthMonitorMessage.HealthMonitorServerPrivateIpForListener;
+                m_tcpListener = new TcpListener(IPAddress.Parse(privateIP), port);  
                 m_tcpListener.Start();
-                Console.WriteLine($"*TcpListener is listening on port {port}.");
+                Console.WriteLine($"*TcpListener is listening on port {privateIP}:{port}.");
                 while (true)
                 {
-                    TcpClient client = m_tcpListener.AcceptTcpClientAsync().Result;        // Task.Result is blocking. OK.
-                    new Thread((x) => ReadTcpClientStream(x)).Start(client);    // read the BinaryReader() and deserialize in separate thread, so not block the TcpListener loop
+                    m_tcpListenerCurrentClientTask = m_tcpListener.AcceptTcpClientAsync();
+                    m_tcpListenerCurrentClient = m_tcpListenerCurrentClientTask.Result;        // Task.Result is blocking. OK.
+                    Console.WriteLine($"TcpMessageListenerLoop.NextClientAccepted.");
+                    Utils.Logger.Info($"TcpMessageListenerLoop.NextClientAccepted.");
+                    if (m_mainThreadExitsResetEvent.IsSet)
+                        return; // if App is exiting gracefully, don't start new thread
+
+                    (new Thread((x) => ReadTcpClientStream(x)) { IsBackground = true }).Start(m_tcpListenerCurrentClient);    // read the BinaryReader() and deserialize in separate thread, so not block the TcpListener loop
                 }
             }
-            catch (Exception e)
+            catch (Exception e) // Background thread can crash application. A background thread does not keep the managed execution environment running.
             {
                 if (m_mainThreadExitsResetEvent.IsSet)
                     return; // if App is exiting gracefully, this Exception is not a problem
-                Utils.Logger.Error("Exception caught in TcpMessageListenerLoop. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
-                throw;  // else, rethrow
+                Utils.Logger.Error("Not expected Exception. We send email by StrongAssert and rethrow exception, which will crash App. TcpMessageListenerLoop. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
+                StrongAssert.Fail(Severity.ThrowException, "Not expected Exception. We send email by StrongAssert and rethrow exception, which will crash App. TcpMessageListenerLoop. HealthMonitor: manual restart is needed.");
+                throw;  // if we don't listen to TcpListener any more, there is no point to continue. Crash the App.
             }
         }
 
@@ -92,11 +103,8 @@ namespace HealthMonitor
                 BinaryReader br = new BinaryReader(client.GetStream());
                 HealthMonitorMessage message = (new HealthMonitorMessage()).DeserializeFrom(br);
                 //string strFromClient = br.ReadString();
-                string logStr = $"TcpMessageListener: Message ID:'{ message.ID}', ParamStr: '{ message.ParamStr}', ResponseFormat: {message.ResponseFormat}'";
-                Utils.Logger.Info(logStr);
-#if DEBUG
-                Console.WriteLine(DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + " " + logStr);  // temporary only, in Development, not in Release
-#endif
+                Console.WriteLine(">" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg:{message.ID}, Param:{message.ParamStr}");  // user can quickly check from Console the messages
+                Utils.Logger.Info($"TcpMessageListener: Message ID:'{ message.ID}', ParamStr: '{ message.ParamStr}', ResponseFormat: {message.ResponseFormat}'");
                 if (message.ResponseFormat == HealthMonitorMessageResponseFormat.None)
                 {
                     Utils.TcpClientDispose(client);
@@ -105,19 +113,51 @@ namespace HealthMonitor
 
                 m_messageQueue.Add(new Tuple<TcpClient, HealthMonitorMessage>(client, message));
             }
-            catch (Exception e)
+            catch (Exception e) // Background thread can crash application. A background thread does not keep the managed execution environment running.
             {
-                Utils.Logger.Error("Exception caught in ReadTcpClientStream. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
-                throw;
+                Console.WriteLine($"Expected Exception. We don't rethrow it. Occurs daily when client VBroker VM server reboots. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
+                Utils.Logger.Info($"Expected Exception. We don't rethrow it. Occurs daily when client VBroker VM server reboots. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
             }
             
         }
 
         void StopTcpMessageListener()
         {
+            Console.WriteLine("StopTcpMessageListener() exiting...");
             // you can finish current TcpConnections properly if it is important
+            // to Dispose the TcpListener, this hack has to be used to do a Last, Final Connection: http://stackoverflow.com/questions/19220957/tcplistener-how-to-stop-listening-while-awainting-accepttcpclientasync
+            TcpClient dummyClient = new TcpClient();
+            dummyClient.ConnectAsync(HealthMonitorMessage.HealthMonitorServerPrivateIpForListener, HealthMonitorMessage.DefaultHealthMonitorServerPort).Wait();
+            Console.WriteLine($"StopTcpMessageListener(). Is DummyClient connected: {dummyClient.Connected}");
+            Utils.TcpClientDispose(dummyClient);
+
+            Console.WriteLine("StopTcpMessageListener() exiting..");
             m_tcpListener.Stop();   // there is no Dispose() method
+            Console.WriteLine("StopTcpMessageListener() exiting.");
+
             // Tasks create Background Threads always, so the TcpMessageListenerLoop() is a Background thread, it will exits when main thread exits, which is OK.
+        }
+
+
+        void ProcessMessage(TcpClient p_tcpClient, HealthMonitorMessage p_message)
+        {
+            switch (p_message.ID)
+            {
+                case HealthMonitorMessageID.TestHardCash:
+                    throw new Exception("Testing Hard Crash by Throwing this Exception");
+                case HealthMonitorMessageID.ReportErrorFromVirtualBroker:
+                    ErrorFromVirtualBroker(p_tcpClient, p_message);
+                    break;
+                case HealthMonitorMessageID.ReportOkFromVirtualBroker:
+                    OkFromVirtualBroker(p_tcpClient, p_message);
+                    break;
+
+            }
+
+            if (p_message.ResponseFormat != HealthMonitorMessageResponseFormat.None)    // if Processing needed Response to Client, we dispose here. otherwise, it was disposed before putting into processing queue
+            {
+                Utils.TcpClientDispose(p_tcpClient);
+            }
         }
 
     }

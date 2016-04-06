@@ -69,6 +69,7 @@ When the 2 IBGateway runs: at start the system consumes: 940MB of 991MB memory. 
 
 
 "dotnet -v run"		// verbose
+dotnet run --configuration Release  // the default is the Debug configuration in the project.json
 dotnet run -f net45   //it works
 dotnet run -f dnx451
 dotnet run -f dnxcore50	// 
@@ -98,5 +99,23 @@ https://www.interactivebrokers.com/en/index.php?f=14099#tws-software
 -Delete c:/JTS completely and install
 -latest TWS can be run by c:\Jts\tws.exe 
 -latest IBGateway can be run by c:\Jts\ibgateway\952\ibgateway.exe 
+
+- On the other hand sometimes TWS Beta changes every day, it can be buggy and it doesn't start in the morning. 
+In that case, better to revert to TWS Latest (the most current Stable) (version 9554)
+However, it is not necessary to download the Latest Stable instead of Beta.
+When TWS starts. (you have 3 seconds), go to More Options, and from the drop-down choose Latest istead of Beta.
+
 2. On Linux
 ?
+
+
+*********************** Encog
+1. Full Encog framework from github.
+https://github.com/encog/encog-dotnet-core
+Too much. It even supports OpenCL, GPU coding. I gave up converting it to DotNetCore.
+
+2. source code from old book: worked. However, there is FeedForward, but not resilient.
+https://github.com/jeffheaton/jeffheaton-book-code
+
+3. Source code from the new book "Artificial Intelligence for Humans". It has ResilientPropagation. Great. It Works.
+https://github.com/jeffheaton/aifh/tree/26b07c42a3870277fe201356467bce7b4213b604

@@ -175,7 +175,10 @@ namespace SqCommon
                     Console.WriteLine($"!Error. We assume Current Directory is where project.json is. Cannot find: {currProject}");
                     return false;
                 }
-                string logFilePath = Path.Combine(currDir, p_filenameWithoutExt + ".sq.log");
+                string logDir = Path.Combine(currDir, "..", "..", "..", "logs");
+                if (!Directory.Exists(logDir))
+                    Directory.CreateDirectory(logDir);
+                string logFilePath = Path.Combine(logDir, p_filenameWithoutExt + "." + DateTime.UtcNow.ToString("yyyy-MM-dd") + ".sqlog"); // the extension is *.sqlog so easy to find it in the file system
                 Console.WriteLine("Log file: " + logFilePath);
                 Logger = new SQLogger(logFilePath);
                 return true;
@@ -247,7 +250,7 @@ namespace SqCommon
             return false;
         }
 
-        public static T LoadFromJSON<T>(string p_filePath)
+        public static T LoadFromJSON<T>(string p_str)
         {
             try
             {
@@ -257,8 +260,8 @@ namespace SqCommon
                 // "Please note that DataContractJsonSerializer only supports the following encodings: UTF-8"
                 // see http://blogs.msdn.com/b/cie/archive/2014/03/19/encountered-unexpected-character-239-error-serializing-json.aspx
 
-                string configStr = System.IO.File.ReadAllText(p_filePath);
-                MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(configStr));
+                //string p_str = System.IO.File.ReadAllText(p_filePath);
+                MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(p_str));
                 DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings();
                 settings.UseSimpleDictionaryFormat = true;
                 DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T), settings);
@@ -268,7 +271,7 @@ namespace SqCommon
             }
             catch (System.Exception ex)
             {
-                Utils.Logger.Info(ex, "Cannot deserialize json " + p_filePath);
+                Utils.Logger.Info(ex, "Cannot deserialize json " + p_str);
                 throw;
             }
         }
@@ -283,11 +286,11 @@ namespace SqCommon
             Dictionary<string, string> configDict = null;
             if (File.Exists(p_configJsonPathWin))
             {
-                configDict = LoadFromJSON<Dictionary<string, string>>(p_configJsonPathWin);
+                configDict = LoadFromJSON<Dictionary<string, string>>(System.IO.File.ReadAllText(p_configJsonPathWin));
             }
             else if (File.Exists(p_configJsonPathLinux))
             {
-                configDict = LoadFromJSON<Dictionary<string, string>>(p_configJsonPathLinux);
+                configDict = LoadFromJSON<Dictionary<string, string>>(System.IO.File.ReadAllText(p_configJsonPathLinux));
             }
             else
             {

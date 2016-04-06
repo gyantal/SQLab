@@ -19,6 +19,7 @@ namespace VirtualBroker
     {
         EClientSocket clientSocket;
         public readonly EReaderSignal Signal = new EReaderMonitorSignal();
+        EReader m_eReader;
         private int nextOrderId;
 
         int m_reqMktDataIDseed = 1000;
@@ -57,12 +58,13 @@ namespace VirtualBroker
         }
 
                 
-        public virtual bool Connect(int p_socketPort)
+        public virtual bool Connect(int p_socketPort, int p_brokerConnectionClientID)
         {
-            ClientSocket.eConnect("127.0.0.1", p_socketPort, 0, false);
+            Utils.Logger.Info($"ClientSocket.eConnect(127.0.0.1, {p_socketPort}, {p_brokerConnectionClientID}, false)");
+            ClientSocket.eConnect("127.0.0.1", p_socketPort, p_brokerConnectionClientID, false);
             //Create a reader to consume messages from the TWS. The EReader will consume the incoming messages and put them in a queue
-            var reader = new EReader(ClientSocket, Signal);
-            reader.Start();
+            m_eReader = new EReader(ClientSocket, Signal);
+            m_eReader.Start();
             //Once the messages are in the queue, an additional thread need to fetch them. This is a very long running Thread, always waiting for all messages (Price, historicalData, etc.). This Thread calls the IbWrapper Callbacks.
             new Thread(() =>
             {
@@ -70,8 +72,8 @@ namespace VirtualBroker
                 {
                     while (ClientSocket.IsConnected())
                     {
-                        Signal.waitForSignal();
-                        reader.processMsgs();
+                        Signal.waitForSignal(); // the reader thread will sign the Signal
+                        m_eReader.processMsgs();
                     }
                 }
                 catch (Exception e)
@@ -79,7 +81,7 @@ namespace VirtualBroker
                     if (Utils.MainThreadIsExiting.IsSet)
                         return; // if App is exiting gracefully, this Exception is not a problem
                         Utils.Logger.Error("Exception caught in Gateway Thread that is fetching messages. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
-                    throw;  // else, rethrow
+                    throw;  // else, rethrow. This will Crash the App, which is OK. Without IB connection, there is no point to continue the VBroker App.
                     }
             })
             { IsBackground = true }.Start();
@@ -102,21 +104,55 @@ namespace VirtualBroker
             return true;
         }
 
+        
+
+        public bool IsConnected()
+        {
+            return ClientSocket.IsConnected();
+        }
+
         public virtual void Disconnect()
         {
             foreach (var item in MktDataSubscriptions)
             {
                 ClientSocket.cancelMktData(item.Key);
             }
-
+            m_eReader.Stop();
             ClientSocket.eDisconnect();
         }
 
 
+        // Exception thrown: System.IO.EndOfStreamException: Unable to read beyond the end of the stream.     (if IBGateways are crashing down.)
         public virtual void error(Exception e)
         {
-            Console.WriteLine("Exception thrown: " + e);
-            throw e;
+            Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e);
+            Utils.Logger.Info("BrokerWrapperIb.error(). Exception: " + e);
+
+            // when VBroker server restarts every morning, the IBGateways are closed too, and as we were keeping a live TcpConnection, we will get an Exception here.
+            // We cannot properly Close our connection in this case, because IBGateways are already shutting down.
+            // Actually, This expected exception in the Background thread comes 5 mseconds before the ConsoleApp gets the Console.Readline() exception.
+            // so in case of EndOfStreamException, let's sleep 100-500msec, and check that MainThread is exiting or not then.
+            // 0405T06:15:04.481#14#5#Error: Unexpected BrokerWrapperIb.error(). Exception thrown: System.IO.EndOfStreamException: Unable to read beyond the end of the stream. at System.IO.BinaryReader.FillBuffer(Int32 numBytes)
+            // 0405T06:15:04.485#1#5#Info: Console.ReadLine() Exception. Somebody closed the Terminal Window. Exception message: Input/output error
+            // 0405T06: 15:04.498#1#5#Info: ****** Main() END
+            // 0405T06: 15:04.534#1#5#Info: Connection closed.
+            if (e is System.IO.EndOfStreamException)
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(300));  // if it is a server reboot, probably during this time, the Main thread will exit anyway, which is OK, because we don't want to send Error report to HealthMonitor in that case.
+                if (Utils.MainThreadIsExiting.IsSet)
+                {
+                    // an expected exception. Don't send Error message to HealthMonitor. This expected event happens every day.
+                    Utils.Logger.Info("BrokerWrapperIb.error(). Expected exception, because 'Utils.MainThreadIsExiting.IsSet && e is System.IO.EndOfStreamException'" + e);
+                    return;
+                }
+            }
+
+            // Otherwise, maybe a trading Error, exception.
+            // Maybe IBGateways were shut down. In which case, we cannot continue this VBroker App, because we should restart IBGateways, and reconnect to them by restarting VBroker.
+            // Try to send HealthMonitor message and shut down the VBroker.
+            Utils.Logger.Error("Unexpected BrokerWrapperIb.error(). Exception thrown: " + e);
+            HealthMonitorMessage.SendException($"Unexpected  BrokerWrapperIb.error()", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+            throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
         }
 
         public virtual void error(string str)
@@ -128,17 +164,18 @@ namespace VirtualBroker
         {
             if (id == -1)
             {
-                if (errorCode == 2104 || errorCode == 2106 || errorCode == 2107)
+                if (errorCode == 2104 || errorCode == 2106 || errorCode == 2107 || errorCode == 2119)
                 {
                     // This is not an error. It is the messages at Connection: 
                     //IB Error. Id: -1, Code: 2104, Msg: Market data farm connection is OK:hfarm
                     //IB Error. Id: -1, Code: 2106, Msg: HMDS data farm connection is OK:ushmds.us
                     //IB Error. Id: -1, Code: 2107, Msg: HMDS data farm connection is inactive but should be available upon demand.ushmds
+                    //IB Error. Id: -1, Code: 2119, Msg: Market data farm is connecting:usfarm
                     return;
                 }
             }
-            Console.WriteLine("IB Error. Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
-            Utils.Logger.Error("IB Error. Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
+            Console.WriteLine("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
+            Utils.Logger.Error("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg + "\n");
         }
 
         public virtual void connectionClosed()
@@ -169,8 +206,41 @@ namespace VirtualBroker
             ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
             //mainClient.reqMktData(marketDataId, contractSPY, "221", false, null);
             ClientSocket.reqMktData(marketDataId, p_contract, null, false, null);
-            MktDataSubscriptions.TryAdd(marketDataId, new MktDataSubscription() { Contract = p_contract });
+
+            var mktDataSubscr = new MktDataSubscription()
+            {
+                Contract = p_contract,
+                MarketDataId = marketDataId
+            };
+            // RUT index data comes once ever 5 seconds
+            mktDataSubscr.CheckDataIsAliveTimer = new System.Threading.Timer(new TimerCallback(MktDataIsAliveTimer_Elapsed), mktDataSubscr, TimeSpan.FromSeconds(15), TimeSpan.FromMilliseconds(-1.0));
+            MktDataSubscriptions.TryAdd(marketDataId, mktDataSubscr);
             return marketDataId;
+        }
+
+        public virtual void CancelMktData(int p_marketDataId)
+        {
+            ClientSocket.cancelMktData(p_marketDataId);
+        }
+
+        //- When streaming realtime price of Data for RUT, the very first time of the day, TWS gives price, but IBGateway does'nt give any price. 
+        // I have to restart VBroker, so second VBroker run, there is a RUT price.
+        //>Solution1: If real time price is not given in 5 minutes, cancel and ask realtime mktData again in the morning
+        //	>this would work intraday too.After 20 seconds, we Subscribe to market data.
+        //>Solution2: or if previous doesn't work, at least, ask mktData again 1 minutes after market Opened.
+        //	>this wouldn't work if VBroker started after market Open, because ReSubscribe wouldn't be called.
+        //>Solution3: or maybe do both previous ideas.
+        public void MktDataIsAliveTimer_Elapsed(object p_state)    // Timer is coming on o ThreadPool thread
+        {
+            MktDataSubscription mktDataSubscr = (MktDataSubscription)p_state;
+            if (mktDataSubscr.IsAnyPriceArrived)  // we had at least 1 price, so everything seems ok.
+                return;
+
+            Console.WriteLine($"DataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
+            Utils.Logger.Info($"DataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
+            ClientSocket.cancelMktData(mktDataSubscr.MarketDataId);
+            ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
+            ClientSocket.reqMktData(mktDataSubscr.MarketDataId, mktDataSubscr.Contract, null, false, null);     // use the same MarketDataId, so we don't have to update the MktDataSubscriptions dictionary.
         }
 
         public virtual bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
@@ -220,9 +290,11 @@ namespace VirtualBroker
                     Utils.Logger.Warn($"Warning. Something is wrong. Price is negative. Returning False for price.");   // however, VBroker may want to continue, so don't throw Exception or do StrongAssert()
                     return false;
                 }
-                if ((DateTime.UtcNow - item.Value.Time).TotalMinutes > 5.0)
+                // for daily High, Daily Low, Previous Close, etc. don't check this staleness
+                bool doCheckDataStaleness = item.Key != TickType.LOW && item.Key != TickType.HIGH && item.Key != TickType.CLOSE;
+                if (doCheckDataStaleness && (DateTime.UtcNow - item.Value.Time).TotalMinutes > 5.0)
                 {
-                    Utils.Logger.Warn($"Warning. Something may be wrong. We have the RT price for '{p_contract.Symbol}' , but it is older than 5 minutes. Maybe Gateway was disconnected. Returning False for price.");
+                    Utils.Logger.Warn($"Warning. Something may be wrong. We have the RT price of {item.Key} for '{p_contract.Symbol}' , but it is older than 5 minutes. Maybe Gateway was disconnected. Returning False for price.");
                     return false;
                 }
             }
@@ -289,7 +361,7 @@ namespace VirtualBroker
             //RtpAppController.gBrokerAPI.m_priceTickARE.Reset();
             //Console.WriteLine("Tick Price. Ticker Id:"+tickerId+", Field: "+ TickType.getField(field) + ", Price: " +price+", CanAutoExecute: "+canAutoExecute);
             // Logger.Warn will put it to the Console too. Temporary
-            //Utils.Logger.Warn("Tick Price. Ticker Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
+            //Utils.Logger.Warn("Tick Price. Ticker Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
             Utils.Logger.Info("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
 
             MktDataSubscription mktDataSubscription = null;
@@ -297,6 +369,17 @@ namespace VirtualBroker
             {
                 Utils.Logger.Error($"MktDataSubscription tickerID { tickId} is not expected");
                 return;
+            }
+
+            if (!mktDataSubscription.IsAnyPriceArrived)
+            {
+                Console.WriteLine($"Firstprice: {mktDataSubscription.Contract.Symbol}, {TickType.getField(field)}, {price}");
+                mktDataSubscription.IsAnyPriceArrived = true;
+            }
+
+            if (mktDataSubscription.Contract.Symbol == "RUT")   // temporary: for debugging purposes
+            {
+                Console.WriteLine($"RUT: {mktDataSubscription.Contract.Symbol}, {TickType.getField(field)}, {price}");
             }
 
             ConcurrentDictionary<int, PriceAndTime> tickData = mktDataSubscription.Prices;
@@ -456,12 +539,12 @@ namespace VirtualBroker
         // "Feeds in currently open orders." We can subscribe to all the current OrdersInfo. For MOC orders for example, before PlaceOrder() we should check that if there is already an MOC order then we Modify that (or Cancel&Recreate)
         public virtual void openOrder(int orderId, Contract contract, Order order, OrderState orderState)
         {
-            Utils.Logger.Warn("OpenOrder. ID: " + orderId + ", " + contract.Symbol + ", " + contract.SecType + " @ " + contract.Exchange + ": " + order.Action + ", " + order.OrderType + " " + order.TotalQuantity + ", " + orderState.Status);
+            Utils.Logger.Info("OpenOrder. ID: " + orderId + ", " + contract.Symbol + ", " + contract.SecType + " @ " + contract.Exchange + ": " + order.Action + ", " + order.OrderType + " " + order.TotalQuantity + ", " + orderState.Status);
         }
 
         public virtual void openOrderEnd()
         {
-            Utils.Logger.Warn("OpenOrderEnd");
+            Utils.Logger.Info("OpenOrderEnd");
         }
 
         public int PlaceOrder(Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, double p_estimatedPrice, bool p_isSimulatedTrades)
@@ -490,7 +573,7 @@ namespace VirtualBroker
                     order.OrderType = "MKT";
                     break;
                 case OrderExecution.MarketOnClose:
-                    order.Action = "MOC";
+                    order.OrderType = "MOC";
                     break;
                 default:
                     throw new Exception($"Unexpected OrderExecution: {p_orderExecution}");
@@ -522,12 +605,42 @@ namespace VirtualBroker
                 return false;
             }
 
-            if (p_isSimulatedTrades)    // for simulated orders, pretend its is executed already, even for MOC orders
+            string orderType = orderSubscription.Order.OrderType;
+
+            if (p_isSimulatedTrades)    // for simulated orders, pretend its is executed already, even for MOC orders, because the BrokerTask that Simulates intraday doesn't want to wait until it is finished at MarketClose
                 return true;
 
-            bool signalReceived = orderSubscription.AutoResetEvent.WaitOne(TimeSpan.FromMinutes(2)); // timeout of 2 minutes. Don't wait forever, because that will consume this thread forever
-            if (!signalReceived)
-                return false;   // if it was a timeout
+            if (orderType == "MKT")
+            {
+                bool signalReceived = orderSubscription.AutoResetEvent.WaitOne(TimeSpan.FromMinutes(2)); // timeout of 2 minutes. Don't wait forever, because that will consume this thread forever
+                if (!signalReceived)
+                    return false;   // if it was a timeout
+            } else if (orderType == "MOC")
+            {
+                // calculate times until MarketClose and wait max 2 minutes after that
+                bool isMarketTradingDay;
+                DateTime marketOpenTimeUtc, marketCloseTimeUtc;
+                bool isTradingHoursOK = Utils.DetermineUsaMarketTradingHours(DateTime.UtcNow, out isMarketTradingDay, out marketOpenTimeUtc, out marketCloseTimeUtc, TimeSpan.FromDays(3));
+                if (!isTradingHoursOK)
+                {
+                    Utils.Logger.Error("WaitOrder().DetermineUsaMarketTradingHours() was not ok.");
+                    return false;
+                }
+                if (!isMarketTradingDay)
+                {
+                    Utils.Logger.Error("WaitOrder().isMarketTradingDay is false. That is impossible. Order shouldn't have been placed.");
+                    return false;
+                }
+                DateTime marketClosePlusExtra = marketCloseTimeUtc.AddMinutes(2);
+                Utils.Logger.Info($"WaitOrder() waits until {marketClosePlusExtra.ToString("HH:mm:ss")}");
+                TimeSpan timeToWait = marketClosePlusExtra - DateTime.UtcNow;
+                if (timeToWait < TimeSpan.Zero)
+                    return true;
+
+                bool signalReceived = orderSubscription.AutoResetEvent.WaitOne(timeToWait); // timeout of 2 minutes. Don't wait forever, because that will consume this thread forever
+                if (!signalReceived)
+                    return false;   // if it was a timeout
+            }
 
             return true;
         }
@@ -570,7 +683,8 @@ namespace VirtualBroker
 
         public virtual void execDetails(int reqId, Contract contract, Execution execution)
         {
-            Console.WriteLine("ExecDetails. " + reqId + " - " + contract.Symbol + ", " + contract.SecType + ", " + contract.Currency + " - " + execution.ExecId + ", " + execution.OrderId + ", " + execution.Shares);
+            //Console.WriteLine("ExecutionDetails. " + reqId + " - " + contract.Symbol + ", " + contract.SecType + ", " + contract.Currency + " - " + execution.ExecId + ", " + execution.OrderId + ", " + execution.Shares);
+            Utils.Logger.Info("ExecutionDetails. ReqId:" + reqId + " - " + contract.Symbol + ", " + contract.SecType + ", " + contract.Currency + " ,executionId: " + execution.ExecId + ", orderID:" + execution.OrderId + ", nShares:" + execution.Shares);
         }
 
         public virtual void execDetailsEnd(int reqId)
@@ -580,7 +694,8 @@ namespace VirtualBroker
 
         public virtual void commissionReport(CommissionReport commissionReport)
         {
-            Console.WriteLine("CommissionReport. " + commissionReport.ExecId + " - " + commissionReport.Commission + " " + commissionReport.Currency + " RPNL " + commissionReport.RealizedPNL);
+            //Console.WriteLine("CommissionReport. " + commissionReport.ExecId + " - " + commissionReport.Commission + " " + commissionReport.Currency + " RPNL " + commissionReport.RealizedPNL);
+            Utils.Logger.Info("CommissionReport. " + commissionReport.ExecId + " - " + commissionReport.Commission + " " + commissionReport.Currency + " RPNL " + commissionReport.RealizedPNL);
         }
 
         public virtual void fundamentalData(int reqId, string data)
@@ -590,7 +705,10 @@ namespace VirtualBroker
 
         public virtual void marketDataType(int reqId, int marketDataType)
         {
-            Console.WriteLine("MarketDataType. " + reqId + ", Type: " + marketDataType);
+            // marketDataType 1 for real time, 2 for frozen
+            // if we ask m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL" });,
+            // then After market Close, there is no more realtime price, and this call back tells us that it has a marketDataType=2, which is an Index
+            Utils.Logger.Info("MarketDataType. " + reqId + ", Type: (1 for real time, 2 for frozen (Index after MarketClose)) " + marketDataType);
         }
 
         public virtual void updateMktDepth(int tickerId, int position, int operation, int side, double price, int size)
@@ -660,15 +778,28 @@ namespace VirtualBroker
         // 3. it is split adjusted (I have checked with FRO for 1:5 split on 2016-02-03), but if dividend is less than 10%, it is not adjusted.
         //"for stock split (and dividend shares of more than 10%), the stock price will be adjusted by the "PAR" value denominator, market cap is the same (shares floating x price) but the price and number of shares outstanding will be adjusted."
         // the returned p_quotes in the last value contains the last realTime price. It comes as CLOSE price for today, but during intraday, this is the realTime lastprice.
+        // 4. https://www.interactivebrokers.co.uk/en/software/api/apiguide/tables/historical_data_limitations.htm
+        // The following table lists the valid whatToShow values based on the corresponding products. for Index, only TRADES is allowed
+        // 5. One of the most important problem: when it is used from one IBGateway on Linux/Windows, later it doesn't work from the other server. Usually works for Stocks, 
+        // but for RUT Index, I had a hard time. very unreliable. It is better to get historical data from YF or from our DB. (later I need HistData from many stocks or more than 1 year)
+        // 6. read the IBGatewayHistoricalData.txt, but as an essence:
+        //maybe, because it is Friday, midnight, that is why RUT historical in unreliable, but the conclusion is:
+        //You can use IB historical data: 	>for stocks 	>popular indices, like SPX, but not the RUT.
+        //>So, for RUT, implement getting historical from our SQL DB.
         public virtual bool ReqHistoricalData(DateTime p_endDateTime, int p_lookbackWindowSize, string p_whatToShow, Contract p_contract, out List<QuoteData> p_quotes)
         {
             p_quotes = null;
             int histDataId = GetUniqueReqHistoricalDataID;
 
+            Console.WriteLine($"ReqHistoricalData() for {p_contract.Symbol}, reqId: {histDataId}");
+            Utils.Logger.Info($"ReqHistoricalData() for {p_contract.Symbol}, reqId: {histDataId}");
+
             // durationString = "60 D" is fine, but "61 D" gives the following error "Historical Market Data Service error message:Time length exceed max.", so after 60, change to Months "3 M" or "11 M"
             string durationString = (p_lookbackWindowSize <=60) ? $"{p_lookbackWindowSize} D" : $"{p_lookbackWindowSize/20 + 1} M"; // dividing by int rounds it down. But we want to round it up, so add 1.
             var histDataSubsc = new HistDataSubscription() { Contract = p_contract, QuoteData = new List<QuoteData>(p_lookbackWindowSize) };
             HistDataSubscriptions.TryAdd(histDataId, histDataSubsc);
+
+            //durationString = "5 D";
 
             ClientSocket.reqHistoricalData(histDataId, p_contract, p_endDateTime.ToString("yyyyMMdd HH:mm:ss"), durationString, "1 day", p_whatToShow, 1, 1, null);    // with daily data formatDate is always "yyyyMMdd", no seconds, and param=2 doesn't give seconds
 
@@ -683,7 +814,10 @@ namespace VirtualBroker
             histDataSubsc.AutoResetEvent.Dispose();     // ! AutoResetEvent has a Dispose
 
             if (!signalReceived)
+            {
+                Utils.Logger.Error($"ReqHistoricalData() timeout for {p_contract.Symbol}");
                 return false;   // if it was a timeout
+            }
 
             if (histDataSubsc.QuoteData.Count > p_lookbackWindowSize)   // if we got too much data, remove the old ones. Very likely it only do shallow copy of values, but no extra memory allocation is required
                 histDataSubsc.QuoteData.RemoveRange(0, histDataSubsc.QuoteData.Count - p_lookbackWindowSize);
@@ -695,7 +829,7 @@ namespace VirtualBroker
         public virtual void historicalData(int reqId, string date, double open, double high, double low, double close, int volume, int count, double WAP, bool hasGaps)
         {
             //Console.WriteLine("HistoricalData. " + reqId + " - Date: " + date + ", Open: " + open + ", High: " + high + ", Low: " + low + ", Close: " + close + ", Volume: " + volume + ", Count: " + count + ", WAP: " + WAP + ", HasGaps: " + hasGaps);
-            Utils.Logger.Trace("HistoricalData. " + reqId + " - Date: " + date + ", Open: " + open + ", High: " + high + ", Low: " + low + ", Close: " + close + ", Volume: " + volume + ", Count: " + count + ", WAP: " + WAP + ", HasGaps: " + hasGaps);
+            //Utils.Logger.Trace("HistoricalData. " + reqId + " - Date: " + date + ", Open: " + open + ", High: " + high + ", Low: " + low + ", Close: " + close + ", Volume: " + volume + ", Count: " + count + ", WAP: " + WAP + ", HasGaps: " + hasGaps);
 
             HistDataSubscription histDataSubscription = null;
             if (!HistDataSubscriptions.TryGetValue(reqId, out histDataSubscription))
@@ -708,6 +842,7 @@ namespace VirtualBroker
 
         public virtual void historicalDataEnd(int reqId, string startDate, string endDate)
         {
+            Console.WriteLine("Historical data end - " + reqId + " from " + startDate + " to " + endDate);
             Utils.Logger.Trace("Historical data end - " + reqId + " from " + startDate + " to " + endDate);
 
             HistDataSubscription histDataSubscription = null;
@@ -763,6 +898,7 @@ namespace VirtualBroker
 
         public void connectAck()
         {
+            //Console.WriteLine($"connectAck()");
             if (ClientSocket.AsyncEConnect)
                 ClientSocket.startApi();
         }

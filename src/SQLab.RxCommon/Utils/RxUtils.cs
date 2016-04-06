@@ -23,7 +23,10 @@ namespace RxCommon
                     Console.WriteLine($"!Error. We assume Current Directory is where project.json is. Cannot find: {currProject}");
                     return false;
                 }
-                string logFilePath = Path.Combine(currDir, p_filenameWithoutExt + ".sq.log");
+                string logDir = Path.Combine(currDir, "..", "..", "..", "logs");
+                if (!Directory.Exists(logDir))
+                    Directory.CreateDirectory(logDir);
+                string logFilePath = Path.Combine(logDir, p_filenameWithoutExt + "."+ DateTime.UtcNow.ToString("yyyy-MM-dd") + ".sqlog");  // the extension is *.sqlog so easy to find it in the file system
 
                 RxLogger.Instance.SubscribeObserver(new ConsoleLogObserver());
                 RxLogger.Instance.SubscribeObserver(new FileLogObserver(logFilePath));

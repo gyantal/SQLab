@@ -131,5 +131,17 @@ namespace IBApi
             }
             return l_bRetVal;
         }
+
+        // if we override Equals, we have to override GetHashCode, else there will be problem if it is a Key in a Dictionary. There is a compiler warning if it is not done.
+        public override int GetHashCode()
+        {
+            return clientId.GetHashCode() +
+                AcctCode.GetHashCode() +
+                time.GetHashCode() +
+                symbol.GetHashCode() +
+                secType.GetHashCode() +
+                exchange.GetHashCode() +
+                side.GetHashCode();
+        }
     }
 }

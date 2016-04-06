@@ -34,6 +34,7 @@ namespace VirtualBroker
         public GatewayUser GatewayUser { get;  }
         public string VbAccountsList { get; set; }
         public int SocketPort { get; set; }
+        public int BrokerConnectionClientID { get; set; }
         public bool IsConnected { get; set; }
 
         public IBrokerWrapper BrokerWrapper { get; set; }
@@ -77,6 +78,7 @@ namespace VirtualBroker
 
         public Gateway(GatewayUser p_gatewayUser)   // gateWayUser will be fixed. We don't allow to change it later.
         {
+            IsConnected = false;
             GatewayUser = p_gatewayUser;
             if (GatewayUser == GatewayUser.CharmatMain || GatewayUser == GatewayUser.CharmatSecondary || GatewayUser == GatewayUser.CharmatPaper)
             {
@@ -154,19 +156,19 @@ namespace VirtualBroker
             double estimatedTransactionValue = p_volume * p_estimatedPrice;
             if (estimatedTransactionValue > AllowedMaxUsdTransactionValue)  // if maxFilter is breached, safer to not trade at all. Even if it is an MOC order and can be grouped with other orders. Safer this way.
             {
-                Utils.Logger.Info($"Warning. MaxFilter is breached. Transaction is MaxFilter (${AllowedMaxUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
+                Utils.Logger.Warn($"Warning. MaxFilter is breached. Transaction is MaxFilter (${AllowedMaxUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
                 return virtualOrderID;
             }
 
             DateTime utcNow = DateTime.UtcNow;
             int nLatestOrders = 0;
-            double estimatedUsdSizeSum = 0.0;
+            double estimatedUsdSizeSumRecently = 0.0;
             lock (VirtualOrders)   // safety checks
             {
                 foreach (var latestOrder in VirtualOrders.Where(r => (utcNow - r.SubmitTime).TotalMinutes < 10.0))
                 {
                     nLatestOrders++;
-                    estimatedUsdSizeSum += latestOrder.EstimatedUsdSize;
+                    estimatedUsdSizeSumRecently += latestOrder.EstimatedUsdSize;
                 }
             }
             if (nLatestOrders >= m_maxNOrdersRecentlyAllowed)
@@ -174,7 +176,7 @@ namespace VirtualBroker
                 Utils.Logger.Error($"nLatestOrders >= m_maxNOrdersRecentlyAllowed. This is for your protection. Transaction {p_contract.Symbol} is skipped. Set Settings to allow more.");
                 return virtualOrderID;      // try to continue with other PlaceOrders()
             }
-            if (estimatedUsdSizeSum >= m_maxEstimatedUsdSumRecentlyAllowed)
+            if (estimatedUsdSizeSumRecently >= m_maxEstimatedUsdSumRecentlyAllowed)
             {
                 Utils.Logger.Error($"estimatedUsdSizeSum >= m_maxEstimatedUsdSumRecentlyAllowed. This is for your protection. Transaction {p_contract.Symbol} is skipped. Set Settings to allow more.");
                 return virtualOrderID;      // try to continue with other PlaceOrders()
@@ -183,27 +185,51 @@ namespace VirtualBroker
             // 2. Execute different orderTypes MKT, MOC
             // vbOrderId and ibOrderID is different, because some Limit orders, or other tricky orders are executed in real life by many concrete IB orders
             // or there are two opposite vbOrder that cancels each other out at MOC, therefore there is no ibOrder at all
+            Console.WriteLine($"Place {(p_isSimulatedTrades ? "Simulated" : "Real")} Order {p_transactionType}  {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
+            Utils.Logger.Info($"Place {(p_isSimulatedTrades?"Simulated":"Real")} Order {p_transactionType} {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
             if (p_orderExecution == OrderExecution.Market)
             {
-                // Perform minFilter skipped here. But for EstimatedPrice, we need that from the Main Gateway
+                // Perform minFilter skipped here. But use estimatedTransactionValue. We get the estimatedPrice from the Main Gateway
                 if (estimatedTransactionValue < AllowedMinUsdTransactionValue)
                 {
-                    Utils.Logger.Info($"Transaction is MinFilter (${AllowedMinUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
+                    Utils.Logger.Warn($"Transaction is MinFilter (${AllowedMinUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
                     lock (VirtualOrders)
-                        VirtualOrders.Add(new VirtualOrder() { OrderId = virtualOrderID, SubmitTime = DateTime.UtcNow, EstimatedUsdSize = 0.0, OrderStatus = OrderStatus.MinFilterSkipped });
+                        VirtualOrders.Add(new VirtualOrder() { OrderId = virtualOrderID, SubmitTime = DateTime.UtcNow, EstimatedUsdSize = 0.0, OrderExecution = p_orderExecution, OrderStatus = OrderStatus.MinFilterSkipped });
                     return virtualOrderID;
                 }
 
                 int ibRealOrderID = BrokerWrapper.PlaceOrder(p_contract, p_transactionType, p_volume, p_orderExecution, p_orderTif, p_limitPrice, p_stopPrice, p_estimatedPrice, p_isSimulatedTrades);
                 lock (VirtualOrders)
-                    VirtualOrders.Add(new VirtualOrder() { OrderId = virtualOrderID, SubmitTime = DateTime.UtcNow, EstimatedUsdSize = estimatedTransactionValue, OrderStatus = OrderStatus.Submitted, RealOrderIds = new List<int>() { ibRealOrderID } });
+                    VirtualOrders.Add(new VirtualOrder() { OrderId = virtualOrderID, SubmitTime = DateTime.UtcNow, EstimatedUsdSize = estimatedTransactionValue, RealOrderIds = new List<int>() { ibRealOrderID }, OrderExecution = p_orderExecution, OrderStatus = OrderStatus.Submitted, });
                 lock (RealOrders)
                     RealOrders.Add(new RealOrder() { OrderId = ibRealOrderID, VirtualOrderIds = new List<int>() { virtualOrderID } });
                 
             } else if (p_orderExecution == OrderExecution.MarketOnClose)
             {
                 // MOC orders need more consideration. Checking current MOC orders of the gateway, modifying it, etc. and 1 realOrders can be many VirtualOrders
-                // MinFilter orders may be played here
+                // (MinFilter orders may be played here if there is already a bigger order under Excetion. However, this 'nice' feature is not necessary.)
+
+                // 1. Get a list of current orders from BrokerGateway
+                // 2. If this ticker that I want to trade is in the list, don't create a new order, but modify that one.
+                // 3. Otherwise, create a new Order
+
+                // !!! Now, we only play UWM, TWM at MOC orders, so in real life, there will be no order Clash. Later, implement it properly. Now, assume that there is no other MOC order for this stock.
+                // in the future implement MOC order in a general way. One RealOrder can mean many Virtual MOC orders.
+
+                // Perform minFilter skipped here. But use estimatedTransactionValue. We get the estimatedPrice from the Main Gateway
+                if (estimatedTransactionValue < AllowedMinUsdTransactionValue)
+                {
+                    Utils.Logger.Warn($"Transaction is MinFilter (${AllowedMinUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
+                    lock (VirtualOrders)
+                        VirtualOrders.Add(new VirtualOrder() { OrderId = virtualOrderID, SubmitTime = DateTime.UtcNow, EstimatedUsdSize = 0.0, OrderExecution = p_orderExecution, OrderStatus = OrderStatus.MinFilterSkipped });
+                    return virtualOrderID;
+                }
+
+                int ibRealOrderID = BrokerWrapper.PlaceOrder(p_contract, p_transactionType, p_volume, p_orderExecution, p_orderTif, p_limitPrice, p_stopPrice, p_estimatedPrice, p_isSimulatedTrades);
+                lock (VirtualOrders)
+                    VirtualOrders.Add(new VirtualOrder() { OrderId = virtualOrderID, SubmitTime = DateTime.UtcNow, EstimatedUsdSize = estimatedTransactionValue, RealOrderIds = new List<int>() { ibRealOrderID }, OrderExecution = p_orderExecution, OrderStatus = OrderStatus.Submitted, });
+                lock (RealOrders)
+                    RealOrders.Add(new RealOrder() { OrderId = ibRealOrderID, VirtualOrderIds = new List<int>() { virtualOrderID } });
 
             }
             else
@@ -227,11 +253,17 @@ namespace VirtualBroker
                 return false;
             }
 
+            if (virtualOrder.OrderStatus == OrderStatus.MinFilterSkipped || virtualOrder.OrderStatus == OrderStatus.MaxFilterSkipped)
+                return true;    // no error. Executed succesfully. Market or MOC orders
+
             if (virtualOrder.OrderExecution == OrderExecution.Market)       // MinFilter and MaxFilter is only properly handled with MKT order not with MOC order
             {
-                if (virtualOrder.OrderStatus == OrderStatus.MinFilterSkipped || virtualOrder.OrderStatus == OrderStatus.MaxFilterSkipped)
-                    return true;    // no error. Executed succesfully
-
+                int realOrderId = virtualOrder.RealOrderIds[0];
+                BrokerWrapper.WaitOrder(realOrderId, p_isSimulatedTrades);
+            }
+            else if (virtualOrder.OrderExecution == OrderExecution.MarketOnClose)
+            {
+                // in the future implement MOC order in a general way. One RealOrder can mean many Virtual MOC orders.
                 int realOrderId = virtualOrder.RealOrderIds[0];
                 BrokerWrapper.WaitOrder(realOrderId, p_isSimulatedTrades);
             }
@@ -278,18 +310,55 @@ namespace VirtualBroker
                     orderStatus = realOrderStatus;
                     executedVolume = realExecutedVolume;
                     executedAvgPrice = realAvgPrice;
-                } else
+                }
+                else
                 {
                     orderStatus = realOrderStatus;  // return the real order status. it doesn't hurt
                     executedVolume = Double.NaN;    // better not using partially filled info, or 0.0
                     executedAvgPrice = Double.NaN;
                 }
 
-
                 return true;
             }
+            else if (virtualOrder.OrderExecution == OrderExecution.MarketOnClose)
+            {
+                // in the future implement MOC order in a general way. One RealOrder can mean many Virtual MOC orders.
 
-            // only  OrderExecution.Market is implemented now
+                if (virtualOrder.OrderStatus == OrderStatus.MinFilterSkipped || virtualOrder.OrderStatus == OrderStatus.MaxFilterSkipped)
+                {
+                    orderStatus = virtualOrder.OrderStatus;
+                    executedVolume = 0.0;
+                    executedAvgPrice = Double.NaN;
+                    p_executionTime = DateTime.UtcNow;
+                    return true;    // correct, expected MinFilter Skip
+                }
+
+                int realOrderId = virtualOrder.RealOrderIds[0];
+
+                // the real order may or maybe Not finished yet. If it is not filled, we will set it as Error order
+                OrderStatus realOrderStatus = OrderStatus.None;
+                double realExecutedVolume = Double.NaN;
+                double realAvgPrice = Double.NaN;
+                DateTime realExecutionTime = DateTime.MinValue;
+                if (!BrokerWrapper.GetRealOrderExecutionInfo(realOrderId, ref realOrderStatus, ref realExecutedVolume, ref realAvgPrice, ref realExecutionTime, p_isSimulatedTrades))
+                    return false;
+
+                if (realOrderStatus == OrderStatus.Filled)
+                {
+                    orderStatus = realOrderStatus;
+                    executedVolume = realExecutedVolume;
+                    executedAvgPrice = realAvgPrice;
+                }
+                else
+                {
+                    orderStatus = realOrderStatus;  // return the real order status. it doesn't hurt
+                    executedVolume = Double.NaN;    // better not using partially filled info, or 0.0
+                    executedAvgPrice = Double.NaN;
+                }
+
+                return true;
+
+            }
             return false;
         }
     }

@@ -1,6 +1,7 @@
 ﻿import os        # listdir, isfile
 import paramiko  # for sftp
 import colorama  # for colourful print
+from stat import S_ISDIR
 from colorama import Fore, Back, Style
 
 # Parameters to change:
@@ -8,8 +9,13 @@ rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives
 rootRemoteDir = "/home/ubuntu/SQ/Server/HealthMonitor/src"
 acceptedSubTreeRoots = ["Server\\HealthMonitor", "SQLab.Common"]        # everything under these relPaths is traversed: files or folders too
 
+serverHost = "ec2-52-23-207-88.compute-1.amazonaws.com"
+serverPort = 22
+serverUser = "ubuntu"
+serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"
+
 excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties"])
-excludeFileExts = set(["sln", "xproj", "log", "ps1", "py", "sh", "user"])
+excludeFileExts = set(["sln", "xproj", "log", "sqlog", "ps1", "py", "sh", "user"])
 
 # "mkdir -p" means Create intermediate directories as required. 
 # http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist
@@ -31,15 +37,63 @@ def mkdir_p(sftp, remote_directory):
         sftp.chdir(basename)
         return True
 
+#remove directory recursively
+# http://stackoverflow.com/questions/20507055/recursive-remove-directory-using-sftp
+# http://stackoverflow.com/questions/3406734/how-to-delete-all-files-in-directory-on-remote-server-in-python
+def isdir(path):
+    try:
+        return S_ISDIR(sftp.stat(path).st_mode)
+    except IOError:
+        return False
+
+# remove the root folder too
+def rm(sftp, path): 
+    files = sftp.listdir(path=path)
+    for f in files:
+        #filepath = os.path.join(path, f)       # it adds '\\', but my server is Linux
+        filepath = path + "/" + f 
+        if isdir(filepath):
+            print("Removing: " + filepath)
+            rm(sftp, filepath)
+        else:
+            sftp.remove(filepath)
+    sftp.rmdir(path)
+
+# do not remove the root folder, only the subfolders recursively
+def rm_onlySubdirectories(sftp, path):
+    files = sftp.listdir(path=path)
+    for f in files:
+        #filepath = os.path.join(path, f)       # it adds '\\', but my server is Linux
+        filepath = path + "/" + f 
+        if isdir(filepath):
+            print("Removing: " + filepath)
+            rm_onlySubdirectories(sftp, filepath)
+            sftp.rmdir(filepath)
+        else:
+            sftp.remove(filepath)    
 
 # script START
 colorama.init()
-print(Fore.MAGENTA + Style.BRIGHT  +  "Start deploying.")
+print(Fore.MAGENTA + Style.BRIGHT  +  "Start deploying '" + acceptedSubTreeRoots[0] + "' ...")
 
-print("SFTP Session is opening...")
-transport = paramiko.Transport(("ec2-52-23-207-88.compute-1.amazonaws.com", 22))
-transport.connect(username = "ubuntu", pkey = paramiko.RSAKey.from_private_key_file("g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"))
+#quicker to do one remote command then removing files/folders recursively one by one
+#in the future. We can 7-zip locally, upload it by Sftp, unzip it with SSHClient commands. It is about 2 days development, so, later.
+#command = "ls " + rootRemoteDir
+command = "rm -rf " + rootRemoteDir
+print("SSHClient. Executing remote command: " + command)
+sshClient = paramiko.SSHClient()
+sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+sshClient.connect(serverHost, serverPort, username = serverUser, pkey = paramiko.RSAKey.from_private_key_file(serverRsaKeyFile))
+(stdin, stdout, stderr) = sshClient.exec_command(command)
+for line in stdout.readlines():
+    print(line)
+sshClient.close()
+
+print("SFTPClient is connecting...")
+transport = paramiko.Transport((serverHost, serverPort))
+transport.connect(username = serverUser, pkey = paramiko.RSAKey.from_private_key_file(serverRsaKeyFile))
 sftp = paramiko.SFTPClient.from_transport(transport)
+#rm_onlySubdirectories(sftp, rootRemoteDir)
 
 for root, dirs, files in os.walk(rootLocalDir, topdown=True):
     curRelPathWin = os.path.relpath(root, rootLocalDir);
@@ -67,7 +121,7 @@ for root, dirs, files in os.walk(rootLocalDir, topdown=True):
         ret = sftp.put(root + "/" + f, remoteDir + f, None, True) # Check FileSize after Put() = True
         #print(Style.RESET_ALL + str(ret))
 
-print(Fore.MAGENTA + Style.BRIGHT  +  "SFTP Session is closing. Deployment is OK.")
+print(Fore.MAGENTA + Style.BRIGHT  +  "SFTPClient is closing. Deployment '" + acceptedSubTreeRoots[0] + "' is OK.")
 sftp.close()
 transport.close()
 #k = input("Press ENTER...")  

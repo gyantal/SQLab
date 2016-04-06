@@ -165,5 +165,11 @@ namespace IBApi
 
             return true;
         }
+
+        // if we override Equals, we have to override GetHashCode, else there will be problem if it is a Key in a Dictionary. There is a compiler warning if it is not done.
+        public override int GetHashCode()
+        {
+            return status.GetHashCode();    // a short one is enough, if matches, laten Equals() will be called
+        }
     }
 }

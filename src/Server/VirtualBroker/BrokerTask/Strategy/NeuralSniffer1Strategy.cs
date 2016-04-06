@@ -1,14 +1,50 @@
 ﻿using DbCommon;
+using IBApi;
+using SqCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using VirtualBroker.Strategy.NeuralSniffer;
+using Utils = SqCommon.Utils;
 
 namespace VirtualBroker
 {
+
+    public class PortfolioParamNeuralSniffer1 : IPortfolioParam     // Strategy specific parameters are here
+    {
+        public double PlayingInstrumentUpsideLeverage { get; set; } // negative number means: play the inverse; instead of long, short the inverse
+        public double PlayingInstrumentDownsideLeverage { get; set; }
+    }
+
     public class NeuralSniffer1Strategy : IBrokerStrategy
     {
+        Task<Dictionary<string, Tuple<IAssetID, string>>> m_loadAssetIdTask = null;
+        Dictionary<string, Tuple<IAssetID, string>> m_tickerToAssetId = null;   // ticker => AssetID : FullTicker mapping
+
         public bool IsSameStrategyForAllUsers { get; set; } = true;
+
+        NNConfig nnConfig = new NNConfig();
+        //List<QuoteData> m_rut;
+
+        //TODO: implement isNextDayInBullishHolidayRange, but think that UberVXX will use it too. So the solution has to be general, not a simple hack
+        // see book Seasonal Stock Market Trends 2009_agy.pdf
+        // we consider only Xmas and New Years's eve as bullish holidays  (later we added Good Friday (eastern) and Thanksgiving)
+        // because there is some overlap, in 2011 december, it gives only 3+4+3=10 trading days (not 12 as expected)
+        //Based on http://www.cobrasmarketview.com/holiday-seasonality/
+        //add to goodHolidays: Good Friday (eastern), and Thanksgiving day (Nov. 22, good Novemer seasonality)
+        // see future dates from here: http://www.timeanddate.com/holidays/us/
+        static readonly DateTime[] g_bullishHolidaysInET = new DateTime[] { new DateTime(2011, 12, 26),
+            new DateTime(2012, 01, 02), new DateTime(2012, 04, 06), new DateTime(2012, 11, 22), new DateTime(2012, 12, 25),
+            new DateTime(2013, 01, 01), new DateTime(2013, 03, 29), new DateTime(2013, 11, 28), new DateTime(2013, 12, 25),
+            new DateTime(2014, 01, 01), new DateTime(2014, 04, 18), new DateTime(2014, 11, 27), new DateTime(2014, 12, 25),
+            new DateTime(2015, 01, 01), new DateTime(2015, 04, 03), new DateTime(2015, 11, 26), new DateTime(2015, 12, 25),
+            new DateTime(2016, 01, 01), new DateTime(2016, 03, 25), new DateTime(2016, 11, 24), new DateTime(2016, 12, 26),
+            new DateTime(2017, 01, 01), new DateTime(2017, 04, 14), new DateTime(2017, 11, 23), new DateTime(2017, 12, 25),
+            new DateTime(2018, 01, 01), new DateTime(2018, 03, 30), new DateTime(2018, 11, 22), new DateTime(2018, 12, 25),
+            new DateTime(2019, 01, 01), new DateTime(2019, 04, 19), new DateTime(2019, 11, 28), new DateTime(2019, 12, 25),
+
+        };
 
         public static IBrokerStrategy StrategyFactoryCreate()
         {
@@ -17,27 +53,176 @@ namespace VirtualBroker
 
         public void Init()
         {
-            throw new NotImplementedException();
-        }
-
-        public List<PortfolioPositionSpec> GeneratePositionSpecs()
-        {
-            throw new NotImplementedException();
+            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(new List<string>() { "UWM", "TWM" }));   // task will start to run on another thread (in the threadpool)
         }
 
         public string StockIdToTicker(int p_stockID)
         {
-            return null;
+            if (m_tickerToAssetId == null)
+                m_tickerToAssetId = m_loadAssetIdTask.Result;   // wait until the parrallel task arrives
+            return m_tickerToAssetId.First(r => r.Value.Item1.ID == p_stockID).Key;
         }
 
         public IAssetID TickerToAssetID(string p_ticker)
         {
-            return null;
+            if (m_tickerToAssetId == null)
+                m_tickerToAssetId = m_loadAssetIdTask.Result;   // wait until the parrallel task arrives
+            return m_tickerToAssetId[p_ticker].Item1;
+        }
+
+        public List<PortfolioPositionSpec> GeneratePositionSpecs()
+        {
+            Utils.Logger.Info("NeuralSniffer1Strategy.GeneratePositionSpecs() Begin.");
+            int lookbackWindowSize = nnConfig.lookbackWindowSize + 3;       // in general we want 202 historical + 1 today price => that will generate 202 %change bars (but because last 2 days data is used, that will be 200 samples)
+
+            bool isNextDayInBullishHolidayRange = false;
+            List<QuoteData> m_rut;      // contains today real-time price too
+
+            DateTime dateNowInET = Utils.ConvertTimeFromUtcToEt(DateTime.UtcNow);
+            DateTime nextTradingDayUtc = Utils.GetNextUsaMarketOpenDayUtc(DateTime.UtcNow, false);
+            DateTime nextTradingDayET = Utils.ConvertTimeFromUtcToEt(nextTradingDayUtc);
+            nextTradingDayET = nextTradingDayET.Date;
+            foreach (DateTime bullishHolidayDateET in g_bullishHolidaysInET)
+            {
+                // we want to be long in the [-3 days, +3 days], so generate 3 days before, 3 days after, and check if nextTradingDayET is that
+                if (Math.Abs((bullishHolidayDateET - nextTradingDayET).TotalDays) > 20)     // if holiday is further than 20 days, there is no point to check
+                    continue;
+
+                DateTime bullishHolidayDateTimeET = bullishHolidayDateET.AddHours(12); // consider 12 hours later = noon
+                DateTime bullishHolidayDateTimeUtc = Utils.ConvertTimeFromEtToUtc(bullishHolidayDateTimeET);
+
+                // 1. Check if nextTradingDayET is in the previous 3 days;
+                DateTime candidateDateTimeUtc = bullishHolidayDateTimeUtc;
+                for (int i = 0; i < 3; i++)
+                {
+                    candidateDateTimeUtc = Utils.GetPreviousUsaMarketOpenDayUtc(candidateDateTimeUtc, false);
+                    DateTime candidateDateTimeET = Utils.ConvertTimeFromUtcToEt(candidateDateTimeUtc);
+                    DateTime candidateDateET = candidateDateTimeET.Date;
+                    if (candidateDateET == nextTradingDayET)
+                    {
+                        isNextDayInBullishHolidayRange = true;
+                        break;
+                    }
+                }
+                if (isNextDayInBullishHolidayRange)
+                    break;
+
+                // 1. Check if nextTradingDayET is in the next 3 days;
+                candidateDateTimeUtc = bullishHolidayDateTimeUtc;
+                for (int i = 0; i < 3; i++)
+                {
+                    candidateDateTimeUtc = Utils.GetNextUsaMarketOpenDayUtc(candidateDateTimeUtc, false);
+                    DateTime candidateDateTimeET = Utils.ConvertTimeFromUtcToEt(candidateDateTimeUtc);
+                    DateTime candidateDateET = candidateDateTimeET.Date;
+                    if (candidateDateET == nextTradingDayET)
+                    {
+                        isNextDayInBullishHolidayRange = true;
+                        break;
+                    }
+                }
+                if (isNextDayInBullishHolidayRange)
+                    break;
+            }
+
+
+            double forecast = Double.NaN;
+            if (isNextDayInBullishHolidayRange)
+            {
+                forecast = 1;
+            }
+            else
+            {
+                // 1. Get historical RUT data 
+                Utils.Logger.Info("NeuralSniffer1Strategy.GeneratePositionSpecs() SqlTools.LoadHistoricalQuotesAsync().");
+                List<QuoteData> rutQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
+                    new QuoteRequest { Ticker = "^RUT", nQuotes =  lookbackWindowSize - 1 }}, DbCommon.AssetType.BenchmarkIndex).Result.
+                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)(float)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
+
+                m_rut = rutQuotesFromSqlDB.Select(item => new QuoteData() { Date = item.Date, AdjClosePrice = item.AdjClosePrice }).ToList(); // Clone the SQL version, not YF
+
+                //Utils.Logger.Info("NeuralSniffer1Strategy.GeneratePositionSpecs() SqlTools.ReqHistoricalData().");
+
+                //You can use IB historical data:     >for stocks OR > popular indices, like SPX, but not the RUT. > So, for RUT, implement getting historical from our SQL DB.
+                 Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL" };
+                //Contract contract = new Contract() { Symbol = "SPX", SecType = "IND", Currency = "USD", Exchange = "CBOE" };
+                //Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL", LocalSymbol = "RUT" };
+                //Contract contract = new Contract() { Symbol = "ES", SecType = "IND", Currency = "USD", Exchange = "GLOBEX" };
+                //Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "SMART" };
+                //Contract contract = new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" };
+                //if (!Controller.g_gatewaysWatcher.ReqHistoricalData(DateTime.UtcNow, lookbackWindowSize, "TRADES", contract, out m_rut))   // real trades, not the MidPoint = AskBidSpread
+                //    return null;
+
+                // 2. Get realtime RUT data (if IBGateway doesn't give it), but IBGateway gives it.
+                var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.LAST, new PriceAndTime() }, { TickType.CLOSE, new PriceAndTime() } };    // we are interested in the following Prices
+                StrongAssert.True(Controller.g_gatewaysWatcher.GetMktDataSnapshot(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if realtime RUT is not given.");
+                double rus2000LastClose = rtPrices[TickType.CLOSE].Price;
+                StrongAssert.True(Utils.IsNear(rus2000LastClose, m_rut[m_rut.Count - 1].AdjClosePrice, Utils.FLOAT_EPS), Severity.NoException, "RUT: IB Last Close price should be the same in SQL DB. Maybe SQL DB has no yesterday data");
+
+                double rus2000Last = rtPrices[TickType.LAST].Price;    // as an Index, there is no Ask,Bid, therefore, there is no MidPrice, only LastPrice
+                // append an extra CSVData representing today close value (estimating)
+                m_rut.Add(new QuoteData() { Date = dateNowInET, AdjClosePrice = rus2000Last });
+                
+
+                // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
+                if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
+                    StrongAssert.True(Math.Abs(rutQuotesFromSqlDB[rutQuotesFromSqlDB.Count - 1].AdjClosePrice - m_rut[m_rut.Count - 2].AdjClosePrice) < 0.02, Severity.NoException, "We continue but yesterday price data doesn't match from IB and SQL DB");
+
+                // log the last 3 values (for later debugging)
+                Utils.Logger.Warn($"{m_rut[m_rut.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 3].AdjClosePrice}");
+                Utils.Logger.Warn($"{m_rut[m_rut.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 2].AdjClosePrice}");
+                Utils.Logger.Warn($"{m_rut[m_rut.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 1].AdjClosePrice} (!Last trade, not last midPoint)");
+
+
+                // 3. Process it
+                DateTime[] dates = new DateTime[m_rut.Count - 1];
+                double[] barChanges = new double[m_rut.Count - 1];
+                double[] dateWeekDays = new double[m_rut.Count - 1];
+                for (int i = 0; i < barChanges.Length; i++)
+                {
+                    dates[i] = m_rut[i + 1].Date;
+                    barChanges[i] = m_rut[i + 1].AdjClosePrice / m_rut[i].AdjClosePrice - 1;
+                    dateWeekDays[i] = (byte)(m_rut[i + 1].Date.DayOfWeek) - 1 - 2;     // Monday is -2, Friday is 2
+                }
+                double dailyPercentChange = barChanges[barChanges.Length - 1];
+                Utils.Logger.Warn($"RUT %Chg:{dailyPercentChange * 100.0:F2}%");
+
+                // double target = p_barChanges[iRebalance + 1]; // so target is the p_iRebalance+1 day %change; so the last index that can be used in training is p_barChanges[p_iRebalance] as output
+                // so, set p_iRebalance to the last usable day index (the last index)
+                double avgTrainError = Double.NaN;
+
+                int generalNensembleGroupMembers = 5;
+                nnConfig.ensembleGroups = new EnsembleGroupSetup[]
+                {    // keep the ensembleMembers number odd; because if it is even, 5 Up prediction and 5 down prediction can cancel each other
+                        new EnsembleGroupSetup() { Nneurons = 1, NNInputDesc = NNInputDesc.BarChange, BarChangeLookbackDaysInds= new int[] { 0, 1 }, NensembleGroupMembers = generalNensembleGroupMembers }
+                };
+
+                nnConfig.nEnsembleRepeat = 21;
+                forecast = new NeuralSniffer().GetEnsembleRepeatForecast(nnConfig.nEnsembleRepeat, nnConfig.ensembleGroups, nnConfig.ensembleAggregation, nnConfig.maxEpoch, dateWeekDays.Length - 1, nnConfig.lookbackWindowSize, nnConfig.outputOutlierThreshold, nnConfig.inputOutlierClipInSD, nnConfig.inputNormalizationBoost, nnConfig.outputNormalizationBoost, nnConfig.notNNStrategy, dateWeekDays, barChanges, true, out avgTrainError);
+            }
+
+            Utils.Logger.Warn($"Forecast:{forecast * 100}%");
+
+            List<PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
+            if (forecast > 0) // bullish
+            {
+                // IBrokerStrategy should not really know about the Trading Execution, or the proper trading instrument of the user or leverage of the user. 
+                // The BrokerTask should overwrite the trading instrument if it wants that suits to the different portfolios
+                // but we want to Calculate this complex Strategy only once, just giving a guideline for the BrokerTask
+                specs.Add(new PortfolioPositionSpec() { Ticker = "TWM", PositionType = PositionType.Short, Size = WeightedSize.Create(1.0) });
+            }
+            else if (forecast < 0)  // bearish
+            {
+                specs.Add(new PortfolioPositionSpec() { Ticker = "UWM", PositionType = PositionType.Short, Size = WeightedSize.Create(1.0) });
+            }
+            else
+                Utils.Logger.Warn("Stay in cash");
+
+            return specs;
         }
 
         public double GetPortfolioLeverage(List<PortfolioPositionSpec> p_suggestedPortfItems, IPortfolioParam p_param)
         {
-            throw new NotImplementedException();
+            return 1.0; // TWM and UWM are already leveraged, so don't increase leverage more
         }
     }
 }

@@ -1,0 +1,163 @@
+******************* story: RUT index works in TWS, but not in IBGateway.
+
+********************************* Conclusion
+- maybe, because it is Friday, midnight, that is why RUT historical in unreliable, but the conclusion is:
+You can use IB historical data: 	>for stocks 	>popular indices, like SPX, but not the RUT.
+>So, for RUT, implement getting historical from our SQL DB.
+
+
+
+
+*************************************************
+https://www.interactivebrokers.com.hk/en/index.php?f=7857
+Use Native Index Prices
+API users running TWS/IB Gateway 950 or above can now elect to show Native index prices when available. Currently the calculated index price is used by default. To change the preference to show native prices in the IB Gateway, in Configuration on the API Settings page, select Prefer Native Index Prices to show the exchange-native index price whenever it's available. If the API is running through TWS, the setting is defined in Global Configuration on the Display > Ticker Row page.
+
+
+You are only allowed 5 (or so) API connections and you've exceeded this number. Maybe some are hanging up? 
+
+You are only allowed to make so many requests/second in the TWS API. If you exceed this number it will get pissed off and boot you out. This is why you setup a data subscription once instead of pinging tws for a snapshot every pass of a while loop. Perhaps you are sending too many requests? I know I had this problem.
+>No, because VXX prices are coming well.
+
+"Sorry to resurrect a dead thread, but volpunter is right- the market data subscriptions do not permit even a second user on the same account to view them simultaneous with the paid subscriber. It's one pair of eyes per subscription."
+
+Request -1, Code: 2104 - Market data farm connection is OK:usfarm
+Request -1, Code: 2107 - HMDS data farm connection is inactive but should be available upon demand.ushmds
+Request -1, Code: 2106 - HMDS data farm connection is OK:cashhmds
+Request 30000001, Code: 200 - No security definition has been found for the request
+Request -1, Code: 2106 - HMDS data farm connection is OK:ushmds
+Request 30000001, Code: 200 - No security definition has been found for the request
+
+Request 40000001, Code: 300 - Can't find EId with tickerId:40000001
+Request 40000001, Code: 300 - Can't find EId with tickerId:40000001
+
+
+Sample Application: Contract Information
+	Symbol	Local Symbol	Type	Currency	Exchange	Primary Exch.	lastTradeDate	Multiplier	Strike	P/C	ConId
+	RUT	RUT	IND	USD	RUSSELL				0		416888
+
+/// <param name="localSymbol">This is the local exchange symbol of the underlying asset.</param>
+
+	
+One user has reported that in some cases IB returns empty data for historical index
+(SecType='Ind') queries. RestartingTWS/Gateway and re-querying when the
+exchange is active appears to solve this problem.
+
+http://r.789695.n4.nabble.com/ibrokers-problems-retrieving-Indices-ETFs-td4661867.html
+Now I try to read an Index/ETF from ibrokers to file. I get "2 1 300 Can't find EId with tickerId:1" 
+reqMktData(tws, ttwsEquity("SPX", exch="CBOE"), eventWrapper=eWrapper.MktData.CSV(1), file=spy.csv) 
+I had this problem also previously for the first request, and then simply subscribing to correct data feed at IB helped me out. Newbie fault. 
+This time I suspect I don't receive data is because twsEquity/twsSTK isn't made for Indices/ETFs. If this is so; could someone please nudge me some pointers to where in iBrokers package I could start trying to fix this. 
+
+	Symbol	Local Symbol	Type	Currency	Exchange	Primary Exch.	lastTradeDate	Multiplier	Strike	P/C	ConId
+	SPX	SPX	IND	USD	CBOE				0		416904
+	
+But this worked on 03-23, so I definitively have the RUT subscription:
+323We19:44:01.382#40 GetContractLastValue() for Symbol RUT
+323We19:44:01.382#40 RequestMarketData Sleeps for 600msec to avoid getting cached price from IBGateway; ticker: RUT, tickId: 2
+323We19:44:01.975#09 ibNet_ErrorMsg(). TickerID: -1, ErrorCode: 2119, ErrorMessage: 'Market data farm is connecting:usfarm.us'
+323We19:44:01.991#40 RequestMarketData Sleeps for 600msec to avoid getting cached price from IBGateway; ticker: RUT, tickId: 2
+323We19:44:02.599#40 RequestMarketData Sleeps for 600msec to avoid getting cached price from IBGateway; ticker: RUT, tickId: 2
+323We19:44:02.833#09 ibNet_ErrorMsg(). TickerID: -1, ErrorCode: 2104, ErrorMessage: 'Market data farm connection is OK:usfarm.us'
+323We19:44:03.207#40 RequestMarketData Sleeps for 600msec to avoid getting cached price from IBGateway; ticker: RUT, tickId: 2
+323We19:44:03.223#09 TickPriceCB(): 2/LastPrice/1079.43/False 
+323We19:44:03.223#09 TickPriceCB(): 2/HighPrice/1097.34/False 
+323We19:44:03.223#09 TickPriceCB(): 2/LowPrice/1078.69/False 
+323We19:44:03.223#09 TickPriceCB(): 2/ClosePrice/1097.34/False 
+323We19:44:03.223#09 TickPriceCB(): 2/BidPrice/-1.00/True 
+323We19:44:03.223#09 TickPriceCB(): 2/AskPrice/-1.00/True 
+323We19:44:03.816#40 GetContractLastValue(). The Symbol RUT last value is : 1079.43
+323We19:44:03.816#40 Rus2000last: 1079.43
+
+
+Show should be TRADES, not MIDPOINT. MIDPOINT gave error
+
+Maybe for RUT: I have real time price data (so NeuralSniffer could work), but not historical data subscription.
+- Even for TWS or IBGateway, OR  :from IBGateway, user2 from WindowsServer gave historical market data
+- doesn't matter or local or remote server OR
+- doesn't matter that user1 or user2  : from TWS (user1 and user2) gave historical market data
+
+-Later, when only one IBGateway ready on my Windows,
+I could query RUT historical from the IB Gateway. Wow. So, it worked. I have the data subscription.
+Maybe it didn't work during the day, because I was using the same from my local windows.
+
+- But this worked on 03-23 with the old NeuralSniffer VBroker on WindowsServer with IBGtway, so I definitively have the RUT subscription:
+"323We19:44:01.382#40 GetContractLastValue() for Symbol RUT"
+
+**************************************** Solution
+So, when I only have ONE real-time streaming stream for a ticker: that works.
+But when I have one streaming on the Developer machine (via TWS or IBGateway) and one on the Production machine (via TWS or IBGateway), that is not allowed by IB.
+
+"Sorry to resurrect a dead thread, but volpunter is right- the market data subscriptions do not permit even a second user on the same account to view them simultaneous with the paid subscriber. It's one pair of eyes per subscription."
+>So, when Linux machine is streaming RUT prices during the day, I cannot use the Developer machine to stream the same prices.
+Solution: on Linux machine: the MainGateway user is DrCharmat, so that streams prices (always)
+and on the local machine, the MainGateway user is always Gyantal
+
+No, on linux, it still does'nt work. IBGateway, with Gyantal2: Win: OK. Linux: not.
+However, 10 minutes later, it doesn't work on Windows either.
+
+IBGateway: After that, RealTime stream works on Windows, but historical not. Even though I exited IBGateway on linux.
+So, realtime works more reliably than historical.
+Maybe don't rely on IB historical data, but use it from our SQL DB, because for indices, it is unreliable.
+
+
+************** put this into source code:
+********at here public virtual bool ReqHistoricalData(
+
+- Historical data limitations: https://www.interactivebrokers.co.uk/en/software/api/apiguide/tables/historical_data_limitations.htm
+Pacing Violations
+All of the API technologies support historical data requests. However, requesting the same historical data in a short period of time can cause extra load on the backend and subsequently cause pacing violations. 
+>So, there is problem with historical  data, but there will be no problem with Realtime data.
+And because maximum 1 year historical can be queried. Yes, maybe better to get the historical from YF or our database.
+"Do not make more than 60 historical data requests in any ten-minute period."
+"The following conditions can cause a pacing violation:
+Making identical historical data requests within 15 seconds;
+Making six or more historical data requests for the same Contract, Exchange and Tick Type within two seconds."
+
+- After a while, Historical Data Farm: Disconnected. Never connects back. Maybe because previous violations.
+However, it is OK:"The Historical Data Farm indicator will only show green when a historical market data request or scanner subscription has been made, as is shown in the following screenshot: ""
+However, it should be Orange = Inactive, not Red as Disconnected. So, it is not good.
+So, many times the IB Historical Data Server is down. Also, unreliable. Our SQL server or YF historical data is always up. Even at midnight.
+
+- still: from gyantal-1 user, from TWS, RUT historical data always works.
+ 3 minutes later, gyantal-1 user, from IBGateway, RUT historical: doesn't work. Only VXX historical.
+ Maybe it is really IBGateway who is buggy.? No, it is just that the data source is very unreliable.
+
+- actually, the problem is not IBGateway, or TWS, or users, but the RUT, as data source.
+With IBGateway: I only change 
+this  "Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL" };"
+to this:  "Contract contract = new Contract() { Symbol = "SPX", SecType = "IND", Currency = "USD", Exchange = "CBOE" };"
+And it works!!!
+>SPX works perfectly, and Always. It comes from CBOE exchange.
+>RUT doesn't work. just rarely. They come from RUSSELL exchange. Different data source. Maybe that data source is down.
+
+- And somehow, if TWS is the client (not Gateway), TWS-pre-calculates it, even if the raw RUT price is not available from Historical-Data-farm.
+Because in TWS, there is a feature: RightClick/Analytical Tools/Price history. That gets the data somehow, even if the IBGateway cannot have it. (and with that you can go back 5 years. So, TWS definitely gets the data somewhere else, because the 1 year limit is not used.)
+
+- I have subscribed charmatSecondary IB account to
+>Russell Indices (NP) (Indices)	NonPro	Real-time index data for the Russell Family of Indexes, including both US and global equities. Real-time and end of day index valuations for over 1000 indexes.	2 USD
+>US Value Bundle (NP) (Indices)	NonPro	A BBO alternative that will deliver aggregated quote, trade, volume, and optional depth information for all four US equity exchange books operated by BATS (BATS, BYX, EDGX, EDGEA). Includes Dow Jones Industrial Average and S&P 500 Indices and top of book GLOBEX quotes for CBOT, CME, COMEX, and NYMEX
+>still, after that IBGateway, with CharmatSecondary account cannot have Historical RUT. 
+(SPX historical is fine.) and RUT historical from TWS is fine too.
+
+************** Also From source code:
+// Restrictions:
+// https://www.interactivebrokers.co.uk/en/software/api/apiguide/tables/historical_data_limitations.htm
+// 1. IB Error. Id: 4001, Code: 321, Msg: Error validating request:-'yd' : cause - Historical data request for greater than 365 days rejected.
+// http://www.elitetrader.com/et/index.php?threads/interactive-brokers-maximum-60-historical-data-requests-in-10-minutes.275746/
+// 2. interactive brokers maximum 60 historical data requests in 10 minutes
+// http://www.elitetrader.com/et/index.php?threads/interactive-broker-historical-prices-dividend-adjustment.280815/
+// 3. it is split adjusted (I have checked with FRO for 1:5 split on 2016-02-03), but if dividend is less than 10%, it is not adjusted.
+//"for stock split (and dividend shares of more than 10%), the stock price will be adjusted by the "PAR" value denominator, market cap is the same (shares floating x price) but the price and number of shares outstanding will be adjusted."
+// the returned p_quotes in the last value contains the last realTime price. It comes as CLOSE price for today, but during intraday, this is the realTime lastprice.
+// 4. https://www.interactivebrokers.co.uk/en/software/api/apiguide/tables/historical_data_limitations.htm
+// The following table lists the valid whatToShow values based on the corresponding products. for Index, only TRADES is allowed
+// 5. One of the most important problem: when it is used from one IBGateway on Linux/Windows, later it doesn't work from the other server. Usually works for Stocks, 
+// but for RUT Index, I had a hard time. very unreliable. It is better to get historical data from YF or from our DB. (later I need HistData from many stocks or more than 1 year)
+// 6. read the IBGatewayHistoricalData.txt, but as an essence:
+//maybe, because it is Friday, midnight, that is why RUT historical in unreliable, but the conclusion is:
+//You can use IB historical data: 	>for stocks 	>popular indices, like SPX, but not the RUT.
+//>So, for RUT, implement getting historical from our SQL DB.
+public virtual bool ReqHistoricalData(DateTime p_endDateTime, int p_lookbackWindowSize, string p_whatToShow, Contract p_contract, out List<QuoteData> p_quotes)
+{
+

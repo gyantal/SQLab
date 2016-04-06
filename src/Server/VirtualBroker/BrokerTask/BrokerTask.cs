@@ -8,7 +8,7 @@ namespace VirtualBroker
     public class BrokerTask
     {
         public BrokerTaskSchema BrokerTaskSchema { get; set; }
-        public Trigger Trigger { get; set; }
+        public VbTrigger Trigger { get; set; }
         public BrokerTaskState BrokerTaskState { get; set; } = BrokerTaskState.NeverStarted; 
 
         internal virtual void Run()

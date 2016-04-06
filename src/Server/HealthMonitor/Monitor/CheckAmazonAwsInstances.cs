@@ -12,6 +12,7 @@ namespace HealthMonitor
 {
     public partial class HealthMonitor
     {
+        int m_nFailedAmazonAwsInstancesCheck = 0;
         bool m_isCheckAmazonAwsInstancesEmailWasSent = false;  // to avoid sending the same warning email many times; send only once
 
         //# Key derivation functions. See: 
@@ -201,7 +202,8 @@ namespace HealthMonitor
                         if (inst.Item1 == "HQaVirtualBrokerAgent")
                         {
                             isCheckedHQaVirtualBrokerAgent = true;
-                            if (inst.Item3 != "stopped")        // 2016-02-18: we expect the VBAgent server to be stopped. When it is live, we expect it to be "running"
+                            //if (inst.Item3 != "stopped")        // 2016-02-18: we expect the VBAgent server to be stopped. When it is live, we expect it to be "running"
+                            if (inst.Item3 != "running")        // 2016-03-17: we expect the VBAgent server to be running.
                                 sbWarning.AppendLine("Instance " + inst.Item1 + " has unexpected state: " + inst.Item3);
                         }
                     }
@@ -218,8 +220,8 @@ namespace HealthMonitor
                 bool isOK = (sbWarning.Length == 0);
                 if (!isOK)
                 {
-                    Utils.Logger.Info("CheckAmazonAwsInstances(): !isOK.");
-                    if (!m_isCheckAmazonAwsInstancesEmailWasSent)
+                    Utils.Logger.Info($"CheckAmazonAwsInstances(): !isOK. m_nFailedAmazonAwsInstancesCheck: {++m_nFailedAmazonAwsInstancesCheck}");
+                    if (!m_isCheckAmazonAwsInstancesEmailWasSent && m_nFailedAmazonAwsInstancesCheck >= 2)  // send email only the second time. First time maybe there is a server Restart, althought AWS will probably say 'running' even when it is under rebooting, but better be safe
                     {
                         Utils.Logger.Info("CheckAmazonAwsInstances(). Sending Warning email.");
                         new Email
@@ -234,6 +236,7 @@ namespace HealthMonitor
                 }
                 else
                 {
+                    m_nFailedAmazonAwsInstancesCheck = 0;
                     Utils.Logger.Info("CheckAmazonAwsInstances(): isOK.");
                     if (m_isCheckAmazonAwsInstancesEmailWasSent)
                     {  // it was bad, but now it is correct somehow

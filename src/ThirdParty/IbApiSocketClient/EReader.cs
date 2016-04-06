@@ -17,6 +17,8 @@ namespace IBApi
         EDecoder processMsgsDecoder;
         const int defaultInBufSize = ushort.MaxValue / 8;
 
+        bool m_isStopped = false;
+
         bool UseV100Plus
         {
             get
@@ -37,14 +39,24 @@ namespace IBApi
 
         public void Start()
         {
+            m_isStopped = false;
             new Thread(() =>
             {
                 while (eClientSocket.IsConnected())
+                {
+                    if (m_isStopped)
+                        break;
                     if (!putMessageToQueue())
                         break;
+                }
 
                 eReaderSignal.issueSignal();
             }) { IsBackground = true }.Start();
+        }
+
+        public void Stop()
+        {
+            m_isStopped = true;
         }
 
         EMessage getMsg()
@@ -53,7 +65,7 @@ namespace IBApi
                 return msgQueue.Count == 0 ? null : msgQueue.Dequeue();
         }
 
-        public void processMsgs()
+        public void processMsgs()   // process from the Queue  (happens in the ProcessorThread of the Client BrokerWrapperIb)
         {
             EMessage msg = getMsg();
 
@@ -61,7 +73,7 @@ namespace IBApi
                 msg = getMsg();
         }
 
-        public bool putMessageToQueue()
+        public bool putMessageToQueue() // put message to the Queue  (happens in the eReader thread)
         {
             try
             {
@@ -91,6 +103,8 @@ namespace IBApi
         private EMessage readSingleMessage()
         {
             var msgSize = 0;
+
+            //if (eClientSocket... Wrapper..tcpStream.Socket.IsConnected)     // protected
 
             if (UseV100Plus)
             {

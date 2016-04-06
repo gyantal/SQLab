@@ -49,7 +49,7 @@ namespace VirtualBroker
 
         public List<PortfolioPositionSpec> GeneratePositionSpecs()
         {
-            Utils.Logger.Info("UberVxxStrategy.GenerateSpecs() Begin.");
+            Utils.Logger.Info("UberVxxStrategy.GeneratePositionSpecs() Begin.");
             int lookbackWindowSize = 102;
 
             List<QuoteData> m_vxx;      // contains today real-time price too
@@ -88,13 +88,13 @@ namespace VirtualBroker
                 return null;
 
             // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
-            if (Utils.IsInRegularTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
+            if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
                 StrongAssert.True(Math.Abs(vxxQuotesFromSqlDB[vxxQuotesFromSqlDB.Count - 1].AdjClosePrice - m_vxx[m_vxx.Count - 2].AdjClosePrice) < 0.02, Severity.NoException, "We continue but yesterday price data doesn't match from IB and SQL DB");
 
             // log the last 3 values (for later debugging)
             Utils.Logger.Warn($"{m_vxx[m_vxx.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_vxx[m_vxx.Count - 3].AdjClosePrice}");
             Utils.Logger.Warn($"{m_vxx[m_vxx.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_vxx[m_vxx.Count - 2].AdjClosePrice}");
-            Utils.Logger.Warn($"{m_vxx[m_vxx.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_vxx[m_vxx.Count -1].AdjClosePrice} (last trade, not the last midPoint. MidPoint would be better)");
+            Utils.Logger.Warn($"{m_vxx[m_vxx.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_vxx[m_vxx.Count -1].AdjClosePrice} (!Last trade, not last midPoint)");
 
             // 2. Do some preprocess
             //Implement that connor vbroker calculates sma100 of prob ft dir, and act according to a threshold
@@ -123,7 +123,7 @@ namespace VirtualBroker
             else
                 forecast = (dailyPercentChange >= 0) ? -1 : 1;// MR regime
 
-            Utils.Logger.Warn($"dailyPercentChange: {dailyPercentChange * 100.0:F2}%, m_probDailyFT: {m_probDailyFT * 100.0}%, isFTRegime: {((isFTRegime) ? "FT" : "MR")}, forecast: {forecast*100}%");
+            Utils.Logger.Warn($"VXX %Chg:{dailyPercentChange * 100.0:F2}%,ProbFT:{m_probDailyFT * 100.0}%,Regime:{((isFTRegime) ? "FT" : "MR")},Forecast:{forecast*100}%");
 
             List<PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
             if (forecast > 0)   // bullish on VXX: buy VXX or UVXY/TVIX

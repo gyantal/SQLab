@@ -69,10 +69,15 @@ namespace VirtualBroker
             throw new NotImplementedException();
         }
 
-        public bool Connect(int p_socketPort)
+        public bool Connect(int p_socketPort, int p_brokerConnectionClientID)
         {
             //Utils.Logger.Warn($"WARNING!!! This fake BrokerWrapper is only for DEV. Use the IB BrokerWrapper in production.");
             m_socketPort = p_socketPort;
+            return true;
+        }
+
+        public bool IsConnected()
+        {
             return true;
         }
 
@@ -152,13 +157,15 @@ namespace VirtualBroker
 
         public bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
         {
+            string ticker = (p_contract.SecType != "IND") ? p_contract.Symbol : "^" + p_contract.Symbol;
+
             // http://www.canbike.org/information-technology/yahoo-finance-url-download-to-a-csv-file.html
             // http://download.finance.yahoo.com/d/quotes.csv?s=AAPL&f=sl1d1t1c1ohgv&e=.csv     where s = symbol, l1 – Last Trade Price
             // sometimes, when there is an 1 hour SummerTime setting difference, we have proper real-time price not 20min later, but 1h20min later.
             //"VXX",20.87,"3/15/2016","4:00pm",+0.29,21.19,21.27,20.83,541558
             // but using k1,b2,b3 is no better: http://download.finance.yahoo.com/d/quotes.csv?s=VXX&f=sl1d1t1k1b2b3c1ohgv&e=.csv
             // "VXX",20.87,"3/15/2016","4:00pm",N/A,N/A,N/A,+0.29,21.19,21.27,20.83,541558
-            string uri = $"http://download.finance.yahoo.com/d/quotes.csv?s={p_contract.Symbol}&f=sl1d1t1k1b2b3c1ohgv&e=.csv";
+            string uri = $"http://download.finance.yahoo.com/d/quotes.csv?s={ticker}&f=sl1d1t1k1b2b3c1ohgv&e=.csv";
             string csvDownload;
             if (!Utils.DownloadStringWithRetry(out csvDownload, uri, 5, TimeSpan.FromSeconds(5), false))
                 return false;
@@ -242,10 +249,11 @@ namespace VirtualBroker
         public bool ReqHistoricalData(DateTime p_endDateTime, int p_lookbackWindowSize, string p_whatToShow, Contract p_contract, out List<QuoteData> p_quotes)
         {
             p_quotes = null;
+            string ticker = (p_contract.SecType != "IND") ? p_contract.Symbol : "^" + p_contract.Symbol;
 
             DateTime startDateTime = p_endDateTime.AddDays(-1.0 * p_lookbackWindowSize / 5.0 * 7.0 * 1.15);  // convert trading days to calendar days, and add extra 10%
             //string uri = "http://ichart.finance.yahoo.com/table.csv?s=VXX&d=1&e=21&f=2014&g=d&a=0&b=30&c=2009&ignore=.csv";
-            string uri = $"http://ichart.finance.yahoo.com/table.csv?s={p_contract.Symbol}&d={p_endDateTime.Month - 1}&e={p_endDateTime.Day}&f={p_endDateTime.Year}&g=d&a={startDateTime.Month - 1}&b={startDateTime.Day}&c={startDateTime.Year}&ignore=.csv";
+            string uri = $"http://ichart.finance.yahoo.com/table.csv?s={ticker}&d={p_endDateTime.Month - 1}&e={p_endDateTime.Day}&f={p_endDateTime.Year}&g=d&a={startDateTime.Month - 1}&b={startDateTime.Day}&c={startDateTime.Year}&ignore=.csv";
             string csvDownload;
             if (!Utils.DownloadStringWithRetry(out csvDownload, uri, 5, TimeSpan.FromSeconds(5), false))
                 return false;
@@ -296,8 +304,16 @@ namespace VirtualBroker
             {
                 case "VXX":
                     return 4001;
-                default:
+                case "SVXY":
                     return 4002;
+                case "RUT":
+                    return 4003;
+                case "UWM":
+                    return 4004;
+                case "TWM":
+                    return 4005;
+                default:
+                    return 3999;
             }
         }
 
@@ -403,17 +419,24 @@ namespace VirtualBroker
 
         public int PlaceOrder(Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, double p_estimatedPrice, bool p_isSimulatedTrades)
         {
-            throw new NotImplementedException();
+            return new Random().Next(10000);    // time dependent seed. Good.
         }
 
         public bool WaitOrder(int p_realOrderId, bool p_isSimulatedTrades)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public bool GetRealOrderExecutionInfo(int p_realOrderId, ref OrderStatus p_realOrderStatus, ref double p_realExecutedVolume, ref double p_realExecutedAvgPrice, ref DateTime p_execptionTime, bool p_isSimulatedTrades)
         {
-            throw new NotImplementedException();
+            //if (p_isSimulatedTrades)    // there was no orderStatus(), so just fake one
+            //{
+                p_realOrderStatus = OrderStatus.Filled;
+                p_realExecutedVolume = 0;    // maybe less is filled than it was required...
+                p_realExecutedAvgPrice = 1.0;   // assume we bought it for $1.0 each // we can do RealTime price or YahooEstimated price, or lastDay Closeprice later if it is required
+                p_execptionTime = DateTime.UtcNow;
+                return true;
+            //}
         }
     }
 }

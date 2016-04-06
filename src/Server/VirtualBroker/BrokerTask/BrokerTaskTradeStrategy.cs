@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Utils = SqCommon.Utils;
 
@@ -21,7 +22,7 @@ namespace VirtualBroker
 
         internal override void Run()
         {
-            Utils.Logger.Warn("StrategyBrokerTask.Run");
+            Utils.Logger.Warn("StrategyBrokerTask.Run() starts.");
 
             //************************* 0. Initializations
             var strategyFactoryCreate = (Func<IBrokerStrategy>)BrokerTaskSchema.Settings[BrokerTaskSetting.StrategyFactory];
@@ -35,29 +36,12 @@ namespace VirtualBroker
                 return;
             foreach (var portfolio in portfolios)
             {
-                Utils.Logger.Warn($"{portfolio.Name}: nTodayPips: {portfolio.TodayPositions.Count}.");
-                portfolio.TodayPositions.ForEach(pip => Utils.Logger.Warn($"{pip.DebugString()}: Volume: {pip.Volume}."));
+                Console.WriteLine($"Prtf:'{portfolio.Name}':");    // there are long portfolio names. Console messages should be shorter
+                Utils.Logger.Info($"{portfolio.Name}: nTodayPips: {portfolio.TodayPositions.Count}.");
+                portfolio.TodayPositions.ForEach(pip => Utils.Logger.Warn($"{pip.DebugString()}: Volume: {pip.Volume:F2}."));
 
                 StrongAssert.True(Controller.g_gatewaysWatcher.IsGatewayConnected(portfolio.IbGatewayUserToTrade), Severity.NoException, $"ERROR! Gateway for user {portfolio.IbGatewayUserToTrade} is not connected. Other portfolios may be fine. We continue.");
             }
-
-            Utils.Logger.Warn($"Implement exceptional rule to wait before being live");
-            // exceptional rule for UberVXX strategy: wait if we are too early
-            // after early connection, wait until 20:59:40, to ask  GetContractLastAndPrevCloseValue(); connection (starting TWS can take 5sec or 20 sec)
-            //if (isSimulationObj == false && strategy.GetType() == typeof(VXXAutocorrelation1Strategy))   // if we trade it, wait until 20:59:40
-            //{
-            //    VBrokerLogger.LogInfo(BrokerTask.TaskLogFile, "RealTrade is detected and after IB.Connection() this special strategy will be executed only at 20:59:40");
-
-            //    TimeSpan timeSpan = ((DateTime)VBroker.g_brokerScheduler.MarketCloseTimeUtc).AddSeconds(-20) - DateTime.UtcNow; // for the 7 sec to work, the PC local time has to be set precisely to the official usa ET time
-            //    VBrokerLogger.LogInfo(BrokerTask.TaskLogFile, "Sleeping for " + timeSpan.ToString());
-            //    if (timeSpan.TotalMinutes > 20)
-            //    {
-            //        VBrokerLogger.LogInfo(BrokerTask.TaskLogFile, "Sleeping timespan is unexpected: {0}min", timeSpan.TotalMinutes);
-            //    }
-
-            //    if (timeSpan.TotalMilliseconds > 500)  // if we are not negative time
-            //        Thread.Sleep((int)timeSpan.TotalMilliseconds);
-            //}
 
             //************************* 2. Generate futurePortfolios with weights
             // most of the time, it is enough to run the strategy to calculate weights once, and play it for many userPortfolios with the same weights. However, sometimes maybe Strategy has to be run for each user separately
@@ -69,6 +53,9 @@ namespace VirtualBroker
                 proposedPositionSpecs = Strategy.GeneratePositionSpecs(); // Strategy calculates suggested positions only once (it may be a long calculation, like Neural Network), and use it for all portfolios
             else
                 throw new NotImplementedException();
+
+            StrongAssert.True(proposedPositionSpecs != null, Severity.ThrowException, "Error. Strategy.GeneratePositionSpecs() returned null. There is no point to continue. Crash here.");
+
             proposedPositionSpecs.ForEach(suggestedItem => Utils.Logger.Warn($"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}"));
 
             //*************************  3. Get realtime prices and Generate futurePortfolios with volumes and send transactions
@@ -88,11 +75,14 @@ namespace VirtualBroker
 
             //*************************  4. Wait until GatewaysManager tells that orders are ready or until timout from expected time
             bool wasAllOrdersOk = true;
+            StringBuilder errorStr = new StringBuilder();
             for (int i = 0; i < portfolios.Count; i++)
             {
-                if (!WaitTransactionsViaBrokerAndCollectExecutionInfo(portfolios[i]))
+                if (!WaitTransactionsViaBrokerAndCollectExecutionInfo(portfolios[i], errorStr))
                     wasAllOrdersOk = false;
             }
+            if (!wasAllOrdersOk)
+                Utils.Logger.Error("Not all trading orders was OK. " + errorStr.ToString());
 
             // ********************* 5. Write All Transactions into DB in one go, not one by one
             WriteAllExecutedTransactionsToDB(portfolios);
@@ -100,13 +90,13 @@ namespace VirtualBroker
             // ******************* 6. send OK or Error reports to HealthMonitor
             if (!new HealthMonitorMessage() {
                 ID = (wasAllOrdersOk) ? HealthMonitorMessageID.ReportOkFromVirtualBroker : HealthMonitorMessageID.ReportErrorFromVirtualBroker,
-                ParamStr = (wasAllOrdersOk) ? $"BrokerTask with strategy {Strategy} was OK." : $"BrokerTask with strategy { Strategy } had ERROR. Inform supervisors to investigate log files.",
+                ParamStr = (wasAllOrdersOk) ? $"BrokerTask {BrokerTaskSchema.Name} was OK." : $"BrokerTask {BrokerTaskSchema.Name} had ERROR. {errorStr.ToString()} Inform supervisors to investigate log files for more detail. ",
                 ResponseFormat = HealthMonitorMessageResponseFormat.None
             }.SendMessage().Result) // Task.Result will block this calling thread as Wait(), and runs the worker task in another ThreadPool thread. Checked.
                 Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
 
 
-            Utils.Logger.Warn($"StrategyBrokerTask.Ends. wasAllOrdersOk: {wasAllOrdersOk}");
+            Utils.Logger.Warn($"StrategyBrokerTask.Run() ends.");
         }
 
 
@@ -139,7 +129,7 @@ namespace VirtualBroker
                 }
             }
             p_portfolio.PortfolioUsdSize = portfolioUsdSize;
-            Utils.Logger.Warn($"Portfolio ({p_portfolio.PortfolioID}) $size (realtime): {p_portfolio.PortfolioUsdSize:F2}");
+            Utils.Logger.Warn($"!!!Portfolio ({p_portfolio.PortfolioID}) $size (realtime): {p_portfolio.PortfolioUsdSize:F2}");
         }
 
         private void DetermineProposedPositions(BrokerTaskPortfolio p_portfolio, List<PortfolioPositionSpec> p_proposedPositionSpecs)
@@ -170,7 +160,7 @@ namespace VirtualBroker
 
             foreach (var suggestedItem in p_portfolio.ProposedPositions)
             {
-                Utils.Logger.Warn($"Strategy suggestion fort this portfolio: {Strategy.StockIdToTicker(suggestedItem.SubTableID)}: signed volume: {suggestedItem.Volume}");
+                Utils.Logger.Warn($"Portfolio suggestion: {Strategy.StockIdToTicker(suggestedItem.SubTableID)}: signed vol: {suggestedItem.Volume}");
             }
         }
 
@@ -228,7 +218,7 @@ namespace VirtualBroker
 
             foreach (var transaction in transactions)
             {
-                Utils.Logger.Warn($"Proposed transaction {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
+                Utils.Logger.Warn($"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
             }
 
             p_portfolio.ProposedTransactions = transactions;    // only assign at the end, if everything was right, there was no thrown Exception. It is safer to do transactions: all or nothing, not partial
@@ -239,7 +229,7 @@ namespace VirtualBroker
             var transactions = p_portfolio.ProposedTransactions;
             if (transactions.Count == 0)
             {
-                Utils.Logger.Warn($"No proposed transactions.");
+                Utils.Logger.Warn($"***Proposed transactions: none.");
                 return;
             }
 
@@ -259,13 +249,13 @@ namespace VirtualBroker
             for (int i = 0; i < transactions.Count; i++)    // quickly place the orders. Don't do any other time consuming work here.
             {
                 var transaction = transactions[i];
-                Utils.Logger.Warn($"Placing Order {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
+                Utils.Logger.Info($"Placing Order {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
                 Contract contract = new Contract() { Symbol = Strategy.StockIdToTicker(transaction.SubTableID), SecType = "STK", Currency = "USD", Exchange = "SMART" };
                 transaction.VirtualOrderId = Controller.g_gatewaysWatcher.PlaceOrder(p_portfolio.IbGatewayUserToTrade, contract, transaction.TransactionType, transaction.Volume, orderExecution, orderTif, null, null, isSimulatedTrades);
             } // don't do anything here. Return, so other portfolio PlaceOrder()-s can be executed too.
         }
 
-        private bool WaitTransactionsViaBrokerAndCollectExecutionInfo(BrokerTaskPortfolio p_portfolio)
+        private bool WaitTransactionsViaBrokerAndCollectExecutionInfo(BrokerTaskPortfolio p_portfolio, StringBuilder p_errorStr)
         {
             var transactions = p_portfolio.ProposedTransactions;
             if (transactions.Count == 0)
@@ -297,8 +287,8 @@ namespace VirtualBroker
                 DateTime executionTime = DateTime.UtcNow;
                 if (!Controller.g_gatewaysWatcher.GetVirtualOrderExecutionInfo(p_portfolio.IbGatewayUserToTrade, transaction.VirtualOrderId, ref orderStatus, ref executedVolume, ref executedAvgPrice, ref executionTime, isSimulatedTrades))
                 {
-                    Utils.Logger.Error("GetVirtualOrderExecutionInfo() failed for virtualOrderId {transaction.VirtualOrderId}");
                     wasAnyErrorInOrders = true;
+                    p_errorStr.AppendLine($"GetVirtualOrderExecutionInfo() failed for virtualOrderId({transaction.VirtualOrderId}): {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume}.");
                 }
                 else
                 {
@@ -308,12 +298,12 @@ namespace VirtualBroker
                     transaction.DateTime = executionTime;
                     if (transaction.OrderStatus == OrderStatus.MinFilterSkipped)
                     {
-                        Utils.Logger.Info($"transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}");       // This is Info. expected
+                        Utils.Logger.Info($"Ok. {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume}. Transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}");       // This is Info. expected
                     }
                     else if (transaction.OrderStatus == OrderStatus.MaxFilterSkipped)
                     {
                         wasAnyErrorInOrders = true;
-                        Utils.Logger.Warn($"transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}");       // This is Warn. not expected
+                        p_errorStr.AppendLine($"Error. {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume}. Transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}");       // This is Warn. not expected
                     }
                     else
                     {
@@ -322,14 +312,14 @@ namespace VirtualBroker
                             // everything is OK. OrderStatus should be Filled or Partially Filled.
                             if (transaction.OrderStatus != OrderStatus.Filled)
                             {
-                                Utils.Logger.Warn($"transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}. Force it to be Filled.");
+                                Utils.Logger.Warn($"{transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume}. Transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}. Force it to be Filled.");
                                 transaction.OrderStatus = OrderStatus.Filled;
                             }
                         }
                         else
                         {
                             wasAnyErrorInOrders = true;
-                            Utils.Logger.Error($"VirtualOrderId {transaction.VirtualOrderId}: transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}");       // This is Error. not expected
+                            p_errorStr.AppendLine($"ERROR in {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume},  VirtualOrderId {transaction.VirtualOrderId}: transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}");       // This is Error. not expected
                         } // else
                     }
                 }   // else

@@ -10,6 +10,6 @@ os.chdir("/home/ubuntu/SQ/Server/HealthMonitor/src")
 print('dotnet restore')
 call(["dotnet", "restore"])
 os.chdir("/home/ubuntu/SQ/Server/HealthMonitor/src/Server/HealthMonitor")
-print('dotnet run')
-call(["dotnet", "run"])
+print('dotnet run --configuration Release')         # the default is the Debug configuration in the project.json file
+call(['dotnet', 'run', '--configuration', 'Release'])
 k = input("Press ENTER...")       # raw_input is built but waiting for Enter key 

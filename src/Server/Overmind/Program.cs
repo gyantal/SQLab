@@ -26,11 +26,20 @@ namespace Overmind
             //.SelectMany(info => info.Assemblies)
             //.Select(info => Assembly.Load(new AssemblyName(info.Name)));
 
-            Console.WriteLine("Hello Overmind, v1.0.7");
-            Console.Title = "Overmind v1.0.7";
+            string runtimeConfig = "Unknown";
+#if RELEASE
+            runtimeConfig = "RELEASE";
+# elif DEBUG
+            runtimeConfig = "DEBUG";
+#endif
+            Console.WriteLine($"Hello Overmind, v1.0.11 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+#if DNX451 || NET451
+            Console.Title = "Overmind v1.0.11";   // Exception in DotNetCore in Win (but it runs on Linux, but it doesn't do anything): Unhandled Exception: System.MissingMethodException: Method not found: 'Void System.Console.set_Title(System.String)'.
+#endif
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app
-            Utils.Logger.Info("****** Main() START");
+            Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+
             Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Overmind.NoGitHub.json", "/home/ubuntu/SQ/Server/Overmind/SQLab.Overmind.NoGitHub.json");
             //StrongAssert.g_strongAssertEvent += StrongAssertEmailSendingEventHandler;     // HealthMonitor StrongAssert should send an email, but all other programs should inform HealthMonitor instead. HealthMonitor is the gatekeeper that assures that users don't receive too many emails.
 
@@ -92,7 +101,7 @@ namespace Overmind
                         break;
                 }
 
-            } while (userInput != "3");
+            } while (userInput != "3" && userInput != "ConsoleIsForcedToShutDown");
 
             Utils.Logger.Info("****** Main() END");
             Controller.g_controller.Exit();
@@ -120,7 +129,16 @@ namespace Overmind
             Console.WriteLine("1. Test Server (Sending Email)");
             Console.WriteLine("2. Say Hello. Don't do anything. Check responsivenes.");
             Console.WriteLine("3. Exit gracefully (Avoid Ctrl-^C).");
-            var result = Console.ReadLine();
+            string result = null;
+            try
+            {
+                result = Console.ReadLine();
+            }
+            catch (System.IO.IOException e) // on Linux, of somebody closes the Terminal Window, Console.Readline() will throw an Exception with Message "Input/output error"
+            {
+                Utils.Logger.Info($"Console.ReadLine() exception. Somebody closes the Terminal Window: {e.Message}");
+                return "ConsoleIsForcedToShutDown";
+            }
             return result;
             //return Convert.ToInt32(result);
         }

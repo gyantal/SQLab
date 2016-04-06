@@ -499,7 +499,7 @@ namespace DbCommon
     public struct StockIndex : IMinimalAssetID, IStockIndexUpdate
     {
         // Note: m_table[index.m_id] = m_table[index.m_ticker] = index
-        static Dictionary<object, IAssetID> g_table;
+        static Dictionary<object, IAssetID> g_table = null;
         internal static int g_maxID;
         //static StaticChangeHandlerWithWeakRef<DBManager> g_cache_chgntf;
 
@@ -551,7 +551,7 @@ namespace DbCommon
             //}
             //DBManager dbManager = DBManager.FromObject(p_dbManager, p_throwOnNull: false);
             //bool fallback = (dbManager == null);
-            //var tmpTable = new Dictionary<object, IAssetID>();  // for sake of thread-safety
+            var tmpTable = new Dictionary<object, IAssetID>();  // for sake of thread-safety
             //if (!fallback)
             //    try
             //    {
@@ -598,7 +598,7 @@ namespace DbCommon
             //        }
             //    }
             //}
-            //g_table = tmpTable;
+            g_table = tmpTable;
 
             //g_cache_chgntf.AddHandler(dbManager, (dbM, _) => Init(dbM, true))
             //    .SetDependency(typeof(MemTables.StockIndex), ChangeNotification.Flags.AllTableEvents);

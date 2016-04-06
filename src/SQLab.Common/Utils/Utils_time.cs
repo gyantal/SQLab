@@ -77,6 +77,40 @@ namespace SqCommon
             
         }
 
+        public static DateTime ConvertTimeFromEtToUtc(DateTime p_dateTimeET)
+        {
+            TimeZoneInfo utcZone = TimeZoneInfo.Utc;
+            TimeZoneInfo estZone = null;
+            try
+            {
+                estZone = Utils.FindSystemTimeZoneById(TimeZoneId.EST);
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "Exception because of TimeZone conversion ");
+                return DateTime.MaxValue;
+            }
+
+            return TimeZoneInfo.ConvertTime(p_dateTimeET, estZone, utcZone);
+        }
+
+        public static DateTime ConvertTimeFromUtcToEt(DateTime p_dateTimeUtc)
+        {
+            TimeZoneInfo utcZone = TimeZoneInfo.Utc;
+            TimeZoneInfo estZone = null;
+            try
+            {
+                estZone = Utils.FindSystemTimeZoneById(TimeZoneId.EST);
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "Exception because of TimeZone conversion ");
+                return DateTime.MaxValue;
+            }
+
+            return TimeZoneInfo.ConvertTime(p_dateTimeUtc, utcZone, estZone);
+        }
+
 
     }
 }

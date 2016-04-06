@@ -1313,6 +1313,12 @@ namespace IBApi
             return true;
         }
 
+        // if we override Equals, we have to override GetHashCode, else there will be problem if it is a Key in a Dictionary. There is a compiler warning if it is not done.
+        public override int GetHashCode()
+        {
+            return OrderId.GetHashCode();   // just a brief is enough. If Hashcode matches, later Equals will be called.
+        }
+
         public bool RandomizeSize { get; set; }
         public bool RandomizePrice { get; set; }
 

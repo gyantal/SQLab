@@ -24,6 +24,9 @@ namespace VirtualBroker
     public class MktDataSubscription
     {
         public Contract Contract { get; set; }
+        public int MarketDataId { get; set; }
+        public bool IsAnyPriceArrived { get; set; }
+        public Timer CheckDataIsAliveTimer { get; set; }
         //public int MktDataTickerID { get; set; }
 
         public ConcurrentDictionary<int, PriceAndTime> Prices { get; set; }
@@ -44,6 +47,7 @@ namespace VirtualBroker
             Prices.TryAdd(TickType.HIGH, new PriceAndTime());
             Prices.TryAdd(TickType.LOW, new PriceAndTime());
         }
+       
     }
 
     public class HistDataSubscription
@@ -76,8 +80,9 @@ namespace VirtualBroker
     {
         string IbAccountsList { get; set; }
 
-        bool Connect(int p_socketPort);
+        bool Connect(int p_socketPort, int p_brokerConnectionClientID);
         void Disconnect();
+        bool IsConnected();
 
         int ReqMktDataStream(Contract p_contract);
         bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes);
