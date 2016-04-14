@@ -22,7 +22,8 @@ namespace VirtualBroker
 
         internal override void Run()
         {
-            Utils.Logger.Warn("StrategyBrokerTask.Run() starts.");
+            Console.WriteLine();
+            Utils.Logger.Warn("**  **  StrategyBrokerTask.Run() starts. **  **");
 
             //************************* 0. Initializations
             var strategyFactoryCreate = (Func<IBrokerStrategy>)BrokerTaskSchema.Settings[BrokerTaskSetting.StrategyFactory];
@@ -40,7 +41,18 @@ namespace VirtualBroker
                 Utils.Logger.Info($"{portfolio.Name}: nTodayPips: {portfolio.TodayPositions.Count}.");
                 portfolio.TodayPositions.ForEach(pip => Utils.Logger.Warn($"{pip.DebugString()}: Volume: {pip.Volume:F2}."));
 
-                StrongAssert.True(Controller.g_gatewaysWatcher.IsGatewayConnected(portfolio.IbGatewayUserToTrade), Severity.NoException, $"ERROR! Gateway for user {portfolio.IbGatewayUserToTrade} is not connected. Other portfolios may be fine. We continue.");
+                if (!Controller.g_gatewaysWatcher.IsGatewayConnected(portfolio.IbGatewayUserToTrade))
+                {
+                    portfolio.IsErrorOccured = true;
+                    if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+                    {
+                        // this will send Error message to HealthMonitor
+                        StrongAssert.Fail(Severity.NoException, $"ERROR! Gateway for user {portfolio.IbGatewayUserToTrade} is not connected. Other portfolios may be fine. We continue.");
+                    } else
+                    {
+                        Utils.Logger.Warn($"Warning, but Not Error in development! Gateway for user {portfolio.IbGatewayUserToTrade} is not connected. Other portfolios may be fine. We continue.");
+                    }
+                }
             }
 
             //************************* 2. Generate futurePortfolios with weights
@@ -61,6 +73,8 @@ namespace VirtualBroker
             //*************************  3. Get realtime prices and Generate futurePortfolios with volumes and send transactions
             for (int i = 0; i < portfolios.Count; i++)
             {
+                if (portfolios[i].IsErrorOccured)
+                    continue;
                 //************************* 3.1  Generate futurePortfolios with volumes, number of proposed shares
                 CalculatePortfolioUsdSizeFromRealTime(portfolios[i]);
                 DetermineProposedPositions(portfolios[i], proposedPositionSpecs);
@@ -78,6 +92,8 @@ namespace VirtualBroker
             StringBuilder errorStr = new StringBuilder();
             for (int i = 0; i < portfolios.Count; i++)
             {
+                if (portfolios[i].IsErrorOccured)
+                    continue;
                 if (!WaitTransactionsViaBrokerAndCollectExecutionInfo(portfolios[i], errorStr))
                     wasAllOrdersOk = false;
             }
@@ -97,6 +113,7 @@ namespace VirtualBroker
 
 
             Utils.Logger.Warn($"StrategyBrokerTask.Run() ends.");
+            Console.WriteLine();
         }
 
 
@@ -335,6 +352,8 @@ namespace VirtualBroker
             List<DbTransaction> allOkTransactions = new List<DbTransaction>();
             foreach (var portfolio in p_portfolios)
             {
+                if (portfolio.IsErrorOccured)
+                    continue;
                 foreach (var transaction in portfolio.ProposedTransactions)
                 {
                     if (transaction.OrderStatus == OrderStatus.Filled)

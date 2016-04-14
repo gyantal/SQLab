@@ -110,8 +110,12 @@ namespace VirtualBroker
 
                 // see what is possible to call: 
                 // "g:\temp\_programmingTemp\TWS API_972.12(2016-02-26)\samples\CSharp\IBSamples\IBSamples.sln" 
+                // for UberVXX
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" });
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SVXY", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+                //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SPY", SecType = "STK", Currency = "USD", Exchange = "SMART" }); // for TotM forecast, but it is not needed just yet
+
+                // for NeuralSniffer
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL", LocalSymbol="RUT" });
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "UWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "TWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
@@ -140,8 +144,10 @@ namespace VirtualBroker
                     }
                     else
                     {
-                        ibWrapper = new BrokerWrapperIb();
-                        //ibWrapper = new BrokerWrapperYF();     // switch on !YF broker after Market Closed, so we can have simulated real time price
+                        if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
+                            ibWrapper = new BrokerWrapperIb();    // when USA market is open
+                        else
+                            ibWrapper = new BrokerWrapperYF();     // Before market open, or After market close. Simulated real time price is needed to determine current portfolio $size.
                     }
                     if (!ibWrapper.Connect(gateway.SocketPort, gateway.BrokerConnectionClientID))
                     {

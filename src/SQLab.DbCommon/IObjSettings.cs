@@ -14,7 +14,7 @@ namespace DbCommon
         T Get<T>(object p_key, T p_defaultValue);
     }
 
-    public static partial class Utils
+    public static partial class DbUtils
     {
         // Remember: UtilSs cctor modifies this
         public static IObjSettings ExeConfig = HQCommonSpecific<IObjSettings>("InitExeConfig") ?? new ExeConfig();

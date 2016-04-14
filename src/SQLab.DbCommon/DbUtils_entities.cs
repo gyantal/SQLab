@@ -75,7 +75,7 @@ namespace DbCommon
                         // TickerProvider.OldStockTickers exploits that values fit in a byte
     }
 
-    public enum TimeZoneID : byte   // dbo.StockExchange.TimeZone
+    public enum DbTimeZoneID : byte   // dbo.StockExchange.TimeZone, there is another TimeZone id in Utils, not in DbUtils, so better to have a different name
     {
         [SystemTimeZoneId("Eastern Standard Time")]     // string ID for System.TimeZoneInfo.FindSystemTimeZoneById()
         EST = 1,

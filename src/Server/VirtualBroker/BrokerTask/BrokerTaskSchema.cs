@@ -90,6 +90,7 @@ namespace VirtualBroker
     {
         public IPortfolioParam Param { get; set; }    // General fields. Not specific for Strategies
         public GatewayUser IbGatewayUserToTrade { get; set; }
+        public bool IsErrorOccured { get; set; }    // if IBGatewayUser is not connected, or there is an error in processing, then stop further processing, and raise Error message, and Supervisor handles manually
 
         public double PortfolioUsdSize { get; set; }    // General fields. Not specific for Strategies
         public List<PortfolioPosition> ProposedPositions { get; set; }

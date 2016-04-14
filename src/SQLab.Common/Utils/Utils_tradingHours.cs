@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace SqCommon
 {
+    // A. Utils_tradingHours.cs is for TradingHours, Open, Close, EarlyClose. It can calculate Open and Close times precisely. It can calculate next trading days in the future (nextTradingDay). 
+    //      It has only currently 1 year data from Nasdaq webpage.
+    //      It is used by VirtualBrokers for trading scheduling.
+    // B. DbUtils_historicalMarketHolidayDays.cs is about all historical days. That is from the SqlDb. It has no idea if there was an EarlyClose or not on that day. 
+    //      Currently, it contains 16 years of data, from 2001-01-01.
+    //      It is used by QuickTester for historical backtesting.
     public static partial class Utils
     {
         static List<Tuple<DateTime, DateTime?>> g_holidays = null;
@@ -264,12 +270,12 @@ namespace SqCommon
         public static DateTime GetNextOrPrevUsaMarketOpenDayUtc(this DateTime p_timeUtc, bool p_currentDayTimeAcceptable /* Inclusive */, bool p_isNext, TimeSpan p_maxAllowedStaleness) // today is not allowed
         {
             DateTime timeToTestUtc = (p_currentDayTimeAcceptable) ? p_timeUtc : ((p_isNext) ? p_timeUtc.AddDays(1) : p_timeUtc.AddDays(-1));
-            int nTry = 0;
+            int iLoop = 0;
             while (true)
             {
-                if (nTry++ > 50)
+                if (iLoop++ > 50)
                 {
-                    Utils.Logger.Error($"GetNextUsaMarketOpenDayUtc() nTry is too high: {nTry}.");
+                    Utils.Logger.Error($"Avoiding infinite loop. GetNextUsaMarketOpenDayUtc() iLoop is too high: {iLoop}. There is no marketOpen day in the next/previous 50 days. Impossible.");
                     return DateTime.MaxValue;
                 }
                 bool isMarketTradingDay;

@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace SqCommon
 {
-    public enum TimeZoneId { Unknown, UTC, EST, London, CET }
+
+    public enum TimeZoneId : byte {  UTC = 0, EST = 1, London = 2, CET = 3, Unknown=255 }  // similar to dbo.StockExchange.TimeZone
 
     public static partial class Utils
     {
@@ -58,6 +59,12 @@ namespace SqCommon
                                 zoneId = "Eastern Standard Time";
                             else
                                 zoneId = "America/New_York";        // or "US/Eastern". We have to test it.
+                            break;
+                        case TimeZoneId.CET:
+                            if (Utils.RunningPlatform() == Platform.Windows)
+                                zoneId = "Central Europe Standard Time";
+                            else
+                                zoneId = "Europe/Budapest";
                             break;
                         default:
                             throw new Exception($"TimeZoneType {p_tzType} is unexpected.");
@@ -112,5 +119,7 @@ namespace SqCommon
         }
 
 
+
+       
     }
 }

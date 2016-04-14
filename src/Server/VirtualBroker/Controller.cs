@@ -106,7 +106,7 @@ namespace VirtualBroker
                 TriggeredTaskSchema = neuralSniffer1TaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
-                StartTimeOffset = TimeSpan.FromMinutes(-32),
+                StartTimeOffset = TimeSpan.FromMinutes(-35),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
             neuralSniffer1TaskSchema.Triggers.Add(new VbTrigger()

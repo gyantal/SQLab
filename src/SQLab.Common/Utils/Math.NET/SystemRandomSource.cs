@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SqCommon;
 
-namespace DbCommon
+namespace SQCommon.MathNet
 {
-    public static partial class DbUtils
+    public class SystemRandomSource
     {
-
-
     }
 }

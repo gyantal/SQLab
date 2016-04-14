@@ -1,0 +1,860 @@
+
+
+******************************** Plan: step by step
+
+1. Review UberVXX documents (!this is actually the collection of almost all UberVXX research performed):
+- Balazs's document of UberVXX: conclude which part (TotM, FOMC, Holidays, OPEX) gave the best profit. That will determine the priority.
+Which docs to Review and collect notes from:
+	- 1. official: "The Uber VXX Live Strategy" book, (FOMC is added, (and other parts too)) 102 pages,
+	  http://www.snifferquant.com/docs/Studies/VIX/The%20Uber%20VXX%20Live%20Strategy.docx
+	  "g:\temp\Balazs\The Uber VXX Live Strategy.docx" 
+	- 2. "VIX FOMC based Live Strategy" (just description of parts FOMC, ToM, Opex), 5 pages
+	  "g:\temp\Balazs\VIX FOMC based Live Strategy.docx" 
+	- 3. Holiday Seasonality in Volatility (adding Holidays): 57 pages
+	  "g:\temp\Balazs\Holiday Seasonality in Volatility.docx" 
+	- 4. Supplement to FOMC: 7 pages (adding TotM, OPEX)
+	  "g:\temp\Balazs\Supplement to our FOMC Based Live VXX Strategy.docx" 
+	- 5. FOMC revision with significance tests: 15 pages
+	  "g:\temp\Balazs\Revision of FOMC Based VXX Strategy.docx" 
+	- 6. Significance analysis of others (not FOMC), and Winter-Summer seasonality of TotM, TotMM: 33 pages
+	  "g:\temp\Balazs\Correlation and Significance Analysis of Uber VXX Strategy Parts.docx" 
+	- 7. 2015-12: Performance of UberVXX Events and Seasonalities, 52 pages
+		(a short and illustrative overview of the Events and Seasonalities part in the first chapter)
+		(Comparison: (TotM,TotMM) combo is best, Holidays next, FOMC third) :
+		(Theory vs. Real Life in 2015)
+		https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit
+	- 8. George's doc: Seasonality: TotM, TotMM, Halloween combo: 51 pages
+		https://docs.google.com/document/d/1DJtSt1FIPFbscAZsn8UAfiBBIhbeWvZcJWtQffGPTfU/edit
+
+2.
+- after reading the documents: think the main concepts over. 
+	//- what was the profit of the Learning versions in Balazs' document? In which document, which pages?
+	>His Aggregated Holiday Learning strategy was 0% CAGR (in spite of VolDrag), but we can do better by
+	elimitanig outliers, using a training set which more regimes, not from 2004, we don't aggregate all holidays.
+	>So, I am optimistic about the Learning way. Also note that TotM T-1 is completely different pre-1990 or post 1990.
+	Only a Learning process can do it properly.
+		in "3. "Holiday Seasonality in Volatility": 57 pages"
+			‘Real’ Averages Strategy:
+			Aggregated Real Averages Strategy, Problems with this:
+				> 1. VXX training set (which is not good, not many samples, and samples are distorted because of 2008, 2009),
+				> 2. it doesn't eliminate outliers. It uses Average, not Win%, so it is bad.
+				> 3. all holidays are aggregated. However, Major holidays are very different to MinorHolidays. Using Minors, it just adds more randomness to the prediction.
+			 Still, in spite of VolDrag, it is 0% CAGR, so it is OK, if we can attack the first 2 problems.
+			 >Also, we wish to create two groups: StrongHolidays, WeakHolidays, not Aggregate everything.
+				(Note that what we play in real life in UberVXX, that solves 2 out of the 3 mentioned problems. So, instead of 0% CAGR, we expect 25% CAGR)
+
+	//- when implementing signifinace analysis, compare it to Zero (Significantly different from Zero, not the Significantly different from its Mean), not the average of the sample.
+		Why? because if it is significantly negative from "zero", I would play it. No matter what.
+		Imagine a case, when because of contango, and because randomness disappears from the market, 
+		VXX falls exactly -0.1% every day.
+		If I compare any day to the average -0.1%, nothing will be significant, so I wouldn't trade it.
+		Even though, it is profitable to short it every day. So, compare it to Zero.
+
+	//- Should we eliminate outliers? Decided: Yes.
+		>does significance test eliminate outliers big effect in a natural way? 
+		If it is true, I don't have to manually eliminate outliers.
+		http://www.theanalysisfactor.com/outliers-to-drop-or-not-to-drop/
+		+++ "Extreme outliers will affect the mean a lot, but will not affect the median.  
+		So you can include outliers (if there is no other compelling reason to remove them) 
+		if you are computing a median, or a mode. 
+			As others have said, if an outlier is too extreme to be believable, such as being likely due to measurement error, 
+		then it is best to exclude it.   If the outlier is plausible, it may be best to analyze the data 
+		both with and without the outliers. 
+			In logistic regression, it can be useful to show the risk factors that predict them.  
+			But including outliers in the data may also mask the effect of predictors on less-extreme data that are not outliers.    In linear regression, outliers can greatly affect the regression (the slope, r-value, and r-squared).  It may be best to remove them from linear regression, and then explain and describe them separately in some other way. 
+		"
+		+++ http://pareonline.net/getvn.asp?v=9&n=6  About t-test (that is what I do)
+		"Interestingly, there was little evidence that outliers produced Type I errors when group means were equal, 
+		and thus removal had little discernable effect.  But when there were strong group differences, outlier removal 
+		tended to have a significant beneficial effect on error rates, although not as substantial an effect as seen 
+		in the correlation analyses."
+		> probably I should do what this say. Eliminate outliers.
+		> the other reason for eliminating outliers is that if the market drops -20%, that is not because it is TotM T-1,
+		but because some other unrelated random event. Which is noise. Better to remove that noise.
+		"It is not legitimate to simply drop the outlier.  You may run the analysis both with and without it"
+		"If the outlier creates a significant association, you should drop the outlier and should not report any significance from your analysis.
+		In the following graph, the relationship between X and Y is clearly created by the outlier.  Without it, there is no relationship between X and Y, so the regression coefficient does not truly describe the effect of X on Y."
+		>So, calculate it with/without the outlier. But only accept the Significance of Both With and Without the outlier says it is significant (into the same direction).
+		So, outlier elimination is needed, because without it, we cannot find those tricky things what is mentioned in  http://www.theanalysisfactor.com/images/graph-3.gif
+		> "My rule of thumb is to always drop the outlier. That’s just me though."
+		>Technically, It’s not justifiable to drop an observation just because it’s an outlier! unless you are sure it’s an error, maybe committed during data entry or at any other stage. For regression analysis, I would advise to use robust regression which deals with this problem.
+		+++ >George: 
+		Reasons for keeping outliers:
+			- my extreme points are not errors, so I cannot delete them simply away. Only obvious Errors should be deleted.
+			- it is easier to program keeping outliers. Because if I delete them, there is a question and parameters of which?
+		Reason for removing outliers:
+			- probably I should do what this say. Eliminate outliers. because it is about T-tests: http://pareonline.net/getvn.asp?v=9&n=6  About t-test
+			- the calculation of Mean and LinRegression is very sensitive to outliers. Better to remove them.
+			- the other commen sense reason for eliminating outliers is that if the market drops -20%, that is not because it is TotM T-1,
+				but because some other unrelated random event. Which is noise. Better to remove that noise.
+		A mixed Keeping/removing outliers idea (but I don't like it. If I have to implement removing, then do it for all)
+			- When I use 12*20=240 samples for 20 years, I have enough samples that an extreme point is OK.
+				>So, with 240 samples, I should keep the outliers
+				> with 60 samples or less, dangerous to use them: eliminate outliers
+				> with 30 samples or less, do not even do predictions.
+
+	//- Because we have decided to do Outlier elimination, (Step 3): 
+		How to handle outlier days in the sample? 
+		- http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
+		"Although it is common practice to use Z-scores to identify possible outliers, 
+		Iglewicz and Hoaglin recommend using the modified Z-score"
+
+	//- Combination of signals (Step 6): How to handle when a day has more than one signal (Combination)
+		> We will think about it in Step 6
+	
+	//- Fine tune Leverage (Step 11): How to handle extra or less leverage (can a Kelly based code determine the leverage as a post-process) 
+		based on the significance of the prediction.
+		I can implement something, without even backtesting it, if it makes sense (and if it is mild). Backtest it later.
+		> We will think about it in Step 11
+
+------------- at this point I have the option to implement the TotM learning version into VBroker first. 
+------------- YES. probably that is the best, and into Quicktester later (because that takes time)
+------------- Until that, maybe a new version of ASP.NET core is coming, with DotNetCore 2.0, or a better Angular2, so it is better to postpone this.
+
+3. 
+- AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50%) in VBroker
+
+	//- have to decide whether to use training set as from SPX, or from VXX or from QQQ or all combined.
+		>Maybe use only one now, just as a quick implementation
+		but later when Combination is ready in Step 6, use both SPX and VXX underlying and combine them.
+		>Check in Quicktester that out of sample, Balazs or my timer was better from 2015 May. Use the winner.
+		>Checked: see "For VXX from 2015-03-26 to 2016-04-12". 
+		Decision: use SPYDerived from 1990 or for the last 20-25 years fixed.
+
+	//- max length of the masks used: I suggested TotMM until Day+6, but Balazs suggested until Day+7. So, let's allow max Day+7 (inclusive)
+		(if we don't limit that, we recirculate to TotM, no point of going to Day+20 for example, so we have to stop somewhere)
+		> "That 14 calendar day means 21.6/30.4*14=9.94 trading days. (approx. 10 trading days), 
+		therefore TotMM-T+1 approximately equals to TotM-T+1+10 = TotM-T+11.  
+		(and therefore TotMM-T+7= TotM-T-(10-7)=TotM-T-3 or sometimes it is TotM-T-4)"
+		Decision: allow max Day+7, -7
+
+	
+- TODO: implement outlier elimination
+- After we decided that Outlier elimination is needed, how to do proper Outlier elimination?
+		(Balazs used +8% or lower than -8% percentages threshold for VXX TotM. So determine 8% is how many StDev away, 
+		and if it 2.2 times, than use that for the other samples (like QQQ, which will have less StDev))
+		> calculate StDev. and http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
+			 "Although it is common practice to use Z-scores to identify possible outliers, 
+			 Iglewicz and Hoaglin recommend using the modified Z-score"
+		> if Sample is 2.5? Z-score away, then eliminate it. This is good, it will not eliminate too many samples.
+			Becasue if  1 of every 10 times, there is a huge panic, than the StDev of the sample will be huge. 
+		- StrongAssert(), but don't throw Exception, just send Error email: 
+			(not likely, but) double check, that max. only 5 or 6% of the samples are eliminated. If 10% of the samples are eliminated
+			as outliers. (10 out of 100), then those are not random outliers.
+
+- TODO:postpone this issue after outlier elimination.
+>TODO:if that still doesn't solve it, and I cannot accept, we can adjust the daily %Change with the %change of the Regime around the 1-2 month in which that sample had been. So, even if TotMM T-1 is really bullish, but that 1-2 Month was economically disasterous, it obviously dragged down its result, that Adjustement will help. We don't want to predict these economic disasters, we just want to predict the OUTPERFORMANCE of that day compared to the average Summer/Winter day. However, we don't want to adjust Winter/Summer regime, just this MontlyUnluckyRegime.
+>TODO: consider implementing this OUTPERFORMANCE prediction instead of %change prediction of that day.
+> why did we select "DDUU.UU00UU" for MidWinter mask? when T-1 is bearish.
+	> because T-2 is bullish, and for T-1, we said, it is not bearish, just neutral, say in Cash.
+	> On the other hand, in Bearish Summer TotMidM-1, is very, very bullish, with T-value > 3.0
+7.4 SPY TotMM, winter masks:
+T-4, -0.80%, Bearish. Playable.
+T-3, -0.36%, Bearish. Probably playable.
+T-2, 0.57%, Bullish from 2008
+T-1, -0.29%, Cash is the best.
+T+1, 0.71%, Bullish until 2006, but flat after 2010
+T+2, 1.21%, Flat until 2006, bullish after 2010. Seems that profit went here from day T+1.
+>Suggested long TotMM winter mask: DDUU.UU00UU  (extra bullish 2 days)
+Yes, but that decision was without significance analisys
+>but 3.1.1. SPY TotMM masks: section shows (allYear, that T-2, T-1 is very bullish. However, it goes to Summer I guess)
+- Before Significance test, we suggested:
+$scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU";
+- After Significance test of SPY, we suggest:
+    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU"; // winter didn't change 
+>day T-2 had T-value: 0.51, and p-value of 30.63%, which is just a tiny edge.
+It doesn't justify that T-2 should be played as Bullish. p-value = 5% or 10% should be considered, not 30%.
+So, I think in my future Adaptive framework, T-2 will be not BullishDay, therefor T-1 is not sorrounded by
+bullish day, therefore, we play Cash on TotM T-1	.
+- however, later, I implement outlier elimination. Maybe that is the reason why T-1 in winter suffers,
+because of 1-2 outliers from the 140 samples.
+T-1 aMean:1993(5):-0.439%, 1994(6):0.359%, 1995(6):0.203%, 1996(6):0.265%, 1997(6):0.739%, 1998(6):-0.260%, !!!!1999(6):-0.942%, !!!
+2000(6):-0.640%, 2001(6):0.092%, 2002(6):0.018%, 2003(6):0.707%, 2004(6):0.499%, 2005(6):0.018%, 2006(6):0.586%, 2007(6):0.179%, 
+!!!2008(6):-0.960%, !!!!
+2009(6):-0.656%, 2010(6):0.039%, 2011(6):-0.262%, 2012(6):-0.610%, 2013(6):0.133%, 2014(6):0.093%, 2015(6):-0.205%, 2016(3):1.192%
+- should I combine both Summer + Winter with weight?, so even if Winter is not lucky, if Summer says
+that day is very bullish then play it.
+For example SPY. TotMidM-1, is the most bullish day in Summer. 
+But in Winter it is even non-significant negative value (Cash). (because 1999 and 2008, the start of the Bear market fell here. So, that Winter sample contains the start of bear markets, while the Summer sample don't.)
+T-2 and T-1 is also very bullish in AllYear Version.
+- first version: don't combine Winter/Summer, just use Winter, because that raises a lot of question, but use a p-value threshold of 30% (not 5%).
+If T-2 (or T-1) is truly bullish days in Summer/Winter both, then the bullishness will slowly go into that,
+and p-value be less than 30%.
+Let's see how many days are played with different p-value thresholds.
+- p-values (t-values): 
+	Quicktester: T-2: winter: 30.63% (0.51), summer: 4.79% (1.68)
+	SQLab: T-2: winter: 0.32, summer: 1.60  (for T-2 Winter, SQLab is even worse. It will never select T-2 as significant)
+>So, I can consider increasing the years from 20 to 23 (getting more samples), that may help a little bit towards being significant, although it is not enough.
+
+
+
+4. 
+- convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core
+- should it use Angular2 ? I like it, but it was quite slow for HealthMonitor website.
+
+
+5. 
+- AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50% R) in "SQ Strategy QuickTester", so that C# code is re-usable
+- Quicktester should give a forecast of that strategy for Today,
+with a separate page in which the steps are detailed as log files.
+So, a user who wants to check what will be played today, don't have to go to Linux Console and start Simulation,
+because the same Log file messages and calculation can be observed on a Website.
+
+
+6. Improve (1) Basic TotM+TotMM things (VBroker + Quicktester) with extensions:
+> and make comparisions in Quicktester as I develop improved versions of the strategy. Write a gDoc study.
+- Close short VXX for the weekend (to sleep better): close the short position at close on Friday and reopen it at open on Monday, 
+	so VBroker should run 20 min. before market open
+	in 2015: "Weekend: We do not play short VXX at the weekend but in backtest we play. It caused 30.00% gain."
+	>try to implement it in an adaptive way, not with a fixed rule. So, if in the future weekends will be good for VXX shorts, we will adapt to it.
+- Consider neighbour days too (Step 6 task): if a Neutral / Cash day is between 2 bullish days. The Neutral day can be played as Bullish too. 
+	I personally would think about playing this way in real life. Can we backtest in Quicktester? Does it worth doing it?
+- Combining signals: incorporate Contango Observer, 
+	which is unlikely to go against Contango direction, but decreases invested days,
+	because there is not enough samples
+- think about how to solve the problems of 'not enough samples', so the prediction is unreliable.
+A. Imagine TotM T-1 days occurs 40 times (enough sample)
+	>If we slice & Dice it to Contango/Backwardation, there will be 30 samples in Contango, 10 in Backwardation
+	>The samples of TotM T-1 Days in Contango = 30, so we have a prediction
+	>but the samples of TotMT-1 Days in Backwardation = 10, there is not enough sample to predict. It will be too random.
+B. One solution to do it is, do not slice&Dice the sample of 40. 
+	>calculate separately the forecast of TotM T-1 days with 40 samples
+	>calculate separately the forecast of Backwardation wit 200 samples
+	Combine the two predictions (with the 2 StDevs), because that lies in the intersection of Both Events.
+	It can be a simple Average, or Weighting with probabilities (Bayesian) or using vol.prediction too. 
+	Theory can be developed later, but a simple averaging is OK at the beginning.
+	That way, we don't go to Cash on TotM days, or on Holiday days, but at least the 
+	Backwardation forecast (bearish) will decrease the Bullish Holiday forecast. Which is good.
+	- in TotM: use both SPX and VXX underlying for signal calculation and combine them. More reliable that way.
+C. There should be a mathemitacal idea how to combine the probabilities of these separate events.
+	It is a Bayesian idea, when event A and event B both occurs at the same time.
+	However, the intersection of event A, B has too few samples.
+	Maybe there is a way to use upl all the samples, as individuals.
+	For example, if you imagine the samples in a huge matrix (vector). Event A selects some part of the matrix,
+	Event B selects another part. Those that selected twice (both A, B), those samples should have
+	a higher weight in the final average, in the final Estimate of %change, final estimate of StDev.
+	Is there a framework for this? Talk with Balazs, the mathematician. How to use all the samples, but giving
+	move weight to the samples which is selected by both A and B.
+
+
+7.
+"SQ Strategy QuickTester" and VBroker: Holidays (42% CAGR)
+- To Holiday seasonality:  fix bearish New Year’s Eve, T-3, T-2, and short Day-1-Day+5 based on the same idea.
+- check that the calculation is corroborated by Balazs's document (Revision of FOMC Based VXX Strategy.docx)
+- also check the per Holidays table (pages 17-18 here https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit#)
+(for example ThanksGiving +1, +2 is Bearish, but +2 is definitely because of an outlier of 12.76%, and the other is hopefully not significantly Bearish day. 
+I don't want to play it Bearish in real life. Around Thanksgiving, market is peaceful.)
+
+8.
+"SQ Strategy QuickTester" and VBroker: FOMC (32% CAGR)
+- check that the calculation is corroborated by Balazs's document (Revision of FOMC Based VXX Strategy.docx)
+- "As it can be seen, Day -2 become more positive, while Day -1 more negative and significant. 
+Thus, shifting trade from Day -2 close to Day -1 open is highly recommended. "
+>George: absolutely. It is a huge boost to T-values, p-values.
+
+9.
+"SQ Strategy QuickTester" and VBroker: Opex (27% CAGR)
+- check that the calculation is corroborated by Balazs's document (Revision of FOMC Based VXX Strategy.docx)
+- separate Summer/Winter because Balazs did that and it is succesfull
+
+10.
+"SQ Strategy QuickTester" and VBroker: VIXFutex (23% CAGR)
+- check that the calculation is corroborated by Balazs's document (Revision of FOMC Based VXX Strategy.docx)
+- separate Summer/Winter because Balazs did that and it is succesfull
+
+11. Improve (2) the whole framework.
+- Fine tune leverage: use forecasted volatility for position sizing (Combination of Kelly and the volDrag): 
+as "UberVXX: Highly Volatile VXX Days Exit Signal": instead of that basic do something more general.
+Apart from forecasting future profit, forecast future volatility too. 
+That is needed for position sizing, which may be zero position, because vol.Drag. can decrease profit.
+
+- https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit# mentions this as Leverage usage
+"VXX/SPY/QQQ Combined:
+If there is a strong bearish signal (there are at least two more bearish signals than bullish), increase the leverage by 50%;
+if there is a weak bearish signal (there is one more bearish signal than bullish), do not use leverage;
+if there is a neutral signal, stay in cash;
+" > but I am not really convinced. This doesn't fit into the Significance statistics framework. We still have time to think about it.
+
+
+
+
+
+
+*********************************** Guidelines to keep in mind
+
+- Don't re-backtest Everything. I will never trade if if I start the backtesting all the details. If the concept makes sense, implement it into trading. 
+I can backtest things later, when it is already trading.
+
+- it should be implemented in a LearningWay, so if market changes later, I don't have to rewrite optimal days. 
+
+- Although maybe not Everything should be implemented in a learning way. Imagine a very good solid reason for someting. Like FOMC days: human fear. 
+If there is one outlier day, that went against us, that unlucky one can modify all future decisions. 
+Even if in the future, the reason of shorting FOMC days is still very good. 
+So either consider NOT learning everything, or eliminate outliers from the trainingSet 
+(the top-bottom 2-5% samples).
+
+- If something is implemented in a learning way, remove outliers. 
+(the top-bottom 2-5% samples, but only if they are 2 or 3 StDev away. (and double check that less than 10% of the samples are outliers)
+If none of them is 3 StDev away, there is no outlier).
+
+- the threshold for BullishEdge, BearishEdge should be different.
+Everybody plays Bullish, very few play Bearish. However, Bearish bets are good portfolio hedges.
+So, when I define SignificanceLevels, AcceptedBullishSignificanceThreshold = T=2.2 is fine, but
+I am more willing to play Bearish. Even if T=only 1.0.
+Actually, Mr. Charmat is happy to play Bearish, if T= 0.0, which means, in case of a tiny edge, (if the market panic is 
+a tiny bit more likely), he is happy to long VXX. 
+(see VXX around FOMC: Long,Long, Short,Short,Long (the second Long day has a %change = 0, but we still play Bearish.))
+
+
+
+
+************************************** Relevant notes
+
+- Adaptive rule: run a statistically significant Test with last 10 years OR at least we have 30-100 samples. (VXX from 2009=6 years, summer month =5, 6*5=30 samples)
+	if p_value is significant
+		Play that day
+	else if both neigbour days are significant, and the direction of the 3 days are the same,
+		we are confident to play this day too.
+		With an predicted profit of the Average of the 3 days (and significance can be averaged too as an estimate)
+
+- Connor part: is currently a fallback mechanish: whene there is no other signal: Holiday, TotM, then Connor is used.
+	However, in the future, we may convert Connor to Significance based decision, which means that 80% of the time the Connor will be in Cash.
+	That is completely different from the current AlwaysInPosition mode.
+			
+- How to combine Connor, FOMC or the VIXFutex, holiday signals. (at the beginning, just do something simple. Later research the whole idea)
+	Option1: hierarchy. 
+	Option2: combining with weights 50%, 50%. If opposite: they cancel each other's out. 
+	Option3: take the sub-strategies Avg%Change on that day. And Average them together. If the Average is negative, 100% short,
+	if the average is positive: 100% long. However this doesn't take into account the 'randomness' of the separate strategies. 
+	One is more Sure (e.g. Win probability=80%), another one is more random (WinProbability=50%).
+	Also, it would be nice to have a strategy that is not 100%, but sometimes play 50%.
+	Option4: (better). Compare the competing SubStrategies T-value, P-value on that given day. Find the highest. That is the clear winner. 
+	So, in TotM T+1 (high T-value) can win over some FOMC days, but best FOMC days will win over weak TotM days. 
+	If the opposite strategies competing two T-values are very similar (10%), you can play cash (they cancel each other's out in this case). 
+	In this way, any number of strategies can be combined into One Uber-strategy, without us giving explicit hierarchies or explicit weights. (can be implemented in VBroker.)Good.
+	Option5: Compare T-values. as before and after that: If we decide to play at all. Estimate Expected value (something like Average). Estimate volatility, and estimate daily volatility drag. 
+	If vol.drag is bigger than Estimated Average, don't play it.
+	So, this only plays it IF it is sure (T-values), and IF its volatility is not too big.
+	It still play 100% short 100% long, but probably mathematically that is the optimal.
+	However, I think from Expected value +VolDrag we can calculate an OptimalLeverage = (0..2).
+	I am pretty sure about it. So, in some cases 2x leverage is the optimal, but in some cases 50% leverage will be played.
+	(we may do a synthetic random time series million samples simulation to sythetize the optimal leverage)
+
+
+------------- Notes from 1. "The Uber VXX Live Strategy.docx"
+
+- To Holiday seasonality:  fix bearish New Year’s Eve, T-3, T-2, and short Day-1-Day+5 based on the same idea.
+play New Year’s seasonality T-3, T-2 bearish (long VXX), even if Significance test doesn't show it.
+So, If investor wants to lock-in the profit or the loss in that tax year, he should sell his position a couple of days earlier than 31st December.
+look at Appendix 1.
+"I fully agree with George's train of thought. I also recommend long Day-3, long Day-2 and short Day-1-Day+5 based on this. I am not afraid of short on Day -1, because 
+", After a market panic on 31/12/2014 (VXX +7.9%), our final recommendation is long VXX on Day -1.
+
+- To TotM and others: incorporate Contango Observer, which is unlikely to go against Contango direction, but decreases invested days
+Contango Observer at Turn of the Month, page 33.
+Observe whether on the given day there is contango or not.
+	- If there is Contango today, use only samples for statistics when there was contango in the past
+	- If there is backwardation, use only backwardation samples. If the number of samples is less than 30, give no prediction
+Other ideas (but they are too fixed rules, that may not be good into the whole idea)
+"It can happen that the signal of the Base Uber VXX strategy has the opposite sign that the Mix sub-strategy has (on FOMC, Holiday, OPEX or ToM days). On these days, shorting VXX could be very dangerous (it happened 44 times between 2004 and 2014).  
+Application: 
+On those days, 
+•	when the signal of the Base Uber VXX strategy has the opposite sign than the Mix sub-strategy has, do not short VXX but go to cash;
+•	when the Base Uber VXX strategy has negative sign and the sign of Mix is zero, decrease investment by 50%;
+•	Long VXX should be played ever, because it has limited risk and it can be a hedge of our whole portfolio
+"
+
+- But if we used our second idea (close on Friday, reopen on Monday), the cost of this kind of halt is only about 0.025% per weekends. (= 1.5% CAGR, fine)
+Thus, the last modification of the Base Uber Strategy is the following: close the short position at close on Friday and reopen it at open on Monday. If the signal for weekend was long, we should keep our position during the weekend.
+
+- 10 out of the 15 best days were on short VXX signals. However, 5 out of 15 best days were on ‘long VXX’ signals. This shows the importance of long VXX signals. We can imagine a strategy that tries to be ‘long VXX’ at least 30% of the time. If we follow only the Contango-Backwardation timers, we are in ‘long VXX’ only about 5%-10% of the time, which is not enough
+
+- Playing SPY with VRP timer is better than Buy and Hold SPY. Furthermore, playing with XIV/VXX is better because we gain not only the good-market-timing-profit, but also the VRP profit (contango). 
+
+- use forecasted volatility for position sizing: 
+as "UberVXX: Highly Volatile VXX Days Exit Signal": instead of that basic do something more general.
+Apart from forecasting future profit, forecast future volatility too. 
+That is needed for position sizing, which may be zero position, because vol.Drag. can decrease profit.
+
+- Vix Futex:
+"When we break out the returns into the contango environment the return of XIV increases to 0.91% – 
+a very nice pickup. Daily return is 0.91% vs 0.49% for non-contango days. Win percentage increased 
+to 65.6% vs 58.2% for non-contango days. All non-contango environments return 0.49%, significantly lower, 
+but still a very good return. XIV has returned average 0.74% per day on the two days before expiration 
+– an incredible return.’"
+
+------------- Notes from 2. "VIX FOMC based Live Strategy" (just description of parts FOMC, ToM, Opex), 5 pages
+
+
+
+------------- Notes from 3. "Holiday Seasonality in Volatility": 57 pages
+
+- page 19: Holiday with VXX strategy using VXX only for training. T-10,T+10 days. "Using dynamic average daily returns – ‘Real’ Averages Strategy". 
+"only the averages of the previous years. " results are saddening. CAGR = -17%.
+Reason: because of outliers, and very small samples (in 2005, we have only 1 previous sample of VXX from 2004),
+the prediction is just random predection. It would result 0% CAGR, but VolDrag is an extra burden, causing negative CAGR.
+Howevev, if we have more than 2-6 samples, because we use SPX or Nasdaq for prediction, we have
+a better, non-random prediction.
+And 20 days around holidays is too big range.
+
+- page 20: VXX training set: eliminating outliers, by using the Win% only (proportions of positive days),
+it was CAGR 0% (with volDrag. So, at least, it is a good prediction, but not strong.)
+Using the same, but instead of +-10 days around holiday, using +-5 days = 15% CAGR. Which is good. 
+We can play this as a component. It will improve in the future.
+
+- Using Kaeppel’s Strategy. Fixed rules. Fix bullish on +-3 days. Doesn't distinguis holidays. 
+CAGR: 30%. (with leverage). Probably without leverage, it is about 25% CAGR.  (same as Buy&Hold XIV with less risk.)
+We can think about whether a learnig based strategy of 15%+ CAGR is better for Holidays, or the fixed rule of Kaeppel.
+Maybe for Holidays, fixed is OK. It is not likely to change.
+However, with TotM, it can change as taxing rules, and policies change in the world.
+If a Learning version gives just a tiny bit less CAGR than the fixed one, we prefer the Adaptive one.
+
+- we have to decide whether we want to unify the 12 holidays (many samples, good for training), or treat them separately (small samples, 1 per year),
+or maybe between these two extremes: 2-3 groups of holidays. StrongHolidays (Xmas, Good Friday), or WeakHolidays(Colombus day).
+>!!!****Yes. Choose this direction.
+
+- Kapper inspects +-3 days, but Balazs' table shows me that even T-5 days before Good Friday, or Xmas is worth considering.
+So, let's inspect +-5 days. If it will be not significant, we will not play it.
+
+- Aggregated Real Averages Strategy, Problems with this:
+	> 1. VXX training set (which is not good, not many samples, and samples are distorted because of 2008, 2009),
+	> 2. it doesn't eliminate outliers. It uses Average, not Win%, so it is bad.
+	> 3. all holidays are aggregated. However, Major holidays are very different to MinorHolidays. Using Minors, it just adds more randomness to the prediction.
+ Still, in spite of VolDrag, it is 0% CAGR, so it is OK, if we can attack the first 2 problems.
+ >Also, we wish to create two groups: StrongHolidays, WeakHolidays, not Aggregate everything.
+	(Note that what we play in real life in UberVXX, that solves 2 out of the 3 mentioned problems. So, instead of 0% CAGR, we expect 25% CAGR)
+
+- in Real life, Balazs' UberVXX uses VXX training set, holidays separation (not aggregate), and outlier elimination. (ask what outlier elimination.)
+ "At first step, we determined the holiday signals based on the optimization of CAGR and Sharpe Ratio (Original Holiday Signals). 
+ But these contain outliers, so we have decided to filter these days. 
+ Our new Outlier-Filtered Holiday Signals are slightly different from Original Holiday Signals. ""
+ - Based on Page 30, we can define 2 groups:
+ MajorStrongBullishPreHolidayGroup = Good Friday, Independence, LabourDay, Thanksgiving, Xmas   // similar: great holidays, people spend time with family
+ MajorStrongBullishPostHolidayGroup = NewYear	// exceptional, not really a Family holiday, but special Tax selling-buying effect. Pre-NewYearEve is bearish, because of tax-selling.
+ MinorHolidays = all others. the Learning framework will not found these days significant. 
+ So, I can decide not even calculate the effect of those. Or if I calculate, they will be non-significant, so not played.
+
+ - Balazs: "Unfortunately, these strategies do not work or are not reliable. In my opinion, the size of our sample causes this lack of success 
+(among others). Our sample is too small: it contains only ten events per holidays. If there is one or two usual event 
+around the given holiday (e.g. FOMC meeting), or there is a special event (e.g. debt ceiling crisis), daily return depend on
+ this and it could have significant effect on our used averages. This can significantly distort the results. 
+ If we had hundred observations per holiday these would eliminate the effects of special events (e.g. in Kaeppel’s investigation). 
+ But we could see that aggregating holidays is not the right solution.
+All in all, I do not recommend using any holiday strategy (not yet), maybe Kaeppel’s one."
+>George: I don't really understand why he says that, because with this over-optimized strategy, the CAGR of UberVXX went from 110% to 200% CAGR.
+(an extra 30% more, which is obviously good). Looking at the numbers, I think we should use it.
+
+
+------------- Notes from 4. "Supplement to our FOMC Based Live VXX Strategy.docx": 7 pages
+
+- TotM: Balazs used an outlier elimination threshold of +-8%. With outlier elimination TotM-1 has 0% mean. 
+So, it is not a bearish day. I wouldn't play as bearish. Anyway, the significance estimate will not play it.
+He says: "Someone may doubt that why long VXX is recommended on Day -1, when SPX is generally in green . 
+In my opinion, demand of SPX call options increases on that days, so VIX can be easily higher."
+"In addition, long VXX can serve as a hedge of our whole portfolio on these days. Based on these, I highly recommend being long on Day -1."
+Ok. So, it makes sense on the Charmat account, but maybe not for another account.
+
+- Option Expiration Seasonality. We will have problem with outlier elimination.
+With outlier elimination, all days are Bullish. There will be no long VXX days.
+Even though in real life, once every 20 times, there is a huge market panic on T-2.
+Maybe randomness, sure. Maybe because a Volcano erupts. But if it is a regular thing, that every 1 out of 10 times,
+there is a panic, then I shouldn't eliminate all of those panicky days.
+So, how to do proper Outlier elimination?
+- calculate StDev.
+- if Sample is 2.5 StDev away, then eliminate it. This is good, it will not eliminate too many samples.
+Becasue if  1 of every 10 times, there is a huge panic, than the StDev of the sample will be huge. 
+- Still, double check, that max. only 5 or 6% of the samples are eliminated. If 10% of the samples are eliminated
+as outliers. (10 out of 100), then those are not random outliers.
+
+- "Using the Turn-of-the-Month Seasonality and the SPX-VIX Controversial Days Exit Signals are highly recommended: 
+the ToM sub-strategy increases our PV, while the exit signal reduces our risk.
+As it could be seen, the Option Expiration Seasonality sub-strategy was not profitable in the last two years. 
+Nevertheless, using the OPEX Seasonality is also recommended, based on my previous (deeper) analysis. 
+In addition, it goes into long VXX 2 days per month, which also could reduce risk.
+"
+
+- but later, he modified it, instead of 5 days, we play only 3 days, and it is consistently profitable now, in every year.
+"So, after some calculations, I have modified the rules and it will be played only three days per months. 
+The usable rule: short VXX on Day 1-3 with 100% of our PV (where Day 1 is the first trading day after the option expiration day)."
+
+
+------------- Notes from 5. "Revision of FOMC Based VXX Strategy.docx", FOMC revision with significance tests: 15 pages
+
+- Last 4 rows belong to a hypothesis analysis. I have tested (using one-sample t-test ) whether the expected return
+ differs from zero (H1) or not (H0) on these days (negative on short days and positive on long days).
+ https://en.wikipedia.org/wiki/Student%27s_t-test#One-sample_t-test
+ Using 5% significance level, Day -3 is clearly positive, why Day 0 is clearly negative. Returns of other days
+  do not differ significantly from zero, albeit Day +1 should be considered positive using Alpha=10%.
+
+- None of the above mentioned books or studies deal with Day -3 and Day -2, so one may think that the performance of
+ VXX on these days does not depend on upcoming meeting. Table 3 and 4 show the highest one-day jumps (higher than 8%) 
+ of VXX on Day -3 and Day -2.  As it can be seen, these days were in different years, thus the high arithmetic returns 
+ do not come from the same regime. Many of them was caused by poor economic or earnings data, political news and – 
+ in my opinion - amplified by the upcoming meeting . Thus, one may accept our argument on long VXX on these days. 
+ Furthermore, long VXX position could work as a hedge of our entire portfolio.
+
+ - One-sample t-test should be used without restriction on the distribution of the ‘population’ when size of sample is at least 30
+ https://en.wikipedia.org/wiki/Location_test
+
+ - Shifting the Day -2 – Day -1 Trade
+As I have mentioned above, in my opinion, volatility decreases after the beginning of the two-day meeting. 
+The meeting starts on the morning of Day -1, so one should think that volatility decreases only after the 
+opening bell on Day -1. Thus, Day -2 – Day -1 trade (switch long VXX to short VXX) should be shifted from 
+close on Day -2 to open on Day -1. Thereby, Day -2 becomes extended (from close on Day -3 to open on Day -1), 
+while Day -1 intraday (from open on Day -1 to close on Day -1). 
+
+- As it can be seen, Day -2 become more positive, while Day -1 more negative and significant. 
+Thus, shifting trade from Day -2 close to Day -1 open is highly recommended. 
+>George: absolutely. It is a huge boost to T-values, p-values.
+
+- "recommend playing the modified, ‘Shortened&Shifted Conditional FOMC VXX Strategy’ in the future (Final Strategy). It works as follows:
+•	Long VXX on Day -3 (from close Day -4 to close Day -3) if VXX does not decrease ‘too much’ 
+	(20% percentile of the previous 1 year) on Day -4 (otherwise stay in cash);
+•	Long VXX on ‘Extended’ Day -2 (from close Day -3 to open Day -1) if VXX does not decrease ‘too much’ 
+	(20% percentile of the previous 1 year) on Day -3 (otherwise stay in cash);
+•	Short VXX intraday on Day -1 (from open Day -1 to close Day -1);
+•	Short VXX on Day 0 (from close Day -1 to close Day 0).
+In addition, playing Day +1 with long VXX would also be worth but it should be considered.
+"
+>George: we will not overcomplicate like this. It is too overfit. That means: not likely to work as succesfully in the future.
+
+
+------------- Notes from 6. "Correlation and Significance Analysis of Uber VXX Strategy Parts.docx", 
+			Significance analysis of others (not FOMC), and Winter-Summer seasonality of TotM, TotMM, 33 pages
+
+
+- Opex:  (I should expect to find the same as Balazs did)
+In order to verify this finding, I have made significance analyses using 2-sample t-test, 
+where H1 indicates significant difference. Here, I have compared the daily percentage returns of 
+specific days (Days 1-3) to returns of other days. In the last row of Table 3 can be seen that shorting 
+VXX on Day 1 (from 2004 and from 2009) and on Day 2 (only from 2004 and not in recent years) is 
+significantly more profitable than shorting on other days with 5% significance level. Using 10% threshold, 
+Day 3 become also significant. 
+
+- worth emphasizing that it does not mean that shorting on non-significant days is not profitable, just 
+not more profitable than generally (as we know that short VXX is profitable in most of the time). 
+Table 4 compared the daily returns of specific days to zero with 1-sample t-test. It can be seen in the last row, 
+that since the inception of VXX (2009), shorting it on Day 1 and Day 3 is very profitable using 5% (or even 2%) 
+significance level, and Day 2 is profitable only with Alpha=10% (which is also acceptable in my opinion).
+
+- All in all, my recommendation is to keep the original strategy, i.e. short VXX on Days 1-3 after OPEX.
+
+- Turn of the Month
+Table 7 and 8 are the same as above in case of OPEX. Based on these, Day -1 is significantly positive compared to other days, while Day 1-3 is negative, but not significantly, except Day 3 from 2009. These findings are in-line with George’s notes :
+•	Day -1: ‘Different from SPY analysis, but consistently bearish from 2009. I would say, it is playable in life as Bearish (even if I don’t like it). Maybe we are in a different regime, or VXX is different from SPY.’
+•	Day +1: ‘Trading bullish, but from 2011 profit went from T+1 and T+2 to T+3’
+•	Day +2: ‘Good trending chart, not volatile. Definitely play.’
+•	Day +3: ‘From 2011 profit went from T+1 and T+2 to T+3. Flat chart from 2013, but still playable’
+In other words, long VXX on Day -1 and short VXX on Day +3 is highly recommended. In addition, short on Day +2 is also significant from 2009. Day +1 is negative, but not significantly. 
+
+- TotMM: 
+, Day +2 is significantly negative compared to both the general case and zero (i.e. not only significantly 
+negative but ‘more negative’ than a general day). Day +3 is significantly negative from 2009 but only compared to zero 
+(i.e. does not significantly negative compared to a general day only in 10% significance level). 
+Day +4, which has not played yet, has negative arithmetic mean as well (more negative than Day +3), but does not seem significant.
+
+- "I recommend extending the original strategy (short Day +2 and Day +3) with short on Day +4 as well"
+
+- "It is well known, that short VXX is profitable in most of the time, so it is better to 
+compare the performance of a given event-day to a general (mostly negative) day instead compare to zero. 
+That is, an event-day is more important, when not only negative but ‘more negative’ than a randomly selected day."
+I disagree. I think we should compare it against zero, not the average negativ VXX %Change.
+Why? because if it is significantly negative from "zero", I would play it. No matter what.
+Imagine a case, when because of contango, and because randomness disappears from the market, VXX falls exactly -0.1% every day.
+If I compare any day to the average -0.1%, nothing will be significant, so I wouldn't trade it.
+Even though, it is profitable to short it every day. So, compare it to Zero.
+
+- He defined the winter season as (25th October; 1st May], 
+After a Grim Reaper style optimization, the Bearish Summer regime was chosen as "(1st May, 25th October]": 
+-so 1st May is the last bullish day. It is TotM-T+1, so it is generally bullish.
+-25th October is the last Bearish day. Therefore the Helloween, which is 31st October and the pre-holiday bullish days are in the bullish period.
+
+
+- the significance analysis of Uber sub-strategies divided into winter and summer parts. 
+Based on this, I recommend new trading rules.
+
+- my modified recommendation is the following around turn of the month:
+•	Day -1: long VXX - both in winter and summer;
+•	Day +1: short VXX only at turn of the quarter - both in winter and summer;
+•	Day +2-+3: short VXX only in winter.
+
+- my modified recommendation is the following around turn of the mid-month:
+•	Day +2: short VXX - both in winter and summer;
+•	Day +3-+7: short VXX only in winter.
+
+- Opex:
+•	Day +0: short VXX only in winter;
+•	Day +1: short VXX - both in winter and summer;
+•	Day +2,+3:short VXX only in winter.
+
+
+------------- Notes from 7. 2015-12: Performance of UberVXX Events and Seasonalities, 52 pages 
+		(a short and illustrative overview of the Events and Seasonalities part in the first chapter)
+		(Comparison: (TotM,TotMM) combo is best, Holidays next, FOMC third) :
+		(Theory vs. Real Life in 2015)
+	  https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit
+
+- Generally, 38% of days have bullish, 17% have bearish and 45% have neutral signal.
+
+-However, results should be treated with caution as almost all the data are in-sample. 
+However, it worked in real life as it was visible on page 2.  for 1 year as out of sample.
+But the good news that the out of sample 2015 is not slowed down too much. It is still 150% CAGR in 2015.
+(in general, overfit strategies quickly loses profitability out of sample)
+
+- FOMC: this sub-strategy had no loosing year using VXX 
+
+- OPEX: sub-strategy using VXX, SPY and QQQ. It can be see that it is a profitable but very hectic sub-strategy.
+	>this sub-strategy had no loosing year using VX
+
+- VIXFUTEX sub-strategy. It can be see that it is also a profitable but very hectic sub-strategy.
+
+- Turn of the Month sub-strategy. It can be see that it is also a profitable but very hectic sub-strategy.
+
+- Table 16: Performance indicators of Sub-strategies using VXX
+CAGRs:
+	TotM (18%) + TotMM (32%): 50% 
+	Holidays: 42%
+	FOMC: 32%
+	OPEX: 27%
+	VIXFutex: 23%
+Altogether: VXX Base strategy. CAGR: 140% (Table 21)
+
+- "It could be concluded that the Holiday and FOMC sub-strategies are the most profitable in all the three cases. 
+But it should be emphasized that the Holiday sub-strategy is a little bit over-optimised due to the absence of sufficient data.
+The 11 years of data means 11 data points in case of Holidays, while 88 data points in case of FOMC and 132-132 in other cases. "
+
+- Leveraged UberVXX Events and Seasonalities:
+this strategy has 6 different (almost independent) signals every day, 
+so the number of bullish or bearish signals on a given day could be a good leverage indicator. 
+For example, play with double leverage on a very bullish indicated day with 3 bullish and 3 neutral signals.
+Or halve the exposure on a slightly bullish indicated day with 3 bullish, 2 bearish and 1 neutral signals.
+
+- https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit# mentions this as Leverage usage
+"VXX/SPY/QQQ Combined:
+If there is a strong bearish signal (there are at least two more bearish signals than bullish), increase the leverage by 50%;
+if there is a weak bearish signal (there is one more bearish signal than bullish), do not use leverage;
+if there is a neutral signal, stay in cash;
+" > but I am not really convinced. This doesn't fit into the Significance statistics framework. We still have time to think about it.
+
+-In my opinion, risk prone investors should use the ‘VXX/SPY/QQQ +50%’ type leverage (190% CAGR, instead of 140%) 
+(much better CAGR and better Sharpe Ratio than in the base case), while ‘VXX/SPY/QQQ Combined‘ 
+type is recommended for risk averse investors. Furthermore, using the hierarchy of the sub-strategies 
+is also recommended in all cases.
+
+- Theory vs. Real Life in 2015
+"we have 121.28% theoretical and 73.82% real life year-to-date (2015-01-01 - 2015-11-16) profits, 
+which are far enough to be the same."
+in 2015: "Weekend: We do not play short VXX at the weekend but in backtest we play. It caused 30.00% gain."
+
+- Rebalance and rounding: In real life trading, we do not apply daily rebalance and are rounding the number of shares. 
+it caused 11.25% loss.
+>Good. I will rebalance it daily. with a MinThreshold of about 200$ only.
+
+- Discretionary stay out: We decided two times this year that it would be better stay out of the market for a few days:
+2015-06-29 - 2015-07-02 (Independent Day Day -4 - Day -1: short VXX): Greek election - 10.32% gain; 
+2015-08-24 (OPEX +1: short VXX): Market panic last week - 10.17% loss.
+
+- We note one reason why our discretionary intervention of staying away from the market maybe a good thing. 
+This strategy is in long VXX in only 17% of the time. Therefore, it is not likely that we can capture those 2-3 really 
+panicky days when the market is very bearish due to geopolitical reasons. 
+Staying away from trading around these market-turmoil events is good, because our 
+Events and Seasonalities do not and cannot read the Financial Times or Wall Street Journal 
+or watch CNBC and therefore cannot capture the momentary state of the political landscape.
+
+- It is worth noting that both of our discretionary stay out decisions were made on Monday before market open. 
+Thus, I made a mistake when total changes of these ‘events’ were classified into the Discretionary Stay Out 
+effect during my previous calculation. These changes should be split into 2 effects: Weekend and Discretionary Stay Out. 
+2015-08-24 (OPEX +1: short VXX):
+close price on 2015-08-21: $20.71 & open price on 2015-08-24: $27.15=> 31.10% Weekend gain;
+close price on 2015-08-24: $24.39 => 10.17% Discretionary Stay out loss.
+
+
+------------- Notes from 8. George's doc: Seasonality: TotM, TotMM, Halloween combo, 51 pages
+
+- Other opinion is this CXO article that explains T-1,T-2,T-3 are bullish days, as Funds selling stocks for paying dividend, income, 
+annuities to retired investors (cash from stock selling is settled 3 days after selling the stock, so they 
+sell on T-4 or earlier.) It says, T-7 to T-4 is bearish selling pressure, but T-3 to T-1 is bullish reversal.
+
+- the much debated TotM T-1: For VXX my note: 
+"Nicely, consistently trending down. Bearish T-1 for VXX seems to be tradeable. 
+Maybe we are in a different regime from 2009 then from 1993 or VXX is different from SPY."
+So, I have a feeling the Significance analysis will play it as Bearish, with Long VXX.
+
+- "That 14 calendar day means 21.6/30.4*14=9.94 trading days. (approx. 10 trading days), 
+	therefore TotMM-T+1 approximately equals to TotM-T+1+10 = TotM-T+11.  
+	(and therefore TotMM-T+7= TotM-T-(10-7)=TotM-T-3 or sometimes it is TotM-T-4)"
+
+- 2015-03-24 addition: later, we found out that Day TotM-T-1 is Bearish from 1990 for the SPX. Market adaptation. 
+So, we can choose to play that day bearish, but looking at ‘Chart: SPX, TotM-T-1’, that Bearish edge is not that big. 
+Mostly flat. Therefore our current suggestion is still Cash (but we admit the day has a bearish edge).
+>"SPX from 1950: TotM-T-1: Almost playable Bearish! Seems Bullish at first, but not playable after 1990. 
+(profit went to T-2). Market evolved. T-1 has became bearish.However, it has 2 unlucky times in 1998, and in 2010. 
+Apart from that, it is mostly flat. See SPY TotM-T-1 chart too. So, I think Cash or Bearish suggested."
+>Our calculation will adapt to it, as for SPY we will not use more than 20 years old samples for training.
+>We have to look back mostly to the last 20 years, and not further.  
+So, we would say: play TotM-T-1 as it is Bearish now. 
+Don't believe Jay Kaeppel, who says it is a Bullish day. He WAS right, but Bullishness went to T-2. (from 1986)
+
+- What is suggested to play for UberVXX with VXX?
+Instead of the currently played D.UUU/"": (only 1 day is bearish)
+CAGR:  39.29%  Annualized StDev:  26.23%  Sharpe:  1.50
+D.UUU/.0UU  (only 4+2 days)
+CAGR: 66.98%	Annualized StDev: 32.23%	Sharpe: 2.08  
+So, play the TotMM T+2, T+3 too!  (maybe T+4 is suggested too. See next section.)
+
+- We can achieve more with D.UUU/UU.DUUU, which is CAGR: 83.29%, but that is more overfitting (especially TotMM-T+1), 
+and we have to play another 4 days, which is not recommended now.
+
+-Because of the similar Sharpe and other common features, short VXX seems to be only a leveraged play. 
+At least, on the Turn of the Month seasonality days. Estimated leverage is 52.13/15.19= 3.43 to the QQQ and 
+ 52.13/13.33= 3.91 to the SPY.
+
+ - because of the highs correlation, a mask developed for SPY in a longer term (22 years) backtest, 
+ can be used in playing the VXX, that only has 5 years history. (Day TotM-T-1 is Bearish from 1990 
+ for the SPX, SPY, so that can be the accepted signal for VXX. But if you are in doubt of the VXX signals, 
+ look for a longer term SPY for advice.)
+-the best Sharpe is is 1.37 with the trading instrument QID (double QQQ).
+
+- We expected that as the ‘Sell in May’ effect is so widely known that its power is diminishing in recent times, 
+however the 65 year chart shows that from 1998 the bearishness of the summer months are even more pronounced than ever.
+
+-7. Intra-month-cycle Halloween: Combination of TotM with ‘Sell in May and go away’
+7.1 The motivation for the combination was:
+1. An academic article mentioned:
+that after doing significance test, only the TotM and the Halloween effect was significant from the other seasonalities tested.
+http://www.cxoadvisory.com/5701/calendar-effects/the-real-calendar-effects/#more-5701
+"On a joint basis, the Halloween and turn-of-the-month effects are strongest, effectively subsuming the other three.
+Days involving only the Halloween effect or the turn-of-the-month effect have strong returns.
+The weekend and holiday effects depend on overlap with the Halloween or turn-of-the-month effects.
+The annualized equity premium over the entire sample period is 7.2% for days covered by either the Halloween effect or 
+the turn-of-the-month effect and -2.8% for all other days.
+…
+In summary, evidence from joint tests support a belief that the Halloween effect and the turn-of-the-month effect are the “real” calendar effects.
+“
+and here is the original article: http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1593770 
+“This paper studies the interaction of the five most well-established calendar effects: the Halloween effect,
+ January effect, turn-of-the-month effect, weekend effect and holiday effect. 
+ We find that Halloween and turn-of-the month (TOM) are the strongest effects fully diminishing the other three effects to zero. 
+ The equity premium over the sample 1963-2008 is 7.2% if there is a Halloween or TOM effect, and -2.8% in all other cases. 
+ These findings are robust with respect to transactions costs, across different samples, market segments, 
+ and international stock markets. Our empirical research narrows down the number of calendar effects from five to two, 
+ leading to a more powerful and puzzling summary of seasonal effects.
+“
+
+-The very long mask (and a little bit the long mask too) is not really about TotM effect, but more about playing the Halloween effect. It is because far from the monthly pivot dates, it is the general idea that summers are bearish, winters are bullish, which we play.
+You can regard it as a fine tuned version of Buy&Hold winter, Short&Hold summer on all days. Spiced it up with the monthly cycles.
+
+- For VXX, different masks can be optimal that for SPY, but maybe we shouldn’t overfit it to VXX, because:
+previous chapter showed that VXX and SPY is very similar, apart from the leverage. So, fitting it to VXX separately is not necessary.
+real traded history of VXX is only from 2009. Only bull market. May not be enough. We like the 22 years backtest of SPY.
+applying SPY optimized mask to VXX is a way to mitigate overfitting. So future profit is more realistic to the backtested one.
+For all these reasons, we used the previous SPY optimized (from 1993) masks applied to the VXX since 2009.
+
+- To monitor the out of sample performance of these masks, scribble down the optimisation date of them, which is 2015-03-26.
+
+- - After Significance test of SPY, we suggest:
+    $scope.dailyMarketDirectionMaskWinterTotM = "UUUD.UUU";	// winter didn't change
+    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU"; // winter didn't change 
+    $scope.dailyMarketDirectionMaskSummerTotM = "DD00U00.U";
+    $scope.dailyMarketDirectionMaskSummerTotMM = "D0UU.0U";
+
+After significance test the mask trades: (15+8)/2=11.5 days per month 
+ SPY: CAGR:  23.27%  Annualized StDev:  14.23%  Sharpe:  1.64; //sharpe increased! more reliable
+ VXX: CAGR:  77.78%  Annualized StDev:  44.02%  Sharpe:  1.77  
+ VXX.SQ: CAGR:  55.06%  Annualized StDev:  41.26%  Sharpe:  1.33    
+ TQQQ: CAGR:  59.14%  Annualized StDev:  35.88%  Sharpe:  1.65  
+
+- We like this masks better.
+We can observe that the old mask that was optimized by hand on SPY had a very good CAGR on SPY. However, the significance test optimized version is more stable.
+-It is more stable for SPY, even if CAGR decreased to 23.27%, the StDev and Sharpe improved
+-more importantly, it is more stable for the Out-of-sample tickers, these tickers were not used for the previous or the current optimization. For these tickers: VXX, VXX.SQ, TQQQ even the CAGR improves.
+This is exactly what we expected: manual optimization based only on the daily T %Changes gives less robust result. Optimizing when we consider the StDev of the daily %change values too gives better results, because that filters out outliers more, and prefer days which is more stable, less random.
+This nicely proves the advantage of statistical significance testing, namely it lead to better, more stable out-of-sample performance.
+
+- "9. Backest to compare 4 predefined masks on out of sample date 2015-07-06:"
+
+- 6.For VXX from 2015-03-26 to 2016-04-12 // the start of the out of sample date
+Buy&Hold: Total Return:  -24.32%  CAGR:  -23.44%  Annualized StDev: 75.45%  Sharpe:  -0.31  
+UberVXXOld: Total Return:  6.90%  CAGR:  6.60%  Annualized StDev:  30.64%  Sharpe:  0.22
+UberVXXNew: Total Return:  58.52%  CAGR:  55.50%  Annualized StDev: 36.72%  Sharpe:  1.5(10d winter, 3d summer)
+SPYDerived: Total Return:  119.12%  , CAGR:  112.05%  Annualized StDev:  56.09%  Sharpe:  2.00(15d winter, 8d summer)  
+Which means, from March 2015, the SPYDerived monthly seasonality was the winner out of sample with 119.12% total return 
+in that 12.5 months. The reason for that big outperformance is that the SPYDerived strategy plays about +50% more days 
+in winter, (15 instead of 10), and 2.5x more in summer (8 days instead of 3). Still, 
+this out of sample performance means that we should favour SPYDerived mask of 25 years instead of the 
+VXX derived mask of 10 years. The SPYDerived mask of 25 years had at least 3 bearish regimes, 
+while the samples from 2004 only have 1 bearish regime in the training set. 
+Note that 2015 was a bearish year. That is the reason of the SPYDerived outperformance.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+************************************** Old Notes for backup (not very relevant now, as the new algoritm is learning, not fixed rules)
+
+- Vbroker.LimitedUberVXX: TotM/TotMM: what to implement in VBroker
++ Jay: Jay is bullish on TotM-1, TotM-2 too: "Over the past 100-plus years, the last trading day of the month has been
+the third most profitable trading day of the month, behind only trading days 2 and 3" 
+(Jay plays Monthly 10=2+4+4, because he plays trading day 9-12 too. Wages come that time too. I can check it with my Quicktester; with SPY 20 years backtest)
++ SPYAnatomy book is too short term: only 13years, Jay is too long: 100 years. As a learning algorithm: 
+I would calculate the rules based on the last 20 years what to do. (a different algorithm later saving it to a DB). Which is most probably:
++ If TotM-1 is under EMA200, go to Cash for 4 days. (on all days T-1, T+1+2+3, play T-1 or not?) 
+it was only backtested in anatomyOfSPY book for T+1, but I accept it for all 4 days; 
+confirmed by Balazs's VXX PV in the UberVXX. In 2007-2008, the strategy was down, but in 2009, it was up.
+<George: I don't want these fixed rules in the code, it is not learning, and EMA200 timer decreases the samples 5-fold, not enough for learning.>
++ TotM-1, TotM+1, TotM+2: Bullish, even if it is on 5-days high ; 
+(T-1 was bearish in UberVXX first, but it is about 0 without outliers. See appendix. I prefer to play the longer term Jay Kaeppel version.)
++ TotM+3: Bullish, but go to Cash if SPY is on its 5-day high
++(or better rule: run a statistically significant Test with last 20 years, and play if mean >2*Avg mean; otherwise that day is Cash); 
+with VXX (without 2x leverage), it can achieve 14% CAGR. Better than SPY 10% long term.
+We don't have 20 year history with VXX, so calculate it for VIX, calculate it with SPY(from 1993); only play if both are significant.
++ I think do not play the T-1. we cannot decide. Balazs says bearish, Jay says bullish. 
+Looking at chart 'Short SPY on ToM Day -1 Strategy (otherwise cash)" in UberVXX, we can see all the 0.20 profit come in 1987. 
+Lucky thing. Because it should be a general tendency of the market to go up.
+So, I guess, there is no edge on day T-1, it will be not significant. So, Cash. Or don't play it.
+With VXX, T+2, T+3 brings the great profit. T-1 doesn't bring munch. So, don't play it. 
+(with SPY T+1 brings the good profit, other days are small profit. so, forget T-1, it is inconclusive.)
+(on the other hand: long VXX is quite safe, azaz szeretjuk jatszani. (as a hedge for the portfolio), so 
+maybe we would like it. And what if regime has been changed, and in this new regime (last 20 years), it is really bearish day 
+(for example, if fund managers have to sell on T-1).
+Also note day T-1 usually Friday (Vix can go down, VXX may be not affected), 
+day T+1 is Monday, which is 'bearish Monday'. that is the reason why T+2 is the best day (in VXX, in SPY T+1 is the best day) in general. 
++Adapt to the non-random anomalies of the last 10 or 20 years only.
+(That is what I want with the Automatic MonthlySeasosonalityTrader. It learns its anomalies from max 10 or 20 years history)
+Jim Simons (Medallion fund at Renaissance): "commodities, currencies had a tendency to trend.. not after 1980", 
+maybe indices too, but nobody is talking about stocks, "finding other approaches, shorter term approaches, Data = Interest rate histories", 
+"Many modells, parallel, if one model fails, other can catch up", "data: weather, annual report, quarterly reports, price, volume". 
+Looking for anomalies. Any one anomaly (1st day of the month) may be a random thing, however if you use many anomalies, that is good. 
+!!!!!(TRUE)"And you have enough samples, you can tell that it is not random. (confidence analysis.). 
+But these anomalies fade after a while. ">George, so we have to adapt
+
+- Vbroker.LimitedUberVXX: combining Helloween's TotM with FOMC days into LimitedUberVXX. 
++FOMC: think it over. Look Balazs + Rob Hanna book again:, but play less than 5 days.
+"my comment of Hanna's book: on Day T-1: I don't like the slice &Dice.
+He just excludes 1998-2002 period from the data, and he can exclude the Bullish edge part, so what is left is the bearish edge.
+But that was already visible on the previous chart.
+I wouldn't research it, and I would drop the FED T-1 day as playing in real life.
+In UberVXX, we play Short VXX = long SPX currently. I would drop it.
+So, what is left: I would only play the FED day: T+0 (and maybe T+1) in my Seasonality."
+<George: these thinkings don't matter now, as the strategy will Learn what to play, rules are not fixed>
+
+- Vbroker.LimitedUberVXX: absolutely implement this 4 holidays into VBroker. T+1, T-1,
+Xmas		New Year		Labour Day		Good Friday	
+0.5% avg. on DAX. That is 2% with the VXX 4x Beta. 8 times a year = 16%
+"Nem ugyanakkor van a labour day USA-ban, mint No.-ban (1st May). És mi csak az amerikait játsszuk.". See Balazs email on pan european holiday effect.
+
+- Vbroker.LimitedUberVXX: absolutely implement VIXFutex, Day T-1 (T-2 can be played too, but not significant, p=8%), 
+because its has the highest average VXX %change (better than TotM), also OPEX +1,+2 can be considered
+(differentiate into Summer/winter as Balazs found for OPEX, VIXFutex)
+see Correlation and Significance Analysis of Uber VXX Strategy Parts

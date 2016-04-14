@@ -276,7 +276,7 @@ namespace DbCommon
         {
             string key = p_enumMember.ToString(); object val = null;
             if (!String.IsNullOrEmpty(key) && 'A' <= key[0])    // valid enum value
-                val = Utils.ExeConfig[key];
+                val = DbUtils.ExeConfig[key];
             return (val != null) ? val.ToString() : null;
         }
     }

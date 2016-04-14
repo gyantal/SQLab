@@ -164,12 +164,13 @@ namespace VirtualBroker
         {
             if (id == -1)
             {
-                if (errorCode == 2104 || errorCode == 2106 || errorCode == 2107 || errorCode == 2119)
+                if (errorCode == 2104 || errorCode == 2106 || errorCode == 2107 || errorCode == 2108 || errorCode == 2119)
                 {
                     // This is not an error. It is the messages at Connection: 
                     //IB Error. Id: -1, Code: 2104, Msg: Market data farm connection is OK:hfarm
                     //IB Error. Id: -1, Code: 2106, Msg: HMDS data farm connection is OK:ushmds.us
                     //IB Error. Id: -1, Code: 2107, Msg: HMDS data farm connection is inactive but should be available upon demand.ushmds
+                    //IB Error. Id: -1, Code: 2108, Msg: HMDS data farm connection is inactive but should be available upon demand.ushmds
                     //IB Error. Id: -1, Code: 2119, Msg: Market data farm is connecting:usfarm
                     return;
                 }

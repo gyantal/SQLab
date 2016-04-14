@@ -1,0 +1,106 @@
+
+
+**********************************************************************
+**************  1.		2016-04-14, Notes
+**********************************************************************
+from https://docs.google.com/document/d/1DJtSt1FIPFbscAZsn8UAfiBBIhbeWvZcJWtQffGPTfU/edit#
+10. Starting trading with VirtualBroker
+
+On 2016-04-14, the VirtualBroker which previously played only the Connor TrendFollowing with VXX as trading instrument started to play the 
+TotM+TotMidM with Summer/Winter distinction. It is an Adaptive UberVXX process. It uses the SPY for mask generation, using only the last 25 years 
+(later we may modify it to use only the last 20 years). Currently p-value of 10% is used for bullish bets (short VXX), 
+and p-value of 15% is used for bearish bets (long VXX), because we want more shorts and that is the less crowded trade. 
+
+This is the SPY nSamples, Win%, T-value, P-values currently synthetized (Green is bullish day, Red is bearish) :
+--- Stats for Winter, TotM:    (Win%, aMean, t-value, p-value)
+T-7 (#140): 52.9%, -0.006%, -0.05, 47.84%
+T-6 (#140): 55.7%, -0.016%, -0.15, 43.90%
+T-5 (#147): 55.1%, 0.061%, 0.60, 27.34%
+T-4 (#162): 56.2%, 0.248%, 2.15, 1.65%
+T-3 (#162): 55.6%, 0.071%, 0.84, 20.16%
+T-2 (#163): 52.8%, 0.114%, 1.23, 10.96%
+T-1 (#163): 46.6%, -0.051%, -0.63, 26.34%
+T+1 (#157): 63.7%, 0.302%, 2.81, 0.28%
+T+2 (#141): 58.9%, 0.150%, 1.53, 6.47%
+T+3 (#141): 59.6%, 0.151%, 1.79, 3.78%
+T+4 (#141): 53.2%, 0.012%, 0.12, 45.21%
+T+5 (#141): 51.8%, 0.001%, 0.01, 49.58%
+T+6 (#141): 55.3%, -0.053%, -0.62, 26.76%
+T+7 (#141): 52.5%, -0.014%, -0.13, 45.00%
+
+--- Stats for Winter, TotMidM:    (Win%, aMean, t-value, p-value)
+T-7 (#141): 56.7%, 0.035%, 0.37, 35.62%
+T-6 (#141): 49.6%, 0.029%, 0.29, 38.49%
+T-5 (#141): 53.2%, -0.075%, -0.90, 18.47%
+T-4 (#141): 49.6%, -0.117%, -1.12, 13.21%
+T-3 (#141): 58.9%, -0.035%, -0.38, 35.18%
+T-2 (#141): 55.3%, 0.059%, 0.58, 28.28%
+T-1 (#140): 55.0%, -0.016%, -0.16, 43.56%
+T+1 (#140): 57.1%, 0.134%, 1.46, 7.33%
+T+2 (#140): 57.9%, 0.224%, 2.27, 1.25%
+T+3 (#140): 50.0%, -0.042%, -0.42, 33.87%
+T+4 (#140): 50.7%, -0.116%, -1.08, 14.09%
+T+5 (#140): 58.6%, 0.202%, 2.06, 2.06%
+T+6 (#140): 55.7%, 0.246%, 2.21, 1.43%
+T+7 (#140): 60.7%, 0.043%, 0.53, 29.95%
+
+--- Stats for Summer, TotM:    (Win%, aMean, t-value, p-value)
+T-7 (#138): 44.9%, -0.205%, -2.06, 2.07%
+T-6 (#138): 44.9%, -0.148%, -1.43, 7.75%
+T-5 (#131): 49.6%, -0.043%, -0.50, 31.06%
+T-4 (#116): 45.7%, -0.006%, -0.06, 47.67%
+T-3 (#116): 57.8%, 0.150%, 1.42, 7.91%
+T-2 (#115): 54.8%, -0.015%, -0.12, 45.12%
+T-1 (#115): 42.6%, -0.070%, -0.63, 26.53%
+T+1 (#122): 61.5%, 0.207%, 1.73, 4.35%
+T+2 (#138): 51.4%, -0.028%, -0.29, 38.63%
+T+3 (#138): 49.3%, -0.022%, -0.23, 40.77%
+T+4 (#138): 50.7%, 0.011%, 0.10, 46.14%
+T+5 (#138): 49.3%, -0.015%, -0.15, 43.91%
+T+6 (#138): 47.8%, -0.063%, -0.56, 28.87%
+T+7 (#138): 52.9%, -0.106%, -1.10, 13.65%
+
+--- Stats for Summer, TotMidM:    (Win%, aMean, t-value, p-value)
+T-6 (#138): 49.3%, -0.081%, -0.82, 20.63%
+T-5 (#138): 50.0%, 0.194%, 1.78, 3.86%
+T-4 (#138): 49.3%, -0.199%, -2.00, 2.35%
+T-3 (#138): 54.3%, -0.026%, -0.28, 39.07%
+T-2 (#138): 58.0%, 0.238%, 1.68, 4.79%
+T-1 (#138): 63.8%, 0.234%, 3.04, 0.14%
+T+1 (#138): 53.6%, -0.021%, -0.15, 43.87%
+T+2 (#138): 57.2%, 0.218%, 2.44, 0.80%
+T+3 (#138): 55.8%, 0.021%, 0.25, 40.16%
+T+4 (#138): 52.9%, -0.035%, -0.33, 36.99%
+T+5 (#138): 40.6%, -0.225%, -2.44, 0.79%
+T+6 (#138): 47.1%, -0.085%, -0.83, 20.28%
+
+So, the synthesized mask is:
+$scope.dailyMarketDirectionMaskWinterTotM = "U000.UUU";
+$scope.dailyMarketDirectionMaskWinterTotMM = "D000.UU0DUU"; 
+$scope.dailyMarketDirectionMaskSummerTotM = "DD00U00.U00000D";
+$scope.dailyMarketDirectionMaskSummerTotMM = "UD0UU.0U00D";
+
+Save the date 2016-04-14 for the record as the start date for the out of sample performance. Note that the AdaptiveUberVxx portfolio in SQDesktop uses AdaptiveConnor strategy for the days when TotM part forecast Cash, therefore the SQDesktop portfolio is a combination of the strategies. If the performance of only the TotM strategy is needed, better to check the previous mask separately in QuickTester.
+
+
+On 2016-04-14 this new mask would give
+For SPY:
+
+CAGR: 24.19%
+Annualized StDev: 13.30%
+Sharpe: 1.82
+Compared to the previous overfit:
+CAGR: 23.39%
+Annualized StDev: 14.16%
+Sharpe: 1.65
+
+
+For VXX from 2004:
+CAGR: 49.51%
+Annualized StDev: 39.59%
+Sharpe: 1.25
+Compared to the previous overfit:
+CAGR: 59.31%
+Annualized StDev: 42.76%
+Sharpe: 1.39
+But it plays 1 day less, and it uses only Significant days, so the new mask is less overfit than the previously synthesized.

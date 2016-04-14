@@ -67,7 +67,7 @@ namespace HealthMonitor
                     {
                         ToAddresses = Utils.Configuration["EmailGyantal"],
                         Subject = "SQ HealthMonitor: WARNING! RealTime Price Service stopped working.",
-                        Body = "SQ HealthMonitor: WARNING! RealTime Price Service stopped working.\nhttp://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l returned this: '" + rtpsReply + "'",
+                        Body = "SQ HealthMonitor: WARNING! RealTime Price Service stopped working.\nhttp://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l \n returned this: '" + rtpsReply + "'",
                         IsBodyHtml = false
                     }.Send();
                     m_isThisServiceOutageWarningEmailWasSent = true;

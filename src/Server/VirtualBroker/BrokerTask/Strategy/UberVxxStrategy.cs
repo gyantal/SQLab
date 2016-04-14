@@ -10,18 +10,42 @@ using Utils = SqCommon.Utils;
 
 namespace VirtualBroker
 {
+    public struct UberVxxQuoteData
+    {
+        public DateTime Date;
+        public double AdjClosePrice;
+        public double PctChg;
+
+        //Offsets: we cannot aggregate Forward and Backward, because imagine that because of WW-III, there is only one day traded during the month, that day is Both a TotM+1, and TotM-1
+        public int TotMForwardOffset;  // 1 = T+1
+        public int TotMBackwardOffset; // 1 = T-1
+        public int TotMidMForwardOffset;  // 1 = T+1    // it is safer to read the code if "Mid" is there
+        public int TotMidMBackwardOffset; // 1 = T-1
+
+    }
+
     public class PortfolioParamUberVXX : IPortfolioParam     // Strategy specific parameters are here
     {
         public double PlayingInstrumentVixLongLeverage { get; set; }
         public double PlayingInstrumentVixShortLeverage { get; set; }
     }
 
-    public class UberVxxStrategy : IBrokerStrategy
+    public partial class UberVxxStrategy : IBrokerStrategy
     {
         Task<Dictionary<string, Tuple<IAssetID, string>>> m_loadAssetIdTask = null;
         Dictionary<string, Tuple<IAssetID, string>> m_tickerToAssetId = null;   // ticker => AssetID : FullTicker mapping
 
         public bool IsSameStrategyForAllUsers { get; set; } = true;
+
+        // advice: if it is a fixed size, use array; faster; not list; List is painful to initialize; re-grow, etc. http://stackoverflow.com/questions/466946/how-to-initialize-a-listt-to-a-given-size-as-opposed-to-capacity
+        // "List is not a replacement for Array. They solve distinctly separate problems. If you want a fixed size, you want an Array. If you use a List, you are Doing It Wrong."
+        List<QuoteData> m_vxxQuotesFromSqlDB;   // doesn't contain today real-time price
+        List<QuoteData> m_vxxQuotesFromIB;      // contains today real-time price too, but max IB history is for 1 year
+        UberVxxQuoteData[] m_vxx;               // contains today real-time price too
+
+        List<QuoteData> m_spyQuotesFromSqlDB;   // doesn't contain today real-time price
+        UberVxxQuoteData[] m_spy;               // doesn't contain today real-time price, because it is not necessary for the calculation
+        
 
         public static IBrokerStrategy StrategyFactoryCreate()
         {
@@ -47,85 +71,35 @@ namespace VirtualBroker
             return m_tickerToAssetId[p_ticker].Item1;
         }
 
+        public double GetPortfolioLeverage(List<PortfolioPositionSpec> p_suggestedPortfItems, IPortfolioParam p_param)
+        {
+            PortfolioParamUberVXX param = (PortfolioParamUberVXX)p_param;
+            // the strategy knows that p_suggestedPortfItems only has 1 row, either VXX (for long VXX) or SVXY (for short VXX)
+            if (p_suggestedPortfItems[0].Ticker == "VXX")
+                return param.PlayingInstrumentVixLongLeverage;
+            else
+                return param.PlayingInstrumentVixShortLeverage;
+        }
+
         public List<PortfolioPositionSpec> GeneratePositionSpecs()
         {
             Utils.Logger.Info("UberVxxStrategy.GeneratePositionSpecs() Begin.");
-            int lookbackWindowSize = 102;
-
-            List<QuoteData> m_vxx;      // contains today real-time price too
-            double m_probDailyFT = 0.0;
-            double m_probDailyFTGoodFtRegimeThreshold = 0.480001;
-
-            // 1. Get VXX price data
-
-            // we can get histical data from these sources and compare them
-            // 1. IB: quickest, but 'Historical data request for greater than 365 days rejected.' and it is split adjusted, but if dividend is less than 10%, it is not adjusted.
-            // 2. YahooFinance as CSV, but twice every year YahooFinance doesn't have the data, or one date is missing from the 200 values
-            // 3. GoogleFinance as HttpDownload
-            // 4. Our SQL server.
-            //// we assume our SQL DB is correct, it is always alive; and has the correct Split info in it, so AdjustedPrice is calculated correctly
-            // YF sometimes is not correct. And if it is not correct, we cannot reapair it.
-            // IB sometimes doesn't give back the LastClosePrice; it is bug in their system. We cannot fix it.
-            // At least, if our SQL DB doesn't give back the info, we can correct it during the day. So, we should rely on our SQL DB more than YF.
-
-            //var p_sqlConn = new SqlConnection("ConnectionString");
-
-            List<QuoteData> vxxQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
-                    new QuoteRequest { Ticker = "VXX", nQuotes = lookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
-                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
-
-            // check that the last date in the CSV is what we expect: the previous market Open day
-            //DateTime expectedUtcLastDateTime = DBUtils.GetPreviousMarketOpenDay(utcNow, StockExchangeID.NASDAQ, VBroker.g_dbManager); // it needs UTC input, result.TimeOfDay == local 00:00 converted to UTC; so it is <Date>:4:00 (UTC), so we should convert it back to Local
-            //DateTime expectedETLastDateTime = TimeZoneInfo.ConvertTimeFromUtc(expectedUtcLastDateTime, TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time"));
-            //DateTime expectedETLastDate = expectedETLastDateTime.Date;
-            //VBrokerLogger.StrongAssert(taskLogFile, vxxQuotesFromSqlDB.Last().Date == expectedETLastDate, Severity.Exception, "m_vxxQuotesFromSqlDB.Last().Date == m_dateNowInET");             // assert that its last Date is today, VBroker is running all day
-
-            //m_vxx = vxxQuotesFromSqlDB.Select(item => new QuoteData() { Date = item.Date, AdjClosePrice = item.AdjClosePrice }).ToList(); // Clone the SQL version, not YF
-
-            // so, for VXX, for which there is no dividend, I can use the split-adjusted IB prices, but for other cases, I will have to use our SQL database (or YF or GF or all)
-            Contract contract = new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" };
-            if (!Controller.g_gatewaysWatcher.ReqHistoricalData(DateTime.UtcNow, lookbackWindowSize, "TRADES", contract, out m_vxx))   // real trades, not the MidPoint = AskBidSpread
-                return null;
-
-            // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
-            if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
-                StrongAssert.True(Math.Abs(vxxQuotesFromSqlDB[vxxQuotesFromSqlDB.Count - 1].AdjClosePrice - m_vxx[m_vxx.Count - 2].AdjClosePrice) < 0.02, Severity.NoException, "We continue but yesterday price data doesn't match from IB and SQL DB");
-
-            // log the last 3 values (for later debugging)
-            Utils.Logger.Warn($"{m_vxx[m_vxx.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_vxx[m_vxx.Count - 3].AdjClosePrice}");
-            Utils.Logger.Warn($"{m_vxx[m_vxx.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_vxx[m_vxx.Count - 2].AdjClosePrice}");
-            Utils.Logger.Warn($"{m_vxx[m_vxx.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_vxx[m_vxx.Count -1].AdjClosePrice} (!Last trade, not last midPoint)");
-
-            // 2. Do some preprocess
-            //Implement that connor vbroker calculates sma100 of prob ft dir, and act according to a threshold
-            //FTDirProb Regime Threshold:	0.48, >48% is good regime (for example 49% is still a good regime); but, 48.00 is a bed regime. In bad regime, we do MR, otherwise FT.
-            //"g:\work\Archi-data\HedgeQuant\docs\gyantal\Studies\VIX\Autocorrelation\VXX auto-correlation with timers\probFTDirSMA100Timer\VXX auto-correlation-from2004_probFTDirSMA100Timer_doInverse 2.xlsx" 
-            double[] vxxDailyPChg = new double[101];
-            for (int i = 0; i < 101; i++)
+            if (!GetHistoricalAndRealTimeDataForAllParts())
             {
-                vxxDailyPChg[i] = m_vxx[m_vxx.Count - (101 - i)].AdjClosePrice / m_vxx[m_vxx.Count - (101 - i) - 1].AdjClosePrice - 1;
+                Utils.Logger.Error("UberVxxStrategy.GeneratePositionSpecs() GetHistoricalAndRealTimeDataForAllParts() Error. However, we try to continue. Maybe the problematic data will be not used in Forecast.");
             }
-            double[] vxxDailyFT = new double[100];
-            for (int i = 0; i < 100; i++)
-            {
-                vxxDailyFT[i] = (vxxDailyPChg[i] >= 0 && vxxDailyPChg[i + 1] >= 0 || vxxDailyPChg[i] < 0 && vxxDailyPChg[i + 1] < 0) ? 1 : 0;
-            }
-            m_probDailyFT = vxxDailyFT.Average();
-
-            // 3. Process it
-            double dailyPercentChange = vxxDailyPChg[vxxDailyPChg.Length - 1];
-            //FTDirProb Regime Threshold:	0.48, >48% is good regime (for example 49% is still a good regime); but, 48.00 is a bed regime. In bad regime, we do MR, otherwise FT.
-            // if today %change = 0, try to short VXX, because in general, 80% of the time, it is worth shorting VXX than going long
             double forecast = 0;
-            bool isFTRegime = m_probDailyFT > m_probDailyFTGoodFtRegimeThreshold;
-            if (isFTRegime)   // FT regime
-                forecast = (dailyPercentChange > 0) ? 1 : -1;        // FT regime: if %change = 0, we bet VXX will go down (-1)
-            else
-                forecast = (dailyPercentChange >= 0) ? -1 : 1;// MR regime
 
-            Utils.Logger.Warn($"VXX %Chg:{dailyPercentChange * 100.0:F2}%,ProbFT:{m_probDailyFT * 100.0}%,Regime:{((isFTRegime) ? "FT" : "MR")},Forecast:{forecast*100}%");
+            double? uberVxxForecast = GetUberVxxForecastVxx();
+            if (uberVxxForecast != null)
+                forecast = (double)uberVxxForecast;
+            else {  // if UberVXX doesn't give forecast, use Connor
+                double? connorForecast = GetConnorForecast();
+                if (connorForecast != null)
+                    forecast = (double)connorForecast;
+            }
 
-            List<PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
+            List <PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
             if (forecast > 0)   // bullish on VXX: buy VXX or UVXY/TVIX
             {
                 // IBrokerStrategy should not really know about the Trading Execution, or the proper trading instrument of the user or leverage of the user. 
@@ -143,15 +117,116 @@ namespace VirtualBroker
             return specs;
         }
 
-
-        public double GetPortfolioLeverage(List<PortfolioPositionSpec> p_suggestedPortfItems, IPortfolioParam p_param)
+        private bool GetHistoricalAndRealTimeDataForAllParts()
         {
-            PortfolioParamUberVXX param = (PortfolioParamUberVXX)p_param;
-            // the strategy knows that p_suggestedPortfItems only has 1 row, either VXX (for long VXX) or SVXY (for short VXX)
-            if (p_suggestedPortfItems[0].Ticker == "VXX")
-                return param.PlayingInstrumentVixLongLeverage;
+            bool isOkGettingHistoricalData = true;
+            // 1. Get VXX price data
+            // we can get histical data from these sources and compare them
+            // 1. IB: quickest, but 'Historical data request for greater than 365 days rejected.' and it is split adjusted, but if dividend is less than 10%, it is not adjusted.
+            // 2. YahooFinance as CSV, but twice every year YahooFinance doesn't have the data, or one date is missing from the 200 values
+            // 3. GoogleFinance as HttpDownload
+            // 4. Our SQL server.
+            //// we assume our SQL DB is correct, it is always alive; and has the correct Split info in it, so AdjustedPrice is calculated correctly
+            // YF sometimes is not correct. And if it is not correct, we cannot reapair it.
+            // IB sometimes doesn't give back the LastClosePrice; it is bug in their system. We cannot fix it.
+            // At least, if our SQL DB doesn't give back the info, we can correct it during the day. So, we should rely on our SQL DB more than YF.
+
+            //var p_sqlConn = new SqlConnection("ConnectionString");
+            int vxxLookbackWindowSize = 102;
+            m_vxxQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
+                    new QuoteRequest { Ticker = "VXX", nQuotes = vxxLookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
+                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
+
+            // check that the last date in the CSV is what we expect: the previous market Open day
+            //DateTime expectedUtcLastDateTime = DBUtils.GetPreviousMarketOpenDay(utcNow, StockExchangeID.NASDAQ, VBroker.g_dbManager); // it needs UTC input, result.TimeOfDay == local 00:00 converted to UTC; so it is <Date>:4:00 (UTC), so we should convert it back to Local
+            //DateTime expectedETLastDateTime = TimeZoneInfo.ConvertTimeFromUtc(expectedUtcLastDateTime, TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time"));
+            //DateTime expectedETLastDate = expectedETLastDateTime.Date;
+            //VBrokerLogger.StrongAssert(taskLogFile, vxxQuotesFromSqlDB.Last().Date == expectedETLastDate, Severity.Exception, "m_vxxQuotesFromSqlDB.Last().Date == m_dateNowInET");             // assert that its last Date is today, VBroker is running all day
+
+            //m_vxx = vxxQuotesFromSqlDB.Select(item => new QuoteData() { Date = item.Date, AdjClosePrice = item.AdjClosePrice }).ToList(); // Clone the SQL version, not YF
+
+            // so, for VXX, for which there is no dividend, I can use the split-adjusted IB prices, but for other cases, I will have to use our SQL database (or YF or GF or all)
+            Contract contract = new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" };
+            if (!Controller.g_gatewaysWatcher.ReqHistoricalData(DateTime.UtcNow, vxxLookbackWindowSize, "TRADES", contract, out m_vxxQuotesFromIB))   // real trades, not the MidPoint = AskBidSpread
+            {
+                isOkGettingHistoricalData = false;
+            }
             else
-                return param.PlayingInstrumentVixShortLeverage;
+            {
+                // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
+                if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
+                    StrongAssert.True(Math.Abs(m_vxxQuotesFromSqlDB[m_vxxQuotesFromSqlDB.Count - 1].AdjClosePrice - m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.02, Severity.NoException, "We continue but yesterday price data doesn't match from IB and SQL DB");
+
+                // log the last 3 values (for later debugging)
+                Utils.Logger.Warn($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].AdjClosePrice}");
+                Utils.Logger.Warn($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice}");
+                Utils.Logger.Warn($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice} (!Last trade, not last midPoint)");
+
+                // 2. Do some preprocess
+                //Implement that connor vbroker calculates sma100 of prob ft dir, and act according to a threshold
+                //FTDirProb Regime Threshold:	0.48, >48% is good regime (for example 49% is still a good regime); but, 48.00 is a bed regime. In bad regime, we do MR, otherwise FT.
+                //"g:\work\Archi-data\HedgeQuant\docs\gyantal\Studies\VIX\Autocorrelation\VXX auto-correlation with timers\probFTDirSMA100Timer\VXX auto-correlation-from2004_probFTDirSMA100Timer_doInverse 2.xlsx" 
+                m_vxx = new UberVxxQuoteData[101];
+                for (int i = 0; i < 101; i++)
+                {
+                    m_vxx[i].Date = m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - (101 - i)].Date;
+                    m_vxx[i].AdjClosePrice = m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - (101 - i)].AdjClosePrice;
+                    m_vxx[i].PctChg = m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - (101 - i)].AdjClosePrice / m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - (101 - i) - 1].AdjClosePrice - 1;
+                }
+            }
+
+
+            // 1. Get Historical Data, SPY is from 1993-01-29, which is 23 years data now, but let's use maximum 20 years of data. Going back to 50 years will be not that adaptive.
+            //int lookbackWindowSize = 21 * 260;  // we ask about 21 years, and we will cut it manually properly, to have exactly the same (20) January as February, as March, etc.
+            //int nYearsInTrainingSet = 20;
+            int nYearsInTrainingSet = 25;   // temporarily, so that we can calculate the same as QuickTester for the longest history. 
+            int lookbackWindowSize = (nYearsInTrainingSet + 1) * 260;  // we ask about 21 years, and we will cut it manually properly, to have exactly the same (20) January as February, as March, etc.
+            m_spyQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
+                    new QuoteRequest { Ticker = "SPY", nQuotes = lookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
+                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
+
+            // log the last 3 values (for later debugging)
+            Utils.Logger.Warn($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 3].AdjClosePrice}");
+            Utils.Logger.Warn($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 2].AdjClosePrice}");
+            Utils.Logger.Warn($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 1].AdjClosePrice}");
+
+            // 2. Do some preprocess
+            DateTime spyStartDate = DateTime.UtcNow.Date.AddYears(-1 * nYearsInTrainingSet);
+            int nUsedSpySamples = m_spyQuotesFromSqlDB.Count - m_spyQuotesFromSqlDB.FindIndex(r => r.Date.Date >= spyStartDate.Date);
+            int nPChg = nUsedSpySamples - 1;
+            m_spy = new UberVxxQuoteData[nPChg];
+            for (int i = nPChg - 1, j = m_spyQuotesFromSqlDB.Count - 1; i >= 0; i--, j--)
+            {
+                m_spy[i].Date = m_spyQuotesFromSqlDB[j].Date;
+                m_spy[i].AdjClosePrice = m_spyQuotesFromSqlDB[j].AdjClosePrice;
+                m_spy[i].PctChg = m_spyQuotesFromSqlDB[j].AdjClosePrice / m_spyQuotesFromSqlDB[j - 1].AdjClosePrice - 1.0;
+            }
+
+            // do we want to add the today's SPY real-time price? Not, because in the TotM model we don't use today data. This model depends on the monthly seasonality. So, only Dates matters.
+            
+
+            return isOkGettingHistoricalData;
         }
+
+        
+
+
+        public double? GetUberVxxForecastVxx()
+        {
+            double? forecast = null;
+
+            double? uberVxxTotMForecast = GetUberVxx_TotM_TotMM_Summer_Winter_ForecastVxx();
+            if (uberVxxTotMForecast != null)
+                forecast = (double)uberVxxTotMForecast;
+
+
+            return forecast;
+        }
+
+        
+
+
+
+        
     }
 }
