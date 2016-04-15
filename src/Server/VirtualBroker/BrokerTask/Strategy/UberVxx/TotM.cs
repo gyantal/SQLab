@@ -251,7 +251,7 @@ namespace VirtualBroker
             }
 
             // create 2 lists, a Forward list, a backward list (maybe later to test day T+12..T+16) Jay's "Monthly 10", which is 4 days in the middle month
-            double pctChgTotal = 0.0;
+            double pctChgUsedSamplesTotal = 0.0;
             for (int i = 0; i < m_spy.Length; i++)  // march over on p_quotes, not pv
             {
                 DateTime day = m_spy[i].Date;
@@ -270,7 +270,7 @@ namespace VirtualBroker
                     }
                 }
 
-                pctChgTotal += pctChg;
+                pctChgUsedSamplesTotal += pctChg;
                 int totMForwardInd = m_spy[i].TotMForwardOffset, totMBackwardInd = m_spy[i].TotMBackwardOffset, totMidMForwardInd = m_spy[i].TotMidMForwardOffset, totMidMBackwardInd = m_spy[i].TotMidMBackwardOffset;
 
                 m_allYearStats.TotMForward[totMForwardInd - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
@@ -308,8 +308,8 @@ namespace VirtualBroker
                 Utils.Logger.Info($"SPY outliers skipped at {outlierBasicZscore_PctThreshold * 100:0.##}%. Pos:{nPositiveOutliers},Neg:{nNegativeOutliers}, {pctOutliers * 100.0:0.##}% of samples.");
                 StrongAssert.True(pctOutliers < 0.05, Severity.NoException, "If 5%+ of the samples are eliminated, that means they are not random outliers. This is unexpected.");
             }
-
-            double pctChgTotalAMean = (m_spy.Length <= 0) ? 0.0 : pctChgTotal / (double)(m_spy.Length);
+            int nUsedSamples = m_spy.Length - nNegativeOutliers - nPositiveOutliers;
+            double pctChgTotalAMean = (nUsedSamples <= 0) ? 0.0 : pctChgUsedSamplesTotal / (double)(nUsedSamples);
 
             CalculateSampleStatsPerRegime(m_winterStats, pctChgTotalAMean);
             CalculateSampleStatsPerRegime(m_summerStats, pctChgTotalAMean);

@@ -206,8 +206,9 @@ Which docs to Review and collect notes from:
 
 5. 
 - AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50% R) in "SQ Strategy QuickTester", so that C# code is re-usable
-- Quicktester should give a forecast of that strategy for Today,
-with a separate page in which the steps are detailed as log files.
+- UI change: for any adaptive implementation, StartDate, EndDate is not enough. We need start-end date for training set/ testing set (in-sample period, out of sample period).
+- Quicktester should give a forecast of that exact strategy that is played live for Today,
+with a separate page in which the steps are detailed as log files. (in essence, I can check a log files of VBroker in a web browser, because the same code is running)
 So, a user who wants to check what will be played today, don't have to go to Linux Console and start Simulation,
 because the same Log file messages and calculation can be observed on a Website.
 
