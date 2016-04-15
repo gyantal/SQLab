@@ -104,12 +104,16 @@ namespace VirtualBroker
             WriteAllExecutedTransactionsToDB(portfolios);
 
             // ******************* 6. send OK or Error reports to HealthMonitor
-            if (!new HealthMonitorMessage() {
-                ID = (wasAllOrdersOk) ? HealthMonitorMessageID.ReportOkFromVirtualBroker : HealthMonitorMessageID.ReportErrorFromVirtualBroker,
-                ParamStr = (wasAllOrdersOk) ? $"BrokerTask {BrokerTaskSchema.Name} was OK." : $"BrokerTask {BrokerTaskSchema.Name} had ERROR. {errorStr.ToString()} Inform supervisors to investigate log files for more detail. ",
-                ResponseFormat = HealthMonitorMessageResponseFormat.None
-            }.SendMessage().Result) // Task.Result will block this calling thread as Wait(), and runs the worker task in another ThreadPool thread. Checked.
-                Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
+            if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+            {
+                if (!new HealthMonitorMessage()
+                {
+                    ID = (wasAllOrdersOk) ? HealthMonitorMessageID.ReportOkFromVirtualBroker : HealthMonitorMessageID.ReportErrorFromVirtualBroker,
+                    ParamStr = (wasAllOrdersOk) ? $"BrokerTask {BrokerTaskSchema.Name} was OK." : $"BrokerTask {BrokerTaskSchema.Name} had ERROR. {errorStr.ToString()} Inform supervisors to investigate log files for more detail. ",
+                    ResponseFormat = HealthMonitorMessageResponseFormat.None
+                }.SendMessage().Result) // Task.Result will block this calling thread as Wait(), and runs the worker task in another ThreadPool thread. Checked.
+                    Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
+            }
 
 
             Utils.Logger.Warn($"StrategyBrokerTask.Run() ends.");

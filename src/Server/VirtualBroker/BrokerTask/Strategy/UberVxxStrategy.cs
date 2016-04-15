@@ -37,6 +37,7 @@ namespace VirtualBroker
 
         public bool IsSameStrategyForAllUsers { get; set; } = true;
 
+        UberVxxConfig uberVxxConfig = new UberVxxConfig();
         // advice: if it is a fixed size, use array; faster; not list; List is painful to initialize; re-grow, etc. http://stackoverflow.com/questions/466946/how-to-initialize-a-listt-to-a-given-size-as-opposed-to-capacity
         // "List is not a replacement for Array. They solve distinctly separate problems. If you want a fixed size, you want an Array. If you use a List, you are Doing It Wrong."
         List<QuoteData> m_vxxQuotesFromSqlDB;   // doesn't contain today real-time price
@@ -179,10 +180,10 @@ namespace VirtualBroker
             // 1. Get Historical Data, SPY is from 1993-01-29, which is 23 years data now, but let's use maximum 20 years of data. Going back to 50 years will be not that adaptive.
             //int lookbackWindowSize = 21 * 260;  // we ask about 21 years, and we will cut it manually properly, to have exactly the same (20) January as February, as March, etc.
             //int nYearsInTrainingSet = 20;
-            int nYearsInTrainingSet = 25;   // temporarily, so that we can calculate the same as QuickTester for the longest history. 
+            int nYearsInTrainingSet = uberVxxConfig.TotM_TrainingSetnYears;   // 25 temporarily, so that we can calculate the same as QuickTester for the longest history. Later we may go back to 20 years only.
             int lookbackWindowSize = (nYearsInTrainingSet + 1) * 260;  // we ask about 21 years, and we will cut it manually properly, to have exactly the same (20) January as February, as March, etc.
             m_spyQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
-                    new QuoteRequest { Ticker = "SPY", nQuotes = lookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
+                    new QuoteRequest { Ticker = uberVxxConfig.TotM_TrainingSetTicker, nQuotes = lookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
                     Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
 
             // log the last 3 values (for later debugging)

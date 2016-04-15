@@ -127,70 +127,81 @@ Which docs to Review and collect notes from:
 		therefore TotMM-T+1 approximately equals to TotM-T+1+10 = TotM-T+11.  
 		(and therefore TotMM-T+7= TotM-T-(10-7)=TotM-T-3 or sometimes it is TotM-T-4)"
 		Decision: allow max Day+7, -7
-
 	
-- TODO: implement outlier elimination
-- After we decided that Outlier elimination is needed, how to do proper Outlier elimination?
-		(Balazs used +8% or lower than -8% percentages threshold for VXX TotM. So determine 8% is how many StDev away, 
-		and if it 2.2 times, than use that for the other samples (like QQQ, which will have less StDev))
-		> calculate StDev. and http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
-			 "Although it is common practice to use Z-scores to identify possible outliers, 
-			 Iglewicz and Hoaglin recommend using the modified Z-score"
-		> if Sample is 2.5? Z-score away, then eliminate it. This is good, it will not eliminate too many samples.
-			Becasue if  1 of every 10 times, there is a huge panic, than the StDev of the sample will be huge. 
-		- StrongAssert(), but don't throw Exception, just send Error email: 
-			(not likely, but) double check, that max. only 5 or 6% of the samples are eliminated. If 10% of the samples are eliminated
+	//- TODO: implement outlier elimination, Basic, research it, and Improve it and backtest the different version in Quicktester, and rewrite it in Step 6.
+	//- After we decided that Outlier elimination is needed, how to do proper Outlier elimination?
+		-calculate StDev.and http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
+			"Although it is common practice to use Z-scores to identify possible outliers, 
+            Iglewicz and Hoaglin recommend using the modified Z - score"
+        - Balazs used +8% or lower than -8% percentages threshold for VXX TotM. (that is about 8/3=2.7% threshold for SPY, which is about Zscore=2.5)  So determine 8% is how many StDev away, 
+		    and if it 2.2 times, than use that for the other samples (like QQQ, which will have less StDev)
+		-(not likely, but) double check, that max. only 5 or 6% of the samples are eliminated. If 10% of the samples are eliminated
 			as outliers. (10 out of 100), then those are not random outliers.
 
-- TODO:postpone this issue after outlier elimination.
->TODO:if that still doesn't solve it, and I cannot accept, we can adjust the daily %Change with the %change of the Regime around the 1-2 month in which that sample had been. So, even if TotMM T-1 is really bullish, but that 1-2 Month was economically disasterous, it obviously dragged down its result, that Adjustement will help. We don't want to predict these economic disasters, we just want to predict the OUTPERFORMANCE of that day compared to the average Summer/Winter day. However, we don't want to adjust Winter/Summer regime, just this MontlyUnluckyRegime.
->TODO: consider implementing this OUTPERFORMANCE prediction instead of %change prediction of that day.
-> why did we select "DDUU.UU00UU" for MidWinter mask? when T-1 is bearish.
-	> because T-2 is bullish, and for T-1, we said, it is not bearish, just neutral, say in Cash.
-	> On the other hand, in Bearish Summer TotMidM-1, is very, very bullish, with T-value > 3.0
-7.4 SPY TotMM, winter masks:
-T-4, -0.80%, Bearish. Playable.
-T-3, -0.36%, Bearish. Probably playable.
-T-2, 0.57%, Bullish from 2008
-T-1, -0.29%, Cash is the best.
-T+1, 0.71%, Bullish until 2006, but flat after 2010
-T+2, 1.21%, Flat until 2006, bullish after 2010. Seems that profit went here from day T+1.
->Suggested long TotMM winter mask: DDUU.UU00UU  (extra bullish 2 days)
-Yes, but that decision was without significance analisys
->but 3.1.1. SPY TotMM masks: section shows (allYear, that T-2, T-1 is very bullish. However, it goes to Summer I guess)
-- Before Significance test, we suggested:
-$scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU";
-- After Significance test of SPY, we suggest:
-    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU"; // winter didn't change 
->day T-2 had T-value: 0.51, and p-value of 30.63%, which is just a tiny edge.
-It doesn't justify that T-2 should be played as Bullish. p-value = 5% or 10% should be considered, not 30%.
-So, I think in my future Adaptive framework, T-2 will be not BullishDay, therefor T-1 is not sorrounded by
-bullish day, therefore, we play Cash on TotM T-1	.
-- however, later, I implement outlier elimination. Maybe that is the reason why T-1 in winter suffers,
-because of 1-2 outliers from the 140 samples.
-T-1 aMean:1993(5):-0.439%, 1994(6):0.359%, 1995(6):0.203%, 1996(6):0.265%, 1997(6):0.739%, 1998(6):-0.260%, !!!!1999(6):-0.942%, !!!
-2000(6):-0.640%, 2001(6):0.092%, 2002(6):0.018%, 2003(6):0.707%, 2004(6):0.499%, 2005(6):0.018%, 2006(6):0.586%, 2007(6):0.179%, 
-!!!2008(6):-0.960%, !!!!
-2009(6):-0.656%, 2010(6):0.039%, 2011(6):-0.262%, 2012(6):-0.610%, 2013(6):0.133%, 2014(6):0.093%, 2015(6):-0.205%, 2016(3):1.192%
-- should I combine both Summer + Winter with weight?, so even if Winter is not lucky, if Summer says
-that day is very bullish then play it.
-For example SPY. TotMidM-1, is the most bullish day in Summer. 
-But in Winter it is even non-significant negative value (Cash). (because 1999 and 2008, the start of the Bear market fell here. So, that Winter sample contains the start of bear markets, while the Summer sample don't.)
-T-2 and T-1 is also very bullish in AllYear Version.
-- first version: don't combine Winter/Summer, just use Winter, because that raises a lot of question, but use a p-value threshold of 30% (not 5%).
-If T-2 (or T-1) is truly bullish days in Summer/Winter both, then the bullishness will slowly go into that,
-and p-value be less than 30%.
-Let's see how many days are played with different p-value thresholds.
-- p-values (t-values): 
-	Quicktester: T-2: winter: 30.63% (0.51), summer: 4.79% (1.68)
-	SQLab: T-2: winter: 0.32, summer: 1.60  (for T-2 Winter, SQLab is even worse. It will never select T-2 as significant)
->So, I can consider increasing the years from 20 to 23 (getting more samples), that may help a little bit towards being significant, although it is not enough.
-
-
+	//- TODO:postpone this issue after outlier elimination.
+		>TODO:if that still doesn't solve it, and I cannot accept, we can adjust the daily %Change with the %change of the Regime around the 1-2 month in which that sample had been. So, even if TotMM T-1 is really bullish, but that 1-2 Month was economically disasterous, it obviously dragged down its result, that Adjustement will help. We don't want to predict these economic disasters, we just want to predict the OUTPERFORMANCE of that day compared to the average Summer/Winter day. However, we don't want to adjust Winter/Summer regime, just this MontlyUnluckyRegime.
+		>TODO: consider implementing this OUTPERFORMANCE prediction instead of %change prediction of that day.
+		> why did we select "DDUU.UU00UU" for MidWinter mask? when T-1 is bearish.
+			> because T-2 is bullish, and for T-1, we said, it is not bearish, just neutral, say in Cash.
+			> On the other hand, in Bearish Summer TotMidM-1, is very, very bullish, with T-value > 3.0
+		7.4 SPY TotMM, winter masks:
+		T-4, -0.80%, Bearish. Playable.
+		T-3, -0.36%, Bearish. Probably playable.
+		T-2, 0.57%, Bullish from 2008
+		T-1, -0.29%, Cash is the best.
+		T+1, 0.71%, Bullish until 2006, but flat after 2010
+		T+2, 1.21%, Flat until 2006, bullish after 2010. Seems that profit went here from day T+1.
+		>Suggested long TotMM winter mask: DDUU.UU00UU  (extra bullish 2 days)
+		Yes, but that decision was without significance analisys
+		>but 3.1.1. SPY TotMM masks: section shows (allYear, that T-2, T-1 is very bullish. However, it goes to Summer I guess)
+		- Before Significance test, we suggested:
+		$scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU";
+		- After Significance test of SPY, we suggest:
+			$scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU"; // winter didn't change 
+		>day T-2 had T-value: 0.51, and p-value of 30.63%, which is just a tiny edge.
+		It doesn't justify that T-2 should be played as Bullish. p-value = 5% or 10% should be considered, not 30%.
+		So, I think in my future Adaptive framework, T-2 will be not BullishDay, therefor T-1 is not sorrounded by
+		bullish day, therefore, we play Cash on TotM T-1	.
+		- however, later, I implement outlier elimination. Maybe that is the reason why T-1 in winter suffers,
+		because of 1-2 outliers from the 140 samples.
+		T-1 aMean:1993(5):-0.439%, 1994(6):0.359%, 1995(6):0.203%, 1996(6):0.265%, 1997(6):0.739%, 1998(6):-0.260%, !!!!1999(6):-0.942%, !!!
+		2000(6):-0.640%, 2001(6):0.092%, 2002(6):0.018%, 2003(6):0.707%, 2004(6):0.499%, 2005(6):0.018%, 2006(6):0.586%, 2007(6):0.179%, 
+		!!!2008(6):-0.960%, !!!!
+		2009(6):-0.656%, 2010(6):0.039%, 2011(6):-0.262%, 2012(6):-0.610%, 2013(6):0.133%, 2014(6):0.093%, 2015(6):-0.205%, 2016(3):1.192%
+		- should I combine both Summer + Winter with weight?, so even if Winter is not lucky, if Summer says
+		that day is very bullish then play it.
+		For example SPY. TotMidM-1, is the most bullish day in Summer. 
+		But in Winter it is even non-significant negative value (Cash). (because 1999 and 2008, the start of the Bear market fell here. So, that Winter sample contains the start of bear markets, while the Summer sample don't.)
+		T-2 and T-1 is also very bullish in AllYear Version.
+		- first version: don't combine Winter/Summer, just use Winter, because that raises a lot of question, but use a p-value threshold of 30% (not 5%).
+		If T-2 (or T-1) is truly bullish days in Summer/Winter both, then the bullishness will slowly go into that,
+		and p-value be less than 30%.
+		Let's see how many days are played with different p-value thresholds.
+		- p-values (t-values): 
+			Quicktester: T-2: winter: 30.63% (0.51), summer: 4.79% (1.68)
+			SQLab: T-2: winter: 0.32, summer: 1.60  (for T-2 Winter, SQLab is even worse. It will never select T-2 as significant)
+		>So, I can consider increasing the years from 20 to 23 (getting more samples), that may help a little bit towards being significant, although it is not enough.
+		- also outlier elimination helped. This was the question: why did we suggested in QuickTester "DDUU.UU00UU" for MidWinter mask? when T-1 is bearish.
+			--- Stats for Winter, TotMidM:    (Win%, aMean, t-value, p-value)
+			Before outlier elimination:
+				T-4 (#141): 49.6%, -0.117%, -1.12, 13.21%
+				T-3 (#141): 58.9%, -0.035%, -0.38, 35.18%
+				T-2 (#141): 55.3%, 0.059%, 0.58, 28.28%		// Bullish, but not significant, so we shouldn't have suggested in the mask.
+				T-1 (#140): 55.0%, -0.016%, -0.16, 43.56%	// ?? this was the problem. It is surrounded by Bullish days, why it is bearish?
+				T+1 (#140): 57.1%, 0.134%, 1.46, 7.33%		// Bullish
+				T+2 (#140): 57.9%, 0.224%, 2.27, 1.25%		// bullish
+			After outlier elimination:
+				T-4 (#137): 49.6%, -0.130%, -1.54, 6.29%
+				T-3 (#138): 59.4%, -0.001%, -0.02, 49.30%
+				T-2 (#139): 54.7%, -0.013%, -0.14, 44.37%
+				T-1 (#139): 56.1%, 0.061%, 0.74, 23.18%	//	much better. 1 outlier eliminated, the day is bullish now, even though it is not significant, but we can suggest it manually
+				T+1 (#139): 57.6%, 0.166%, 1.91, 2.91%
+				T+2 (#137): 56.9%, 0.130%, 1.54, 6.33%
 
 4. 
 - convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core
 - should it use Angular2 ? I like it, but it was quite slow for HealthMonitor website.
+- maybe I should wait until ASP.NET Core RC2 is out. So, let's rest a bit.
 
 
 5. 
@@ -203,11 +214,19 @@ because the same Log file messages and calculation can be observed on a Website.
 
 6. Improve (1) Basic TotM+TotMM things (VBroker + Quicktester) with extensions:
 > and make comparisions in Quicktester as I develop improved versions of the strategy. Write a gDoc study.
-- Close short VXX for the weekend (to sleep better): close the short position at close on Friday and reopen it at open on Monday, 
+- Close short VXX for the weekend (to sleep better): (do trainig for that 'phenonema', adaptive) close the short position at close on Friday and reopen it at open on Monday, 
 	so VBroker should run 20 min. before market open
 	in 2015: "Weekend: We do not play short VXX at the weekend but in backtest we play. It caused 30.00% gain."
 	>try to implement it in an adaptive way, not with a fixed rule. So, if in the future weekends will be good for VXX shorts, we will adapt to it.
-- Consider neighbour days too (Step 6 task): if a Neutral / Cash day is between 2 bullish days. The Neutral day can be played as Bullish too. 
+- implement advanced outlier elimination, improve the Basic one, research it, and Improve it and backtest the different version in Quicktester, and rewrite it in Step 6.
+	Maybe AdvancedOutlier elimination is not even needed because with the BasicZscore, here are how many samples are eliminated:
+	OutlierBasicZscore_Zscore = 2.7: SPY outliers skipped at 3.21%. Pos:70,Neg:57, 2.17% of samples.
+	OutlierBasicZscore_Zscore = 3.0: SPY outliers skipped at 3.57%. Pos:45,Neg:42, 1.49% of samples.  (I try to use this)
+	OutlierBasicZscore_Zscore = 4.0: SPY outliers skipped at 4.76%. Pos:17,Neg:18, 0.6% of samples.
+	OutlierBasicZscore_Zscore = 5.0: SPY outliers skipped at 5.95%. Pos:8,Neg:9, 0.29% of samples.
+	Note that the ratio of Positive to Negative is very even. Because it is true that there are big panic days, but there are big upside days too. e.g.: Oct 13, 2008: up +14.5%
+- Consider neighbour days too (Step 6 task) (do I want that? not necessarily, backtest it): 
+	if a Neutral / Cash day is between 2 bullish days. The Neutral day can be played as Bullish too. 
 	I personally would think about playing this way in real life. Can we backtest in Quicktester? Does it worth doing it?
 - Combining signals: incorporate Contango Observer, 
 	which is unlikely to go against Contango direction, but decreases invested days,

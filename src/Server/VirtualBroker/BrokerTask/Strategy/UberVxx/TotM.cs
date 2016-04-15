@@ -44,10 +44,6 @@ namespace VirtualBroker
         SampleStatsPerRegime m_summerStats;
         SampleStatsPerRegime m_allYearStats;
 
-        // - the threshold for BullishEdge, BearishEdge (T-value, p-value) can be different. We are more willing to do Bearish LongVXX, as a hedge of other portfolios, and because that is the less overcrowded trade.
-        const double cBullishDaySignificantPvalue = 0.10;   // instead of the typical 5% significance level, we allow 10%
-        const double cBearishDaySignificantPvalue = 0.15;   // we are more lenient, we allow more days to be bearish
-
         public double? GetUberVxx_TotM_TotMM_Summer_Winter_ForecastVxx()    // forecast VXX, not SPY
         {
             if (!PrepareHistoricalStatsForAllRegimes())
@@ -119,7 +115,7 @@ namespace VirtualBroker
             double winPct = statsToUse.WinPct;
             double tValue = statsToUse.TvalueToZero;  // TvalueToZero is a signed value. (p-value is not, that is a probability). So, the direction of T-value is fine to forecast
             double pValue= statsToUse.PvalueToZero;
-            double significantPvalue = (Math.Abs(tValue) >= 0.0) ? cBullishDaySignificantPvalue : cBearishDaySignificantPvalue;
+            double significantPvalue = (Math.Abs(tValue) >= 0.0) ? uberVxxConfig.TotM_BullishDaySignificantPvalue : uberVxxConfig.TotM_BearishDaySignificantPvalue;
             if (pValue <= significantPvalue)  // Depending nSamples, but approx. T-value of 0.5 is p-value=30%, T-value 1.0 is about p-value: 15%,  T-Value of 1.7 is about p-value 4.5%
             {
                 // In formating numbers you can use "0" as mandatory place and "#" as optional place (not Zero). So:
@@ -235,12 +231,45 @@ namespace VirtualBroker
             m_summerStats = CreateSampleStatsPerRegime("Summer", (int)(m_spy.Length / 260.0 * 6.0 * 1.1)); // give a little 10% overhead, so List<> will be not re-allocated many times
             m_allYearStats = CreateSampleStatsPerRegime("AllYear", (int)(m_spy.Length/260.0*12.0*1.1));   // give a little 10% overhead, so List<> will be not re-allocated many times
 
+            double outlierBasicZscore_PctThreshold = Double.NaN;
+            int nNegativeOutliers = 0, nPositiveOutliers = 0;
+            if (uberVxxConfig.TotM_OutlierElimination != OutlierElimination.None)
+            {
+                //-calculate StDev.and http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
+                //	"Although it is common practice to use Z-scores to identify possible outliers, 
+                //    Iglewicz and Hoaglin recommend using the modified Z - score"
+                //- Balazs used +8% or lower than -8% percentages threshold for VXX TotM. So determine 8% is how many StDev away, 
+                //	and if it 2.2 times, than use that for the other samples (like QQQ, which will have less StDev)
+                //-(not likely, but) double check, that max. only 5 or 6% of the samples are eliminated. If 10% of the samples are eliminated
+                //	as outliers. (10 out of 100), then those are not random outliers.
+
+                double n = (double)m_spy.Length;
+                List<double> samples = m_spy.Select(r => r.PctChg).ToList();
+                double aMean = samples.Average();
+                double correctedStDev = Math.Sqrt(samples.Sum(r => (r - aMean) * (r - aMean)) / (n - 1.0));     // it is about 1.1% for the SPX, http://www.investopedia.com/articles/04/021804.asp
+                outlierBasicZscore_PctThreshold = correctedStDev * uberVxxConfig.OutlierBasicZscore_Zscore;
+            }
+
             // create 2 lists, a Forward list, a backward list (maybe later to test day T+12..T+16) Jay's "Monthly 10", which is 4 days in the middle month
             double pctChgTotal = 0.0;
             for (int i = 0; i < m_spy.Length; i++)  // march over on p_quotes, not pv
             {
                 DateTime day = m_spy[i].Date;
                 double pctChg = m_spy[i].PctChg;
+
+                if (uberVxxConfig.TotM_OutlierElimination == OutlierElimination.BasicZscore)
+                {
+                    if (Math.Abs(pctChg) > outlierBasicZscore_PctThreshold)
+                    {
+                        if (pctChg > 0)
+                            nPositiveOutliers++;
+                        else if (pctChg < 0)
+                            nNegativeOutliers++;
+
+                        continue;
+                    }
+                }
+
                 pctChgTotal += pctChg;
                 int totMForwardInd = m_spy[i].TotMForwardOffset, totMBackwardInd = m_spy[i].TotMBackwardOffset, totMidMForwardInd = m_spy[i].TotMidMForwardOffset, totMidMBackwardInd = m_spy[i].TotMidMBackwardOffset;
 
@@ -264,6 +293,20 @@ namespace VirtualBroker
                     m_summerStats.TotMidMBackward[totMidMBackwardInd - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
                 }
 
+            }
+
+            if (uberVxxConfig.TotM_OutlierElimination != OutlierElimination.None)
+            {
+                //Maybe AdvancedOutlier elimination is not even needed because with the BasicZscore, here are how many samples are eliminated:
+                //OutlierBasicZscore_Zscore = 2.7: SPY outliers skipped at 3.21 %.Pos:70,Neg: 57, 2.17 % of samples.
+                //OutlierBasicZscore_Zscore = 4.0: SPY outliers skipped at 4.76 %.Pos:17,Neg: 18, 0.6 % of samples.
+                //OutlierBasicZscore_Zscore = 5.0: SPY outliers skipped at 5.95 %.Pos:8,Neg: 9, 0.29 % of samples.
+                //It is very even.Because there are big panic days, but there are buy upside days too. e.g.: Oct 13, 2008: up + 14.5 %
+
+                double pctOutliers = ((double)(nPositiveOutliers + nNegativeOutliers) / m_spy.Length);
+                Console.WriteLine($"SPY outliers skipped at {outlierBasicZscore_PctThreshold * 100:0.##}%. Pos:{nPositiveOutliers},Neg:{nNegativeOutliers}, {pctOutliers * 100.0:0.##}% of samples.");
+                Utils.Logger.Info($"SPY outliers skipped at {outlierBasicZscore_PctThreshold * 100:0.##}%. Pos:{nPositiveOutliers},Neg:{nNegativeOutliers}, {pctOutliers * 100.0:0.##}% of samples.");
+                StrongAssert.True(pctOutliers < 0.05, Severity.NoException, "If 5%+ of the samples are eliminated, that means they are not random outliers. This is unexpected.");
             }
 
             double pctChgTotalAMean = (m_spy.Length <= 0) ? 0.0 : pctChgTotal / (double)(m_spy.Length);
@@ -498,7 +541,7 @@ namespace VirtualBroker
                 return;
 
             double n = (double)nInt;
-            List<double> samples = p_sampleStats.Samples.Select(r => r.Item2).ToList(); // only the AdjustedPrices are needed, not the Dates; but keep the Date in the sample for Debugging reasons
+            List<double> samples = p_sampleStats.Samples.Select(r => r.Item2).ToList(); // only the PctChanges are needed, not the Dates; but keep the Date in the sample for Debugging reasons
             double aMean = samples.Average();
             double correctedStDev = Math.Sqrt(samples.Sum(r => (r - aMean) * (r - aMean)) / (n - 1.0));
             double standardError = correctedStDev / Math.Sqrt(n);
