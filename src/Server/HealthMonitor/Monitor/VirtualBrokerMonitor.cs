@@ -76,15 +76,23 @@ namespace HealthMonitor
                 return;
 
             Utils.Logger.Info("InformSupervisors(). Sending Warning email.");
-            new Email
+            try
             {
-                ToAddresses = Utils.Configuration["EmailGyantal"],
-                Subject = p_emailSubject,
-                Body = p_emailBody,
-                IsBodyHtml = false
-            }.Send();
+                new Email
+                {
+                    ToAddresses = Utils.Configuration["EmailGyantal"],
+                    Subject = p_emailSubject,
+                    Body = p_emailBody,
+                    IsBodyHtml = false
+                }.Send();
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "InformSupervisors() email sending is crashed, but we still try to make the PhoneCall.");
+            }
+            
 
-            if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+            if (!IsRunningAsLocalDevelopment())
             {
                 Utils.Logger.Info("InformSupervisors(). Making Phonecall.");
 

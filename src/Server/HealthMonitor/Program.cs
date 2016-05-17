@@ -101,10 +101,7 @@ namespace HealthMonitor
             }
             gHasBeenCalled = true;
 
-            ConsoleColor previousForeColour = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("----HealthMonitor Server    (type and press Enter)----");
-            Console.ForegroundColor = previousForeColour;
+            Utils.ConsoleWriteLine(ConsoleColor.Magenta, "----HealthMonitor Server    (type and press Enter)----");      
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes.");
             Console.WriteLine("2. Test AmazonAWS API:DescribeInstances()");
             Console.WriteLine("3. VirtualBroker Report: show on Console.");

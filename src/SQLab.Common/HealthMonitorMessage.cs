@@ -67,6 +67,7 @@ namespace SqCommon
 
         public static void SendException(string p_locationMsg, Exception e, HealthMonitorMessageID p_healthMonId)
         {
+            Utils.Logger.Warn($"HealthMonitorMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
             if (!(new HealthMonitorMessage()
             {
                 ID = p_healthMonId,

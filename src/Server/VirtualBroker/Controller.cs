@@ -30,6 +30,21 @@ namespace VirtualBroker
             g_brokerScheduler.Init();
         }
 
+        public static bool IsRunningAsLocalDevelopment()
+        {
+            if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+            {
+                return false;
+            }
+            else
+            {
+                // Windows: however, sometimes, when Running on Windows, we want to Run it as a proper Production environment. E.g.
+                //      + Sometimes, for Debugging reasons, 
+                //      + sometimes, because Linux server is down and running the Production locally on Windows
+                return true;
+            }
+        }
+
         public void BuildTasks()
         {
             Func<IBrokerStrategy> uberVxxStrategyCreateFunc = UberVxxStrategy.StrategyFactoryCreate;

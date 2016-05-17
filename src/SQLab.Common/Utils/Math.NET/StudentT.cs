@@ -31,9 +31,9 @@ namespace SQCommon.MathNet
     {
         //System.Random _random;
 
-        readonly double _location;
-        readonly double _scale;
-        readonly double _freedom;
+        //readonly double _location;
+        //readonly double _scale;
+        //readonly double _freedom;
 
         /// <summary>
         /// Initializes a new instance of the StudentT class. This is a Student t-distribution with location 0.0
@@ -42,9 +42,9 @@ namespace SQCommon.MathNet
         public StudentT()
         {
             //_random = SystemRandomSource.Default;
-            _location = 0.0;
-            _scale = 1.0;
-            _freedom = 1.0;
+            //_location = 0.0;
+            //_scale = 1.0;
+            //_freedom = 1.0;
         }
 
         /// <summary>

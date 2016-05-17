@@ -26,7 +26,7 @@ namespace HealthMonitor
             DateTime utcNow = DateTime.UtcNow;
             TimeSpan utcNowTime = utcNow.TimeOfDay;
             // when developing, we don't want to restrict the time it can run, only on Linux production environment
-            if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+            if (!IsRunningAsLocalDevelopment())
             {
                 // Now, in 2015, there is no point at checking it overnight, as no Developer will be able to fix it.
                 // in Utc time USA stock market is open around 15:30-21:00 or 14:30-20:00, but developer's sleeping in the main factor

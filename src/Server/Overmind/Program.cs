@@ -122,10 +122,8 @@ namespace Overmind
             }
             gHasBeenCalled = true;
 
-            ConsoleColor previousForeColour = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("----Overmind Server    (type and press Enter)----");
-            Console.ForegroundColor = previousForeColour;
+
+            Utils.ConsoleWriteLine(ConsoleColor.Magenta, "----Overmind Server    (type and press Enter)----");
             Console.WriteLine("1. Test Server (Sending Email)");
             Console.WriteLine("2. Say Hello. Don't do anything. Check responsivenes.");
             Console.WriteLine("3. Exit gracefully (Avoid Ctrl-^C).");

@@ -66,7 +66,12 @@ namespace SqCommon
             // use ' instead of " and you can have space in the text too new ProcessStartInfo("/bin/bash", argumentsStr);
             //string argumentsStr = "-c \"echo 'This is message body from Linux Temporary (with_space_working)' | mail -s 'This is Subject1 from Linux command line' \"" + ToAddresses + "\"\"";
             string argumentsStr;
-            
+
+            // (`) can be in the MessageBody, like this "StackTrace:    at System.Threading.Tasks.Task`1.GetResultCore(Boolean waitCompletionNotification)", 
+            // however, bash doesn't like it.  "/bin/bash: -c: line 0: syntax error near unexpected token `('", so eliminate it from both HTML and non-html versions.
+
+            string preparedBody = Body.Replace("`", "'");
+
             if (IsBodyHtml)
             {
                 //http://stackoverflow.com/questions/2591755/how-send-html-mail-using-linux-command-line        // this doesn't work for me, because my mailx is Heirloom and -a means attachment
@@ -97,7 +102,7 @@ namespace SqCommon
 //) | sendmail -t""";
 
                 // see "myknowledge\Linux\OS\Sending Html email from Bash.txt" and we make one big line of Body. Other option is that keep many lines, but write 'echo' in front of them.
-                string preparedBody = Body.Replace("\"", "\"\"").Replace(@"<", @"\<").Replace(@">", @"\>").Replace(@";", @"\;").Replace(@"'", @"\'").Replace(@"(", @"\(").Replace(@")", @"\)").Replace(@"{", @"\{").Replace(@"}", @"\}").Replace(@"#", @"\#").Replace("\n", "").Replace("\r","");
+                string preparedHtmlBody = preparedBody.Replace("\"", "\"\"").Replace(@"<", @"\<").Replace(@">", @"\>").Replace(@";", @"\;").Replace(@"'", @"\'").Replace(@"(", @"\(").Replace(@")", @"\)").Replace(@"{", @"\{").Replace(@"}", @"\}").Replace(@"#", @"\#").Replace("\n", "").Replace("\r","");
 
                 argumentsStr =
                 @"-c ""(
@@ -113,12 +118,12 @@ echo """"""""
 echo """"--some.unique.value.ABC123/server.xyz.com"""" 
 echo """"Content-Type: text/html"""" 
 echo """""""" 
-echo """"" + preparedBody + @""""" 
+echo """"" + preparedHtmlBody + @""""" 
 ) | sendmail -t""";
                 argumentsStr = argumentsStr.Replace("\r", "");  // error was: /bin/bash: $'\r': command not found
             }
             else
-                argumentsStr = "-c \"echo '" + Body + "' | mail -s '" + Subject + "' \"" + ToAddresses + "\"\"";
+                argumentsStr = "-c \"echo '" + preparedBody + "' | mail -s '" + Subject + "' \"" + ToAddresses + "\"\"";
             Utils.Logger.Info("HQEmail.SendLinuxCommandLine() bash command arguments: " + argumentsStr);
             ProcessStartInfo procStartInfo = new ProcessStartInfo("/bin/bash", argumentsStr);
             procStartInfo.RedirectStandardOutput = true;

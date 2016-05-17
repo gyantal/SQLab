@@ -122,6 +122,8 @@ FROM (SELECT * FROM Stock INNER JOIN
         public static async Task<bool> LoadHistoricalPipsFromDbAndCalculateTodayPips(List<DbPortfolio> p_portfolios)
         {
             // 1. Get All Historical Pips + All split Info
+            SqCommon.Utils.Logger.Debug($"LoadHistoricalPipsFromDbAndCalculateTodayPips() start.");
+
             StringBuilder sqlBuilder = new StringBuilder();
             sqlBuilder.Append("SELECT * INTO #TempFileSystemReduced FROM (SELECT ID, Name, UserID FROM FileSystemItem WHERE ");
             for (int i = 0; i < p_portfolios.Count; i++)
@@ -155,6 +157,8 @@ FROM (SELECT * FROM Stock INNER JOIN
             
             // 2. Do the GetPortfolioAtTime() TransactionAccumulator locally
             TransactionAccumulator(p_portfolios, sqlResult, DateTime.UtcNow);
+
+            SqCommon.Utils.Logger.Debug($"LoadHistoricalPipsFromDbAndCalculateTodayPips() end.");
             return true;
         }
 

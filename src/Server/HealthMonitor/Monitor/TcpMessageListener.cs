@@ -104,7 +104,7 @@ namespace HealthMonitor
                 HealthMonitorMessage message = (new HealthMonitorMessage()).DeserializeFrom(br);
                 //string strFromClient = br.ReadString();
                 Console.WriteLine(">" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg:{message.ID}, Param:{message.ParamStr}");  // user can quickly check from Console the messages
-                Utils.Logger.Info($"TcpMessageListener: Message ID:'{ message.ID}', ParamStr: '{ message.ParamStr}', ResponseFormat: {message.ResponseFormat}'");
+                Utils.Logger.Info($"TcpMessageListener: Message ID:\"{ message.ID}\", ParamStr: \"{ message.ParamStr}\", ResponseFormat: \"{message.ResponseFormat}\"");
                 if (message.ResponseFormat == HealthMonitorMessageResponseFormat.None)
                 {
                     Utils.TcpClientDispose(client);

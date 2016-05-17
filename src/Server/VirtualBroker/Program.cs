@@ -26,6 +26,18 @@ namespace VirtualBroker
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
 
+            if (!Controller.IsRunningAsLocalDevelopment())
+            {
+                // if it is Saturday, Sunday, don't start VBroker, because often IB makes maintenance on the weekends and IBGateway cannot connect, therefore VBroker will raise an error anyway.
+                // however, don't consider USA holidays. It is better to start VBroker, because it may not be a UK, German, French holiday, so maybe a DAX trader would like to trade on that day
+                DateTime dateNowInET = Utils.ConvertTimeFromUtcToEt(DateTime.UtcNow);
+                if (dateNowInET.DayOfWeek == DayOfWeek.Saturday || dateNowInET.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    Utils.Logger.Info($"Assuming morning restart of VBroker every day!!!, if today is the weekend, there is no reason to start. Ending execution now.");
+                    return;
+                }
+            }
+
             Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.VirtualBroker.NoGitHub.json", "/home/ubuntu/SQ/Server/VirtualBroker/SQLab.VirtualBroker.NoGitHub.json");
             Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
             HealthMonitorMessage.InitGlobals(HealthMonitorMessage.HealthMonitorServerPublicIpForClients, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
@@ -119,10 +131,7 @@ namespace VirtualBroker
             }
             gHasBeenCalled = true;
 
-            ConsoleColor previousForeColour = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("----VirtualBroker (type and press Enter)----");
-            Console.ForegroundColor = previousForeColour;
+            Utils.ConsoleWriteLine(ConsoleColor.Magenta, "----VirtualBroker (type and press Enter)----");
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes");
             Console.WriteLine("2. Test IbGateway Connection");
             Console.WriteLine("3. Test HealthMonitor by sending ErrorFromVirtualBroker");

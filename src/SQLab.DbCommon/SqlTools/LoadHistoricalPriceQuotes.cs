@@ -398,6 +398,7 @@ FROM (
                     }
                     catch (Exception e)
                     {
+                        SqCommon.Utils.Logger.Debug($"Exception: ExecuteSqlQueryAsync() catch inner exception. nTry: {nTry}. Try it again.");
                         bool failed = (nTry <= @try);
                         if (!failed)
                         {

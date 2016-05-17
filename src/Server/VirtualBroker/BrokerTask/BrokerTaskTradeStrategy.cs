@@ -44,7 +44,7 @@ namespace VirtualBroker
                 if (!Controller.g_gatewaysWatcher.IsGatewayConnected(portfolio.IbGatewayUserToTrade))
                 {
                     portfolio.IsErrorOccured = true;
-                    if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+                    if (!Controller.IsRunningAsLocalDevelopment())
                     {
                         // this will send Error message to HealthMonitor
                         StrongAssert.Fail(Severity.NoException, $"ERROR! Gateway for user {portfolio.IbGatewayUserToTrade} is not connected. Other portfolios may be fine. We continue.");
@@ -104,7 +104,7 @@ namespace VirtualBroker
             WriteAllExecutedTransactionsToDB(portfolios);
 
             // ******************* 6. send OK or Error reports to HealthMonitor
-            if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+            if (!Controller.IsRunningAsLocalDevelopment())
             {
                 if (!new HealthMonitorMessage()
                 {
@@ -295,8 +295,13 @@ namespace VirtualBroker
 
             //Block until all transactions complete.
             Utils.Logger.Info("Before Task.WaitAllOrders(tasks)");
-            bool isNoOrderTimeout = Task.WaitAll(tasks.ToArray(), TimeSpan.FromMinutes(2));   // returns false if timeout
-            Utils.Logger.Info($"After Task.WaitAllOrders(tasks). Is No Order Timeout: {isNoOrderTimeout} (Good, if there was no order timeout, but it is not a guarantee that everything was right. For example. Shares were not available for shorting.");
+            // http://stackoverflow.com/questions/9846615/async-task-whenall-with-timeout
+            // Timeout here is not necessary, because BrokerWrapper.WaitOrder() will do a 2 minutes timeout for MKT orders, and Properly calculated MarketClose+2 minutes for MOC orders.
+            // However, for absolute safety, to send Error Email to Supervisor, don't let an inifinte Task.WaitAll() here.
+            // Imagine a case when MOC order was done at 9:30. Until 16:00, there is 6:30. So, do a 7hours timeout here.
+            var allTasks = Task.WhenAll(tasks.ToArray());
+            var theFirstCompletedTask = Task.WhenAny(allTasks, Task.Delay(TimeSpan.FromHours(7))).Result;   // returns false if timeout
+            Utils.Logger.Info($"After Task.WaitAllOrders(tasks). Note: BrokerWrapper.WaitOrder() will do a 2 minutes timeout (MKT, MOC). Was it 7 hours timeout: {theFirstCompletedTask != allTasks} (Good, if there was no order timeout, but it is not a guarantee that everything was right. For example. Shares were not available for shorting.");
 
             bool wasAnyErrorInOrders = false;
             for (int i = 0; i < transactions.Count; i++)

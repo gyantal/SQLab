@@ -55,7 +55,7 @@ namespace VirtualBroker
             try
             {
                 Gateway gateway1, gateway2;
-                if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+                if (!Controller.IsRunningAsLocalDevelopment())
                 {
                     gateway1 = new Gateway(GatewayUser.GyantalMain) { VbAccountsList = "U407941", SocketPort = 7301, BrokerConnectionClientID = 41};
                     gateway2 = new Gateway(GatewayUser.CharmatSecondary) { VbAccountsList = "U988767", SocketPort = 7303, BrokerConnectionClientID = 42};
@@ -138,7 +138,7 @@ namespace VirtualBroker
                 {
                     nConnectionRetry++;
                     IBrokerWrapper ibWrapper = null;
-                    if (Utils.RunningPlatform() == Platform.Linux)    // assuming production environment on Linux, Other ways to customize: ifdef DEBUG/RELEASE  ifdef PRODUCTION/DEVELOPMENT, etc. this Linux/Windows is fine for now
+                    if (!Controller.IsRunningAsLocalDevelopment())
                     {
                         ibWrapper = new BrokerWrapperIb();      // recreate IB wrapper at every Connection try. It is good this way.
                     }

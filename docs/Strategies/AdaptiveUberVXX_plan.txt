@@ -23,7 +23,10 @@ Which docs to Review and collect notes from:
 		(Comparison: (TotM,TotMM) combo is best, Holidays next, FOMC third) :
 		(Theory vs. Real Life in 2015)
 		https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit
-	- 8. George's doc: Seasonality: TotM, TotMM, Halloween combo: 51 pages
+	- 8. 2016-04: Revision of UberVXX Events and Seasonalities
+		(re-optimize TotM, TotMidM, Opex, VixFutex rules, based on outlier eliminating this time, and 1 more year of out of sample history. FOMC and Holidays were not changed.)
+		https://docs.google.com/document/d/1Kaazv6gjDfffHG3cjNgSMuseoe45UftMKiZP8XPO2pA/edit
+	- 9. George's doc: Seasonality: TotM, TotMM, Halloween combo: 51 pages
 		https://docs.google.com/document/d/1DJtSt1FIPFbscAZsn8UAfiBBIhbeWvZcJWtQffGPTfU/edit
 
 2.
@@ -93,6 +96,15 @@ Which docs to Review and collect notes from:
 				> with 60 samples or less, dangerous to use them: eliminate outliers
 				> with 30 samples or less, do not even do predictions.
 
+	  //- When handling outliers, should we completely eliminate them or cap them (maximize) ? Decision: for TotM eliminate, for FOMC cap them.
+			> Balazs used +8% or lower than -8% percentages threshold for VXX TotM. (that is about 8/3=2.7% threshold for SPY, which is about Zscore=2.5)  So determine 8% is how many StDev away, 
+		    and if it 2.2 times, than use that for the other samples (like QQQ, which will have less StDev)
+			On skype Balazs said: VXX StDev is 3.64% (from 2004), and sometimes he used 8% threshold (Zvalue=2.2, eliminates 2.5% of the samples) or uses 11% threshold (Zvalue=3.9, eliminates 1% of the stamples)
+			He also said he doesn't eliminate the samples, only maximizes them. Yes, I can understand, but I think if we have enough samples, it is better to kill these samples in general.
+			because if VXX goes up by 15% that is obviously so exceptional (political decision) thing, and it is a random event comparing to the effect what we intend to meausure.
+			>so for a TotM statistics, when only mild %change movement is expected, a 15% change is a random outlier (not caused by the TotM effect), => kill outliers
+			>on the other hand, measuring FOMC days, a 15% change a rare, but Expected outlier, (caused by the FED decision) we should keep the outlier, but maybe maximise it, how Balazs is doing.
+
 	//- Because we have decided to do Outlier elimination, (Step 3): 
 		How to handle outlier days in the sample? 
 		- http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
@@ -133,8 +145,6 @@ Which docs to Review and collect notes from:
 		-calculate StDev.and http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
 			"Although it is common practice to use Z-scores to identify possible outliers, 
             Iglewicz and Hoaglin recommend using the modified Z - score"
-        - Balazs used +8% or lower than -8% percentages threshold for VXX TotM. (that is about 8/3=2.7% threshold for SPY, which is about Zscore=2.5)  So determine 8% is how many StDev away, 
-		    and if it 2.2 times, than use that for the other samples (like QQQ, which will have less StDev)
 		-(not likely, but) double check, that max. only 5 or 6% of the samples are eliminated. If 10% of the samples are eliminated
 			as outliers. (10 out of 100), then those are not random outliers.
 
@@ -203,10 +213,25 @@ Which docs to Review and collect notes from:
 - should it use Angular2 ? I like it, but it was quite slow for HealthMonitor website.
 - maybe I should wait until ASP.NET Core RC2 is out. So, let's rest a bit.
 
+- 2016-04-22: they are doing RC3 now: https://www.myget.org/gallery/aspnetvnext
+- http://www.hanselman.com/blog/AnUpdateOnASPNETCore10RC2.aspx
+- ASP.NET Community Standup https://live.asp.net/
+They say 3-6 weeks the final ASP with the new Tooling from 04-19.
+And this tools is Visual Studio New Project, etc. Ok. So, don't wait. Let's start with the daily build Now. 6 weeks is too much. I will update later.
+new Runtime (the non-UI portion of Asp.net), ASP.NET tooling = the UI that plugs into VS. (but I don't really need it.)
+>Ok. So, I will not have the VS create project for that, but
+	> install latest DotNetCore CLI
+	> get latest HelloAsp.Net from GitHub examples
+	> the project.json, etc. will work. It should be the same Example as in the video https://www.youtube.com/watch?v=hfJgGHqVcLI&list=PL0M0zPgJ3HSftTAAHttA3JQU4vOjXFquF&index=0
+	It uses Dotnet CLI with RC2-3002416 (check 24:50 on video)
+
+
+
 
 5. 
 - AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50% R) in "SQ Strategy QuickTester", so that C# code is re-usable
 - UI change: for any adaptive implementation, StartDate, EndDate is not enough. We need start-end date for training set/ testing set (in-sample period, out of sample period).
+	we also need trainingSet_ticker (SPY), testingSetTicker = VXX differentiation
 - Quicktester should give a forecast of that exact strategy that is played live for Today,
 with a separate page in which the steps are detailed as log files. (in essence, I can check a log files of VBroker in a web browser, because the same code is running)
 So, a user who wants to check what will be played today, don't have to go to Linux Console and start Simulation,
@@ -214,7 +239,7 @@ because the same Log file messages and calculation can be observed on a Website.
 
 
 6. Improve (1) Basic TotM+TotMM things (VBroker + Quicktester) with extensions:
-> and make comparisions in Quicktester as I develop improved versions of the strategy. Write a gDoc study.
+> and make comparisions in Quicktester as I develop improved versions of the strategy. Write a gDoc study chapters. Start a new gDoc: "Adaptive UberVXX with SQLab" (QuickTester+VBroker)
 - Close short VXX for the weekend (to sleep better): (do trainig for that 'phenonema', adaptive) close the short position at close on Friday and reopen it at open on Monday, 
 	so VBroker should run 20 min. before market open
 	in 2015: "Weekend: We do not play short VXX at the weekend but in backtest we play. It caused 30.00% gain."

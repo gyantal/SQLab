@@ -46,7 +46,7 @@ namespace VirtualBroker
             }
             catch (Exception e)
             {
-                HealthMonitorMessage.SendException("BrokerTaskExecutionThreadRun Exception: ", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+                HealthMonitorMessage.SendException("BrokerTaskExecutionThreadRun Exception: ", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker); // don't send Email here. HealthMonitor will decide what to do
             }
         }
     }
