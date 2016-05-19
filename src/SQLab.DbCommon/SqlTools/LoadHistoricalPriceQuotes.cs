@@ -350,6 +350,19 @@ FROM (
 ) AS txx WHERE xx <= @n";
         #endregion
 
+
+
+        // 2016-05-19, DotNetCore RC2 (24027): ConnectionString "Trusted_Connection" or "integrated security" keywords are not yet supported on Linux (it works on Windows)
+        //Crash in BrokerTaskExecutionThreadRun Exception: . Exception Message: 'One or more errors occurred. (The keyword 'integrated security' is not supported on this platform.)', 
+        //https://github.com/aspnet/EntityFramework/issues/4915
+        //Is integrated security supported on Linux?
+        //No, it isn't. Our test never sets integrated security = true, but the test fails anyways.
+        //But the test sets Trusted_Connection, which is an alias for integrated security:
+        //It looks like sqlclient silently ignored the invalid connection string before the update
+        //"Removing Trusted_Connection=False from my string connection it did work, for some reason the Trusted_Connection=False was forcing integrated security."
+        //I think what is actually happening is that the new build of SQLClient is validating this when before it was not.Therefore I'll still go ahead and remove it.
+        //>Removing "Trusted_Connection=False;" from connectionString solved the problem.
+
         // can RetrieveMultipleResults
         public static async Task<IList<List<object[]>>> ExecuteSqlQueryAsync(string p_sql, SqlConnection p_conn = null,
             Dictionary<string, object> p_params = null, CancellationToken p_canc = default(CancellationToken))

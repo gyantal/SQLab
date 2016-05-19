@@ -10,6 +10,7 @@ using System.Text;
 using System.IO;
 using System.Xml;
 using SqCommon;
+//using System.Runtime.InteropServices;
 
 namespace Overmind
 {
@@ -113,6 +114,8 @@ namespace Overmind
             //resetEvent.Wait(TimeSpan.FromSeconds(15));
         }
 
+        //public static bool IsOutputRedirected { get { return FileType.Char != GetFileType(GetStdHandle(StdHandle.Stdout)); } } //See more at: http://www.mzan.com/article/3453220-how-to-detect-if-console-in-stdin-has-been-redirected.shtml#sthash.bOKTcrMZ.dpuf
+
         static bool gHasBeenCalled = false;
         static public string DisplayMenu()
         {
@@ -122,6 +125,13 @@ namespace Overmind
             }
             gHasBeenCalled = true;
 
+            Console.WriteLine("Is output redirected: " + Console.IsOutputRedirected + "WindowHeight: " + Console.WindowHeight + "WindowWidth: " + Console.WindowWidth);
+
+            // Recover the standard output stream so that a 
+            // completion message can be displayed.
+            StreamWriter standardOutput = new StreamWriter(Console.OpenStandardOutput());
+            standardOutput.AutoFlush = true;
+            Console.SetOut(standardOutput);
 
             Utils.ConsoleWriteLine(ConsoleColor.Magenta, "----Overmind Server    (type and press Enter)----");
             Console.WriteLine("1. Test Server (Sending Email)");

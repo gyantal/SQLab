@@ -24,13 +24,13 @@
 
   "dependencies": {
     "System.Reactive.Interfaces": "3.0.0-*",
-    "NETStandard.Library": "1.5.0-rc2-24103",
-    "System.Collections.Concurrent": "4.0.12-rc3-24103-01",
-    "System.ComponentModel": "4.0.1-rc3-24103-01",
-    "System.Threading": "4.0.11-rc3-24103-01",
-    "System.Threading.Thread": "4.0.0-rc3-24103-01",
-    "System.Threading.ThreadPool": "4.0.10-rc3-24103-01",
-    "System.Threading.Timer": "4.0.1-rc3-24103-01"
+    "NETStandard.Library": "1.5.0-rc2-24027",
+    "System.Collections.Concurrent": "4.0.12-rc2-24027",
+    "System.ComponentModel": "4.0.1-rc2-24027",
+    "System.Threading": "4.0.11-rc2-24027",
+    "System.Threading.Thread": "4.0.0-rc2-24027",
+    "System.Threading.ThreadPool": "4.0.10-rc2-24027",
+    "System.Threading.Timer": "4.0.1-rc2-24027"
   },
 
   "frameworks": {

@@ -10,6 +10,10 @@ os.chdir("/home/ubuntu/SQ/Server/HealthMonitor/src")
 print('dotnet restore')
 call(["dotnet", "restore"])
 os.chdir("/home/ubuntu/SQ/Server/HealthMonitor/src/Server/HealthMonitor")
-print('dotnet run --configuration Release')         # the default is the Debug configuration in the project.json file
-call(['dotnet', 'run', '--configuration', 'Release'])
+#print('dotnet run --configuration Release')         # the default is the Debug configuration in the project.json file
+#call(['dotnet', 'run', '--configuration', 'Release']) # before dotnet version #2777, `dotnet run` did Console.IsOutputRedirected, while 'dotnet build' not. That made Console.Colors fail.
+print('dotnet build --configuration Release')         # the default is the Debug configuration in the project.json file
+call(['dotnet', 'build', '--configuration', 'Release'])
+print('dotnet bin/Release/netcoreapp1.0/ubuntu.14.04-x64/HealthMonitor.dll')
+call(['dotnet', 'bin/Release/netcoreapp1.0/ubuntu.14.04-x64/HealthMonitor.dll'])
 k = input("Press ENTER...")       # raw_input is built but waiting for Enter key 
