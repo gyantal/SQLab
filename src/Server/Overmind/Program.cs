@@ -34,9 +34,7 @@ namespace Overmind
             runtimeConfig = "DEBUG";
 #endif
             Console.WriteLine($"Hello Overmind, v1.0.11 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
-#if DNX451 || NET451
-            Console.Title = "Overmind v1.0.11";   // Exception in DotNetCore in Win (but it runs on Linux, but it doesn't do anything): Unhandled Exception: System.MissingMethodException: Method not found: 'Void System.Console.set_Title(System.String)'.
-#endif
+            Console.Title = "Overmind v1.0.11";
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
@@ -125,13 +123,7 @@ namespace Overmind
             }
             gHasBeenCalled = true;
 
-            Console.WriteLine("Is output redirected: " + Console.IsOutputRedirected + "WindowHeight: " + Console.WindowHeight + "WindowWidth: " + Console.WindowWidth);
-
-            // Recover the standard output stream so that a 
-            // completion message can be displayed.
-            StreamWriter standardOutput = new StreamWriter(Console.OpenStandardOutput());
-            standardOutput.AutoFlush = true;
-            Console.SetOut(standardOutput);
+            //Console.WriteLine("Is output redirected: " + Console.IsOutputRedirected + "WindowHeight: " + Console.WindowHeight + "WindowWidth: " + Console.WindowWidth);
 
             Utils.ConsoleWriteLine(ConsoleColor.Magenta, "----Overmind Server    (type and press Enter)----");
             Console.WriteLine("1. Test Server (Sending Email)");

@@ -126,14 +126,19 @@ namespace SqCommon
             }
         }
 
+        // Note: this Linux specific functionality is not necessary. But it is decided that we leave it here, because this Linux specific
+        // Bright and Bold ("1" means bold, (char)27 + "[1;35m";) colours looks much much prettier
+        // than the Dotnetcore official non-bold and darkish looking Console.Magenta.
+        // In the future, when DotNetCore supports Console.Bold colours too (in theory Windows console has this feature too), this code can be eliminated.
         //VT100 codes, http://www.cplusplus.com/forum/unices/36461/
         //this Linux handling should be temporary only until it is fixed in DotNetCore in Linux
         // this works too in the Terminal. Type this "printf '\e[38;5;196m Foreground color: red\n'" or printf '\e[1;35m Foreground color: Magenta'"
         // \033 is the C-style octal code for an escape character. it is 3*8+3=27
         // this works in a C++ program: printf("\033[1;35m  Hello, world!\n");   (even on the VirtualBroker server)
+        // 2016-05-20: before dotnet version #2777, `dotnet run` did Console.IsOutputRedirected to text-stream file, while 'dotnet build' not. That made Console.Colors fail (Colours are not put into files, only to terminal)
         public static string GetLinuxVT100ForeColorCodes(ConsoleColor p_color)
         {
-             switch (p_color)
+            switch (p_color)
             {
                 case ConsoleColor.Black:
                     return (char)27 + "[1;30m";
@@ -168,7 +173,7 @@ namespace SqCommon
                 case ConsoleColor.Yellow:
                     return (char)27 + "[1;33m";     // this is brown, because there is no Yellow  in Linux VT100
                 case ConsoleColor.Gray:
-                    return (char)27 + "[1;37m";         
+                    return (char)27 + "[1;37m";
                 default:
                     string LinuxDefaultConsoleColor = (char)27 + "[0m";  //VT100 codes, http://www.cplusplus.com/forum/unices/36461/
                     return LinuxDefaultConsoleColor;

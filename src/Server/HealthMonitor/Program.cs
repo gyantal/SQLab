@@ -29,9 +29,7 @@ namespace HealthMonitor
             runtimeConfig = "DEBUG";
 #endif
             Console.WriteLine($"Hello HealthMonitor, v1.0.13 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
-#if DNX451 || NET451
-            Console.Title = "HealthMonitor v1.0.13";   // Exception in DotNetCore in Win (but it runs on Linux, but it doesn't do anything): Unhandled Exception: System.MissingMethodException: Method not found: 'Void System.Console.set_Title(System.String)'.
-#endif
+            Console.Title = "HealthMonitor v1.0.13";
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
