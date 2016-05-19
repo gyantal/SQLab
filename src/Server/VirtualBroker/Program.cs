@@ -18,7 +18,7 @@ namespace VirtualBroker
 # elif DEBUG
             runtimeConfig = "DEBUG";
 #endif
-            Console.WriteLine($"Hello VirtualBroker, v1.0.12 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+            Console.WriteLine($"Hello VirtualBroker, v1.0.13 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
 #if DNX451 || NET451
             Console.Title = "VirtualBroker v1.0.12";   // Exception in DotNetCore in Win (but it runs on Linux, but it doesn't do anything): Unhandled Exception: System.MissingMethodException: Method not found: 'Void System.Console.set_Title(System.String)'.
 #endif
@@ -131,7 +131,7 @@ namespace VirtualBroker
             }
             gHasBeenCalled = true;
 
-            Utils.ConsoleWriteLine(ConsoleColor.Magenta, "----VirtualBroker (type and press Enter)----");
+            Utils.ConsoleWriteLine(ConsoleColor.Magenta, "------- VirtualBroker (type and press Enter) ------- ");
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes");
             Console.WriteLine("2. Test IbGateway Connection");
             Console.WriteLine("3. Test HealthMonitor by sending ErrorFromVirtualBroker");

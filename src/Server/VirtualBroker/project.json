@@ -2,51 +2,30 @@
   "version": "1.0.0-*",
   "description": "VirtualBroker Console Application",
   "authors": [ "gyantal" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
 
-  "compilationOptions": {
+  "buildOptions": {
     "emitEntryPoint": true
   },
 
-  "commands": {
-    "VirtualBroker": "VirtualBroker"
-  },
-
-   "dependencies": {
+  "dependencies": {
     "SQLab.Common": { "version": "1.0.0-*", "target": "project" },
     "SQLab.RxCommon": { "version": "1.0.0-*", "target": "project" },
     "SQLab.DbCommon": { "version": "1.0.0-*", "target": "project" },
     "IbApiSocketClient": { "version": "1.0.0-*", "target": "project" }
   },
 
+  "runtimes": {
+    "ubuntu.14.04-x64": { },
+    "win10-x64": { }
+  },
+
   "frameworks": {
-    "dnxcore50": {
-      "dependencies": {
-        "NETStandard.Library": "1.0.0-rc3-23811",
-        "System.Runtime": "4.1.0-rc3-23811",
-        "System.Runtime.Loader": "4.0.0-rc3-23811",
-        "System.Runtime.InteropServices": "4.1.0-rc3-23811",
-        "System.Reflection": "4.1.0-rc3-23811",
-        "System.Net.Security": "4.0.0-rc3-23811",
-        "System.Diagnostics.Process": "4.1.0-rc3-23811",
-        "System.Xml.ReaderWriter": "4.0.11-rc3-23811",
-        "System.Security.Cryptography.Hashing.Algorithms": "4.0.0-beta-23302",
-        "System.Text.Encodings.Web": "4.0.0-rc3-23811",
-        "System.Net.Http": "4.0.1-rc3-23811",
-        "System.Data.SqlClient": "4.0.0-rc3-23811"
-      }
-    },
-    "dnx451": {
-      "dependencies": {
-        "System.Net.Http": "4.0.0.0",
-        "System.Text.Encodings.Web": "4.0.0-rc3-23811",
-        "System.Runtime": "4.0.0.0"
-      },
-      "frameworkAssemblies": {
-        "System.Data": "4.0.0.0"
-      }
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
     }
+  },
+
+  "commands": {
+    "VirtualBroker": "VirtualBroker"
   }
 }

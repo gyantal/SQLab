@@ -4,58 +4,34 @@
   "description": "Reactive Extensions Platform Services Library used to access platform-specific functionality and enlightenment services.",
   "authors": [ "Microsoft" ],
   "copyright": "Copyright (C) Microsoft Corporation",
-  "tags": [ "Rx", "Reactive", "Extensions", "Observable", "LINQ", "Events" ],
-  "iconUrl": "http://go.microsoft.com/fwlink/?LinkId=261274",
-  "projectUrl": "http://go.microsoft.com/fwlink/?LinkId=261273",
-  "licenseUrl": "http://go.microsoft.com/fwlink/?LinkID=261272",
-  "requireLicenseAcceptance": true,
-
-  "exclude": [ "Strings_PlatformServices.Designer.cs" ],
+  "buildOptions": {
+    "define": [
+      "NO_EVENTARGS_CONSTRAINT",
+      "HAS_EDI",
+      "HAS_WINRT",
+      "HAS_PROGRESS",
+      "PREFER_ASYNC",
+      "HAS_AWAIT",
+      "HAS_APTCA",
+      "NO_REMOTING",
+      "NO_SERIALIZABLE",
+      "NO_THREAD",
+      "CRIPPLED_REFLECTION",
+      "PLIB",
+      "USE_TIMER_SELF_ROOT"
+    ],
+    "compile": {
+      "exclude": [ "Strings_PlatformServices.Designer.cs" ]
+    }
+  },
 
   "dependencies": {
     "System.Reactive.Linq": "3.0.0-*"
   },
 
   "frameworks": {
-    "dnx451": {
-      "compilationOptions": {
-        "define": [
-          "NO_EVENTARGS_CONSTRAINT",
-          "HAS_EDI",
-          "HAS_WINRT",
-          "HAS_PROGRESS",
-          "PREFER_ASYNC",
-          "HAS_AWAIT",
-          "HAS_APTCA",
-          "HAS_DISPATCHER_PRIORITY",
-          "HAS_WINFORMS",
-          "USE_TIMER_SELF_ROOT"
-        ]
-      }
-    },
-    "dotnet5.4": {
-      "compilationOptions": {
-        "define": [
-          "NO_EVENTARGS_CONSTRAINT",
-          "HAS_EDI",
-          "HAS_WINRT",
-          "HAS_PROGRESS",
-          "PREFER_ASYNC",
-          "HAS_AWAIT",
-          "HAS_APTCA",
-          "NO_REMOTING",
-          "NO_SERIALIZABLE",
-          "NO_THREAD",
-          "CRIPPLED_REFLECTION",
-          "PLIB",
-          "USE_TIMER_SELF_ROOT"
-        ]
-      },
-      "dependencies": {
-        "NETStandard.Library": "1.0.0-rc3-23811",
-        "System.Diagnostics.Tools": "4.0.1-rc3-23811",
-        "System.Diagnostics.Debug": "4.0.11-rc3-23811"
-      }
+    "netstandard1.5": {
+      "imports": "dnxcore50"
     }
   }
 }

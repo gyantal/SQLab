@@ -2,11 +2,8 @@
   "version": "1.0.0-*",
   "description": "DotNetCoreTest Console Application",
   "authors": [ "gyantal" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
 
-  "compilationOptions": {
+  "buildOptions": {
     "emitEntryPoint": true
   },
 
@@ -16,19 +13,22 @@
   ],
 
   "dependencies": {
-    "NETStandard.Library": "1.0.0-rc3-23823",
-    "System.Net.Http": "4.0.1-rc3-23823"
+    "NETStandard.Library": "1.5.0-rc2-24103",
+    "System.Net.Http": "4.1.0-rc3-24103-01"
   },
 
   "commands": {
     "DotNetCoreTest": "DotNetCoreTest"
   },
 
+  "runtimes": {
+    "ubuntu.14.04-x64": { },
+    "win10-x64": { }
+  },
+
   "frameworks": {
-    "dnxcore50": {
-      "dependencies": {
-        
-      }
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
     }
   }
 }

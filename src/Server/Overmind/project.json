@@ -2,43 +2,30 @@
   "version": "1.0.0-*",
   "description": "Overmind Console Application",
   "authors": [ "gyantal" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
-
-  "compilationOptions": {
-    "emitEntryPoint": true
+  "buildOptions": {
+    "emitEntryPoint": true,
+    "copyToOutput": {
+      "include": [ "NLog.config" ]
+    }
   },
 
   "dependencies": {
-    "NLog": "4.4.0-alpha1",
     "SQLab.Common": "1.0.0-*"
+  },
+
+  "runtimes": {
+    "ubuntu.14.04-x64": { },
+    "win10-x64": { }
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
+    }
   },
 
   "commands": {
     "Overmind": "Overmind"
-  },
-
-  "content": [ "NLog.config" ],
-
-  "frameworks": {
-    "dnxcore50": {
-      "dependencies": {
-        "NETStandard.Library": "1.0.0-rc3-23811",
-        "System.Runtime": "4.1.0-rc3-23811",
-        "System.Runtime.InteropServices": "4.1.0-rc3-23811",
-        "System.Net.Security": "4.0.0-rc3-23811",
-        "System.Diagnostics.Process": "4.1.0-rc3-23811",
-        "System.Xml.ReaderWriter": "4.0.11-rc3-23811",
-        "System.Net.Http": "4.0.1-rc3-23811"
-      }
-    },
-    "dnx451": {
-      "dependencies": {
-        "System.Net.Http": "4.0.0.0"
-      },
-      "frameworkAssemblies": {
-      }
-    }
   }
+
 }

@@ -128,10 +128,12 @@ namespace SqCommon
 
         //VT100 codes, http://www.cplusplus.com/forum/unices/36461/
         //this Linux handling should be temporary only until it is fixed in DotNetCore in Linux
-        // this works too in the Terminal. Type this "printf '\e[38;5;196m Foreground color: red\n'"
+        // this works too in the Terminal. Type this "printf '\e[38;5;196m Foreground color: red\n'" or printf '\e[1;35m Foreground color: Magenta'"
+        // \033 is the C-style octal code for an escape character. it is 3*8+3=27
+        // this works in a C++ program: printf("\033[1;35m  Hello, world!\n");   (even on the VirtualBroker server)
         public static string GetLinuxVT100ForeColorCodes(ConsoleColor p_color)
         {
-            switch (p_color)
+             switch (p_color)
             {
                 case ConsoleColor.Black:
                     return (char)27 + "[1;30m";
@@ -172,6 +174,7 @@ namespace SqCommon
                     return LinuxDefaultConsoleColor;
             }
         }
+
 
         public static Tuple<ConsoleColor?, ConsoleColor?> ConsoleColorBegin(ConsoleColor? p_foregroundColor, ConsoleColor? p_backgroundColor)
         {

@@ -2,30 +2,30 @@
   "version": "1.0.0-*",
   "description": "TestReactiveExtensions Console Application",
   "authors": [ "gyantal" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
 
-  "compilationOptions": {
+  "buildOptions": {
     "emitEntryPoint": true
   },
 
   "dependencies": {
-    "System.Reactive.PlatformServices": { "version": "3.0.0-*", "target": "project" }
+    "System.Reactive.PlatformServices": {
+      "version": "3.0.0-*",
+      "target": "project"
+    }
   },
 
   "commands": {
     "TestReactiveExtensions": "TestReactiveExtensions"
   },
 
+  "runtimes": {
+    "ubuntu.14.04-x64": { },
+    "win10-x64": { }
+  },
+
   "frameworks": {
-    "dnxcore50": {
-      "dependencies": {
-        "NETStandard.Library": "1.0.0-rc3-23811",
-        "Microsoft.NETCore.Platforms": "1.0.1-rc3-23811",
-        "System.Console": "4.0.0-rc3-23811"
-      }
-    },
-    "dnx451": { }
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
+    }
   }
 }

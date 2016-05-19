@@ -9,10 +9,12 @@ rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives
 rootRemoteDir = "/home/ubuntu/SQ/Server/Overmind/src"
 acceptedSubTreeRoots = ["Server\\Overmind", "SQLab.Common"]        # everything under these relPaths is traversed: files or folders too
 
-serverHost = "ec2-52-23-207-88.compute-1.amazonaws.com"
+serverHost = "ec2-52-23-207-88.compute-1.amazonaws.com"         # Dev server
+serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"  # Dev server
+#serverHost = "ec2-54-209-86-129.compute-1.amazonaws.com"         # live VBroker server
+#serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerAgentKeyPairName.pem"  # live VBroker server
 serverPort = 22
 serverUser = "ubuntu"
-serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"
 
 excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties"])
 excludeFileExts = set(["sln", "xproj", "log", "sqlog", "ps1", "py", "sh", "user"])

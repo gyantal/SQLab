@@ -2,15 +2,9 @@
   "version": "1.0.0-*",
   "description": "DotNetCoreTestNetSecurity Console Application",
   "authors": [ "gyantal" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
 
-  "compilationOptions": {
+  "buildOptions": {
     "emitEntryPoint": true
-  },
-
-  "dependencies": {
   },
 
   "commands": {
@@ -26,19 +20,21 @@
     "Later, put back the * dependency as latest. rc3-23823 works, but from rc3-23824: 'package System.Net.Http does'nt support dnxcore50'. Maybe a bug now. Wait a month and fix it."
   ],
 
+  "dependencies": {
+    "NETStandard.Library": "1.5.0-rc2-24103",
+    "System.Net.Http": "4.1.0-rc3-24103-01",
+    "System.Net.Security": "4.0.0-rc3-24103-01",
+    "System.Diagnostics.Process": "4.1.0-rc3-24103-01"
+  },
+
+  "runtimes": {
+    "ubuntu.14.04-x64": { },
+    "win10-x64": { }
+  },
+
   "frameworks": {
-    "dnxcore50": {
-      "dependencies": {
-        "NETStandard.Library": "1.0.0-rc3-23823",
-        "System.Net.Security": "4.0.0-rc3-23823",
-        "System.Net.Sockets": "4.1.0-rc3-23823",
-        "System.Runtime.InteropServices": "4.1.0-rc3-23823",
-        "System.Diagnostics.Process": "4.1.0-rc3-23823"
-      }
-    },
-    "dnx451": {
-      "dependencies": {
-      }
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
     }
   }
 }

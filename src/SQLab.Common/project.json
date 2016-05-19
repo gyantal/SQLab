@@ -2,13 +2,6 @@
   "version": "1.0.0-*",
   "description": "SQLab.Common Class Library",
   "authors": [ "gyantal" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
-
-  "dependencies": {
-   
-  },
 
   "//": [
     "Comments:",
@@ -16,34 +9,23 @@
     "in the framework section: 'dnxcore50' or dotnet50 or dotnet55 should be before the dnx451,net451, because 'dotnet run' will execute the first framework that it finds"
   ],
 
-  "frameworks": {
-    "dnx451": {
-      "dependencies": {
-        "System.Net.Http": "4.0.0.0",
-        "System.Runtime.Serialization.Primitives": "4.0.0.0",
-        "System.Runtime.Serialization.Json": "4.0.0.0"
-      },
-      "frameworkAssemblies": {
-        "System.Runtime.Serialization": "4.0.0.0",
-        "System.Xml": "4.0.0.0"
+  "dependencies": {
+    "NETStandard.Library": "1.5.0-rc2-24103",
+    "System.Threading.Thread": "4.0.0-rc3-24103-01",
+    "System.Threading.ThreadPool": "4.0.10-rc3-24103-01",
+    "System.Diagnostics.Process": "4.1.0-rc3-24103-01",
+    "System.Xml.XmlDocument": "4.0.1-rc3-24103-01",
+    "System.Net.Http": "4.1.0-rc3-24103-01",
+    "System.Net.Security": "4.0.0-rc3-24103-01",
+    "System.Runtime.Serialization.Primitives": "4.1.1-rc3-24103-01",
+    "System.Runtime.Serialization.Json": "4.0.2-rc3-24103-01"
 
-      }
-    },
-    "dotnet5.4": {
-      "dependencies": {
-        "NETStandard.Library": "1.0.0-rc3-23811",
-        "System.Runtime": "4.1.0-rc3-23811",
-        "System.Runtime.Extensions": "4.1.0-rc3-23811",
-        "System.Runtime.InteropServices": "4.1.0-rc3-23811",
-        "System.Threading.Thread": "4.0.0-rc3-23811",
-        "System.Net.Security": "4.0.0-rc3-23811",
-        "System.Diagnostics.Process": "4.1.0-rc3-23811",
-        "System.Xml.XmlDocument": "4.0.1-rc3-23811",
-        "System.Xml.ReaderWriter": "4.0.11-rc3-23811",
-        "System.Net.Http": "4.0.1-rc3-23811",
-        "System.Runtime.Serialization.Primitives": "4.1.0-rc3-23811",
-        "System.Runtime.Serialization.Json": "4.0.1-rc3-23811"
-      }
+  },
+
+  "frameworks": {
+    "netstandard1.5": {
+      "imports": "dnxcore50"
     }
   }
+  
 }
