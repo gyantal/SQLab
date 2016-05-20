@@ -210,26 +210,31 @@ Which docs to Review and collect notes from:
 
 4. 
 - convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core
-- should it use Angular2 ? I like it, but it was quite slow for HealthMonitor website.
-- maybe I should wait until ASP.NET Core RC2 is out. So, let's rest a bit.
+- should it use Angular2 ? I like it, but it was quite slow for HealthMonitor website. (maybe it is quicker now)
 
-- 2016-04-22: they are doing RC3 now: https://www.myget.org/gallery/aspnetvnext
-- http://www.hanselman.com/blog/AnUpdateOnASPNETCore10RC2.aspx
-- ASP.NET Community Standup https://live.asp.net/
-They say 3-6 weeks the final ASP with the new Tooling from 04-19.
-And this tools is Visual Studio New Project, etc. Ok. So, don't wait. Let's start with the daily build Now. 6 weeks is too much. I will update later.
-new Runtime (the non-UI portion of Asp.net), ASP.NET tooling = the UI that plugs into VS. (but I don't really need it.)
->Ok. So, I will not have the VS create project for that, but
-	> install latest DotNetCore CLI
-	> get latest HelloAsp.Net from GitHub examples
-	> the project.json, etc. will work. It should be the same Example as in the video https://www.youtube.com/watch?v=hfJgGHqVcLI&list=PL0M0zPgJ3HSftTAAHttA3JQU4vOjXFquF&index=0
-	It uses Dotnet CLI with RC2-3002416 (check 24:50 on video)
-
-
+- Detailed report from VBroker to HealthMonitor.exe  (delay)
+	>HealthMonitor.exe can use this detail
+		in HealthMonitor Daily Report email.
+		in http://sqhealthmonitor.azurewebsites.net/
+	>the current very short, very brief presentation of both the email, and website is OK. Don't change that.
+	However, if a user scrolls down, more detail can be seen. Which is only read very rarely, but this way
+	it saves the user some time, because he doesn't have to open VNC server and scroll up in VBroker console.
+	Also, result can be seen on the Android email client, when travelling.
+	Parts:
+	>BrokerTaskSchema.Name
+	>Important middle steps that caused the Final forecast: FOMC or Holiday or TotM or Connor was used.
+	>"Final VXX Forecast:{forecast * 100}%" "VXX: 100% or RUT: -700%"
+	>For each portfolio: // There are 2 portfolios. With long names. Maybe shorten with PortfolioID as in console
+		>"Portfolio name 'bla-bla': $size: $2300"			
+		If not "trading simulation" but real trade (which is at MOC only):
+	>"Trading: none", or "Trading: $Value of the trade. "Sell VXX $2300, Buy SVXY $4600"
+Or it is not necessary to implement urgently because VBroker Console messages contains those info with Colours.
+Implement it only when I re-implement http://sqhealthmonitor.azurewebsites.net/# to Linux in DotnetCore RC2
 
 
 5. 
-- AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50% R) in "SQ Strategy QuickTester", so that C# code is re-usable
+with the new "SQ Strategy QuickTester" Website on Linux implement:
+- AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50% R) in "SQ Strategy QuickTester", so that C# code is re-usable in VBroker
 - UI change: for any adaptive implementation, StartDate, EndDate is not enough. We need start-end date for training set/ testing set (in-sample period, out of sample period).
 	we also need trainingSet_ticker (SPY), testingSetTicker = VXX differentiation
 - Quicktester should give a forecast of that exact strategy that is played live for Today,

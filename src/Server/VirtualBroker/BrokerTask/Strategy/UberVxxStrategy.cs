@@ -91,6 +91,9 @@ namespace VirtualBroker
             }
             double forecast = GetForecastVxx();
 
+            Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"Final VXX Forecast:{forecast * 100}%");
+            Utils.Logger.Info($"Final VXX Forecast:{forecast * 100}%");
+
             List <PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
             if (forecast > 0)   // bullish on VXX: buy VXX or UVXY/TVIX
             {
@@ -150,9 +153,9 @@ namespace VirtualBroker
                     StrongAssert.True(Math.Abs(m_vxxQuotesFromSqlDB[m_vxxQuotesFromSqlDB.Count - 1].AdjClosePrice - m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.02, Severity.NoException, "We continue but yesterday price data doesn't match from IB and SQL DB");
 
                 // log the last 3 values (for later debugging)
-                Utils.Logger.Warn($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].AdjClosePrice}");
-                Utils.Logger.Warn($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice}");
-                Utils.Logger.Warn($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice} (!Last trade, not last midPoint)");
+                Utils.Logger.Trace($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].AdjClosePrice}");
+                Utils.Logger.Trace($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice}");
+                Utils.Logger.Trace($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice} (!Last trade, not last midPoint)");
 
                 // 2. Do some preprocess
                 //Implement that connor vbroker calculates sma100 of prob ft dir, and act according to a threshold
@@ -178,9 +181,9 @@ namespace VirtualBroker
                     Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
 
             // log the last 3 values (for later debugging)
-            Utils.Logger.Warn($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 3].AdjClosePrice}");
-            Utils.Logger.Warn($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 2].AdjClosePrice}");
-            Utils.Logger.Warn($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 1].AdjClosePrice}");
+            Utils.Logger.Trace($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 3].AdjClosePrice}");
+            Utils.Logger.Trace($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 2].AdjClosePrice}");
+            Utils.Logger.Trace($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 1].AdjClosePrice}");
 
             // 2. Do some preprocess
             DateTime spyStartDate = DateTime.UtcNow.Date.AddYears(-1 * nYearsInTrainingSet);

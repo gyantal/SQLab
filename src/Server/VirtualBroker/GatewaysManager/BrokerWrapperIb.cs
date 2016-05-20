@@ -795,7 +795,7 @@ namespace VirtualBroker
             p_quotes = null;
             int histDataId = GetUniqueReqHistoricalDataID;
 
-            Console.WriteLine($"ReqHistoricalData() for {p_contract.Symbol}, reqId: {histDataId}");
+            //Console.WriteLine($"ReqHistoricalData() for {p_contract.Symbol}, reqId: {histDataId}");
             Utils.Logger.Info($"ReqHistoricalData() for {p_contract.Symbol}, reqId: {histDataId}");
 
             // durationString = "60 D" is fine, but "61 D" gives the following error "Historical Market Data Service error message:Time length exceed max.", so after 60, change to Months "3 M" or "11 M"
@@ -846,7 +846,7 @@ namespace VirtualBroker
 
         public virtual void historicalDataEnd(int reqId, string startDate, string endDate)
         {
-            Console.WriteLine("Historical data end - " + reqId + " from " + startDate + " to " + endDate);
+            //Console.WriteLine("Historical data end - " + reqId + " from " + startDate + " to " + endDate);
             Utils.Logger.Trace("Historical data end - " + reqId + " from " + startDate + " to " + endDate);
 
             HistDataSubscription histDataSubscription = null;

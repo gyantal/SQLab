@@ -227,23 +227,36 @@ namespace SqCommon
                 Console.BackgroundColor = (ConsoleColor)p_previousColors.Item2;
         }
 
+        // on Windows. Blue is too dark. DarkBlue is hardly visible. http://i.stack.imgur.com/Qmbj8.png  // Try to use
+        // Magenta for menu
+        // Cyan for VBroker strategy Start/End
+        // Red for Warnings (bad)
+        // Green for general important things (because Yellow is not good, because on Linux Yellow is Brown in VT100)
         public static void ConsoleWriteLine(ConsoleColor? p_foreColor, string p_value) // static objects like Console cannot have Extensions methods with the 'this' keyword.
         {
-            ConsoleWrite(p_foreColor, null, true, p_value);
+            ConsoleWrite(p_foreColor, null, false, true, p_value);
+        }
+
+        public static void ConsoleWriteLine(ConsoleColor? p_foreColor, bool p_writeTimeStamp, string p_value) // static objects like Console cannot have Extensions methods with the 'this' keyword.
+        {
+            ConsoleWrite(p_foreColor, null, p_writeTimeStamp, true, p_value);
         }
 
         public static void ConsoleWriteLine(ConsoleColor? p_foreColor, ConsoleColor? p_backColor, string p_value) // static objects like Console cannot have Extensions methods with the 'this' keyword.
         {
-            ConsoleWrite(p_foreColor, p_backColor, true, p_value);
+            ConsoleWrite(p_foreColor, p_backColor, false, true, p_value);
         }
 
         public static void ConsoleWrite(ConsoleColor? p_foreColor, string p_value) // static objects like Console cannot have Extensions methods with the 'this' keyword.
         {
-            ConsoleWrite(p_foreColor, null, false, p_value);
+            ConsoleWrite(p_foreColor, null, false, false, p_value);
         }
 
-        public static void ConsoleWrite(ConsoleColor? p_foreColor, ConsoleColor? p_backColor, bool p_useWriteLine, string p_value) // static objects like Console cannot have Extensions methods with the 'this' keyword.
+        public static void ConsoleWrite(ConsoleColor? p_foreColor, ConsoleColor? p_backColor, bool p_writeTimeStamp, bool p_useWriteLine, string p_value) // static objects like Console cannot have Extensions methods with the 'this' keyword.
         {
+            if (p_writeTimeStamp)
+                Console.Write(DateTime.UtcNow.ToString("MMdd'T'HH':'mm':'ss.fff': '")); // timestamp uses the original colour
+
             var colors = Utils.ConsoleColorBegin(p_foreColor, p_backColor);
             if (p_useWriteLine)
                 Console.WriteLine(p_value);

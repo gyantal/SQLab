@@ -52,8 +52,8 @@ namespace VirtualBroker
                 return null;
             }
 
-            Console.WriteLine($"TotM training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");
-            Utils.Logger.Info($"TotM training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");
+            Utils.ConsoleWriteLine(null, true, $"TotM: Training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");
+            Utils.Logger.Info($"TotM: Training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");
 
             // In theory TotM vs. TotMM signals can conflict, because in 2001, market was closed for 4 days, because of the NY terrorist event. 
             // TotM -T+2 can conflict with TotMM-T-4 easily.
@@ -119,14 +119,14 @@ namespace VirtualBroker
             if (pValue <= significantPvalue)  // Depending nSamples, but approx. T-value of 0.5 is p-value=30%, T-value 1.0 is about p-value: 15%,  T-Value of 1.7 is about p-value 4.5%
             {
                 // In formating numbers you can use "0" as mandatory place and "#" as optional place (not Zero). So:
-                Console.WriteLine($"NextDay: {regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue*100.0:0.##}%.");
+                Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"NextDay: {regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue*100.0:0.##}%.");
                 Utils.Logger.Info($"NextDay: {regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue * 100.0:0.##}%.");
 
                 forecast = -1.0 * Math.Sign(tValue);    //invert the prediction, because long SPY bullishness means short VXX, and we predict VXX.
             } else
             {
-                Console.WriteLine($"NextDay: {regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue * 100:F2}%. Not Signif. at {significantPvalue * 100.0:0.##}%.");
-                Utils.Logger.Info($"NextDay: {regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue * 100:F2}%. Not Signif. at {significantPvalue * 100.0:0.##}%.");
+                Utils.ConsoleWriteLine(null, true, $"{statsToUse.Name}{statsToUse.DayOffset}:{regimeToUse.Name}, SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue * 100:F2}%. NOT Signif. at {significantPvalue * 100.0:0.##}%.");
+                Utils.Logger.Info($"{statsToUse.Name}{statsToUse.DayOffset}:{regimeToUse.Name}, SPY Win%:{winPct*100:0.0}, T-v:{tValue:F2}, P-v:{pValue * 100:F2}%. NOT Signif. at {significantPvalue * 100.0:0.##}%.");
             }
 
             return forecast;
@@ -304,7 +304,7 @@ namespace VirtualBroker
                 //It is very even.Because there are big panic days, but there are buy upside days too. e.g.: Oct 13, 2008: up + 14.5 %
 
                 double pctOutliers = ((double)(nPositiveOutliers + nNegativeOutliers) / m_spy.Length);
-                Console.WriteLine($"SPY outliers skipped at {outlierBasicZscore_PctThreshold * 100:0.##}%. Pos:{nPositiveOutliers},Neg:{nNegativeOutliers}, {pctOutliers * 100.0:0.##}% of samples.");
+                //Console.WriteLine($"SPY outliers skipped at {outlierBasicZscore_PctThreshold * 100:0.##}%. Pos:{nPositiveOutliers},Neg:{nNegativeOutliers}, {pctOutliers * 100.0:0.##}% of samples.");
                 Utils.Logger.Info($"SPY outliers skipped at {outlierBasicZscore_PctThreshold * 100:0.##}%. Pos:{nPositiveOutliers},Neg:{nNegativeOutliers}, {pctOutliers * 100.0:0.##}% of samples.");
                 StrongAssert.True(pctOutliers < 0.05, Severity.NoException, "If 5%+ of the samples are eliminated, that means they are not random outliers. This is unexpected.");
             }

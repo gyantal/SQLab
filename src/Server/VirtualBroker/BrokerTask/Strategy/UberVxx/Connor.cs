@@ -31,7 +31,8 @@ namespace VirtualBroker
             else
                 forecast = (dailyPercentChange >= 0) ? -1 : 1;// MR regime
 
-            Utils.Logger.Warn($"VXX %Chg:{dailyPercentChange * 100.0:F2}%,ProbFT:{m_probDailyFT * 100.0}%,Regime:{((isFTRegime) ? "FT" : "MR")},Forecast:{forecast * 100}%");
+            Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"Connor: VXX %Chg:{dailyPercentChange * 100.0:F2}%,ProbFT:{m_probDailyFT * 100.0}%,Regime:{((isFTRegime) ? "FT" : "MR")},Forecast:{forecast * 100}%");
+            Utils.Logger.Info($"VXX %Chg:{dailyPercentChange * 100.0:F2}%,ProbFT:{m_probDailyFT * 100.0}%,Regime:{((isFTRegime) ? "FT" : "MR")},Forecast:{forecast * 100}%");
             return forecast;
         }
     }

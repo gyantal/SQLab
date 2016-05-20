@@ -65,8 +65,8 @@ namespace VirtualBroker
             if (closestHolidayET != null)
             {
                 DatePropertiesFlags holidayFlagOnly = closestHolidayET.Flags & DatePropertiesFlags._KindOfUsaHoliday;
-                Utils.Logger.Debug($"Closest holiday {holidayFlagOnly} found: {closestHolidayET.DateLoc}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
-                Console.WriteLine($"Closest holiday {holidayFlagOnly}: {closestHolidayET.DateLoc}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
+                Utils.Logger.Debug($"Closest holiday '{holidayFlagOnly}' on {closestHolidayET.DateLoc.ToString("yyyy-MM-dd")}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
+                Utils.ConsoleWriteLine(null, true, $"Closest holiday '{holidayFlagOnly}' on {closestHolidayET.DateLoc.ToString("yyyy-MM-dd")}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
                 // Holiday days was revised in 2015-11, based on that here is the latest in 2016-04: https://docs.google.com/document/d/1Kaazv6gjDfffHG3cjNgSMuseoe45UftMKiZP8XPO2pA/edit
                 switch (holidayFlagOnly)
                 {

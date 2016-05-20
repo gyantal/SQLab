@@ -170,9 +170,9 @@ namespace VirtualBroker
                     StrongAssert.True(Math.Abs(rutQuotesFromSqlDB[rutQuotesFromSqlDB.Count - 1].AdjClosePrice - m_rut[m_rut.Count - 2].AdjClosePrice) < 0.02, Severity.NoException, "We continue but yesterday price data doesn't match from IB and SQL DB");
 
                 // log the last 3 values (for later debugging)
-                Utils.Logger.Warn($"{m_rut[m_rut.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 3].AdjClosePrice}");
-                Utils.Logger.Warn($"{m_rut[m_rut.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 2].AdjClosePrice}");
-                Utils.Logger.Warn($"{m_rut[m_rut.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 1].AdjClosePrice} (!Last trade, not last midPoint)");
+                Utils.Logger.Trace($"{m_rut[m_rut.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 3].AdjClosePrice}");
+                Utils.Logger.Trace($"{m_rut[m_rut.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 2].AdjClosePrice}");
+                Utils.Logger.Trace($"{m_rut[m_rut.Count - 1].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 1].AdjClosePrice} (!Last trade, not last midPoint)");
 
 
                 // 3. Process it
@@ -186,7 +186,8 @@ namespace VirtualBroker
                     dateWeekDays[i] = (byte)(m_rut[i + 1].Date.DayOfWeek) - 1 - 2;     // Monday is -2, Friday is 2
                 }
                 double dailyPercentChange = barChanges[barChanges.Length - 1];
-                Utils.Logger.Warn($"RUT %Chg:{dailyPercentChange * 100.0:F2}%");
+                Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"RUT %Chg:{dailyPercentChange * 100.0:F2}%");
+                Utils.Logger.Info($"RUT %Chg:{dailyPercentChange * 100.0:F2}%");
 
                 // double target = p_barChanges[iRebalance + 1]; // so target is the p_iRebalance+1 day %change; so the last index that can be used in training is p_barChanges[p_iRebalance] as output
                 // so, set p_iRebalance to the last usable day index (the last index)
@@ -202,7 +203,8 @@ namespace VirtualBroker
                 forecast = new NeuralSniffer().GetEnsembleRepeatForecast(nnConfig.nEnsembleRepeat, nnConfig.ensembleGroups, nnConfig.ensembleAggregation, nnConfig.maxEpoch, dateWeekDays.Length - 1, nnConfig.lookbackWindowSize, nnConfig.outputOutlierThreshold, nnConfig.inputOutlierClipInSD, nnConfig.inputNormalizationBoost, nnConfig.outputNormalizationBoost, nnConfig.notNNStrategy, dateWeekDays, barChanges, true, out avgTrainError);
             }
 
-            Utils.Logger.Warn($"Forecast:{forecast * 100}%");
+            Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"Final RUT Forecast:{forecast * 100}%");
+            Utils.Logger.Info($"Final RUT Forecast:{forecast * 100}%");
 
             List<PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
             if (forecast > 0) // bullish

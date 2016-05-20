@@ -23,7 +23,8 @@ namespace VirtualBroker
         internal override void Run()
         {
             Console.WriteLine();
-            Utils.Logger.Warn("**  **  StrategyBrokerTask.Run() starts. **  **");
+            Utils.Logger.Info($"****  StrategyBrokerTask.Run() starts. BrokerTask Name: {BrokerTaskSchema.Name}");
+            Utils.ConsoleWriteLine(ConsoleColor.Cyan, true, $"****  BrokerTask starts: '{BrokerTaskSchema.Name}'");
 
             //************************* 0. Initializations
             var strategyFactoryCreate = (Func<IBrokerStrategy>)BrokerTaskSchema.Settings[BrokerTaskSetting.StrategyFactory];
@@ -37,9 +38,9 @@ namespace VirtualBroker
                 return;
             foreach (var portfolio in portfolios)
             {
-                Console.WriteLine($"Prtf:'{portfolio.Name}':");    // there are long portfolio names. Console messages should be shorter
+                //Console.WriteLine($"Prtf:'{portfolio.Name}':");    // there are long portfolio names. Console messages should be shorter
                 Utils.Logger.Info($"{portfolio.Name}: nTodayPips: {portfolio.TodayPositions.Count}.");
-                portfolio.TodayPositions.ForEach(pip => Utils.Logger.Warn($"{pip.DebugString()}: Volume: {pip.Volume:F2}."));
+                portfolio.TodayPositions.ForEach(pip => Utils.Logger.Info($"{pip.DebugString()}: Volume: {pip.Volume:F2}."));
 
                 if (!Controller.g_gatewaysWatcher.IsGatewayConnected(portfolio.IbGatewayUserToTrade))
                 {
@@ -68,7 +69,11 @@ namespace VirtualBroker
 
             StrongAssert.True(proposedPositionSpecs != null, Severity.ThrowException, "Error. Strategy.GeneratePositionSpecs() returned null. There is no point to continue. Crash here.");
 
-            proposedPositionSpecs.ForEach(suggestedItem => Utils.Logger.Warn($"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}"));
+            proposedPositionSpecs.ForEach(suggestedItem =>
+            {
+                Utils.ConsoleWriteLine(null, true, $"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}");
+                Utils.Logger.Info($"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}");
+            });
 
             //*************************  3. Get realtime prices and Generate futurePortfolios with volumes and send transactions
             for (int i = 0; i < portfolios.Count; i++)
@@ -116,7 +121,8 @@ namespace VirtualBroker
             }
 
 
-            Utils.Logger.Warn($"StrategyBrokerTask.Run() ends.");
+            Utils.Logger.Info($"StrategyBrokerTask.Run() ends.");
+            Utils.ConsoleWriteLine(ConsoleColor.Yellow, true, $"****  BrokerTask ends: '{BrokerTaskSchema.Name}'");
             Console.WriteLine();
         }
 
@@ -150,7 +156,8 @@ namespace VirtualBroker
                 }
             }
             p_portfolio.PortfolioUsdSize = portfolioUsdSize;
-            Utils.Logger.Warn($"!!!Portfolio ({p_portfolio.PortfolioID}) $size (realtime): {p_portfolio.PortfolioUsdSize:F2}");
+            Utils.ConsoleWriteLine(null, true, $"Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}");
+            Utils.Logger.Info($"!!!Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}");
         }
 
         private void DetermineProposedPositions(BrokerTaskPortfolio p_portfolio, List<PortfolioPositionSpec> p_proposedPositionSpecs)
@@ -181,7 +188,8 @@ namespace VirtualBroker
 
             foreach (var suggestedItem in p_portfolio.ProposedPositions)
             {
-                Utils.Logger.Warn($"Portfolio suggestion: {Strategy.StockIdToTicker(suggestedItem.SubTableID)}: signed vol: {suggestedItem.Volume}");
+                Utils.ConsoleWriteLine(null, true, $"Portfolio suggestion: {Strategy.StockIdToTicker(suggestedItem.SubTableID)}: signed vol: {suggestedItem.Volume}");
+                Utils.Logger.Info($"Portfolio suggestion: {Strategy.StockIdToTicker(suggestedItem.SubTableID)}: signed vol: {suggestedItem.Volume}");
             }
         }
 
@@ -239,7 +247,8 @@ namespace VirtualBroker
 
             foreach (var transaction in transactions)
             {
-                Utils.Logger.Warn($"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
+                Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
+                Utils.Logger.Info($"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
             }
 
             p_portfolio.ProposedTransactions = transactions;    // only assign at the end, if everything was right, there was no thrown Exception. It is safer to do transactions: all or nothing, not partial
@@ -250,7 +259,8 @@ namespace VirtualBroker
             var transactions = p_portfolio.ProposedTransactions;
             if (transactions.Count == 0)
             {
-                Utils.Logger.Warn($"***Proposed transactions: none.");
+                Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"***Proposed transactions: none.");
+                Utils.Logger.Info($"***Proposed transactions: none.");
                 return;
             }
 
