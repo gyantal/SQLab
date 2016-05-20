@@ -21,13 +21,14 @@ namespace VirtualBroker
             DateTime nextTradingDayET_Date = Utils.ConvertTimeFromUtcToEt(nextTradingDayUtc).Date;
             //SampleStatsPerRegime regimeToUse = IsBullishWinterDay(nextTradingDayET_Date) ? m_winterStats : m_summerStats;
 
+            // 1. FOMC section (separation is not necessary). With this implementation that FOMC is ahead of Holidays, FOMC has higher priority, which is OK for now.
             // for FOMC T-3, T-2, T-1, T+0, T+1, and because there are 8 FOMC days in a year, find the first Fomc date backwards which is less than NextTradingDay + 10 calendar days
-            DateTime fomcDateUpperThresholdET = nextTradingDayET_Date.AddDays(10);  // TODO: change this to 10 later.
+            DateTime fomcDateUpperThresholdET = nextTradingDayET_Date.AddDays(10);  // for debug purposes, you can change this to 30, but in the final version this shouldb be 10, so that FindList() only has maximum one candidate
             DateTime fomcDateLowerThresholdET = nextTradingDayET_Date.AddDays(-10);
             var closestFomcET = specialDates.FindLast(r => ((r.Flags & DatePropertiesFlags.FomcMeetingLastDay) != 0) && (r.DateLoc < fomcDateUpperThresholdET) && (r.DateLoc > fomcDateLowerThresholdET)); // FindLast(), ordered list. Search backward as there are less items in the future than in the past
             if (closestFomcET != null)
             {
-                int offsetInd = CalculateOffsetInd(nextTradingDayET_Date, closestFomcET.DateLoc);       // VXX forecast: Long,Long,Short,Short,Long for days T-3, T-2, T-1, T+0, T+1
+                int offsetInd = CalculateOffsetIndOfTradingDateFromEvent(nextTradingDayET_Date, closestFomcET.DateLoc);       // VXX forecast: Long,Long,Short,Short,Long for days T-3, T-2, T-1, T+0, T+1
                 Utils.Logger.Debug($"Closest FOMC date found: {closestFomcET.DateLoc}, day T{((offsetInd>=0)? "+": "-")}{Math.Abs(offsetInd)}");
                 Console.WriteLine($"Closest FOMC date: {closestFomcET.DateLoc}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
                 if (offsetInd == -1 || offsetInd == 0)
@@ -36,7 +37,9 @@ namespace VirtualBroker
                     return 1.0;     // VXX positive long forecast, which is bearish for the market
             }
 
-            DateTime holidayDateUpperThresholdET = nextTradingDayET_Date.AddDays(15);  // TODO: change this to 15 later. T-5 is played for Xmas, and T+5 is played for NewYear
+
+            //2. Holidays section (separation is not necessary)
+            DateTime holidayDateUpperThresholdET = nextTradingDayET_Date.AddDays(15);  // 15 is optimal as: T-5 is played for Xmas, and T+5 is played for NewYear, and they can overlap. It can be any other number, not only 15, the code will find the closest one.
             DateTime holidayDateLowerThresholdET = nextTradingDayET_Date.AddDays(-15);
             // NewYear and Xmas is close to each other, so multiple holidays can be collected. We have to find the closest one.
             DateProperty closestHolidayET = null;
@@ -52,7 +55,7 @@ namespace VirtualBroker
                     continue;
 
                 Utils.Logger.Debug($"Potential holiday date found: {specialDates[i].DateLoc}");
-                int offsetInd = CalculateOffsetInd(nextTradingDayET_Date, specialDates[i].DateLoc);
+                int offsetInd = CalculateOffsetIndOfTradingDateFromEvent(nextTradingDayET_Date, specialDates[i].DateLoc);
                 if (Math.Abs(offsetInd) < Math.Abs(closestHolidayOffsetInd))
                 {
                     closestHolidayOffsetInd = offsetInd;
@@ -124,9 +127,9 @@ namespace VirtualBroker
         }
 
 
-        private int CalculateOffsetInd(DateTime p_nextTradingDate, DateTime p_eventDate)
+        private int CalculateOffsetIndOfTradingDateFromEvent(DateTime p_tradingDate, DateTime p_eventDate)
         {
-            DateTime nextTradingDate = p_nextTradingDate.Date;  // don't trust caller that it has only a Date part. It should, but it is safer this way.
+            DateTime nextTradingDate = p_tradingDate.Date;  // don't trust caller that it has only a Date part. It should, but it is safer this way.
             DateTime eventDate = p_eventDate.Date;
             if (nextTradingDate == eventDate)
                 return 0;       // it is T+0
