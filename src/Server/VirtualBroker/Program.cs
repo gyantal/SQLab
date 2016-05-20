@@ -128,7 +128,7 @@ namespace VirtualBroker
                 Console.WriteLine();
             }
             gHasBeenCalled = true;
-
+            
             Utils.ConsoleWriteLine(ConsoleColor.Magenta, "------- VirtualBroker (type and press Enter) ------- ");
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes");
             Console.WriteLine("2. Test IbGateway Connection");

@@ -9,29 +9,29 @@ namespace DbCommon
     // A. Utils_tradingHours.cs is for TradingHours, Open, Close, EarlyClose. It can calculate Open and Close times precisely. It can calculate next trading days in the future (nextTradingDay). 
     //      It has only currently 1 year data from Nasdaq webpage.
     //      It is used by VirtualBrokers for trading scheduling.
-    // B. DbUtils_historicalMarketHolidayDays.cs is about all historical days. That is from the SqlDb. It has no idea if there was an EarlyClose or not on that day. 
+    // B. DbUtils_historicalMarketClosedDays.cs is about all historical days. That is from the SqlDb. It has no idea if there was an EarlyClose or not on that day. 
     //      Currently, it contains 16 years of data, from 2001-01-01.
     //      It is used by QuickTester for historical backtesting.
     public static partial class DbUtils
     {
-        static Dictionary<CountryID, List<DateTime>> g_marketHolidays = null;
-        static DateTime g_marketHolidaysDownloadDate = DateTime.MinValue;    // the last time we downloaded info from the internet
+        static Dictionary<CountryID, List<DateTime>> g_marketClosedDates = null;
+        static DateTime g_marketClosedDatesDownloadDate = DateTime.MinValue;    // the last time we downloaded info from the internet
         static TimeSpan g_maxAllowedStalenessDefault = TimeSpan.FromDays(3);
 
-        public static Dictionary<CountryID, List<DateTime>> GetMarketHolidays()
+        public static Dictionary<CountryID, List<DateTime>> GetMarketClosedDates()
         {
-            return GetMarketHolidays(g_maxAllowedStalenessDefault);
+            return GetMarketClosedDates(g_maxAllowedStalenessDefault);
         }
 
-        public static Dictionary<CountryID, List<DateTime>> GetMarketHolidays(TimeSpan p_maxAllowedStaleness)
+        public static Dictionary<CountryID, List<DateTime>> GetMarketClosedDates(TimeSpan p_maxAllowedStaleness)
         {
-            if ((g_marketHolidays != null) && (DateTime.UtcNow - g_marketHolidaysDownloadDate) < p_maxAllowedStaleness)
-                return g_marketHolidays;
+            if ((g_marketClosedDates != null) && (DateTime.UtcNow - g_marketClosedDatesDownloadDate) < p_maxAllowedStaleness)
+                return g_marketClosedDates;
 
-            g_marketHolidays = SqlTools.LoadMarketHolidays().Result;
+            g_marketClosedDates = SqlTools.LoadStockMarketClosedDates().Result;
 
-            g_marketHolidaysDownloadDate = DateTime.UtcNow;
-            return g_marketHolidays;
+            g_marketClosedDatesDownloadDate = DateTime.UtcNow;
+            return g_marketClosedDates;
         }
 
         public static bool IsMarketOpenDayUtc(this DateTime p_timeUtc, StockExchangeID p_xchg)
@@ -67,11 +67,11 @@ namespace DbCommon
             DayOfWeek day = p_dateLocal.DayOfWeek;
             if (day == DayOfWeek.Sunday || day == DayOfWeek.Saturday)
                 return false;
-            var marketHolidays = GetMarketHolidays()[p_countryID];
+            var marketClosedDays = GetMarketClosedDates()[p_countryID];
             DateTime dateLocalDate = p_dateLocal.Date;
-            var foundInd = marketHolidays.BinarySearch(dateLocalDate);
-            bool isHoliday = foundInd >= 0;
-            return !isHoliday;
+            var foundInd = marketClosedDays.BinarySearch(dateLocalDate);
+            bool isMarketClosed = foundInd >= 0;
+            return !isMarketClosed;
         }
 
         public static DateTime GetNextUsaMarketOpenDayLoc(this DateTime p_timeLoc, bool p_currentDayAcceptable /* today is Inclusive or not */)

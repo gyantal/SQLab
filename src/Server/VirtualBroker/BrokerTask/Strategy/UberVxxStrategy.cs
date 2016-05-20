@@ -89,16 +89,7 @@ namespace VirtualBroker
             {
                 Utils.Logger.Error("UberVxxStrategy.GeneratePositionSpecs() GetHistoricalAndRealTimeDataForAllParts() Error. However, we try to continue. Maybe the problematic data will be not used in Forecast.");
             }
-            double forecast = 0;
-
-            double? uberVxxForecast = GetUberVxxForecastVxx();
-            if (uberVxxForecast != null)
-                forecast = (double)uberVxxForecast;
-            else {  // if UberVXX doesn't give forecast, use Connor
-                double? connorForecast = GetConnorForecast();
-                if (connorForecast != null)
-                    forecast = (double)connorForecast;
-            }
+            double forecast = GetForecastVxx();
 
             List <PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
             if (forecast > 0)   // bullish on VXX: buy VXX or UVXY/TVIX
@@ -212,22 +203,29 @@ namespace VirtualBroker
         
 
 
-        public double? GetUberVxxForecastVxx()
+        public double GetForecastVxx()
         {
-            double? forecast = null;
+            double forecast = 0;    // temporary there is a preference hierarchy of Fomc/Holidays/TotM/Connor, but later we want a fairer combination
 
-            double? uberVxxTotMForecast = GetUberVxx_TotM_TotMM_Summer_Winter_ForecastVxx();
-            if (uberVxxTotMForecast != null)
-                forecast = (double)uberVxxTotMForecast;
+            double? uberVxxFomcHolidaysForecast = GetUberVxx_FomcAndHolidays_ForecastVxx();
+            if (uberVxxFomcHolidaysForecast != null)
+                forecast = (double)uberVxxFomcHolidaysForecast;
+            else
+            {
+                double? uberVxxTotMForecast = GetUberVxx_TotM_TotMM_Summer_Winter_ForecastVxx();
+                if (uberVxxTotMForecast != null)
+                    forecast = (double)uberVxxTotMForecast;
+                else
+                {
+                    double? connorForecast = GetConnorForecast();   // if UberVXX doesn't give forecast, use Connor
+                    if (connorForecast != null)
+                        forecast = (double)connorForecast;
+                }
+            }
 
-
-            return forecast;
+            return forecast;       // 0 = neutral forecast, CASH
         }
 
-        
-
-
-
-        
+    
     }
 }

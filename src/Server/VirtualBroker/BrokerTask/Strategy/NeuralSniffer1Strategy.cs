@@ -157,7 +157,8 @@ namespace VirtualBroker
                 StrongAssert.True(Controller.g_gatewaysWatcher.GetMktDataSnapshot(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if realtime RUT is not given.");
                 double rus2000LastClose = rtPrices[TickType.CLOSE].Price;
                 // on 2016-05-02, RUT close price: YF: 1130.85, GF and IB: 1130.84, therefore 1 penny difference should be accepted.
-                StrongAssert.True(Utils.IsNear(rus2000LastClose, m_rut[m_rut.Count - 1].AdjClosePrice, 0.015), Severity.NoException, $"Warning only! RUT: IB Last Close price ({rus2000LastClose}) should be the same as in SQL DB ({m_rut[m_rut.Count - 1].AdjClosePrice}). Maybe SQL DB has no yesterday data. Execution and trading will coninue as usual by using yesterday price from SQL DB  ({m_rut[m_rut.Count - 1].AdjClosePrice}). However, it is better to check the crawlers that fills SQL DB.");
+                // on 2016-05-20, RUT close price: YF: 1,094.76, GF and IB: 1,094.78, therefore 2 penny difference should be accepted.
+                StrongAssert.True(Utils.IsNear(rus2000LastClose, m_rut[m_rut.Count - 1].AdjClosePrice, 0.025), Severity.NoException, $"Warning only! RUT: IB Last Close price ({rus2000LastClose}) should be the same as in SQL DB ({m_rut[m_rut.Count - 1].AdjClosePrice}). Maybe SQL DB has no yesterday data. Execution and trading will coninue as usual by using yesterday price from SQL DB  ({m_rut[m_rut.Count - 1].AdjClosePrice}). However, it is better to check the crawlers that fills SQL DB.");
 
                 double rus2000Last = rtPrices[TickType.LAST].Price;    // as an Index, there is no Ask,Bid, therefore, there is no MidPrice, only LastPrice
                 // append an extra CSVData representing today close value (estimating)

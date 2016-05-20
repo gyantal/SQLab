@@ -142,7 +142,7 @@ namespace VirtualBroker
             // or just put tomorrow into the sample temporarily.
 
             // 1.1 calculate totMForwardDayOffset
-            DateTime iDate = new DateTime(pvStartDate.Year, pvStartDate.Month, 1);  // Time is 00:00, which is OK, but strangly it is visualized as "12:00 AM", but yeah. Correct. it is not noon.
+            DateTime iDate = new DateTime(pvStartDate.Year, pvStartDate.Month, 1);  // Time is 00:00, which is OK, but strangely it is visualized as "12:00 AM", but yeah. Correct. it is not noon.
             iDate = DbUtils.GetNextUsaMarketOpenDayLoc(iDate, true);    // this is day T+1
             int iDateOffset = 1;    // T+1
             while (iDate < pvStartDate) // marching forward until iDate = startDate

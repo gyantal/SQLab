@@ -146,6 +146,55 @@ namespace DbCommon
         //OptionExpired = 102,      // optional, maybe not here, it can be determined automatically
     }
 
+    // dbo.DateProperties.Flags complements dbo.DateProperties.Comment: comments that have fixed string value
+    // (because occur regularly) should be specified in Flags, to avoid accidental differences in the string values.
+    // Whenever the Flags are changed, the dbo.DateProperties.StrProperties computed column should be updated
+    // to keep the table human-readable. For an example on how to do this, see GDriveHedgeQuant\robin\SQLtest\DateProperties.160504.sql
+    // If (row.date < 1998)
+    // MarketOpenDayHolidays = ColombusDay OR SuperBowl
+    // else
+    // MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
+    [Flags]
+    public enum DatePropertiesFlags : short // dbo.DateProperties.Flags
+    {
+        //None = 0,
+
+        // Flags specific to the USA:
+        NewYear = 1,
+        MLutherKing = 2,
+        SuperBowl = 3,          // as of 2016, this is not a stock market holiday, only civil holiday
+        Presidents = 4,
+        GoodFriday = 5,
+        Memorial = 6,
+        Independence = 7,
+        Labor = 8,
+        Columbus = 9,           // as of 2016, this is not a stock market holiday, only civil holiday
+        Veterans = 10,          // as of 2016, this is not a stock market holiday, only civil holiday
+        Thanksgiving = 11,
+        Xmas = 12,
+        // The above names are not in any particular order. New ones should be added - not inserted (avoid changing existing values).
+        _KindOfUsaHoliday = 15,
+        // New flags should be added BELOW the existing ones until the ↑two↓ abuts each other
+        EcbMeeting = 2048,
+        FomcMinutesRelease = 4096,
+        FomcMeetingLastDay = 8192,
+
+        _KindOfUsaHolidayAndAllRegularEvents = 15 + 2048 + 4096 + 8192,     // "911Attacks", "HurricaneSandy", "FuneralReagen" are StockMarketClosed days, but one time events, not regular
+
+        // Flags specific to the UK:
+        // ...
+
+        // Global flags (for all countries):
+        StockMarketClosed = 16384
+    }
+
+    public class DateProperty
+    {
+        public DateTime DateLoc { get; set; }       // Date. usually with time component of 0:0. Meaning it is in its local country/event time zone
+        public CountryID CountryID { get; set; }
+        public DatePropertiesFlags Flags { get; set; }
+        public string Comment { get; set; }
+    }
 
     public class StockExchangeTimeZoneData
     {
