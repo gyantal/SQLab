@@ -125,6 +125,21 @@ namespace Overmind
                     // So less headache overall.
                     new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: send holidays, bank report to accountant", Body = "Send holidays, bank report to accountant. In 3 days, it is the 1st day of the month. ", IsBodyHtml = false }.Send();
                 }
+
+                double? price = GetAmazonProductPrice("https://www.amazon.co.uk/Electronics-Sennheiser-Professional-blocking-gaming-headset-Black/dp/B00JQDOANK/");
+                if (price == null || price <= 150.0)
+                {
+                    new Email
+                    {
+                        ToAddresses = Utils.Configuration["EmailGyantal"],
+                        Subject = "OvermindServer: Amazon price warning.",
+                        Body = (price == null) ?
+                            $"GetAmazonProductPrice() couldn't obtain current price. Check log file.":
+                            $"Time to buy Sennheiser GAME ZERO now. Amazon price dropped from 199.99 to {price}. Go to https://www.amazon.co.uk/Electronics-Sennheiser-Professional-blocking-gaming-headset-Black/dp/B00JQDOANK/ and buy headset now. See '2016-05, Sennheiser buying.txt'.",
+                        IsBodyHtml = false
+                    }.Send();
+                }
+
             }
             catch (Exception e)
             {
@@ -246,6 +261,36 @@ namespace Overmind
             return todayPercentChange;
         }
 
+        private static double? GetAmazonProductPrice(string p_amazonProductUrl)
+        {
+            string errorMessage = String.Empty;
+            double price = 0.0;
+            var webpage = new HttpClient().GetStringAsync(p_amazonProductUrl).Result;
+            Utils.Logger.Info("HttpClient().GetStringAsync returned: " + ((webpage.Length > 100) ? webpage.Substring(0, 100) : webpage));
+
+            // <span id="priceblock_ourprice" class="a-size-medium a-color-price">£199.95</span>
+            string searchStr = @"id=""priceblock_ourprice"" class=""a-size-medium a-color-price"">";
+            int startInd = webpage.IndexOf(searchStr);
+            if (startInd == -1)
+            {   // it is expected (not an exception), that sometimes Amazon changes its website, so we will fail. User will be notified.
+                Utils.Logger.Info($"searchString '{searchStr}' was not found.");
+                return null;
+            }
+            int endInd = webpage.IndexOf('<', startInd + searchStr.Length);
+            if (endInd == -1)
+            {   // it is expected (not an exception), that sometimes Amazon changes its website, so we will fail. User will be notified.
+                Utils.Logger.Info($"'<' after searchString '{searchStr}' was not found.");
+                return null;
+            }
+            string priceStr = webpage.Substring(startInd + searchStr.Length + 1, endInd - (startInd + searchStr.Length + 1));
+            if (!Double.TryParse(priceStr, out price))
+            {
+                Utils.Logger.Info($"{priceStr} cannot be parsed to Double.");
+                return null;
+            }
+            return price;
+        }
+
         internal void TestSendingEmailAndPhoneCall()
         {
             Console.WriteLine("TestSendingEmail started.");
@@ -286,6 +331,23 @@ namespace Overmind
 
             Console.WriteLine("TestSendingEmail Finished.");
             Utils.Logger.Info("TestSendingEmail() END");
+        }
+
+        internal void TestCheckingAmazonPrice()
+        {
+            Utils.Logger.Info("TestCheckingAmazonPrice() START");
+            double? price = GetAmazonProductPrice("https://www.amazon.co.uk/Electronics-Sennheiser-Professional-blocking-gaming-headset-Black/dp/B00JQDOANK/");
+            string priceStr = (price == null) ? "null" : price.ToString();
+            Console.WriteLine($"Amazon price is: {priceStr}. Sending email.");
+
+            new Email
+            {
+                ToAddresses = Utils.Configuration["EmailGyantal"],
+                Subject = "OvermindServer: Amazon price warning: Time to buy Sennheiser GAME ZERO now",
+                Body = $"Time to buy Sennheiser GAME ZERO now. Amazon price dropped from 199.99 to {priceStr}. Go to https://www.amazon.co.uk/Electronics-Sennheiser-Professional-blocking-gaming-headset-Black/dp/B00JQDOANK/ and buy headset now. See '2016-05, Sennheiser buying.txt'. ",
+                IsBodyHtml = false
+            }.Send();
+
         }
     }
 }

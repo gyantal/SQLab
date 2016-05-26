@@ -171,7 +171,7 @@ namespace SqCommon
                 case ConsoleColor.Magenta:
                     return (char)27 + "[1;35m";
                 case ConsoleColor.Yellow:
-                    return (char)27 + "[1;33m";     // this is brown, because there is no Yellow  in Linux VT100
+                    return (char)27 + "[1;33m";     // somebody said this is brown, because there is no Yellow  in Linux VT100. But we tested. It is not brown on Linux. It is Yellow. Correct.
                 case ConsoleColor.Gray:
                     return (char)27 + "[1;37m";
                 default:
@@ -231,7 +231,7 @@ namespace SqCommon
         // Magenta for menu
         // Cyan for VBroker strategy Start/End
         // Red for Warnings (bad)
-        // Green for general important things (because Yellow is not good, because on Linux Yellow is Brown in VT100)
+        // Green for general important things (Yellow can be good too, because later we realized in spite of the rumour that it is Brown in VT100, it is correctly Yellow in DotNetCore ubuntu)
         public static void ConsoleWriteLine(ConsoleColor? p_foreColor, string p_value) // static objects like Console cannot have Extensions methods with the 'this' keyword.
         {
             ConsoleWrite(p_foreColor, null, false, true, p_value);

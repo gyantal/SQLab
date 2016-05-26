@@ -91,16 +91,19 @@ namespace Overmind
                 switch (userInput)
                 {
                     case "1":
-                        Controller.g_controller.TestSendingEmailAndPhoneCall();
-                        break;
-                    case "2":
                         //new HQEmail().SendOnMono(true);
                         Console.WriteLine("Hello. I am not crashed yet! :)");
                         Utils.Logger.Info("Hello. I am not crashed yet! :)");
                         break;
+                    case "2":
+                        Controller.g_controller.TestSendingEmailAndPhoneCall();
+                        break;
+                    case "3":
+                        Controller.g_controller.TestCheckingAmazonPrice();
+                        break;
                 }
 
-            } while (userInput != "3" && userInput != "ConsoleIsForcedToShutDown");
+            } while (userInput != "4" && userInput != "ConsoleIsForcedToShutDown");
 
             Utils.Logger.Info("****** Main() END");
             Controller.g_controller.Exit();
@@ -126,9 +129,10 @@ namespace Overmind
             //Console.WriteLine("Is output redirected: " + Console.IsOutputRedirected + "WindowHeight: " + Console.WindowHeight + "WindowWidth: " + Console.WindowWidth);
 
             Utils.ConsoleWriteLine(ConsoleColor.Magenta, "----Overmind Server    (type and press Enter)----");
-            Console.WriteLine("1. Test Server (Sending Email)");
-            Console.WriteLine("2. Say Hello. Don't do anything. Check responsivenes.");
-            Console.WriteLine("3. Exit gracefully (Avoid Ctrl-^C).");
+            Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes.");
+            Console.WriteLine("2. Test Server (Sending Email & Calling Phone)");
+            Console.WriteLine("3. Test Amazon Price Check (Sending Email)");
+            Console.WriteLine("4. Exit gracefully (Avoid Ctrl-^C).");
             string result = null;
             try
             {

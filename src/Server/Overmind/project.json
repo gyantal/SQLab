@@ -13,6 +13,12 @@
     "SQLab.Common": "1.0.0-*"
   },
 
+  // "runtimes" section is required in EXE style Console Apps, because if not "dotnet run" or "dotnet build" will give this.
+  // However, for WebApps,  where we chose type = platform, the runtimes section is not required. The current platform will be used for build.
+  // "preserveCompilationContext": true, doesn't help
+  // "Can not find runtime target for framework '.NETCoreApp,Version=v1.0' compatible with one of the target runtimes: 'win10-x64, win81-x64, win8-x64, win7-x64'. Possible causes:
+  // 1. The project has not been restored or restore failed - run `dotnet restore`
+  // 2. The project does not list one of 'win10-x64, win81-x64, win8-x64, win7-x64' in the 'runtimes' section.
   "runtimes": {
     "ubuntu.14.04-x64": { },
     "win10-x64": { }

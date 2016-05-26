@@ -2,7 +2,8 @@
 
 ******************************** Plan: step by step
 
-1. Review UberVXX documents (!this is actually the collection of almost all UberVXX research performed):
+1. 
+//Review UberVXX documents (!this is actually the collection of almost all UberVXX research performed):
 - Balazs's document of UberVXX: conclude which part (TotM, FOMC, Holidays, OPEX) gave the best profit. That will determine the priority.
 Which docs to Review and collect notes from:
 	- 1. official: "The Uber VXX Live Strategy" book, (FOMC is added, (and other parts too)) 102 pages,
@@ -30,7 +31,7 @@ Which docs to Review and collect notes from:
 		https://docs.google.com/document/d/1DJtSt1FIPFbscAZsn8UAfiBBIhbeWvZcJWtQffGPTfU/edit
 
 2.
-- after reading the documents: think the main concepts over. 
+//- after reading the documents: think the main concepts over. 
 	//- what was the profit of the Learning versions in Balazs' document? In which document, which pages?
 	>His Aggregated Holiday Learning strategy was 0% CAGR (in spite of VolDrag), but we can do better by
 	elimitanig outliers, using a training set which more regimes, not from 2004, we don't aggregate all holidays.
@@ -124,7 +125,7 @@ Which docs to Review and collect notes from:
 ------------- Until that, maybe a new version of ASP.NET core is coming, with DotNetCore 2.0, or a better Angular2, so it is better to postpone this.
 
 3. 
-- AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50%) in VBroker
+//- AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50%) in VBroker
 
 	//- have to decide whether to use training set as from SPX, or from VXX or from QQQ or all combined.
 		>Maybe use only one now, just as a quick implementation
@@ -209,8 +210,19 @@ Which docs to Review and collect notes from:
 				T+2 (#137): 56.9%, 0.130%, 1.54, 6.33%
 
 4. 
+Website: convert webtools. so everything is on Linux now (except SQL database)
+//- test that Kestrel server works on Linux, (port 80 worked only with 'sudo dotnet', .UseMvc() routing for Index was reworked in ASP.NET RC2)
+- check favico.ico, check static files, static background image.
+- register new domain
+	http://docs.aws.amazon.com/gettingstarted/latest/swh/website-hosting-intro.html
+	Pricing for domain names varies by TLD (top-level domains). Annual: co.uk $9.00, com $12.00; that is OK. Register ot for 3 years at least Now. or the longest we can.
+- make https possible, not only http
+	https://github.com/aspnet/Home/issues/1486
+- implement GoogleAuth for all sub-links (webtools), but not for the main page (but the main page is a very small page without images, scripts, and it is served from RAM)
+- convert VolatilityIndicesInDifferentMonths
+- convert VXXAdaptiveConnorAliveBacktest
+- convert, recreate "HealthMonitor" website
 - convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core
-- should it use Angular2 ? I like it, but it was quite slow for HealthMonitor website. (maybe it is quicker now)
 
 - Detailed report from VBroker to HealthMonitor.exe  (delay)
 	>HealthMonitor.exe can use this detail
