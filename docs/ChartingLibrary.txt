@@ -1,0 +1,9 @@
+
+
+*********** Email, 2016-05-31 from TradingView
+"We've found out that you've published the Charting Library copy in your public repository here: 
+https://github.com/gyantal/NeuralSniffer
+We have the Charting Library in our private repo and we don't want it to be publicly available like this. 
+Please remove this copy asap and let me know when it is removed.
+The common way to do what you wanted is to (1) fork our Charting Library repo and then (2) 
+remove your charting_library folder and replace it with the git submodule referring to your own Charting Library fork.""

@@ -211,18 +211,71 @@ Which docs to Review and collect notes from:
 
 4. 
 Website: convert webtools. so everything is on Linux now (except SQL database)
-//- test that Kestrel server works on Linux, (port 80 worked only with 'sudo dotnet', .UseMvc() routing for Index was reworked in ASP.NET RC2)
-- check favico.ico, check static files, static background image.
-- register new domain
+//- test that Kestrel server works on Linux, 
+		(port 80 worked only with 'sudo dotnet', .UseMvc() routing for Index was reworked in ASP.NET RC2)
+		
+//- check Network	performance from USA server, https://developers.google.com/web/tools/chrome-devtools/profile/network-performance/resource-loading
+	Index.html from memory: Download time: 90-100ms. From an USA server, it is very good, because my London-NewYork speedtest ping is: 106ms already
+			Based in Birmingham via Cable connection
+				Servers
+				Maidenhead ping 12ms distance -50miles
+				London ping 56ms distance - 100miles
+				New York NY ping 86ms distance - 3400miles
+				Los Angeles CA ping 162ms distance -5350miles
+			or
+			Maidenhead ping 42ms --50 miles
+			London ping 61ms -- 50 miles
+			New York NY ping 151ms -- 3450 miles
+			Los Angeles CA ping 178ms -- 5400 mile
+	Try to keep this 100ms, maybe 200ms response time of the server, and Clients will be happy.
+//- Index.html. Chrome Developer Tools, Timeline feature shows the rending of the already downloaded page. It shows 20msec Scripting, 13msec rending, 202msec other (Chrome inner code, not homepage specific), which is fine.
+Adding 100msec webserver response time: 100ms download + 240msec rending = 340msec. Excellent. I should keep this under 1sec altogether.
+
+
+//- check favico.ico (nice to have in Bookmarks), check static files, static background image (althought Index.html should not contain background image; or Maybe.
+see best practices for static files: "g:\agy\myknowledge\programming\_otherWebDevelopment\Browser cache, static files, background images, favicon.txt" 
+
+- register new domain name and associate it with static IP
 	http://docs.aws.amazon.com/gettingstarted/latest/swh/website-hosting-intro.html
 	Pricing for domain names varies by TLD (top-level domains). Annual: co.uk $9.00, com $12.00; that is OK. Register ot for 3 years at least Now. or the longest we can.
-- make https possible, not only http
-	https://github.com/aspnet/Home/issues/1486
+	Amazon Route 53 also offers Domain Name Registration – you can purchase and manage domain names such as example.com and Amazon Route 53 will automatically configure DNS settings for your domains.
+	http://aws.amazon.com/route53/
+	Is static IP server necessary for Domain names?
+	***here are the steps to do: http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-ec2-instance.html
+	"We recommend that you also create an Elastic IP address and associate it with your Amazon EC2 instance. An Elastic IP address ensures that the IP address of your Amazon EC2 instance will never change."
+	ok. They just recommend it. It is not necessary. Howewer, it is free, so do it.
+	https://aws.amazon.com/ec2/pricing/
+	- "You can have one Elastic IP (EIP) address associated with a running instance at no charge. ""
+	- "$0.50 per hosted zone / month for the first 25 hosted zones". We need a hosted zone, so that is 50p. Fine.
+	- Traffic Flow, $50.00 per policy record / month. There is no charge for traffic policies that are not associated with a DNS name via a policy record. 
+		"existing routing types such as failover and geolocation. ". So, I don't need Traffic Policy. I will have 0 traffic policy. 
+		Check it at https://console.aws.amazon.com/route53/trafficflow/home#/
+created an Elastic IP address, Elastic (static) IP: 23.20.243.199.
+register domain: snifferquant.net
+Domain registration might take up to three days to complete.
+
+- make https possible, not only http, without a red-flag. "HTTPS, CloudFront (SSL cert, geo-replication).txt""
+
+- check that AWS CloudFront SSL forwarding works. Measure speed.
+
+- comment out SSL code in source (use only http on both ports 80, 443). Noting Cloudfront and that it is good, because the Linux instance doesn't have to use CPU for encryption.
+
+- upload background image to Amazon S3 storage and serve homepages (links) from there. images can come from AmazonS3Storage.com/myimages/*   (same for /css)
+
+- set up CloudFront that snifferquant.net/myimages/ are taken from AmazonS3Storage.com/myimages/   (probably I need another origin: EC2 origin is for html, form images/css it is cached)
+// was not needed: "Conclusion: direct s3.amazonaws.com usage seems to be a better solution than CloudFront translation, because of extra 80ms overhead."
+
+
+
+
 - implement GoogleAuth for all sub-links (webtools), but not for the main page (but the main page is a very small page without images, scripts, and it is served from RAM)
-- convert VolatilityIndicesInDifferentMonths
-- convert VXXAdaptiveConnorAliveBacktest
-- convert, recreate "HealthMonitor" website
-- convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core
+
+- check Network	performance from USA server with and without Google Auth of the same page
+
+- convert VolatilityIndicesInDifferentMonths, simple JS
+- convert VXXAdaptiveConnorAliveBacktest, simple JS
+- convert, recreate "HealthMonitor", Angular2 and TS
+- convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core, Angular2 (not 1 as before) and TS
 
 - Detailed report from VBroker to HealthMonitor.exe  (delay)
 	>HealthMonitor.exe can use this detail
@@ -313,6 +366,12 @@ I don't want to play it Bearish in real life. Around Thanksgiving, market is pea
 - "As it can be seen, Day -2 become more positive, while Day -1 more negative and significant. 
 Thus, shifting trade from Day -2 close to Day -1 open is highly recommended. "
 >George: absolutely. It is a huge boost to T-values, p-values.
+- SPY or VXX samples should be used after 1994. http://stockmarketalmanac.co.uk/2014/07/fomc-announcements-and-financial-markets/
+"Since 1981, the FOMC has had eight scheduled meetings per year, the timing of which is quite irregular, The schedule of meetings for a particular year is announced ahead of time.
+Starting in 1994, the FOMC began to issue a policy statement (“FOMC statement”) after the meetings that summarised the Committee’s economic outlook and the policy decision at that meeting. The FOMC statements are released around 2:15 pm Eastern Time. Before 1994 monetary policy decisions were not announced; investors therefore had to guess policy actions from the size and type of open market operations in the days following each meeting."
+"Since votes have been made public through press statements in 2002"
+
+
 
 9.
 "SQ Strategy QuickTester" and VBroker: Opex (27% CAGR)

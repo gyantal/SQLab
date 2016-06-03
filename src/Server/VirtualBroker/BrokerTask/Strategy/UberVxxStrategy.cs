@@ -91,7 +91,7 @@ namespace VirtualBroker
             }
             double forecast = GetForecastVxx();
 
-            Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"Final VXX Forecast:{forecast * 100}%");
+            Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"Final VXX Forecast:{forecast * 100}%");
             Utils.Logger.Info($"Final VXX Forecast:{forecast * 100}%");
 
             List <PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();

@@ -213,7 +213,7 @@ FROM (SELECT * FROM Stock INNER JOIN
                 DateTime dateLocal = (DateTime)r[1];
                 StockExchangeID stockExchangeId = assetDescs[assetID].StockExchangeID;
                 DateTime timeUtc = TimeZoneInfo.ConvertTime(dateLocal, DbUtils.StockExchangeToTimeZoneData[(int)stockExchangeId].TimeZoneInfo, TimeZoneInfo.Utc);
-                return new SplitAndDividendInfo() { StockID = stockID, TimeUtc = timeUtc, IsSplit = (bool)r[2], DividendOrPrevClosePrice = (double)(float)r[3], OldVolume = (short)r[4], NewVolume = (short)r[5] };
+                return new SplitAndDividendInfo() { StockID = stockID, TimeUtc = timeUtc, IsSplit = (bool)r[2], DividendOrPrevClosePrice = (double)(float)r[3], OldVolume = (int)r[4], NewVolume = (int)r[5] };
             }).OrderBy(r => r.TimeUtc).ToList();
 
 

@@ -71,7 +71,7 @@ namespace VirtualBroker
 
             proposedPositionSpecs.ForEach(suggestedItem =>
             {
-                Utils.ConsoleWriteLine(null, true, $"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}");
+                Utils.ConsoleWriteLine(null, false, $"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}");
                 Utils.Logger.Info($"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}");
             });
 
@@ -156,7 +156,7 @@ namespace VirtualBroker
                 }
             }
             p_portfolio.PortfolioUsdSize = portfolioUsdSize;
-            Utils.ConsoleWriteLine(null, true, $"Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}");
+            Utils.ConsoleWriteLine(null, false, $"Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}");
             Utils.Logger.Info($"!!!Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}");
         }
 
@@ -188,7 +188,7 @@ namespace VirtualBroker
 
             foreach (var suggestedItem in p_portfolio.ProposedPositions)
             {
-                Utils.ConsoleWriteLine(null, true, $"Portfolio suggestion: {Strategy.StockIdToTicker(suggestedItem.SubTableID)}: signed vol: {suggestedItem.Volume}");
+                Utils.ConsoleWriteLine(null, false, $"Portfolio suggestion: {Strategy.StockIdToTicker(suggestedItem.SubTableID)}: signed vol: {suggestedItem.Volume}");
                 Utils.Logger.Info($"Portfolio suggestion: {Strategy.StockIdToTicker(suggestedItem.SubTableID)}: signed vol: {suggestedItem.Volume}");
             }
         }
@@ -247,7 +247,7 @@ namespace VirtualBroker
 
             foreach (var transaction in transactions)
             {
-                Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
+                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
                 Utils.Logger.Info($"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
             }
 
@@ -259,7 +259,7 @@ namespace VirtualBroker
             var transactions = p_portfolio.ProposedTransactions;
             if (transactions.Count == 0)
             {
-                Utils.ConsoleWriteLine(ConsoleColor.Green, true, $"***Proposed transactions: none.");
+                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"***Proposed transactions: none.");
                 Utils.Logger.Info($"***Proposed transactions: none.");
                 return;
             }

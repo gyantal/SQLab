@@ -34,7 +34,7 @@ namespace SqCommon
 
         public const int DefaultHealthMonitorServerPort = 52100;    // largest port number: 65535 
 
-        // VBroker DEV server: private ip: 172.31.60.145, public Ip: 52.23.207.88
+        // VBroker DEV server: private IP: 172.31.60.145, public static IP (Elastic): 23.20.243.199 == currently http://snifferquant.net/ but what if in the future, the Website and HealthMonitor will be on separate servers. So, use IP, instead of DNS name *.net.
         public static string HealthMonitorServerPrivateIpForListener
         {
             get
@@ -51,9 +51,9 @@ namespace SqCommon
             get {
                 if (Utils.RunningPlatform() == Platform.Windows)
                     return "localhost";       // sometimes for clients running on Windows (in development), we want localHost if Testing new HealthMonitor features
-                    //return "52.23.207.88";      // sometimes for clients running on Windows (in development), we want the proper Healthmonitor if Testing runnig VBroker locally
+                    //return "23.20.243.199";      // sometimes for clients running on Windows (in development), we want the proper Healthmonitor if Testing runnig VBroker locally
                 else
-                    return "52.23.207.88";
+                    return "23.20.243.199";
             }
         }
 

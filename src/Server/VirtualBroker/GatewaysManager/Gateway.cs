@@ -186,14 +186,14 @@ namespace VirtualBroker
             // 2. Execute different orderTypes MKT, MOC
             // vbOrderId and ibOrderID is different, because some Limit orders, or other tricky orders are executed in real life by many concrete IB orders
             // or there are two opposite vbOrder that cancels each other out at MOC, therefore there is no ibOrder at all
-            Utils.ConsoleWriteLine(null, true, $"Place {(p_isSimulatedTrades ? "Simulated" : "Real")} Order {p_transactionType}  {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
+            Utils.ConsoleWriteLine(null, false, $"Place {(p_isSimulatedTrades ? "Simulated" : "Real")} Order {p_transactionType}  {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
             Utils.Logger.Info($"Place {(p_isSimulatedTrades?"Simulated":"Real")} Order {p_transactionType} {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
             if (p_orderExecution == OrderExecution.Market)
             {
                 // Perform minFilter skipped here. But use estimatedTransactionValue. We get the estimatedPrice from the Main Gateway
                 if (estimatedTransactionValue < AllowedMinUsdTransactionValue)
                 {
-                    Utils.ConsoleWriteLine(null, true, $"Transaction is MinFilter (${AllowedMinUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
+                    Utils.ConsoleWriteLine(null, false, $"Transaction is MinFilter (${AllowedMinUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
                     Utils.Logger.Info($"Transaction is MinFilter (${AllowedMinUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
                     lock (VirtualOrders)
                         VirtualOrders.Add(new VirtualOrder() { OrderId = virtualOrderID, SubmitTime = DateTime.UtcNow, EstimatedUsdSize = 0.0, OrderExecution = p_orderExecution, OrderStatus = OrderStatus.MinFilterSkipped });

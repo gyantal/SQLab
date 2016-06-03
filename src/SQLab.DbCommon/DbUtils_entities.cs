@@ -225,8 +225,8 @@ namespace DbCommon
         //public DateTime TimeUtc { get { return TimeLoc.ToUtc(StockExchangeID); } }
         //public DateTime TimeUtc { get { return TimeZoneInfo.ConvertTime(TimeLoc, DbUtils.g_timeZoneInfo[(int)StockExchangeID].TimeZoneInfo, TimeZoneInfo.Utc); } }
         //public StockExchangeID StockExchangeID { get; set; }
-        public short NewVolume { get; set; }
-        public short OldVolume { get; set; }
+        public int NewVolume { get; set; }
+        public int OldVolume { get; set; }
         public double DividendOrPrevClosePrice { get; set; }  // this is price if it is split; or dividend otherwise
         public bool IsSplit { get; set; }
 

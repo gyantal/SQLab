@@ -13,7 +13,7 @@ colorama.init()
 print(Fore.MAGENTA + Style.BRIGHT  +  "Start deploying.")
 
 print("SFTP Session is opening...")
-transport = paramiko.Transport(("ec2-52-23-207-88.compute-1.amazonaws.com", 22))
+transport = paramiko.Transport(("ec2-23-20-243-199.compute-1.amazonaws.com", 22))
 transport.connect(username = "ubuntu", pkey = paramiko.RSAKey.from_private_key_file("g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"))
 sftp = paramiko.SFTPClient.from_transport(transport)
 

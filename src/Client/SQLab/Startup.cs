@@ -37,7 +37,7 @@ namespace SQLab
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
-            //app.UseStaticFiles();   // without it, the Server will not return static HTML files
+            app.UseStaticFiles();   // without it, the Server will not return static files like favicon.ico or other htm files
 
             app.UseMvc();     // see new changes in ASP.Net Core 1.0 routing: http://www.inversionofcontrol.co.uk/asp-net-core-1-0-routing-under-the-hood/
         }

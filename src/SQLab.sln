@@ -13,6 +13,7 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DotNetCoreTest", "Test\DotN
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docs", "_docs", "{086CF043-0ECF-46DD-AC47-75BF5344AA80}"
 	ProjectSection(SolutionItems) = preProject
+		..\docs\ChartingLibrary.txt = ..\docs\ChartingLibrary.txt
 		..\docs\DeveloperNotes.txt = ..\docs\DeveloperNotes.txt
 	EndProjectSection
 EndProject
