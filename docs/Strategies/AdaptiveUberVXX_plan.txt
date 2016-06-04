@@ -235,7 +235,7 @@ Adding 100msec webserver response time: 100ms download + 240msec rending = 340ms
 //- check favico.ico (nice to have in Bookmarks), check static files, static background image (althought Index.html should not contain background image; or Maybe.
 see best practices for static files: "g:\agy\myknowledge\programming\_otherWebDevelopment\Browser cache, static files, background images, favicon.txt" 
 
-- register new domain name and associate it with static IP
+//- register new domain name and associate it with static IP
 	http://docs.aws.amazon.com/gettingstarted/latest/swh/website-hosting-intro.html
 	Pricing for domain names varies by TLD (top-level domains). Annual: co.uk $9.00, com $12.00; that is OK. Register ot for 3 years at least Now. or the longest we can.
 	Amazon Route 53 also offers Domain Name Registration – you can purchase and manage domain names such as example.com and Amazon Route 53 will automatically configure DNS settings for your domains.
@@ -254,28 +254,29 @@ created an Elastic IP address, Elastic (static) IP: 23.20.243.199.
 register domain: snifferquant.net
 Domain registration might take up to three days to complete.
 
-- make https possible, not only http, without a red-flag. "HTTPS, CloudFront (SSL cert, geo-replication).txt""
+//- make https possible, not only http, without a red-flag. "HTTPS, CloudFront (SSL cert, geo-replication).txt""
 
-- check that AWS CloudFront SSL forwarding works. Measure speed.
+//- check that AWS CloudFront SSL forwarding works. Measure speed.
 
-- comment out SSL code in source (use only http on both ports 80, 443). Noting Cloudfront and that it is good, because the Linux instance doesn't have to use CPU for encryption.
+//- comment out SSL code in source (use only http on both ports 80, 443). Noting Cloudfront and that it is good, because the Linux instance doesn't have to use CPU for encryption.
 
-- upload background image to Amazon S3 storage and serve homepages (links) from there. images can come from AmazonS3Storage.com/myimages/*   (same for /css)
+//- upload background image to Amazon S3 storage and serve homepages (links) from there. images can come from AmazonS3Storage.com/myimages/*   (same for /css)
 
-- set up CloudFront that snifferquant.net/myimages/ are taken from AmazonS3Storage.com/myimages/   (probably I need another origin: EC2 origin is for html, form images/css it is cached)
+//- set up CloudFront that snifferquant.net/myimages/ are taken from AmazonS3Storage.com/myimages/   (probably I need another origin: EC2 origin is for html, form images/css it is cached)
 // was not needed: "Conclusion: direct s3.amazonaws.com usage seems to be a better solution than CloudFront translation, because of extra 80ms overhead."
 
+//- implement GoogleAuth for all sub-links (webtools), but not for the main page (but the main page is a very small page without images, scripts, and it is served from RAM)
+If we ever want to test Direct connection (not CloudFront indirect), we have to leave
+
+//- check Network	performance from USA server with and without Google Auth of the same page.
+Good, beacause Google Auth is only needed once every 14 days. After that Browser has it in the Cookie. Send it to Kresnel, so there is no extra roundtrip. Great.
 
 
-
-- implement GoogleAuth for all sub-links (webtools), but not for the main page (but the main page is a very small page without images, scripts, and it is served from RAM)
-
-- check Network	performance from USA server with and without Google Auth of the same page
 
 - convert VolatilityIndicesInDifferentMonths, simple JS
+- file logging is needed. Hook Utils.Logger under ASP.logging so we get ASP messages too.
 - convert VXXAdaptiveConnorAliveBacktest, simple JS
 - convert, recreate "HealthMonitor", Angular2 and TS
-- convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core, Angular2 (not 1 as before) and TS
 
 - Detailed report from VBroker to HealthMonitor.exe  (delay)
 	>HealthMonitor.exe can use this detail
@@ -296,7 +297,8 @@ Domain registration might take up to three days to complete.
 Or it is not necessary to implement urgently because VBroker Console messages contains those info with Colours.
 Implement it only when I re-implement http://sqhealthmonitor.azurewebsites.net/# to Linux in DotnetCore RC2
 
-
+- convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core, Angular2 (not 1 as before) and TS
+	
 5. 
 with the new "SQ Strategy QuickTester" Website on Linux implement:
 - AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50% R) in "SQ Strategy QuickTester", so that C# code is re-usable in VBroker
@@ -306,6 +308,7 @@ with the new "SQ Strategy QuickTester" Website on Linux implement:
 with a separate page in which the steps are detailed as log files. (in essence, I can check a log files of VBroker in a web browser, because the same code is running)
 So, a user who wants to check what will be played today, don't have to go to Linux Console and start Simulation,
 because the same Log file messages and calculation can be observed on a Website.
+- implement FOMC version (Mr. C. asked for it.)
 
 
 6. Improve (1) Basic TotM+TotMM things (VBroker + Quicktester) with extensions:

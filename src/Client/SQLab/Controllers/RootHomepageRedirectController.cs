@@ -4,6 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SqCommon;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Authentication;
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -11,15 +14,44 @@ namespace SQLab.Controllers
 {
     //[Route("api/[controller]")]
     [Route("~/", Name = "default")]
-    [Route("~/login", Name = "login")]
+   // [Route("~/login", Name = "login")]
     [Route("~/access_denied", Name = "access_denied")]
     [Route("~/app/{*url}", Name = "app")]
     [Route("~/DeveloperDashboard", Name = "DeveloperDashboard")]
+    [Authorize]
     public class RootHomepageRedirectController : Controller
     {
         public ActionResult Index()
-
         {
+            // CookieAuthenticationOptions.AutomaticAuthenticate = true (default) causes User to be set
+            var user = HttpContext.User;
+            // Deny anonymous request beyond this point.
+            if (user == null || !user.Identities.Any(identity => identity.IsAuthenticated))
+            {
+                //return new ChallengeResult("Google", new AuthenticationProperties { RedirectUri = "/" });
+
+                return new RedirectResult("/login");
+
+                // This is what [Authorize] calls
+                // The cookie middleware will intercept this 401 and redirect to /login
+                //await HttpContext.Authentication.ChallengeAsync();
+                //HttpContext.Authentication.ChallengeAsync().RunSynchronously();
+                //HttpContext.Authentication.ChallengeAsync();
+
+                // This is what [Authorize(ActiveAuthenticationSchemes = MicrosoftAccountDefaults.AuthenticationScheme)] calls
+                // await context.Authentication.ChallengeAsync(MicrosoftAccountDefaults.AuthenticationScheme);
+                //return null;
+            }
+
+            StringBuilder sbUser = new StringBuilder();
+            sbUser.AppendLine("Hello " + (HttpContext.User.Identity.Name ?? "anonymous"));
+            foreach (var claim in HttpContext.User.Claims)
+            {
+                sbUser.AppendLine(claim.Type + ": " + claim.Value);
+            }
+
+
+
             bool serveDeveloperDashboard = false;
 #if DEBUG
             serveDeveloperDashboard = true;
