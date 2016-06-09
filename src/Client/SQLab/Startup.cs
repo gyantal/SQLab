@@ -65,21 +65,19 @@ namespace SQLab
             loggerFactory.AddDebug(Microsoft.Extensions.Logging.LogLevel.Debug);       // write to the Debug output window (in VS). MinLevel can be specified. by default it is LogLevel.Information
             // set nLog here if NLog works properly
 
-            // After Configuring logging, set-up other things
-            Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json", "/home/ubuntu/SQ/Client/SQLab/SQLab.Client.SQLab.NoGitHub.json");
-            //Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
-            //HealthMonitorMessage.InitGlobals(HealthMonitorMessage.HealthMonitorServerPublicIpForClients, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
-            //StrongAssert.g_strongAssertEvent += StrongAssertMessageSendingEventHandler;
-            //TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException; // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
-
-
-
             // using https://github.com/aspnet/Security/blob/59fc691f4152e6d5017176c0b700ee9834640481/samples/SocialSample/Startup.cs
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
-                AutomaticAuthenticate = true,
+                //AuthenticationScheme = "MyCookieMiddlewareInstance",
+                CookieName = ".SQ.AspNetCore.Cookies", // ".AspNetCore.Cookies"
+                AutomaticAuthenticate = true,   // default is true
                 AutomaticChallenge = true,
-                LoginPath = new PathString("/login")
+                LoginPath = new PathString("/login"),    // if CloudFront string is in the Request Header, then the "/login" should be "https:www.snifferquant.net/login". However, this is a global setting, not URL request dependent. 
+                //So, whatever, leave the temporary solution that Google authentication is HTTP, but after that we move back to HTTPS
+                SlidingExpiration = true,   // default is true
+                ExpireTimeSpan = TimeSpan.FromDays(14),  // default is 14 days
+                                                         //CookieHttpOnly = false, // default: true.The default is true, which means the cookie will only be passed to only HTTP requests and is not made available to JS script on the page
+                                                         //CookieSecure = CookieSecureOption.Never // default: CookieSecurePolicy.SameAsRequest;
             });
 
             if (!String.IsNullOrEmpty(Utils.Configuration["GoogleClientId"]) && !String.IsNullOrEmpty(Utils.Configuration["GoogleClientSecret"]))
@@ -89,7 +87,11 @@ namespace SQLab
                 {
                     ClientId = Utils.Configuration["GoogleClientId"],
                     ClientSecret = Utils.Configuration["GoogleClientSecret"],
-                    SaveTokens = true,
+
+                    //     SaveTokens: Defines whether access and refresh tokens should be stored in the Microsoft.AspNetCore.Http.Authentication.AuthenticationProperties
+                    //     after a successful authorization. This property is set to false by default to
+                    //     reduce the size of the final authentication cookie.
+                    SaveTokens = true,                    
                     Events = new OAuthEvents()
                     {
                         OnRemoteFailure = ctx =>
@@ -115,12 +117,52 @@ namespace SQLab
             {
                 signoutApp.Run(async context =>
                 {
+                    //string cloudFrontSuccessfulAuthUri = String.Empty; // "https"
+                    //foreach (var header in context.Request.Headers)
+                    //{
+                    //    Console.WriteLine($"{header.Key} : {header.Value}");
+                    //    if (header.Key == "CloudFront-Forwarded-Proto")
+                    //    {
+                    //        //cloudFrontForwardedProto = header.Value + "://"; //"https"
+                    //        cloudFrontSuccessfulAuthUri = "https://" + context.Request.Host.ToString();          // if "CloudFront-Forwarded-Proto" has been found temporary overwrite to HTTPS, even if it comes from HTTP. So we redirect HTTP back to HTTPS
+                    //        Console.WriteLine($"cloudFrontForwardedProto = '{header.Value}'");
+                    //    }
+                    //}
+
+
+
                     var authType = context.Request.Query["authscheme"];
                     if (!string.IsNullOrEmpty(authType))
                     {
+                        //To create a cookie holding your user information you must construct a ClaimsPrincipal holding the information you wish to be serialized in the cookie. Once you have a suitable ClaimsPrincipal inside your controller method call
+                        //await HttpContext.Authentication.SignInAsync("MyCookieMiddlewareInstance", principal);
+                        //await context.Authentication.SignInAsync(authType, )
+                        //var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "bob") }, CookieAuthenticationDefaults.AuthenticationScheme));
+                        //await context.Authentication.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, user);
+
                         // By default the client will be redirect back to the URL that issued the challenge (/login?authtype=foo),
                         // send them to the home page instead (/).
-                        await context.Authentication.ChallengeAsync(authType, new AuthenticationProperties() { RedirectUri = "/" });
+                        await context.Authentication.ChallengeAsync(authType, new AuthenticationProperties() {
+
+                            //IsPersistent = true,    // default: false. whether the authentication session cookie is persisted across multiple Browser sessions/requests.
+                            //!!! 2016-06-09: IsPersist  Google Auth accross Browser sessions. Wait until RC3. It is fixed.
+                            //!!!With exactly the same source code as startup.cs as the SocialSample.
+                            //-IsPersist doesn't work with RC2.
+                            //	This can be a Platform type, and so, compile time dependencies are installed. no "net451" required
+                            //-It works locally with RC3-2132. 
+                            //	However that Cannot be Platform type, asd compile time dependencies will fail.
+                            //	But as Non Platform, there is a
+                            //	Microsoft.DotNet.ProjectModel 1.0.0-rc3-002996 is not compatible with netcoreapp1.0 (.NETCoreApp,Version=v1.0). Package Microsoft.DotNet.ProjectModel 1.0.0-rc3-002996 supports:
+                            //      - net451 (.NETFramework,Version=v4.5.1)
+                            //      - netstandard1.6 (.NETStandard,Version=v1.6)
+                            //The samples use ""net451" in Frameworks", but on Linux it is not allowed, so I cannot use that.
+                            //>Conclusion. IsPersist accross browser sessions is probably fixed in RC3. However I cannot use it now.
+                            //It will be released on 26 June, which is 3 week. Wait until that and fix this.
+
+                            RedirectUri = "/" });
+                        //await context.Authentication.ChallengeAsync(authType, new AuthenticationProperties() {
+                        //    RedirectUri = cloudFrontSuccessfulAuthUri + "/"
+                        //});
                         return;
                     }
 
@@ -169,6 +211,27 @@ namespace SQLab
 
             app.Run(async context =>
             {
+                //string cloudFrontSuccessfulAuthUri = String.Empty; // "https"
+                if (context.Request.Path.ToString() == "/") // temporary log to see that Origin Custom Headers: CloudFrontSQNet=True is arrived or not
+                {
+                    Console.WriteLine($"Cookies:");
+                    foreach (var cookie in context.Request.Cookies)
+                    {
+                        Console.WriteLine($"{cookie.Key} : {cookie.Value}");
+                    }
+
+                //    foreach (var header in context.Request.Headers)
+                //    {
+                //        Console.WriteLine($"{header.Key} : {header.Value}");
+                //        if (header.Key == "CloudFront-Forwarded-Proto")
+                //        {
+                //            //cloudFrontForwardedProto = header.Value + "://"; //"https"
+                //            cloudFrontSuccessfulAuthUri = "https://" + context.Request.Host.ToString();          // if "CloudFront-Forwarded-Proto" has been found temporary overwrite to HTTPS, even if it comes from HTTP. So we redirect HTTP back to HTTPS
+                //            Console.WriteLine($"cloudFrontForwardedProto = '{header.Value}'");
+                //        }
+                //    }
+                }
+          
                 bool isAuthNeeded = true;   // some files, like static files, etc. will not require authentication. Only main Html codes require that.
 
                 // CookieAuthenticationOptions.AutomaticAuthenticate = true (default) causes User to be set
@@ -185,7 +248,20 @@ namespace SQLab
                 {
                     // This is what [Authorize] calls
                     // The cookie middleware will intercept this 401 and redirect to /login
-                    await context.Authentication.ChallengeAsync();
+                    //await context.Authentication.ChallengeAsync();
+
+                    await context.Authentication.ChallengeAsync(new AuthenticationProperties()
+                    {
+                        IsPersistent = true    // default: false. whether the authentication session cookie is persisted across multiple Browser sessions/requests.
+                       // RedirectUri = "/"
+                    });
+
+                    // authProp. RedirectUri = the URI After succesfull Auth, which is the '/'. It is not the Uri for the unsuccesfull Auth. That can be found in the "Cookie" auth middleware config 
+
+                    //await context.Authentication.ChallengeAsync(new AuthenticationProperties()
+                    //{
+                    //    RedirectUri = cloudFrontSuccessfulAuthUri + "/"
+                    //});
 
                     // This is what [Authorize(ActiveAuthenticationSchemes = MicrosoftAccountDefaults.AuthenticationScheme)] calls
                     // await context.Authentication.ChallengeAsync(MicrosoftAccountDefaults.AuthenticationScheme);

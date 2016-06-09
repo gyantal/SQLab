@@ -275,7 +275,10 @@ Good, beacause Google Auth is only needed once every 14 days. After that Browser
 
 - convert VolatilityIndicesInDifferentMonths, simple JS
 - file logging is needed. Hook Utils.Logger under ASP.logging so we get ASP messages too.
+- User-access (which user(anonymous or not), what IP, that IP is what country) should be logged into a separate user-access log file, and it can be monitored from the Websit
+- if there is a crash in C# code, HealthMonitor is notified (time, crash stackTrace, user, IP, country)
 - convert VXXAdaptiveConnorAliveBacktest, simple JS
+- if there is a crash in JS code, HealthMonitor is notified (time, crash stackTrace, user, IP, country)
 - convert, recreate "HealthMonitor", Angular2 and TS
 
 - Detailed report from VBroker to HealthMonitor.exe  (delay)

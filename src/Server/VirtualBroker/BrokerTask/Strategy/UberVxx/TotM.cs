@@ -52,7 +52,7 @@ namespace VirtualBroker
                 return null;
             }
 
-            Utils.ConsoleWriteLine(null, false, $"TotM: Training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");
+            //Utils.ConsoleWriteLine(null, false, $"TotM: Training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");    // next Console line shows the "SPY" or "VXX" as for Win%
             Utils.Logger.Info($"TotM: Training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");
 
             // In theory TotM vs. TotMM signals can conflict, because in 2001, market was closed for 4 days, because of the NY terrorist event. 
@@ -119,7 +119,7 @@ namespace VirtualBroker
             if (pValue <= significantPvalue)  // Depending nSamples, but approx. T-value of 0.5 is p-value=30%, T-value 1.0 is about p-value: 15%,  T-Value of 1.7 is about p-value 4.5%
             {
                 // In formating numbers you can use "0" as mandatory place and "#" as optional place (not Zero). So:
-                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"NextDay: {regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue*100.0:0.##}%.");
+                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"{regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue*100.0:0.##}%.");
                 Utils.Logger.Info($"NextDay: {regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue * 100.0:0.##}%.");
 
                 forecast = -1.0 * Math.Sign(tValue);    //invert the prediction, because long SPY bullishness means short VXX, and we predict VXX.

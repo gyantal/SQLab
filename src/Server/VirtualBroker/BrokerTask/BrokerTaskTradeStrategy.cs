@@ -123,7 +123,6 @@ namespace VirtualBroker
 
             Utils.Logger.Info($"StrategyBrokerTask.Run() ends.");
             Utils.ConsoleWriteLine(ConsoleColor.Yellow, true, $"****  BrokerTask ends: '{BrokerTaskSchema.Name}'");
-            Console.WriteLine();
         }
 
 
