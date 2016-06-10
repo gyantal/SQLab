@@ -41,10 +41,7 @@ namespace SQLab.Controllers
 #if DEBUG
             serveDeveloperDashboard = true;
 #endif
-            var urlPath = "";
-            if (HttpContext.Request.Path.HasValue)
-                urlPath = HttpContext.Request.Path.Value;
-
+            var urlPath = (HttpContext.Request.Path.HasValue) ? HttpContext.Request.Path.Value : String.Empty;
             if (urlPath.ToLower() == "/developerdashboard") // a specific path can always force to get the proper page. Irrespective of DEBUG or RELEASE
                 serveDeveloperDashboard = true;
             if (urlPath.ToLower() == "/userdashboard") // a specific path can always force to get the proper page. Irrespective of DEBUG or RELEASE

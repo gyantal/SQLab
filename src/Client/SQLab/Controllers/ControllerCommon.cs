@@ -35,7 +35,7 @@ namespace SQLab.Controllers
                 if (claim.Type == @"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")
                     email = claim.Value;
             }
-            //m_logger.LogInformation("RootHomepageRedirect.Index() is called with email: '" + email + "'");
+            p_logger.LogInformation($"{((p_controller.HttpContext.Request.Path.HasValue) ? p_controller.HttpContext.Request.Path.Value : String.Empty)} is called with email: '" + email + "'");
             if (email == "Unknown")
             {
                 return new RedirectResult("/login");
