@@ -441,6 +441,30 @@ namespace SqCommon
             }
         }
 
+        static List<string> g_authorizedGoogleUsers = null;
+
+        public static bool IsAuthorizedGoogleUsers(IConfigurationRoot p_config, string p_email)
+        {
+            if (g_authorizedGoogleUsers == null)
+            {
+                g_authorizedGoogleUsers = new List<string>() {
+                    p_config["EmailGyantal"].ToLower(),
+                    p_config["EmailGyantal2"].ToLower(),
+                    p_config["EmailSumi"].ToLower(),
+                    p_config["EmailRobin"].ToLower(),
+                    p_config["EmailLaci"].ToLower(),
+                    p_config["EmailBalazs"].ToLower(),
+                    p_config["EmailCharmat0"].ToLower(),
+                    p_config["EmailCharmat1"].ToLower(),
+                    p_config["EmailCharmat2"].ToLower(),
+                    p_config["EmailCharmat3"].ToLower(),
+                    p_config["EmailJCharmat1"].ToLower()
+                };
+            }
+            bool isUserOK = g_authorizedGoogleUsers.Contains(p_email.ToLower());
+            return isUserOK;
+        }
+
         public static IConfigurationRoot InitConfigurationAndInitUtils(string p_configJsonPathWin, string p_configJsonPathLinux)
         {
             // "Microsoft.Extensions.Configuration": "1.0.0-rc2-16054", is based on ASP.NET. It is updated less frequently, it consumes more memory. 

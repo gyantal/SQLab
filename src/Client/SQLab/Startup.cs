@@ -19,8 +19,36 @@ using System.Text.Encodings.Web;
 
 namespace SQLab
 {
+    public interface IWebAppGlobals
+    {
+        DateTime WebAppStartTime { get; set; }
+    }
+
+    class WebAppGlobals : IWebAppGlobals
+    {
+        DateTime m_webAppStartTime = DateTime.UtcNow;
+
+        public DateTime WebAppStartTime
+        {
+            get
+            {
+                return m_webAppStartTime;
+            }
+            set
+            {
+                m_webAppStartTime = value;
+            }
+        }
+    }
+
     public class Startup
     {
+        private static Microsoft.Extensions.Logging.ILogger mStartupLogger;     // not used in Controllers
+
+        //private static SqCommon.IConfigurationRoot SqConfiguration { get; set; }   // don't maket it as a global variable, do DI, dependency injection to services
+
+        private static IWebAppGlobals WebAppGlobals { get; set; }
+
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -34,7 +62,7 @@ namespace SQLab
             //builder.AddJsonFile(configJsonPath, optional: true);       // somehow, it didn't work. But anyway, it is better to use SQCommon.Config, because that makes the x64 translation only once, at start, not every time
 
             builder.AddEnvironmentVariables();
-            Configuration = builder.Build();
+            Configuration = builder.Build();    // this is ASP.Net Config, not Utils.Configuration
         }
 
         public Microsoft.Extensions.Configuration.IConfigurationRoot Configuration { get; }
@@ -45,6 +73,8 @@ namespace SQLab
             // Add framework services. 
             services.AddAuthentication(options => options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
             services.AddMvc();
+            services.AddSingleton(_ => Utils.Configuration);      // this is the proper DependenciInjection (DI) way of pushing it as a service to Controllers
+            services.AddSingleton(_ => WebAppGlobals);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,7 +105,7 @@ namespace SQLab
                 LoginPath = new PathString("/login"),    // if CloudFront string is in the Request Header, then the "/login" should be "https:www.snifferquant.net/login". However, this is a global setting, not URL request dependent. 
                 //So, whatever, leave the temporary solution that Google authentication is HTTP, but after that we move back to HTTPS
                 SlidingExpiration = true,   // default is true
-                ExpireTimeSpan = TimeSpan.FromDays(14),  // default is 14 days
+                ExpireTimeSpan = TimeSpan.FromDays(30),  // default is 14 days
                                                          //CookieHttpOnly = false, // default: true.The default is true, which means the cookie will only be passed to only HTTP requests and is not made available to JS script on the page
                                                          //CookieSecure = CookieSecureOption.Never // default: CookieSecurePolicy.SameAsRequest;
             });
@@ -205,125 +235,132 @@ namespace SQLab
                 });
             });
 
-
-
-
-
-            app.Run(async context =>
+            //app.Map("/", indexApp =>    // The path must not end with a '/'
+   
+            //app.UseMvc();     // see new changes in ASP.Net Core 1.0 routing: http://www.inversionofcontrol.co.uk/asp-net-core-1-0-routing-under-the-hood/
+            app.UseMvc(routes =>
             {
-                //string cloudFrontSuccessfulAuthUri = String.Empty; // "https"
-                if (context.Request.Path.ToString() == "/") // temporary log to see that Origin Custom Headers: CloudFrontSQNet=True is arrived or not
-                {
-                    Console.WriteLine($"Cookies:");
-                    foreach (var cookie in context.Request.Cookies)
-                    {
-                        Console.WriteLine($"{cookie.Key} : {cookie.Value}");
-                    }
-
-                //    foreach (var header in context.Request.Headers)
-                //    {
-                //        Console.WriteLine($"{header.Key} : {header.Value}");
-                //        if (header.Key == "CloudFront-Forwarded-Proto")
-                //        {
-                //            //cloudFrontForwardedProto = header.Value + "://"; //"https"
-                //            cloudFrontSuccessfulAuthUri = "https://" + context.Request.Host.ToString();          // if "CloudFront-Forwarded-Proto" has been found temporary overwrite to HTTPS, even if it comes from HTTP. So we redirect HTTP back to HTTPS
-                //            Console.WriteLine($"cloudFrontForwardedProto = '{header.Value}'");
-                //        }
-                //    }
-                }
-          
-                bool isAuthNeeded = true;   // some files, like static files, etc. will not require authentication. Only main Html codes require that.
-
-                // CookieAuthenticationOptions.AutomaticAuthenticate = true (default) causes User to be set
-                var user = context.User;
-
-                // This is what [Authorize] calls
-                // var user = await context.Authentication.AuthenticateAsync(AuthenticationManager.AutomaticScheme);
-
-                // This is what [Authorize(ActiveAuthenticationSchemes = MicrosoftAccountDefaults.AuthenticationScheme)] calls
-                // var user = await context.Authentication.AuthenticateAsync(MicrosoftAccountDefaults.AuthenticationScheme);
-
-                // Deny anonymous request beyond this point.
-                if (user == null || !user.Identities.Any(identity => identity.IsAuthenticated))
-                {
-                    // This is what [Authorize] calls
-                    // The cookie middleware will intercept this 401 and redirect to /login
-                    //await context.Authentication.ChallengeAsync();
-
-                    await context.Authentication.ChallengeAsync(new AuthenticationProperties()
-                    {
-                        IsPersistent = true    // default: false. whether the authentication session cookie is persisted across multiple Browser sessions/requests.
-                       // RedirectUri = "/"
-                    });
-
-                    // authProp. RedirectUri = the URI After succesfull Auth, which is the '/'. It is not the Uri for the unsuccesfull Auth. That can be found in the "Cookie" auth middleware config 
-
-                    //await context.Authentication.ChallengeAsync(new AuthenticationProperties()
-                    //{
-                    //    RedirectUri = cloudFrontSuccessfulAuthUri + "/"
-                    //});
-
-                    // This is what [Authorize(ActiveAuthenticationSchemes = MicrosoftAccountDefaults.AuthenticationScheme)] calls
-                    // await context.Authentication.ChallengeAsync(MicrosoftAccountDefaults.AuthenticationScheme);
-
-                    return;
-                }
-
-                // Display user information
-                context.Response.ContentType = "text/html";
-
-                switch (context.Request.Path.ToString())
-                {
-                    case "/UserInfo":
-                        await ResponseUserInfo(context);
-                        break;
-                    case "/DeveloperDashboard":
-                        await ResponseDeveloperDashboard(context);
-                        break;
-                    default:
-                        await ResponseIndexHtml(context);
-                        break;
-                }
-
-                
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller}/{action=Index}/{id?}");
+                    //template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            app.UseMvc();     // see new changes in ASP.Net Core 1.0 routing: http://www.inversionofcontrol.co.uk/asp-net-core-1-0-routing-under-the-hood/
+            //app.Run(async context =>
+            //{
+            //    //string cloudFrontSuccessfulAuthUri = String.Empty; // "https"
+            //    //if (context.Request.Path.ToString() == "/") // temporary log to see that Origin Custom Headers: CloudFrontSQNet=True is arrived or not
+            //    //{
+            //    Console.WriteLine($"Cookies:");
+            //    foreach (var cookie in context.Request.Cookies)
+            //    {
+            //        Console.WriteLine($"{cookie.Key} : {cookie.Value}");
+            //    }
+
+            //    //    foreach (var header in context.Request.Headers)
+            //    //    {
+            //    //        Console.WriteLine($"{header.Key} : {header.Value}");
+            //    //        if (header.Key == "CloudFront-Forwarded-Proto")
+            //    //        {
+            //    //            //cloudFrontForwardedProto = header.Value + "://"; //"https"
+            //    //            cloudFrontSuccessfulAuthUri = "https://" + context.Request.Host.ToString();          // if "CloudFront-Forwarded-Proto" has been found temporary overwrite to HTTPS, even if it comes from HTTP. So we redirect HTTP back to HTTPS
+            //    //            Console.WriteLine($"cloudFrontForwardedProto = '{header.Value}'");
+            //    //        }
+            //    //    }
+            //    // }
+
+            //    bool isAuthNeeded = true;   // some files, like static files, etc. will not require authentication. Only main Html codes require that.
+
+            //    // CookieAuthenticationOptions.AutomaticAuthenticate = true (default) causes User to be set
+            //    var user = context.User;
+
+            //    // This is what [Authorize] calls
+            //    // var user = await context.Authentication.AuthenticateAsync(AuthenticationManager.AutomaticScheme);
+
+            //    // This is what [Authorize(ActiveAuthenticationSchemes = MicrosoftAccountDefaults.AuthenticationScheme)] calls
+            //    // var user = await context.Authentication.AuthenticateAsync(MicrosoftAccountDefaults.AuthenticationScheme);
+
+            //    // Deny anonymous request beyond this point.
+            //    if (user == null || !user.Identities.Any(identity => identity.IsAuthenticated))
+            //    {
+            //        // This is what [Authorize] calls
+            //        // The cookie middleware will intercept this 401 and redirect to /login
+            //        //await context.Authentication.ChallengeAsync();
+
+            //        await context.Authentication.ChallengeAsync(new AuthenticationProperties()
+            //        {
+            //            IsPersistent = true    // (no effect; because "/login" will authenticate; default: false. whether the authentication session cookie is persisted across multiple Browser sessions/requests.
+            //                                   // RedirectUri = "/"
+            //        });
+
+            //        // authProp. RedirectUri = the URI After succesfull Auth, which is the '/'. It is not the Uri for the unsuccesfull Auth. That can be found in the "Cookie" auth middleware config 
+
+            //        //await context.Authentication.ChallengeAsync(new AuthenticationProperties()
+            //        //{
+            //        //    RedirectUri = cloudFrontSuccessfulAuthUri + "/"
+            //        //});
+
+            //        // This is what [Authorize(ActiveAuthenticationSchemes = MicrosoftAccountDefaults.AuthenticationScheme)] calls
+            //        // await context.Authentication.ChallengeAsync(MicrosoftAccountDefaults.AuthenticationScheme);
+
+            //        return;
+            //    }
+
+            //    // Display user information
+            //    context.Response.ContentType = "text/html";
+
+            //    // Display user information
+            //    context.Response.ContentType = "text/html";
+
+            //    switch (context.Request.Path.ToString())
+            //    {
+            //        case "/UserInfo":
+            //            await ResponseUserInfo(context);
+            //            break;
+            //        case "/DeveloperDashboard":
+            //            await ResponseDeveloperDashboard(context);
+            //            break;
+            //        default:
+            //            await ResponseIndexHtml(context);
+            //            break;
+            //    }
+            //});
+
 
         }
 
-        private static async Task ResponseIndexHtml(HttpContext p_context)
-        {
-            await ResponseDeveloperDashboard(p_context);
-        }
+        //private static async Task ResponseIndexHtml(HttpContext p_context)
+        //{
+        //    await ResponseDeveloperDashboard(p_context);
+        //}
 
-        private static async Task ResponseUserInfo(HttpContext p_context)
-        {
-            await p_context.Response.WriteAsync("<html><body>");
-            await p_context.Response.WriteAsync("Hello " + (p_context.User.Identity.Name ?? "anonymous") + "<br>");
-            await p_context.Response.WriteAsync("Request.Path '" + (p_context.Request.Path.ToString() ?? "Empty") + "'<br>");
-            foreach (var claim in p_context.User.Claims)
-            {
-                await p_context.Response.WriteAsync(claim.Type + ": " + claim.Value + "<br>");
-            }
+        //private static async Task ResponseUserInfo(HttpContext p_context)
+        //{
+        //    await p_context.Response.WriteAsync("<html><body>");
+        //    await p_context.Response.WriteAsync("Hello " + (p_context.User.Identity.Name ?? "anonymous") + "<br>");
+        //    await p_context.Response.WriteAsync("Request.Path '" + (p_context.Request.Path.ToString() ?? "Empty") + "'<br>");
+        //    foreach (var claim in p_context.User.Claims)
+        //    {
+        //        await p_context.Response.WriteAsync(claim.Type + ": " + claim.Value + "<br>");
+        //    }
 
-            await p_context.Response.WriteAsync("Tokens:<br>");
-            await p_context.Response.WriteAsync("Access Token: " + await p_context.Authentication.GetTokenAsync("access_token") + "<br>");
-            await p_context.Response.WriteAsync("Refresh Token: " + await p_context.Authentication.GetTokenAsync("refresh_token") + "<br>");
-            await p_context.Response.WriteAsync("Token Type: " + await p_context.Authentication.GetTokenAsync("token_type") + "<br>");
-            await p_context.Response.WriteAsync("expires_at: " + await p_context.Authentication.GetTokenAsync("expires_at") + "<br>");
-            await p_context.Response.WriteAsync("<a href=\"/logout\">Logout</a><br>");
-            await p_context.Response.WriteAsync("</body></html>");
-        }
+        //    await p_context.Response.WriteAsync("Tokens:<br>");
+        //    await p_context.Response.WriteAsync("Access Token: " + await p_context.Authentication.GetTokenAsync("access_token") + "<br>");
+        //    await p_context.Response.WriteAsync("Refresh Token: " + await p_context.Authentication.GetTokenAsync("refresh_token") + "<br>");
+        //    await p_context.Response.WriteAsync("Token Type: " + await p_context.Authentication.GetTokenAsync("token_type") + "<br>");
+        //    await p_context.Response.WriteAsync("expires_at: " + await p_context.Authentication.GetTokenAsync("expires_at") + "<br>");
+        //    await p_context.Response.WriteAsync("<a href=\"/logout\">Logout</a><br>");
+        //    await p_context.Response.WriteAsync("</body></html>");
+        //}
 
-        private static async Task ResponseDeveloperDashboard(HttpContext p_context)
-        {
-            string fullPath = (Utils.RunningPlatform() == Platform.Linux) ?
-                    "/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/DeveloperDashboard.html" :
-                    @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\DeveloperDashboard.html";
+        //private static async Task ResponseDeveloperDashboard(HttpContext p_context)
+        //{
+        //    string fullPath = (Utils.RunningPlatform() == Platform.Linux) ?
+        //            "/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/DeveloperDashboard.html" :
+        //            @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\DeveloperDashboard.html";
 
-            string fileStr = System.IO.File.ReadAllText(fullPath);
-            await p_context.Response.WriteAsync(fileStr);  
-        }
+        //    string fileStr = System.IO.File.ReadAllText(fullPath);
+        //    await p_context.Response.WriteAsync(fileStr);  
+        //}
     }
 }

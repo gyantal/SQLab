@@ -7,6 +7,8 @@ using SqCommon;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Authentication;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,93 +16,58 @@ namespace SQLab.Controllers
 {
     //[Route("api/[controller]")]
     [Route("~/", Name = "default")]
-   // [Route("~/login", Name = "login")]
-    [Route("~/access_denied", Name = "access_denied")]
+    // [Route("~/login", Name = "login")]
+    //[Route("~/access_denied", Name = "access_denied")]
     [Route("~/app/{*url}", Name = "app")]
     [Route("~/DeveloperDashboard", Name = "DeveloperDashboard")]
-    [Authorize]
+    [Route("~/UserDashboard", Name = "UserDashboard")]
+    [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
     public class RootHomepageRedirectController : Controller
     {
+        private readonly ILogger<Program> m_logger;
+        private readonly SqCommon.IConfigurationRoot m_config;
+
+        public RootHomepageRedirectController(ILogger<Program> p_logger, SqCommon.IConfigurationRoot p_config)
+        {
+            m_logger = p_logger;
+            m_config = p_config;
+        }
+
         public ActionResult Index()
         {
-            // CookieAuthenticationOptions.AutomaticAuthenticate = true (default) causes User to be set
-            var user = HttpContext.User;
-            // Deny anonymous request beyond this point.
-            if (user == null || !user.Identities.Any(identity => identity.IsAuthenticated))
-            {
-                //return new ChallengeResult("Google", new AuthenticationProperties { RedirectUri = "/" });
+            var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
 
-                return new RedirectResult("/login");
-
-                // This is what [Authorize] calls
-                // The cookie middleware will intercept this 401 and redirect to /login
-                //await HttpContext.Authentication.ChallengeAsync();
-                //HttpContext.Authentication.ChallengeAsync().RunSynchronously();
-                //HttpContext.Authentication.ChallengeAsync();
-
-                // This is what [Authorize(ActiveAuthenticationSchemes = MicrosoftAccountDefaults.AuthenticationScheme)] calls
-                // await context.Authentication.ChallengeAsync(MicrosoftAccountDefaults.AuthenticationScheme);
-                //return null;
-            }
-
-            StringBuilder sbUser = new StringBuilder();
-            sbUser.AppendLine("Hello " + (HttpContext.User.Identity.Name ?? "anonymous"));
-            foreach (var claim in HttpContext.User.Claims)
-            {
-                sbUser.AppendLine(claim.Type + ": " + claim.Value);
-            }
-
-
-
-            bool serveDeveloperDashboard = false;
+            bool serveDeveloperDashboard = false;   // for Index.html, the DEBUG def gives a direction
 #if DEBUG
             serveDeveloperDashboard = true;
-#else
+#endif
             var urlPath = "";
             if (HttpContext.Request.Path.HasValue)
                 urlPath = HttpContext.Request.Path.Value;
-            if (urlPath.ToLower() == "/developerdashboard")
-                serveDeveloperDashboard = true;     // in RELEASE: only temporary, until it is under heavy development. Later, turn this to False.
-#endif
+
+            if (urlPath.ToLower() == "/developerdashboard") // a specific path can always force to get the proper page. Irrespective of DEBUG or RELEASE
+                serveDeveloperDashboard = true;
+            if (urlPath.ToLower() == "/userdashboard") // a specific path can always force to get the proper page. Irrespective of DEBUG or RELEASE
+                serveDeveloperDashboard = false;  
+
             if (serveDeveloperDashboard)
             {
                 // this should work only in local development, not when it is published on the Server as Release. On the server, it can be accessed temporarily with "/DeveloperDashboard.html"
-                // loading files from HDD is 370msec at the first time, later it comes from file cache, so only 10msec. Still it is better to serve small Index.html from RAM
-                string fullPath = (Utils.RunningPlatform() == Platform.Linux) ?
+                // loading files from HDD is 370msec at the first time, later it comes from file cache, so only 10msec. Still, in the future, it is better to serve small Index.html from RAM
+                string fileStr = System.IO.File.ReadAllText(((Utils.RunningPlatform() == Platform.Linux) ?
                     "/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/DeveloperDashboard.html" :
-                    @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\DeveloperDashboard.html";
-             
-                string fileStr = System.IO.File.ReadAllText(fullPath);
+                    @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\DeveloperDashboard.html"));
+                return Content(fileStr, "text/html");
+            } else
+            {
+                string fileStr = System.IO.File.ReadAllText(((Utils.RunningPlatform() == Platform.Linux) ?
+                    "/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/UserDashboard.html" :
+                    @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\UserDashboard.html"));
                 return Content(fileStr, "text/html");
             }
-
-            string email = "Unknown";
-            foreach (var claim in User.Claims)
-            {
-                if (claim.Type == @"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")
-                    email = claim.Value;
-            }
-            //m_logger.LogInformation("RootHomepageRedirect.Index() is called with email: '" + email + "'");
-            //if (email == "Unknown")
-            //{
-            //    return new ChallengeResult("Google", new AuthenticationProperties { RedirectUri = "/" });
-            //}
-
-            //if (Utils.IsAuthorizedGoogleUsers(m_config, email))
-            //{
-            //    StringBuilder sb = new StringBuilder(m_dashboardStr1);
-            //    sb.Append(email).Append(m_dashboardStr2);
-            //    return Content(sb.ToString(), "text/html");   // Fast and protected and cannot be accessed as a File without Google authentication
-            //}
-            ////return View("~/Views/Index.html"); 
-            ////return Redirect("Index.html");
-            //else
-            //{
-            return Content(@"<HTML><body>Google Authorization Is Required. Your Google account: '<strong>" + email + @"'</strong> is not accepted.<br/>" +
-                    @"<A href=""TestAuth/ExternalLogin"">Login here</a> or " +
-                    @"<A href=""TestAuth/ExternalLogout"">logout this Google user </a> and login with another one." +
-                    "</body></HTML>", "text/html");
-            //}
+            
         }
+
+        
     }
 }
