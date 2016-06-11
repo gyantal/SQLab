@@ -13,6 +13,7 @@ namespace HealthMonitor
         public bool IsRealtimePriceServiceTimerEnabled { get; set; } = true;
         public bool IsVBrokerTimerEnabled { get; set; } = true;
         public bool IsProcessingVBrokerMessagesEnabled { get; set; } = true;
+        public bool IsProcessingSQLabWebsiteMessagesEnabled { get; set; } = true;
 
         public bool IsSendErrorEmailAtGracefulShutdown { get; set; } = true;   // switch this off before deployment, and switch it on after deployment; make functionality on the WebSite
 
@@ -307,5 +308,70 @@ namespace HealthMonitor
 
             return sb;
         }
+
+
+        private void InformSupervisors(string p_emailSubject, string p_emailBody, string p_phonecallText, ref Object p_informSupervisorLock, ref DateTime p_lastEmailTime, ref DateTime p_lastPhoneCallTime)
+        {
+            bool doInformSupervisors = false;
+            lock (p_informSupervisorLock)   // if InformSupervisors is called on two different threads at the same time, (if VBroker notified us twice very quickly), we still want to inform user only once
+            {
+                TimeSpan timeFromLastEmail = DateTime.UtcNow - p_lastEmailTime;
+                if (timeFromLastEmail > TimeSpan.FromMinutes(10))
+                {
+                    doInformSupervisors = true;
+                    p_lastEmailTime = DateTime.UtcNow;
+                }
+            }
+
+            if (!doInformSupervisors)
+                return;
+
+            Utils.Logger.Info("InformSupervisors(). Sending Warning email.");
+            try
+            {
+                new Email
+                {
+                    ToAddresses = Utils.Configuration["EmailGyantal"],
+                    Subject = p_emailSubject,
+                    Body = p_emailBody,
+                    IsBodyHtml = true
+                    //IsBodyHtml = false        // has problems with exceptions : /bin/bash: -c: line 1: syntax error near unexpected token `('
+                }.Send();
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "InformSupervisors() email sending is crashed, but we still try to make the PhoneCall.");
+            }
+
+
+            if (!IsRunningAsLocalDevelopment() && !String.IsNullOrEmpty(p_phonecallText))
+            {
+                Utils.Logger.Info("InformSupervisors(). Making Phonecall.");
+
+                TimeSpan timeFromLastCall = DateTime.UtcNow - p_lastPhoneCallTime;
+                if (timeFromLastCall > TimeSpan.FromMinutes(30))
+                {
+                    var call = new PhoneCall
+                    {
+                        FromNumber = Caller.Gyantal,
+                        ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
+                        Message = p_phonecallText,
+                        NRepeatAll = 2
+                    };
+                    // skipped temporarily
+                    bool didTwilioAcceptedTheCommand = call.MakeTheCall();
+                    if (didTwilioAcceptedTheCommand)
+                    {
+                        Utils.Logger.Debug("PhoneCall instruction was sent to Twilio.");
+                        p_lastPhoneCallTime = DateTime.UtcNow;
+                    }
+                    else
+                        Utils.Logger.Error("PhoneCall instruction was NOT accepted by Twilio.");
+                }
+            }
+
+
+        }
+
     }
 }

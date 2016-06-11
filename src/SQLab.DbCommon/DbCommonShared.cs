@@ -306,15 +306,7 @@ namespace DbCommon
 
     public static partial class DbUtils
     {
-        public static string ToStringOrNull(this object o)
-        {
-            return o == null ? null : o.ToString();
-        }
-        public static string ToStringWithoutStackTrace(this Exception e)
-        {
-            string s = (e == null ? null : e.ToString()) ?? String.Empty;
-            return s.Substring(0, Math.Min(s.Length, s.IndexOf("\n   at ") & int.MaxValue));
-        }
+        
         /// <summary> p_whatIsOceLike bits: 1=OperationCanceledException, 2=TaskCanceledException, 4=ThreadAbortException.<para>
         /// Dives into AggregateException. For any e Exception: IsOceLike(e.InnerException) -> IsOceLike(e)</para></summary>
         public static bool IsOceLike(Exception e, int p_whatIsOceLike = 3)

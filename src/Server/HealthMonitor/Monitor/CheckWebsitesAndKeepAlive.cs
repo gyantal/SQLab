@@ -12,7 +12,8 @@ namespace HealthMonitor
         public readonly string[] cWebsitesToCheck = {
             "http://sqhealthmonitor.azurewebsites.net/WebServer/Ping",
             "http://www.snifferquant.com/dac/",
-            "http://strategysniffer.azurewebsites.net" };
+            "http://strategysniffer.azurewebsites.net",
+            "https://www.snifferquant.net/WebServer/Ping"};
 
         bool m_isCheckWebsitesServiceOutageEmailWasSent = false;  // to avoid sending the same warning email every 9 minutes; send only once
         

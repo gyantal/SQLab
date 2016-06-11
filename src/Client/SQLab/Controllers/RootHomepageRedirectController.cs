@@ -21,6 +21,8 @@ namespace SQLab.Controllers
     [Route("~/app/{*url}", Name = "app")]
     [Route("~/DeveloperDashboard", Name = "DeveloperDashboard")]
     [Route("~/UserDashboard", Name = "UserDashboard")]
+    [Route("~/VolatilityIndicesInDifferentMonths", Name = "VolatilityIndicesInDifferentMonths")]
+    [Route("~/VXXAdaptiveConnorLiveBacktest", Name = "VXXAdaptiveConnorLiveBacktest")]
     [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
     public class RootHomepageRedirectController : Controller
     {
@@ -37,32 +39,38 @@ namespace SQLab.Controllers
         {
             var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
 
-            bool serveDeveloperDashboard = false;   // for Index.html, the DEBUG def gives a direction
-#if DEBUG
-            serveDeveloperDashboard = true;
+            var urlPath = (HttpContext.Request.Path.HasValue) ? HttpContext.Request.Path.Value.ToLower() : String.Empty;
+#if DEBUG   // for the Index page, give Dashboard according to DEBUG or RELEASE
+            if (String.IsNullOrWhiteSpace(urlPath) || urlPath == "/")
+                urlPath = "/developerdashboard";
+#else
+            if (String.IsNullOrWhiteSpace(urlPath) || urlPath == "/")
+                urlPath = "/userdashboard";
 #endif
-            var urlPath = (HttpContext.Request.Path.HasValue) ? HttpContext.Request.Path.Value : String.Empty;
-            if (urlPath.ToLower() == "/developerdashboard") // a specific path can always force to get the proper page. Irrespective of DEBUG or RELEASE
-                serveDeveloperDashboard = true;
-            if (urlPath.ToLower() == "/userdashboard") // a specific path can always force to get the proper page. Irrespective of DEBUG or RELEASE
-                serveDeveloperDashboard = false;  
-
-            if (serveDeveloperDashboard)
+            string fileName = String.Empty;
+            switch (urlPath)
             {
-                // this should work only in local development, not when it is published on the Server as Release. On the server, it can be accessed temporarily with "/DeveloperDashboard.html"
-                // loading files from HDD is 370msec at the first time, later it comes from file cache, so only 10msec. Still, in the future, it is better to serve small Index.html from RAM
-                string fileStr = System.IO.File.ReadAllText(((Utils.RunningPlatform() == Platform.Linux) ?
-                    "/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/DeveloperDashboard.html" :
-                    @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\DeveloperDashboard.html"));
-                return Content(fileStr, "text/html");
-            } else
-            {
-                string fileStr = System.IO.File.ReadAllText(((Utils.RunningPlatform() == Platform.Linux) ?
-                    "/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/UserDashboard.html" :
-                    @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\UserDashboard.html"));
-                return Content(fileStr, "text/html");
+                case "/userdashboard":
+                    fileName = "UserDashboard.html";
+                    break;
+                case "/developerdashboard":
+                    fileName = "DeveloperDashboard.html";
+                    break;
+                case "/volatilityindicesindifferentmonths":
+                    fileName = "VolatilityIndicesInDifferentMonths.html";
+                    break;
+                case "/vxxadaptiveconnorlivebacktest":
+                    fileName = "VXXAdaptiveConnorLiveBacktest.html";
+                    break;
+                default:
+                    fileName = "UserDashboard.html";
+                    break;
             }
-            
+
+            string fileStr = System.IO.File.ReadAllText(((Utils.RunningPlatform() == Platform.Linux) ?
+                    $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/{fileName}" :
+                    @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" + fileName));
+            return Content(fileStr, "text/html");
         }
 
         

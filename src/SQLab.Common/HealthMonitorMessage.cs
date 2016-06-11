@@ -17,7 +17,8 @@ namespace SqCommon
         ReportOkFromVirtualBroker,
         SendDailySummaryReportEmail,
         GetHealthMonitorCurrentState,   // not used at the moment
-        GetHealthMonitorCurrentStateToHealthMonitorWebsite
+        GetHealthMonitorCurrentStateToHealthMonitorWebsite,
+        ReportErrorFromSQLabWebsite,
     };
 
     public enum HealthMonitorMessageResponseFormat { None = 0, String, JSON };
@@ -67,15 +68,39 @@ namespace SqCommon
 
         public static void SendException(string p_locationMsg, Exception e, HealthMonitorMessageID p_healthMonId)
         {
-            Utils.Logger.Warn($"HealthMonitorMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
+            //Utils.Logger.Warn($"HealthMonitorMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
+            Utils.Logger.Warn($"HealthMonitorMessage.SendException(): Exception occured in {p_locationMsg}. Exception: '{ e.ToString()}'");
             if (!(new HealthMonitorMessage()
             {
                 ID = p_healthMonId,
-                ParamStr = $"Crash in {p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}",
+                ParamStr = $"Exception occured in {p_locationMsg}. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'",
                 ResponseFormat = HealthMonitorMessageResponseFormat.None
             }.SendMessage().Result))
             {
                 Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
+            }
+        }
+
+        static DateTime gLastStrongAssertMessageTime = DateTime.MinValue;
+        public static async void SendStrongAssert(string p_locationMsg, StrongAssertMessage p_msg, HealthMonitorMessageID p_healthMonId)
+        {
+            //Utils.Logger.Warn($"HealthMonitorMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
+            Utils.Logger.Warn($"HealthMonitorMessage.SendStrongAssert(): StrongAssert in {p_locationMsg}. Message: '{ p_msg}'");
+            if ((DateTime.UtcNow - gLastStrongAssertMessageTime).TotalMinutes > 30)   // don't send it in every minute, just after 30 minutes
+            {
+                var t = (new HealthMonitorMessage()
+                {
+                    ID = p_healthMonId,
+                    ParamStr = $"StrongAssert occured in {p_locationMsg}. Severity: {p_msg.Severity}, Message { p_msg.Message}, StackTrace: { p_msg.StackTrace}",
+                    ResponseFormat = HealthMonitorMessageResponseFormat.None
+                }.SendMessage());
+
+                if (!(await t))
+                {
+                    Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
+                }
+
+                gLastStrongAssertMessageTime = DateTime.UtcNow;
             }
         }
 

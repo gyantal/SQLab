@@ -76,33 +76,33 @@ namespace SqCommon
             {
                 //http://stackoverflow.com/questions/2591755/how-send-html-mail-using-linux-command-line        // this doesn't work for me, because my mailx is Heirloom and -a means attachment
                 //argumentsStr = "-c \"echo '" + Body + "' | mail -a 'Content-type: text/html' -s '" + Subject + "' \"" + ToAddresses + "\"\"";
-//                string argumentsStrTest =
-//@"-c ""(
-//echo """"From: me@xyz.com """"
-//echo """"To: gyantal@gmail.com """"
-//echo """"MIME-Version: 1.0""""
-//echo """"Content-Type: multipart/alternative\; """" 
-//echo ' boundary=""""""""some.unique.value.ABC123/server.xyz.com""""""""' 
-//echo """"Subject: Test HTML e-mail."""" 
-//echo """""""" 
-//echo """"This is a MIME-encapsulated message"""" 
-//echo """""""" 
-//echo """"--some.unique.value.ABC123/server.xyz.com"""" 
-//echo """"Content-Type: text/html"""" 
-//echo """""""" 
-//echo """"\<html\>"""" 
-//echo """"\<head\>"""" 
-//echo """"\<title\>HTML E-mail\</title\>"""" 
-//echo """"\</head\>"""" 
-//echo """"\<body\>"""" 
-//echo """"\<a href=\'http://www.google.com\'\>Click Here\</a\>"""" 
-//echo """"\</body\>"""" 
-//echo """"\</html\>"""" 
-//echo """"------some.unique.value.ABC123/server.xyz.com--"""" 
-//) | sendmail -t""";
+                //                string argumentsStrTest =
+                //@"-c ""(
+                //echo """"From: me@xyz.com """"
+                //echo """"To: gyantal@gmail.com """"
+                //echo """"MIME-Version: 1.0""""
+                //echo """"Content-Type: multipart/alternative\; """" 
+                //echo ' boundary=""""""""some.unique.value.ABC123/server.xyz.com""""""""' 
+                //echo """"Subject: Test HTML e-mail."""" 
+                //echo """""""" 
+                //echo """"This is a MIME-encapsulated message"""" 
+                //echo """""""" 
+                //echo """"--some.unique.value.ABC123/server.xyz.com"""" 
+                //echo """"Content-Type: text/html"""" 
+                //echo """""""" 
+                //echo """"\<html\>"""" 
+                //echo """"\<head\>"""" 
+                //echo """"\<title\>HTML E-mail\</title\>"""" 
+                //echo """"\</head\>"""" 
+                //echo """"\<body\>"""" 
+                //echo """"\<a href=\'http://www.google.com\'\>Click Here\</a\>"""" 
+                //echo """"\</body\>"""" 
+                //echo """"\</html\>"""" 
+                //echo """"------some.unique.value.ABC123/server.xyz.com--"""" 
+                //) | sendmail -t""";
 
                 // see "myknowledge\Linux\OS\Sending Html email from Bash.txt" and we make one big line of Body. Other option is that keep many lines, but write 'echo' in front of them.
-                string preparedHtmlBody = preparedBody.Replace("\"", "\"\"").Replace(@"<", @"\<").Replace(@">", @"\>").Replace(@";", @"\;").Replace(@"'", @"\'").Replace(@"(", @"\(").Replace(@")", @"\)").Replace(@"{", @"\{").Replace(@"}", @"\}").Replace(@"#", @"\#").Replace("\n", "").Replace("\r","");
+                string preparedHtmlBody = preparedBody.Replace("\"", "\"\"").Replace(@"<", @"\<").Replace(@">", @"\>").Replace(@";", @"\;").Replace(@"'", @"\'").Replace(@"(", @"\(").Replace(@")", @"\)").Replace(@"{", @"\{").Replace(@"}", @"\}").Replace(@"#", @"\#").Replace("\n", "").Replace("\r", "");
 
                 argumentsStr =
                 @"-c ""(
@@ -120,10 +120,16 @@ echo """"Content-Type: text/html""""
 echo """""""" 
 echo """"" + preparedHtmlBody + @""""" 
 ) | sendmail -t""";
-                argumentsStr = argumentsStr.Replace("\r", "");  // error was: /bin/bash: $'\r': command not found
+                argumentsStr = argumentsStr.Replace("\r", "");  // bash doesn't like new lines, like \r. error was: /bin/bash: $'\r': command not found
             }
             else
+            {
+                // /bin/bash: -c: line 1: syntax error near unexpected token `(' , but when the same message was sent as Html, it worked
+                if (preparedBody.IndexOf("\r") != -1)
+                    Utils.ConsoleWriteLine(ConsoleColor.Red, "Warning. Linux bash doesn't like NewLines. NewLines can be removed from HTML emails, but not nicely from Text emails. Use IsBodyHtml=True.");
+             
                 argumentsStr = "-c \"echo '" + preparedBody + "' | mail -s '" + Subject + "' \"" + ToAddresses + "\"\"";
+            }
             Utils.Logger.Info("HQEmail.SendLinuxCommandLine() bash command arguments: " + argumentsStr);
             ProcessStartInfo procStartInfo = new ProcessStartInfo("/bin/bash", argumentsStr);
             procStartInfo.RedirectStandardOutput = true;

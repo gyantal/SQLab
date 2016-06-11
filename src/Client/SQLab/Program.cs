@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using System.Security.Cryptography.X509Certificates;
 using SqCommon;
+using System.Threading;
 
 namespace SQLab
 {
@@ -14,25 +15,38 @@ namespace SQLab
     {
         public static void Main(string[] args)
         {
+            string runtimeConfig = "Unknown";
+#if RELEASE
+            runtimeConfig = "RELEASE";
+# elif DEBUG
+            runtimeConfig = "DEBUG";
+#endif
+            Console.WriteLine($"Hello SQLab WebServer, v1.0.11 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+            Console.Title = "SQLab WebServer v1.0.11";
+            if (!Utils.InitDefaultLogger("Client." + typeof(Program).Namespace))    // will be "Client.SQLab.log"
+                return; // if we cannot create logger, terminate app
+            Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+            
             // After Configuring logging, set-up other things
             Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json", "/home/ubuntu/SQ/Client/SQLab/SQLab.Client.SQLab.NoGitHub.json");
-            //Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
-            //HealthMonitorMessage.InitGlobals(HealthMonitorMessage.HealthMonitorServerPublicIpForClients, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
-            //StrongAssert.g_strongAssertEvent += StrongAssertMessageSendingEventHandler;
-            //TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException; // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
+            Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
+            HealthMonitorMessage.InitGlobals(HealthMonitorMessage.HealthMonitorServerPublicIpForClients, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
+            StrongAssert.g_strongAssertEvent += StrongAssertMessageSendingEventHandler;
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException; // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
 
-
-            // for changing the default port 5000 ("UPDATED 2: ASP.NET Core RC2 changes"): http://stackoverflow.com/questions/34212765/how-do-i-get-the-kestrel-web-server-to-listen-to-non-localhost-requests
-            // effect of adding .UseUrls("http://*:80",)
-            // Windows: Firewall will pop up. Allow rule is required.
-            // Linux: exception is thrown at Kestrel start
-            //      Unhandled Exception: System.AggregateException: One or more errors occurred. (Error - 13 EACCES permission denied)--->Microsoft.AspNetCore.Server.Kestrel.Networking.UvException: Error - 13 EACCES permission denied
-            //      at Microsoft.AspNetCore.Server.Kestrel.Networking.Libuv.Check(Int32 statusCode)
-            //      at Microsoft.AspNetCore.Server.Kestrel.Networking.Libuv.tcp_bind(UvTcpHandle handle, SockAddr & addr, Int32 flags)
-            // https://github.com/aspnet/Home/issues/311
-            // A normal user is not allowed to bind sockets to TCP ports < 1024, you need more permissions than the normal user has (read: 'root'-access). The easiest and quickest solution probably is using sudo to start the process, but that's also the most frowned upon solution. The reason is that the process then has every access right on the system.
-            // The cleanest solution and the one that for which Kestrel is developed is using a front-end server / load balancer on port 80(for example nginx, or endpoints in Azure) that forwards the requests to an unprivileged Kestrel on a private port.
-            var host = new WebHostBuilder()
+            try
+            {
+                // for changing the default port 5000 ("UPDATED 2: ASP.NET Core RC2 changes"): http://stackoverflow.com/questions/34212765/how-do-i-get-the-kestrel-web-server-to-listen-to-non-localhost-requests
+                // effect of adding .UseUrls("http://*:80",)
+                // Windows: Firewall will pop up. Allow rule is required.
+                // Linux: exception is thrown at Kestrel start
+                //      Unhandled Exception: System.AggregateException: One or more errors occurred. (Error - 13 EACCES permission denied)--->Microsoft.AspNetCore.Server.Kestrel.Networking.UvException: Error - 13 EACCES permission denied
+                //      at Microsoft.AspNetCore.Server.Kestrel.Networking.Libuv.Check(Int32 statusCode)
+                //      at Microsoft.AspNetCore.Server.Kestrel.Networking.Libuv.tcp_bind(UvTcpHandle handle, SockAddr & addr, Int32 flags)
+                // https://github.com/aspnet/Home/issues/311
+                // A normal user is not allowed to bind sockets to TCP ports < 1024, you need more permissions than the normal user has (read: 'root'-access). The easiest and quickest solution probably is using sudo to start the process, but that's also the most frowned upon solution. The reason is that the process then has every access right on the system.
+                // The cleanest solution and the one that for which Kestrel is developed is using a front-end server / load balancer on port 80(for example nginx, or endpoints in Azure) that forwards the requests to an unprivileged Kestrel on a private port.
+                var host = new WebHostBuilder()
                 .UseUrls("http://*:80", "https://*:443", "http://localhost:5000")        // default only: "http://localhost:5000",  adding "http://*:80" will listen to clients from any IP4 or IP6 address, so Windows Firewall will prompt                 
                 .UseKestrel(options =>
                 {
@@ -70,7 +84,24 @@ namespace SQLab
                 .UseStartup<Startup>()
                 .Build();
 
-            host.Run();
+                host.Run();
+            }
+            catch (Exception e)
+            {
+                HealthMonitorMessage.SendException("SQLab Website Main Thread", e, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+            }
+        }
+
+        // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            HealthMonitorMessage.SendException("SQLab Website TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+        }
+
+        internal static void StrongAssertMessageSendingEventHandler(StrongAssertMessage p_msg)
+        {
+            Utils.Logger.Info("StrongAssertEmailSendingEventHandler()");
+            HealthMonitorMessage.SendStrongAssert("SQLab Website", p_msg, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
         }
 
         private static X509Certificate2 LoadHttpsCertificate()

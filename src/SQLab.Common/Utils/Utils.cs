@@ -330,6 +330,26 @@ namespace SqCommon
             }
         }
 
+        public static string ToStringOrNull(this object o)
+        {
+            return o == null ? null : o.ToString();
+        }
+
+        public static string ToStringWithoutStackTrace(this Exception e)
+        {
+            string s = (e == null ? null : e.ToString()) ?? String.Empty;
+            return s.Substring(0, Math.Min(s.Length, s.IndexOf("\n   at ") & int.MaxValue));
+        }
+
+        public static string ToStringWithShortenedStackTrace(this Exception e, int p_maxLength)
+        {
+            string s = (e == null ? null : e.ToString()) ?? String.Empty;
+            if (s.Length <= p_maxLength)
+                return s;
+            else
+                return s.Substring(0, p_maxLength) + "...";
+        }
+
         public static string FormatInvCult(this string p_fmt, params object[] p_args)
         {
             if (p_fmt == null || p_args == null || p_args.Length == 0)

@@ -154,6 +154,10 @@ namespace HealthMonitor
                 case HealthMonitorMessageID.GetHealthMonitorCurrentStateToHealthMonitorWebsite:
                     CurrentStateToHealthMonitorWebsite(p_tcpClient, p_message);
                     break;
+                case HealthMonitorMessageID.ReportErrorFromSQLabWebsite:
+                    ErrorFromSqLabWebsite(p_tcpClient, p_message);
+                    break;
+
             }
 
             if (p_message.ResponseFormat != HealthMonitorMessageResponseFormat.None)    // if Processing needed Response to Client, we dispose here. otherwise, it was disposed before putting into processing queue

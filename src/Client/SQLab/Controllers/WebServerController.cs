@@ -59,5 +59,34 @@ namespace SQLab.Controllers
 
             return Content(sb.ToString(), "text/html");
         }
+
+        [HttpGet]   // Ping is accessed by the WebJob every 5 minutes (to keep it alive), no no GoogleAuth there
+        public ActionResult HttpRequestHeader()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<html><body>");
+            sb.Append("Request.Headers: <br><br>");
+            foreach (var header in Request.Headers)
+            {
+                sb.Append($"{header.Key} : {header.Value} <br>");
+            }
+            sb.Append("</body></html>");
+
+            return Content(sb.ToString(), "text/html");
+        }
+
+        [HttpGet]   // Ping is accessed by the WebJob every 5 minutes (to keep it alive), no no GoogleAuth there
+        public ActionResult TestHealthMonitorEmailByRaisingException()
+        {
+            string crash = null;
+            Console.WriteLine(crash.ToString());
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<html><body>");
+            sb.Append("TestHealthMonitorEmailByRaisingException: <br><br>");
+            sb.Append("</body></html>");
+
+            return Content(sb.ToString(), "text/html");
+        }
     }
 }

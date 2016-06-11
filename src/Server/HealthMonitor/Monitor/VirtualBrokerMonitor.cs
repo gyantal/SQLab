@@ -11,7 +11,7 @@ namespace HealthMonitor
 {
     public partial class HealthMonitor
     {
-        Object m_lastInformSupervisorLock = new Object();   // null value cannot be locked, so we have to create an object
+        Object m_lastVbInformSupervisorLock = new Object();   // null value cannot be locked, so we have to create an object
         DateTime m_lastVbErrorEmailTime = DateTime.MinValue;    // don't email if it was made in the last 10 minutes
         DateTime m_lastVbErrorPhoneCallTime = DateTime.MinValue;    // don't call if it was made in the last 30 minutes
         List<Tuple<DateTime, bool, HealthMonitorMessage>> m_VbReport = new List<Tuple<DateTime, bool, HealthMonitorMessage>>(); // List<> is not thread safe
@@ -56,69 +56,7 @@ namespace HealthMonitor
             }
 
             Utils.Logger.Info("ErrorFromVirtualBroker().");
-            InformSupervisors("SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { p_message.ParamStr}", "There is an Error in Virtual Broker. ... I repeat: Error in Virtual Broker.");
-        }
-
-        private void InformSupervisors(string p_emailSubject, string p_emailBody, string p_phonecallText)
-        {
-            bool doInformSupervisors = false;
-            lock (m_lastInformSupervisorLock)   // if InformSupervisors is called on two different threads at the same time, (if VBroker notified us twice very quickly), we still want to inform user only once
-            {
-                TimeSpan timeFromLastEmail = DateTime.UtcNow - m_lastVbErrorEmailTime;
-                if (timeFromLastEmail > TimeSpan.FromMinutes(10))
-                {
-                    doInformSupervisors = true;
-                    m_lastVbErrorEmailTime = DateTime.UtcNow;
-                }
-            }
-
-            if (!doInformSupervisors)
-                return;
-
-            Utils.Logger.Info("InformSupervisors(). Sending Warning email.");
-            try
-            {
-                new Email
-                {
-                    ToAddresses = Utils.Configuration["EmailGyantal"],
-                    Subject = p_emailSubject,
-                    Body = p_emailBody,
-                    IsBodyHtml = false
-                }.Send();
-            }
-            catch (Exception e)
-            {
-                Utils.Logger.Error(e, "InformSupervisors() email sending is crashed, but we still try to make the PhoneCall.");
-            }
-            
-
-            if (!IsRunningAsLocalDevelopment())
-            {
-                Utils.Logger.Info("InformSupervisors(). Making Phonecall.");
-
-                TimeSpan timeFromLastCall = DateTime.UtcNow - m_lastVbErrorPhoneCallTime;
-                if (timeFromLastCall > TimeSpan.FromMinutes(30))
-                {
-                    var call = new PhoneCall
-                    {
-                        FromNumber = Caller.Gyantal,
-                        ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
-                        Message = p_phonecallText,
-                        NRepeatAll = 2
-                    };
-                    // skipped temporarily
-                    bool didTwilioAcceptedTheCommand = call.MakeTheCall();
-                    if (didTwilioAcceptedTheCommand)
-                    {
-                        Utils.Logger.Debug("PhoneCall instruction was sent to Twilio.");
-                        m_lastVbErrorPhoneCallTime = DateTime.UtcNow;
-                    }
-                    else
-                        Utils.Logger.Error("PhoneCall instruction was NOT accepted by Twilio.");
-                }
-            }
-
-
+            InformSupervisors("SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { p_message.ParamStr}", "There is an Error in Virtual Broker. ... I repeat: Error in Virtual Broker.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
         }
 
         public void CheckOKMessageArrived(DateTime p_utcStart, string p_triggeredTaskSchemaName) // p_triggeredTaskSchemaName = "UberVXX"
@@ -153,7 +91,7 @@ namespace HealthMonitor
 
             if (expectedMessage == null)    // Send email, make phonecall
             {
-                InformSupervisors($"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} didn't arrive.", $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} did't arrive.", $"Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive. ... I repeat: Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive.");
+                InformSupervisors($"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} didn't arrive.", $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} did't arrive.", $"Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive. ... I repeat: Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
             } else
             {
                 // do nothing. If it was an Error message, the Phonecall was already made when the Error message arrived

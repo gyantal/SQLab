@@ -271,16 +271,25 @@ If we ever want to test Direct connection (not CloudFront indirect), we have to 
 //- check Network	performance from USA server with and without Google Auth of the same page.
 Good, beacause Google Auth is only needed once every 14 days. After that Browser has it in the Cookie. Send it to Kresnel, so there is no extra roundtrip. Great.
 
+//- convert VolatilityIndicesInDifferentMonths, simple JS
+
+//- file logging is needed. Hook Utils.Logger under ASP.logging so we get ASP messages too.
+//- User-access (which user(anonymous or not), what IP, that IP is what country) should be logged into a separate user-access log file, and it can be monitored from the Website.
+No. It is not necessary. It just slows down the whole server.  This is written into a log file. We can filter lines to get only user access, if it is needed (in very rare cases.)
+"0610T19:42:32.499#25#Info: !!! User 'gyantal@gmail.com' requesting '/YahooFinanceForwarder' from ::1."
+//- GetRequestIP(Controller p_controller) implementation properly with CloudFront front-end.
+
+//- if there is a crash in SQLab Website C# code, HealthMonitor is notified. Email is sent. Supervisor can check logfile for (time, crash stackTrace, user, IP, country).
 
 
-- convert VolatilityIndicesInDifferentMonths, simple JS
-- file logging is needed. Hook Utils.Logger under ASP.logging so we get ASP messages too.
-- User-access (which user(anonymous or not), what IP, that IP is what country) should be logged into a separate user-access log file, and it can be monitored from the Websit
-- if there is a crash in C# code, HealthMonitor is notified (time, crash stackTrace, user, IP, country)
-- convert VXXAdaptiveConnorAliveBacktest, simple JS
-- if there is a crash in JS code, HealthMonitor is notified (time, crash stackTrace, user, IP, country)
-- convert, recreate "HealthMonitor", Angular2 and TS
 
+- convert VXXAdaptiveConnorAliveBacktest, simple JS, TradingView is not needed. The whole ConnorPage is superseded by the QuickTester later, 
+so no need to waste time here with fine details.
+	>However, it should support real-time price. By implementing HTTPS version in SQLab website, that will temporarily download from the HQaCompute as HTTP.
+- if there is a crash in JS code, SQLabWebsite is notified, and after HealthMonitor is notified (time, crash stackTrace, user, IP, country)
+
+
+- convert, recreate "HealthMonitor", upgrade to the new Angular2 and TS
 - Detailed report from VBroker to HealthMonitor.exe  (delay)
 	>HealthMonitor.exe can use this detail
 		in HealthMonitor Daily Report email.

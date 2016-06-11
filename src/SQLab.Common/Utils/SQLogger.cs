@@ -46,7 +46,7 @@ namespace SqCommon
         public void Info(Exception p_ex, string p_message)
         {
             // this was an Exception. That is important. Write it to the Console too, not only the log file
-            string str = $"{DateTime.UtcNow.ToString("MMdd'T'HH':'mm':'ss.fff")}#{Thread.CurrentThread.ManagedThreadId}#{LogLevel.Info}: {p_message}, : EXCEPTION - INFO: {p_ex.Message}";
+            string str = $"{DateTime.UtcNow.ToString("MMdd'T'HH':'mm':'ss.fff")}#{Thread.CurrentThread.ManagedThreadId}#{LogLevel.Info}: {p_message}, : EXCEPTION: {p_ex.ToStringWithShortenedStackTrace(400)}";
             Console.WriteLine(str);
             WriteToFileVerbatim(str);
         }
@@ -59,7 +59,7 @@ namespace SqCommon
         public void Warn(Exception p_ex, string p_message)
         {
             // this was an Exception. That is important. Write it to the Console too, not only the log file
-            string str = $"{DateTime.UtcNow.ToString("MMdd'T'HH':'mm':'ss.fff")}#{Thread.CurrentThread.ManagedThreadId}#{LogLevel.Warn}: {p_message}, : EXCEPTION - INFO: {p_ex.Message}";
+            string str = $"{DateTime.UtcNow.ToString("MMdd'T'HH':'mm':'ss.fff")}#{Thread.CurrentThread.ManagedThreadId}#{LogLevel.Warn}: {p_message}, : EXCEPTION: {p_ex.ToStringWithShortenedStackTrace(400)}";
             Console.WriteLine(str);
             WriteToFileVerbatim(str);
         }
@@ -80,7 +80,7 @@ namespace SqCommon
         public void Error(Exception p_ex, string p_message)
         {
             // this was an Exception. That is important. Write it to the Console too, not only the log file
-            string str = $"{DateTime.UtcNow.ToString("MMdd'T'HH':'mm':'ss.fff")}#{Thread.CurrentThread.ManagedThreadId}#{LogLevel.Error}: {p_message}, : EXCEPTION - INFO: {p_ex.Message}";
+            string str = $"{DateTime.UtcNow.ToString("MMdd'T'HH':'mm':'ss.fff")}#{Thread.CurrentThread.ManagedThreadId}#{LogLevel.Error}: {p_message}, : EXCEPTION: {p_ex.ToStringWithShortenedStackTrace(400)}";
             Console.WriteLine(str);
             WriteToFileVerbatim(str);
         }
@@ -101,7 +101,7 @@ namespace SqCommon
         public void Fatal(Exception p_ex, string p_message)
         {
             // this was an Exception. That is important. Write it to the Console too, not only the log file
-            string str = $"{DateTime.UtcNow.ToString("MMdd'T'HH':'mm':'ss.fff")}#{Thread.CurrentThread.ManagedThreadId}#{LogLevel.Fatal}: {p_message}, : EXCEPTION - INFO: {p_ex.Message}";
+            string str = $"{DateTime.UtcNow.ToString("MMdd'T'HH':'mm':'ss.fff")}#{Thread.CurrentThread.ManagedThreadId}#{LogLevel.Fatal}: {p_message}, : EXCEPTION: {p_ex.ToStringWithShortenedStackTrace(400)}";
             Console.WriteLine(str);
             WriteToFileVerbatim(str);
         }

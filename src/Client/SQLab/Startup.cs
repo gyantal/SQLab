@@ -43,7 +43,7 @@ namespace SQLab
 
     public class Startup
     {
-        private static Microsoft.Extensions.Logging.ILogger mStartupLogger;     // not used in Controllers
+        //private static Microsoft.Extensions.Logging.ILogger mStartupLogger;     // not used in Controllers
 
         //private static SqCommon.IConfigurationRoot SqConfiguration { get; set; }   // don't maket it as a global variable, do DI, dependency injection to services
 
@@ -94,6 +94,7 @@ namespace SQLab
             //loggerFactory.AddConsole(LogLevel.Debug);     // write to the Console  (if available) window as Colorful multiline (in Kestrel??) . MinLevel can be specified. by default it is LogLevel.Information
             loggerFactory.AddDebug(Microsoft.Extensions.Logging.LogLevel.Debug);       // write to the Debug output window (in VS). MinLevel can be specified. by default it is LogLevel.Information
             // set nLog here if NLog works properly
+            loggerFactory.AddProvider(new SQLabAspLoggerProvider());
 
             // using https://github.com/aspnet/Security/blob/59fc691f4152e6d5017176c0b700ee9834640481/samples/SocialSample/Startup.cs
             app.UseCookieAuthentication(new CookieAuthenticationOptions
@@ -136,7 +137,7 @@ namespace SQLab
             else
             {
                 Console.WriteLine("A_G_CId and A_G_CSe from Config has NOT been found. Cannot initialize GoogelAuthentication.");
-               // mStartupLogger.LogWarning("A_G_CId and A_G_CSe from Config has NOT been found. Cannot initialize GoogelAuthentication.");
+                Utils.Logger.Warn("A_G_CId and A_G_CSe from Config has NOT been found. Cannot initialize GoogelAuthentication.");
             }
 
             app.UseStaticFiles();   // without it, the Server will not return static files like favicon.ico or other htm files
