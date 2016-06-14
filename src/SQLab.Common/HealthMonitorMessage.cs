@@ -66,6 +66,7 @@ namespace SqCommon
             TcpServerPort = p_port;
         }
 
+        // all the exceptions are sent, because they are important Even if many happens in a 30 minutes period
         public static void SendException(string p_locationMsg, Exception e, HealthMonitorMessageID p_healthMonId)
         {
             //Utils.Logger.Warn($"HealthMonitorMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
@@ -73,7 +74,7 @@ namespace SqCommon
             if (!(new HealthMonitorMessage()
             {
                 ID = p_healthMonId,
-                ParamStr = $"Exception occured in {p_locationMsg}. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'",
+                ParamStr = $"Exception in {p_locationMsg}. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'",
                 ResponseFormat = HealthMonitorMessageResponseFormat.None
             }.SendMessage().Result))
             {
@@ -81,17 +82,22 @@ namespace SqCommon
             }
         }
 
-        static DateTime gLastStrongAssertMessageTime = DateTime.MinValue;
-        public static async void SendStrongAssert(string p_locationMsg, StrongAssertMessage p_msg, HealthMonitorMessageID p_healthMonId)
+        public static void SendStrongAssert(string p_locationMsg, StrongAssertMessage p_msg, HealthMonitorMessageID p_healthMonId)
+        {
+            Send(p_locationMsg, $"StrongAssert. Severity: {p_msg.Severity}, Message { p_msg.Message}, StackTrace: { p_msg.StackTrace}", p_healthMonId);
+        }
+
+        static DateTime gLastMessageTime = DateTime.MinValue;
+        public static async void Send(string p_locationMsg, string p_msg, HealthMonitorMessageID p_healthMonId)
         {
             //Utils.Logger.Warn($"HealthMonitorMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
-            Utils.Logger.Warn($"HealthMonitorMessage.SendStrongAssert(): StrongAssert in {p_locationMsg}. Message: '{ p_msg}'");
-            if ((DateTime.UtcNow - gLastStrongAssertMessageTime).TotalMinutes > 30)   // don't send it in every minute, just after 30 minutes
+            Utils.Logger.Warn($"HealthMonitorMessage.Send(): Msg from {p_locationMsg}. Message: '{ p_msg}'");
+            if ((DateTime.UtcNow - gLastMessageTime).TotalMinutes > 30)   // don't send it in every minute, just after 30 minutes
             {
                 var t = (new HealthMonitorMessage()
                 {
                     ID = p_healthMonId,
-                    ParamStr = $"StrongAssert occured in {p_locationMsg}. Severity: {p_msg.Severity}, Message { p_msg.Message}, StackTrace: { p_msg.StackTrace}",
+                    ParamStr = $"Msg from {p_locationMsg}. {p_msg}",
                     ResponseFormat = HealthMonitorMessageResponseFormat.None
                 }.SendMessage());
 
@@ -99,11 +105,11 @@ namespace SqCommon
                 {
                     Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
                 }
-
-                gLastStrongAssertMessageTime = DateTime.UtcNow;
+                gLastMessageTime = DateTime.UtcNow;
             }
         }
 
+        
 
         public void SerializeTo(BinaryWriter p_binaryWriter)
         {

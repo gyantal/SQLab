@@ -51,12 +51,12 @@
             background: #fff;
             background: linear-gradient(#f6f6f6 0, #fff 50px);
             background: -o-linear-gradient(#f6f6f6 0, #fff 50px);
-            background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);
+            /*background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);*/
             background: -moz-linear-gradient(#f6f6f6 0, #fff 50px);
             background: -webkit-linear-gradient(#f6f6f6 0, #fff 50px);
             box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-            -o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            -ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            /*-o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);*/
+            /*-ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);*/
             -moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
             -webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         }
@@ -72,146 +72,398 @@
             background: #fff;
             background: linear-gradient(#f6f6f6 0, #fff 50px);
             background: -o-linear-gradient(#f6f6f6 0, #fff 50px);
-            background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);
+            /*background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);*/
             background: -moz-linear-gradient(#f6f6f6 0, #fff 50px);
             background: -webkit-linear-gradient(#f6f6f6 0, #fff 50px);
             box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-            -o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            -ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            /*-o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            -ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);*/
             -moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
             -webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         }
     </style>
+
+
 </head>
 <body>
     <script type="text/javascript" src="//code.jquery.com/jquery-2.1.0.min.js"></script>
-    <script type="text/javascript" src="../charting_library/charting_library.min.js"></script>
-    <script type="text/javascript" src="/js/datafeedVXXAdaptiveConnorLiveBacktest.js"></script>
-    
-
+    <!--<script type="text/javascript" src="../charting_library/charting_library.min.js"></script>
+    <script type="text/javascript" src="/js/datafeedVXXAdaptiveConnorLiveBacktest.js"></script>-->
 
     <script type="text/javascript">
+        // Error handler
+        window.onerror = function (msg, url, line, col, error) {
+            // Note that col & error are new to the HTML 5 spec and may not be
+            // supported in every browser.  It worked for me in Chrome.
+            var extra = !col ? '' : '.\nColumn: ' + col;
+            if (error !== undefined) { //so it won't blow up in the rest of the browsers
+                if (error.stack !== undefined && error.message !== undefined) {
+                    extra += '.\nError.message: ' + error.message;
+                    extra += '.\nError.stack: ' + error.stack;
+                }
+                else
+                    extra += '.\nError: ' + error;
 
+            }
+
+            // dump all previous JS Logs into the message, and attach that too.
+            logsStr = "";
+            pageLogs = Logger.DefaultLogger().getLog(LogLevel.ALL_UNDER_CRITICAL);
+            for (var i = 0; i < pageLogs.length; ++i) {
+                logLevelLog = pageLogs[i];
+                for (var j = 0; j < logLevelLog.length; ++j) {
+                    log = "Time " + logLevelLog[j].time + " :" + logLevelLog[j].args[0] + ".*\n";
+                    logsStr += log;
+                }
+            }
+
+            fullErrorMsg = "Error: " + msg + ".\nUrl: " + url + ".\nLine: " + line + extra + ".\nPrevious Logs:\n" + logsStr;
+
+            // TODO: Report this error via ajax so you can keep track of what pages have JS issues
+            // $.post("logerror.aspx", { "msg" : message });
+
+            var http = new XMLHttpRequest();
+            // var postdata = "JsLog.Info:"
+            // var postdata = "JsLog.Warn:"
+            var postdata = "JsLog.Err:" + fullErrorMsg; //Probably need the escape method for values here, like you did.. like unescape("qwerty")
+
+            http.open("POST", "/JsLog", true);
+
+            //Send the proper header information along with the request
+            //http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            http.setRequestHeader("Content-length", postdata.length);
+
+            //http.onreadystatechange = function () {//Call a function when the state changes.
+            //    if (http.readyState == 4 && http.status == 200) {
+            //        alert(http.responseText);
+            //    }
+            //}
+            http.send(postdata);
+
+
+            // You can view the information in an alert to see things working like this:
+            alert(fullErrorMsg);
+
+            var suppressErrorAlert = true;
+            // If you return true, then error alerts (like in older versions of
+            // Internet Explorer) will be suppressed.
+            return suppressErrorAlert;
+        };
+
+
+        // Logger
+        (function () {
+            "use strict";
+
+            /**
+             * @type {Object.<String, Logger>}
+             */
+            var loggers = {};
+            var canConsoleLog = typeof console == 'object' && typeof console.log == 'function';
+
+
+            /**
+             * Logger class
+             * Provides extended functionality for logging useful even without any
+             * console.log method available.
+             * @constructor
+             * @param {String} name The name of the Logger. Will be used to prefix logged messages.
+             */
+            var Logger = window.Logger = function (name) {
+
+                var logs = {},
+                that = this;
+
+                this.logLevel = LogLevel.DEVELOP; // Log all messages by default.
+
+                (function init() {
+                    logs[LogLevel.DEBUG] = [];
+                    logs[LogLevel.INFO] = [];
+                    logs[LogLevel.WARNING] = [];
+                    logs[LogLevel.ERROR] = [];
+                    logs[LogLevel.CRITICAL] = [];
+                }());
+
+
+                /**
+                 * Logs one or more messages with a certain LogLevel and prints them to
+                 * the console if available.
+                 * @param {Number} level The LogLevel of the message(s).
+                 * @param {...*} params Virtually infinite amount of parameters to log.
+                 */
+                this.log = function (level, params) {
+                    if (!isCombinedLevel(level)) {
+                        Logger.getLogger('LoggerAPI')
+                            .debug('Can\'t log with a combined level', level);
+                        return;
+                    }
+
+                    var time = new Date().getTime(),
+                        logObj = {
+                            logger: name,
+                            time: time,
+                            args: []
+                        },
+                        args = ['"[' + name + ' | ' + time + ']"'];
+
+                    for (var i = 1; i < arguments.length; ++i) {
+                        logObj.args.push(arguments[i]);
+                        args.push('arguments[' + i + ']');
+                    }
+
+                    logs[level].push(logObj);
+
+                    if (canConsoleLog && this.logLevel & level) {
+                        eval('console.log(' + args.join(',') + ');');
+                    }
+                };
+
+
+                /**
+                 * Proxy to log a DEBUG level message.
+                 * @param {...*} params Messages to log.
+                 */
+                this.debug = function (params) {
+                    return proxy(LogLevel.DEBUG, arguments);
+                };
+
+                /**
+                 * Proxy to log an INFO level message.
+                 * @param {...*} params Messages to log.
+                 */
+                this.info = function (params) {
+                    return proxy(LogLevel.INFO, arguments);
+                };
+
+                /**
+                 * Proxy to log a WARNING level message.
+                 * @param {...*} params Messages to log.
+                 */
+                this.warning = function (params) {
+                    return proxy(LogLevel.WARNING, arguments);
+                };
+
+                /**
+                 * Proxy to log an ERROR level message.
+                 * @param {...*} params Messages to log.
+                 */
+                this.error = function (params) {
+                    return proxy(LogLevel.ERROR, arguments);
+                };
+
+                /**
+                 * Proxy to log a CRITICAL level message.
+                 * @param {...*} params Messages to log.
+                 */
+                this.critical = function (params) {
+                    return proxy(LogLevel.CRITICAL, arguments);
+                };
+
+
+                /**
+                 * Gets one or multiple logs by LogLevel.
+                 * @param {Number} loglevel The level(s) of the log(s) to retrieve.
+                 * @return {Array} A copy of the log(s), not the orriginals.
+                 */
+                this.getLog = function (loglevel) {
+                    var result = [];
+                    for (var i = 1; i < loglevel; i = i << 1) {
+                        if (loglevel & i) {
+                            result.push([].concat(logs[i]));
+                        }
+                    }
+                    return result.length == 1 ? result[0] : result;
+                };
+
+
+                /**
+                 * A pretty recurring algorithm to prepend an argument to an existing
+                 * list of arguments. Unfortunately, the arguments object is not a real
+                 * array and thus can't be treated like one, thus this workaround.
+                 */
+                function proxy(level, params) {
+                    var args = [level];
+                    for (var i = 0; i < params.length; ++i) {
+                        args.push(params[i]);
+                    }
+                    return that.log.apply(that, args);
+                }
+
+
+                /**
+                 * Checks if the provided number has more than one bit set.
+                 * @return {Boolean} True if exactly one bit is set, else false.
+                 */
+                function isCombinedLevel(level) {
+                    var foundOnce = false;
+                    for (var i = 1; i <= level; i = i << 1) {
+                        if (level & i) {
+                            if (foundOnce) return false;
+                            foundOnce = true;
+                        }
+                    }
+                    return foundOnce;
+                }
+            };
+
+
+            /**
+             * Stores different logging levels used for distinguishing which messages to
+             * print to the console.
+             * @enum {Number}
+             */
+            var LogLevel = window.LogLevel = {
+                DEBUG: 1,
+                INFO: 2,
+                WARNING: 4,
+                ERROR: 8,
+                CRITICAL: 16,
+                ALL_UNDER_CRITICAL: 31,
+                DEVELOP: 0xFFFF, // Basically everything possible...
+                PRODUCTION: 8 | 16
+            };
+
+
+            /**
+             * Gets an existing or creates and registers a new Logger with the given name.
+             * @param {String} name The name of the Logger.
+             * @return {Logger} The corresponding Logger.
+             */
+            window.Logger.getLogger = function (name) {
+                if (name in loggers) return loggers[name];
+                loggers[name] = new Logger(name);
+                return loggers[name];
+            };
+
+            window.Logger.DefaultLogger = function () {
+                return Logger.getLogger("DefaultLogger");
+            };
+        }());
+    </script>
+
+    <script type="text/javascript">
+        Logger.DefaultLogger().info("**** START");
+        //Logger.getLogger("MainLogger").info("**** START");
         gConnorStrategy = {};
         gTradingViewChartWidget = null;
 
-        TradingView.onready(function () {
-            //https://github.com/tradingview/charting_library/wiki/Widget-Constructor
-            var widget = new TradingView.widget({
-                //fullscreen: true,
-                symbol: 'SQAdaptiveConnor',
-                //symbol: 'AA',
-                interval: 'D',
-                container_id: "tv_chart_container",
-                //	BEWARE: no trailing slash is expected in feed URL
-                datafeed: new Datafeeds.UDFCompatibleDatafeed(gConnorStrategy),
-                library_path: "../charting_library/",
-                locale: "en",
-                //	Regression Trend-related functionality is not implemented yet, so it's hidden for a while
-                drawings_access: { type: 'black', tools: [{ name: "Regression Trend" }] },
+        //TradingView.onready(function () {
+        //    //https://github.com/tradingview/charting_library/wiki/Widget-Constructor
+        //    var widget = new TradingView.widget({
+        //        //fullscreen: true,
+        //        symbol: 'SQAdaptiveConnor',
+        //        //symbol: 'AA',
+        //        interval: 'D',
+        //        container_id: "tv_chart_container",
+        //        //	BEWARE: no trailing slash is expected in feed URL
+        //        datafeed: new Datafeeds.UDFCompatibleDatafeed(gConnorStrategy),
+        //        library_path: "../charting_library/",
+        //        locale: "en",
+        //        //	Regression Trend-related functionality is not implemented yet, so it's hidden for a while
+        //        drawings_access: { type: 'black', tools: [{ name: "Regression Trend" }] },
 
-                charts_storage_url: 'http://saveload.tradingview.com',
-                client_id: 'tradingview.com',
-                user_id: 'public_user_id'
-
-
-                , width: "90%"        //Remark: if you want the chart to occupy all the available space, do not use '100%' in those field. Use fullscreen parameter instead (see below). It's because of issues with DOM nodes resizing in different browsers.
-                , height: 600
-                //https://github.com/tradingview/charting_library/wiki/Featuresets
-                //,enabled_features: ["trading_options"]    
-                //, enabled_features: ["charting_library_debug_mode", "narrow_chart_enabled", "move_logo_to_main_pane"] //narrow_chart_enabled and move_logo_to_main_pane doesn't do anything to me
-                , enabled_features: ["charting_library_debug_mode"]
-                //, disabled_features: ["use_localstorage_for_settings", "volume_force_overlay", "left_toolbar", "control_bar", "timeframes_toolbar", "border_around_the_chart", "header_widget"]
-                , disabled_features: ["border_around_the_chart"]
-                , debug: true   // Setting this property to true makes the chart to write detailed API logs to console. Feature charting_library_debug_mode is a synonym for this field usage.
-                , time_frames: [
-                    //{ text: "All", resolution: "6M" }, crash: first character should be a Number
-                    { text: "5y", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
-                    { text: "60m", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month.
-                    { text: "12m", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month.
-                    //{ text: "6000d", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO NOT WORK. Max days: 350
-                ]
-
-                , overrides: {
-                    "mainSeriesProperties.style": 3,    // area style
-                    "symbolWatermarkProperties.color": "#644"
-                },
+        //        charts_storage_url: 'http://saveload.tradingview.com',
+        //        client_id: 'tradingview.com',
+        //        user_id: 'public_user_id'
 
 
-            });
+        //        , width: "90%"        //Remark: if you want the chart to occupy all the available space, do not use '100%' in those field. Use fullscreen parameter instead (see below). It's because of issues with DOM nodes resizing in different browsers.
+        //        , height: 600
+        //        //https://github.com/tradingview/charting_library/wiki/Featuresets
+        //        //,enabled_features: ["trading_options"]
+        //        //, enabled_features: ["charting_library_debug_mode", "narrow_chart_enabled", "move_logo_to_main_pane"] //narrow_chart_enabled and move_logo_to_main_pane doesn't do anything to me
+        //        , enabled_features: ["charting_library_debug_mode"]
+        //        //, disabled_features: ["use_localstorage_for_settings", "volume_force_overlay", "left_toolbar", "control_bar", "timeframes_toolbar", "border_around_the_chart", "header_widget"]
+        //        , disabled_features: ["border_around_the_chart"]
+        //        , debug: true   // Setting this property to true makes the chart to write detailed API logs to console. Feature charting_library_debug_mode is a synonym for this field usage.
+        //        , time_frames: [
+        //            //{ text: "All", resolution: "6M" }, crash: first character should be a Number
+        //            { text: "5y", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
+        //            { text: "60m", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month.
+        //            { text: "12m", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month.
+        //            //{ text: "6000d", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO NOT WORK. Max days: 350
+        //        ]
 
-            //// it is set in the variables, but it is not updated in the chart.
-            //widget.options.hideSideToolbar = true;    //obsolete(1.1 - 1.5) (use disabled_features instead)
-            //widget.options.time_frames[0].text = "ALL";
-
-            //https://github.com/tradingview/charting_library/wiki/Widget-Methods
-            //widget.onContextMenu(function (unixtime, price) {
-            //    return [{
-            //        position: "top",
-            //        text: "First top menu item, time: " + unixtime + ", price: " + price,
-            //        click: function () { alert("First clicked."); }
-            //    }, {
-            //        position: "top",
-            //        text: "Second top menu item 2",
-            //        click: function () { alert("Second clicked."); }
-            //    }, {
-            //        position: "bottom",
-            //        text: "Bottom menu item",
-            //        click: function () { alert("Third clicked."); }
-            //    }];
-            //});
+        //        , overrides: {
+        //            "mainSeriesProperties.style": 3,    // area style
+        //            "symbolWatermarkProperties.color": "#644"
+        //        },
 
 
-            widget.onChartReady(function () {
+        //    });
 
-                gTradingViewChartWidget = widget;
+        //    //// it is set in the variables, but it is not updated in the chart.
+        //    //widget.options.hideSideToolbar = true;    //obsolete(1.1 - 1.5) (use disabled_features instead)
+        //    //widget.options.time_frames[0].text = "ALL";
 
-                widget.options.time_frames[0].text = "ALL";     // doesn't work; doesn't change the Text
+        //    //https://github.com/tradingview/charting_library/wiki/Widget-Methods
+        //    //widget.onContextMenu(function (unixtime, price) {
+        //    //    return [{
+        //    //        position: "top",
+        //    //        text: "First top menu item, time: " + unixtime + ", price: " + price,
+        //    //        click: function () { alert("First clicked."); }
+        //    //    }, {
+        //    //        position: "top",
+        //    //        text: "Second top menu item 2",
+        //    //        click: function () { alert("Second clicked."); }
+        //    //    }, {
+        //    //        position: "bottom",
+        //    //        text: "Bottom menu item",
+        //    //        click: function () { alert("Third clicked."); }
+        //    //    }];
+        //    //});
 
-                widget.createStudy('Moving Average Exponential', false, false, [26]);       //inputs: (since version 1.2) an array of study inputs.
 
-                //var position = widget.createPositionLine()
-                //    .onReverse(function (text) {
-                //    })
-                //    .onClose(function (text) {
-                //    })
-                //    .setText("PROFIT OF POSITION: $??.? (?.??%)")
-                //    .setQuantity("#X.XX")    // that is the Position in the positionLine (number of shares)
-                //    .setLineLength(3); //  how far is the mark from the right side
-                //position.setPrice(position.getPrice() - 2.0);     // how far is that from the lastBar price.
+        //    widget.onChartReady(function () {
 
-                //var order = widget.createOrderLine()
-                //	.onCancel(function(text) {
-                //	})
-                //	.setText("STOP: 73.5 (5,64%)")
-                //    .setLineLength(3)
-                //	.setQuantity("2");
-                //order.setPrice(order.getPrice() - 2.5);
+        //        gTradingViewChartWidget = widget;
 
-                //widget.createExecutionShape()     // this crashes
-                //	.setText("@1,320.75 Limit Buy 1")
-                //	.setTextColor("rgba(255,0,0,0.5)")
-                //	.setArrowSpacing(25)
-                //	.setArrowHeight(25)
-                //	.setArrowColor("#F00")
-                //	//.setTime(new Date().valueOf() - 3*24*60*60*1000)    // get 3 days earlier than today
-                //    .setTime(new Date(2014,12,1,0,0,0,0).valueOf())    // get 3 days earlier than today
-                //	.setPrice(15.5);
-            });
-        })
+        //        widget.options.time_frames[0].text = "ALL";     // doesn't work; doesn't change the Text
+
+        //        widget.createStudy('Moving Average Exponential', false, false, [26]);       //inputs: (since version 1.2) an array of study inputs.
+
+        //        //var position = widget.createPositionLine()
+        //        //    .onReverse(function (text) {
+        //        //    })
+        //        //    .onClose(function (text) {
+        //        //    })
+        //        //    .setText("PROFIT OF POSITION: $??.? (?.??%)")
+        //        //    .setQuantity("#X.XX")    // that is the Position in the positionLine (number of shares)
+        //        //    .setLineLength(3); //  how far is the mark from the right side
+        //        //position.setPrice(position.getPrice() - 2.0);     // how far is that from the lastBar price.
+
+        //        //var order = widget.createOrderLine()
+        //        //	.onCancel(function(text) {
+        //        //	})
+        //        //	.setText("STOP: 73.5 (5,64%)")
+        //        //    .setLineLength(3)
+        //        //	.setQuantity("2");
+        //        //order.setPrice(order.getPrice() - 2.5);
+
+        //        //widget.createExecutionShape()     // this crashes
+        //        //	.setText("@1,320.75 Limit Buy 1")
+        //        //	.setTextColor("rgba(255,0,0,0.5)")
+        //        //	.setArrowSpacing(25)
+        //        //	.setArrowHeight(25)
+        //        //	.setArrowColor("#F00")
+        //        //	//.setTime(new Date().valueOf() - 3*24*60*60*1000)    // get 3 days earlier than today
+        //        //    .setTime(new Date(2014,12,1,0,0,0,0).valueOf())    // get 3 days earlier than today
+        //        //	.setPrice(15.5);
+        //    });
+        //})
 
     </script>
 
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
-    <script src="http://www.flotcharts.org/flot/jquery.flot.js"></script>
-    <script src="http://www.flotcharts.org/flot/jquery.flot.time.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.time.js"></script>
 
 
 
 
     <h2>Adaptive Connor-Autocorrelation: VXX 'FT Direction Probability' strategy. <small style="font-size: 0.6em; font-weight: normal">Alive Backtest (forever up-to-date)</small></h2>
     <p class="labelStyle">Lookback Days [1-200]:</p> <input type="text" id="idLookbackDays" value="100" min="1" max="200" size="3" /><br>
-    <p class="labelStyle">ProbDailyFT Threshold [0%-100%]</p> <input type="text" id="idThreshold" value="48" min="0" max="100" size="3" /> <small>%  (exactly this and under this is MR regime; =100 means full MR; =0 means full FT)</small> <br>
+    <p class="labelStyle">ProbDailyFT Threshold [0%-100%]</p> <input type="text" id="idThreshold" value="47" min="0" max="100" size="3" /> <small>%  (exactly this and under this is MR regime; =100 means full MR; =0 means full FT)</small> <br>
     <p class="labelStyle">Short VXX Leverage: [0.00-2.00]</p> <input type="text" id="idShortLeverage" value="1" min="0" max="2" size="2" />
 
     <!--<input id="startButton" type="submit" value="Start alive backtest">   don't do Form Submit, because that Submits the page, which reload the page -->
@@ -222,7 +474,10 @@
   <pre style="font-size: 1.2em; font-weight: bold" id="idOutputImportantText"></pre>
     <p class="chartTitleStyle">Portfolio Value (PV) (Flotchart)</p>
     <div id="idOutputPVChart"></div>
-    <p class="chartTitleStyle">Portfolio Value (PV) (TradingViewChart). <span class="labelAlertStyle">Press the largest timeframe after backtest is ready to zoom out!</span></p>
+
+    <!--<p class="chartTitleStyle">Portfolio Value (PV) (TradingViewChart). 
+    <span class="labelAlertStyle">Press the largest timeframe after backtest is ready to zoom out!</span></p>-->
+
     <div id="tv_chart_container"></div>
     <p class="chartTitleStyle">FT regimes</p>
     <div id="idOutputRegimeChart"></div>
@@ -233,7 +488,7 @@
     <small>
         <b>Strategy summary: </b> For every day, determine if it is a FollowThrough (FT) day (if up day is followed by up day or down day followed by down day). Otherwise it is a Mean Reversion (MR) day.
         Calculate the 'FT day probability' by the frequency of occurence in the last X days (lookback days = 50, 100, 200).
-        Define a threshold (like p=48% probability) that separates FT and MR regimes.
+        Define a threshold (like p=47% probability) that separates FT and MR regimes.
         In FT regime, play FT, in MR regime play MR for the next day.
     </small>
     <br><br>
@@ -241,7 +496,7 @@
         <b>Backtest notes: </b><br>
         -StartDate is 2009-12-31 (about 200 days after VXX was born), so different lookbacks can be compared fairly. EndDate is today using the realtime price.<br>
         -Portfolio Value (PV) starts at $1.0.<br>
-        -ProbDailyFT Threshold: <i>if 48% is specified, the >48.001% is good FT regime (for example 49% is still a good regime); but exact 48.00% is a bad MR regime.</i> We call FT regime good regime because that was the dominant regime historically.
+        -ProbDailyFT Threshold: <i>if 47% is specified, the >47.001% is good FT regime (for example 49% is still a good regime); but exact 47.00% is a bad MR regime.</i> We call FT regime good regime because that was the dominant regime historically.
     </small>
 
     <pre id="idOutputNotImportantText"></pre>
@@ -249,6 +504,8 @@
 
     <script>
         $(window).load(function () {
+
+            Logger.DefaultLogger().info("window.load()");
 
             // create a script here, with the today date in the URL
             var today = new Date();
@@ -259,7 +516,7 @@
             var head = document.getElementsByTagName('head')[0];
             var script = document.createElement('script');
             script.type = 'text/javascript';
-            script.src = "http://hqacompute.cloudapp.net/q/yff?yffOutFormat=json&yffColumns=dc1&yffOutVar=histVXXPriceOrig&yffUri=ichart.finance.yahoo.com/table.csv&s=VXX&a=0&b=30&c=2009&d=" + mm + "&e=" + dd + "&f=" + yyyy + "&g=d&ignore=.csv";
+            script.src = "/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dc1&yffOutVar=histVXXPriceOrig&yffUri=ichart.finance.yahoo.com/table.csv&s=VXX&a=0&b=30&c=2009&d=" + mm + "&e=" + dd + "&f=" + yyyy + "&g=d&ignore=.csv";
             head.appendChild(script);
 
 
@@ -288,6 +545,10 @@
         };
 
         document.getElementById("startButton").onclick = function () {
+            Logger.DefaultLogger().info("startButton.onClick() was called.");
+            //pageLogs = Logger.getLogger("MainLogger").getLog(LogLevel.CRITICAL);
+            //call_something_undefined();
+
             if (typeof histVXXPriceOrig === 'undefined') {
                 alert('VXX historical data is not yet downloaded. Wait 2 seconds and try it again.');
                 return;
@@ -297,7 +558,7 @@
                 alert('Please consider: lookbackDays in [1..200]');
                 return;
             }
-            //in real life I used: double m_probDailyFTGoodFtRegimeThreshold = 0.480001;-->
+            //in real life I used: double m_probDailyFTGoodFtRegimeThreshold = 0.470001;-->
             var regimeFTthresholdPct = Number(document.getElementById("idThreshold").value) / 100 + 0.000001;
             var shortLeverage = Number(document.getElementById("idShortLeverage").value);
 
@@ -430,17 +691,17 @@
             //    gTradingViewChartWidget.load(json);
             //});
 
-
-            // 6. Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
-            ////***!!!!This is the best if we have to work with the official Chart, but postMessage works without this
-            // this part will set up the Timeframes bar properly, but later is chart.onReady() you have to click the first button by "dateRangeDiv.children['0'].click();"
-            gDatafeedObject = null; // purge it, so setInterval() will not update the Chart every 10 seconds
-            gTradingViewChartWidget.remove();       // this is the way to the widget.options to be effective
-            //gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
-            gTradingViewChartWidget.options.time_frames[0].text = "61m";    // I can calculate dynamically, but not important now.
-            gTradingViewChartWidget.options.time_frames[1].text = "6y";
-            //gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
-            gTradingViewChartWidget.create()
+            //// Disable TradingView chart. Later, we MAY make it alive, as the TestBed for TradingView charting for the big QuickTester app. Even though, is is not necessary to make it Live.
+            //// 6. Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
+            //////***!!!!This is the best if we have to work with the official Chart, but postMessage works without this
+            //// this part will set up the Timeframes bar properly, but later is chart.onReady() you have to click the first button by "dateRangeDiv.children['0'].click();"
+            //gDatafeedObject = null; // purge it, so setInterval() will not update the Chart every 10 seconds
+            //gTradingViewChartWidget.remove();       // this is the way to the widget.options to be effective
+            ////gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
+            //gTradingViewChartWidget.options.time_frames[0].text = "61m";    // I can calculate dynamically, but not important now.
+            //gTradingViewChartWidget.options.time_frames[1].text = "6y";
+            ////gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
+            //gTradingViewChartWidget.create()
 
             //// 3. Refresh TVChart (make it call the getBars()), version 3: parent.removeChild(iFrame); and append again, // good for resize() iframe, but doesn't rebuild the Toolbars
             ////redraw chart, see https://github.com/tradingview/charting_library/issues/155 ,but changing options.width doesn't work for me; for that you have to do it on the iFrame
@@ -507,7 +768,7 @@
                 }
             };
         </script>
-        <script src="http://hqacompute.cloudapp.net/q/rtp?s=VXX&f=l&jsonp=realtimepriceCallback"></script>
+        <script src="/rtp?s=VXX&f=l&jsonp=realtimepriceCallback"></script>
 
 
 </body>

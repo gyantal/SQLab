@@ -143,9 +143,29 @@ namespace SQLab
                     //_traceSource.TraceEvent(GetEventType(logLevel), eventId.Id, message);
                 }
 
-                if (exception != null)
-                    HealthMonitorMessage.SendException("SQLab Website AspLogger", exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+                if (exception != null && IsSendableToHealthMonitorForEmailing(exception))
+                    HealthMonitorMessage.SendException("Website.C#.AspLogger", exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
 
+            }
+
+            private bool IsSendableToHealthMonitorForEmailing(Exception p_exception)
+            {
+                // anonymous people sometimes connect and we have SSL or authentication errors
+                // also we are not interested in Kestrel Exception. Some of these exceptions are not bugs, but correctSSL or Authentication fails.
+                // we only interested in our bugs our Controller C# code
+                string fullExceptionStr = p_exception.ToString();
+                if (fullExceptionStr.IndexOf("SSL Handshake failed with OpenSSL error") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf("ECONNRESET connection reset by peer") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf("The handshake failed due to an unexpected packet format") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf("ENOTCONN socket is not connected") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf("Authentication failed because the remote party has closed the transport stream") != -1)
+                    return false;
+
+                return true;
             }
 
             public void Dispose()

@@ -88,20 +88,20 @@ namespace SQLab
             }
             catch (Exception e)
             {
-                HealthMonitorMessage.SendException("SQLab Website Main Thread", e, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+                HealthMonitorMessage.SendException("Website.C#.MainThread", e, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
             }
         }
 
         // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
-            HealthMonitorMessage.SendException("SQLab Website TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+            HealthMonitorMessage.SendException("Website.C#.TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
         }
 
         internal static void StrongAssertMessageSendingEventHandler(StrongAssertMessage p_msg)
         {
             Utils.Logger.Info("StrongAssertEmailSendingEventHandler()");
-            HealthMonitorMessage.SendStrongAssert("SQLab Website", p_msg, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+            HealthMonitorMessage.SendStrongAssert("Website.C#.StrongAssert", p_msg, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
         }
 
         private static X509Certificate2 LoadHttpsCertificate()

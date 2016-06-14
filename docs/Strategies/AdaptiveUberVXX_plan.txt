@@ -281,13 +281,13 @@ No. It is not necessary. It just slows down the whole server.  This is written i
 
 //- if there is a crash in SQLab Website C# code, HealthMonitor is notified. Email is sent. Supervisor can check logfile for (time, crash stackTrace, user, IP, country).
 
-
-
-- convert VXXAdaptiveConnorAliveBacktest, simple JS, TradingView is not needed. The whole ConnorPage is superseded by the QuickTester later, 
+//- convert VXXAdaptiveConnorAliveBacktest, simple JS, TradingView is not needed. The whole ConnorPage is superseded by the QuickTester later, 
 so no need to waste time here with fine details.
 	>However, it should support real-time price. By implementing HTTPS version in SQLab website, that will temporarily download from the HQaCompute as HTTP.
-- if there is a crash in JS code, SQLabWebsite is notified, and after HealthMonitor is notified (time, crash stackTrace, user, IP, country)
+//- catching all JS errors, and logging in JS too
 
+
+	
 
 - convert, recreate "HealthMonitor", upgrade to the new Angular2 and TS
 - Detailed report from VBroker to HealthMonitor.exe  (delay)

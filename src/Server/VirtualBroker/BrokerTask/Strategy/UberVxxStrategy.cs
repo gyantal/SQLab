@@ -159,7 +159,7 @@ namespace VirtualBroker
 
                 // 2. Do some preprocess
                 //Implement that connor vbroker calculates sma100 of prob ft dir, and act according to a threshold
-                //FTDirProb Regime Threshold:	0.48, >48% is good regime (for example 49% is still a good regime); but, 48.00 is a bed regime. In bad regime, we do MR, otherwise FT.
+                //FTDirProb Regime Threshold:	0.47, >47% is good regime (for example 48% is still a good regime); but, 47.00 is a bed regime. In bad regime, we do MR, otherwise FT.
                 //"g:\work\Archi-data\HedgeQuant\docs\gyantal\Studies\VIX\Autocorrelation\VXX auto-correlation with timers\probFTDirSMA100Timer\VXX auto-correlation-from2004_probFTDirSMA100Timer_doInverse 2.xlsx" 
                 m_vxx = new UberVxxQuoteData[101];
                 for (int i = 0; i < 101; i++)
