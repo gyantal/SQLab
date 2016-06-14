@@ -38,7 +38,11 @@ namespace SQLab.Controllers
                 jsLogMessage = reader.ReadToEnd();
             }
 
-            m_logger.LogInformation("JsLog arrived: " + jsLogMessage);
+            string email, ip;
+            ControllerCommon.GetRequestUserAndIP(this, out email, out ip);
+            string jsLogMsgWithOrigin = $"User '{email}' from '{ip}': {jsLogMessage}";
+
+            m_logger.LogInformation("JsLog arrived: " + jsLogMsgWithOrigin);
             // get the control string, which is until the first ":".  e.g. "JsLog.Err:Error: Uncaught ReferenceError:..."
             int logLevelInd = jsLogMessage.IndexOf(':');
             if (logLevelInd == -1)
@@ -49,7 +53,7 @@ namespace SQLab.Controllers
             string logLevel = jsLogMessage.Substring(0, logLevelInd);
             if (logLevel == "JsLog.Err")
             {   // notify HealthMonitor to send an email
-                HealthMonitorMessage.Send("Website.JS", jsLogMessage, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+                HealthMonitorMessage.Send("Website.JS", jsLogMsgWithOrigin, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
 
             }
 

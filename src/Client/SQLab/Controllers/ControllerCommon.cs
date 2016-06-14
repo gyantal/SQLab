@@ -29,14 +29,11 @@ namespace SQLab.Controllers
             //{
             //    sbUser.AppendLine(claim.Type + ": " + claim.Value);
             //}
-            
-            string email = "Unknown";
-            foreach (var claim in p_controller.User.Claims)
-            {
-                if (claim.Type == @"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")
-                    email = claim.Value;
-            }
-            p_logger.LogInformation($"!!! User '{email}' requesting '{((p_controller.HttpContext.Request.Path.HasValue) ? p_controller.HttpContext.Request.Path.Value : String.Empty)}' from {GetRequestIP(p_controller)}.");
+
+            string email, ip;
+            GetRequestUserAndIP(p_controller, out email, out ip);
+
+            p_logger.LogInformation($"!!! User '{email}' from '{ip}' requesting '{((p_controller.HttpContext.Request.Path.HasValue) ? p_controller.HttpContext.Request.Path.Value : String.Empty)}'.");
             if (email == "Unknown")
             {
                 return new RedirectResult("/login");
@@ -50,6 +47,20 @@ namespace SQLab.Controllers
             }
             else
                 return null;
+        }
+
+        // Some fallback logic can be added to handle the presence of a Load Balancer.  or CloudFront. Checked: CloudFront uses X-Forwarded-For : "82.44.159.196"
+        // http://stackoverflow.com/questions/28664686/how-do-i-get-client-ip-address-in-asp-net-core
+        public static bool GetRequestUserAndIP(Controller p_controller, out string p_email, out string p_ip, bool p_tryUseXForwardHeader = true)
+        {
+            p_email = "Unknown";
+            foreach (var claim in p_controller.User.Claims)
+            {
+                if (claim.Type == @"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")
+                    p_email = claim.Value;
+            }
+            p_ip = GetRequestIP(p_controller);
+            return true;
         }
 
         // Some fallback logic can be added to handle the presence of a Load Balancer.  or CloudFront. Checked: CloudFront uses X-Forwarded-For : "82.44.159.196"

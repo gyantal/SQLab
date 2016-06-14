@@ -501,6 +501,7 @@
 
     <pre id="idOutputNotImportantText"></pre>
 
+    <button id="testJsCrashToHealthMonitorButton">Test JavaScript crash for HealthMonitor email</button>
 
     <script>
         $(window).load(function () {
@@ -750,6 +751,12 @@
 
         }
 
+
+        document.getElementById("testJsCrashToHealthMonitorButton").onclick = function () {
+            Logger.DefaultLogger().info("testJsCrashToHealthMonitorButton.onClick() was called.");
+            //pageLogs = Logger.getLogger("MainLogger").getLog(LogLevel.CRITICAL);
+            call_something_undefined_to_test_crash();
+        }
     </script>
 
 
