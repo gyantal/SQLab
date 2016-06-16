@@ -8,32 +8,53 @@ namespace HealthMonitor
 {
     public partial class HealthMonitor
     {
-        // You can't create a 'const' array because arrays are objects and can only be created at runtime and const entities are resolved at compile time.
-        public readonly string[] cWebsitesToCheck = {
-            "http://sqhealthmonitor.azurewebsites.net/WebServer/Ping",
-            "http://www.snifferquant.com/dac/",
-            "http://strategysniffer.azurewebsites.net",
-            "https://www.snifferquant.net/WebServer/Ping"};
+        struct DownloadFailStruct
+        {
+            public string url;
+            public int maxAllowedFail;      // usually 0 fails are allowed
+            public int nFail;
+
+            public DownloadFailStruct(string p_url, int p_maxAllowedFail, int p_nFail)
+            {
+                url = p_url;
+                maxAllowedFail = p_maxAllowedFail;
+                nFail = p_nFail;
+            }
+        };
+
+        DownloadFailStruct[] cWebsitesToCheckAndnFail = {
+            new DownloadFailStruct("http://www.snifferquant.com/dac/", 0, 0),
+            new DownloadFailStruct("https://www.snifferquant.net/WebServer/Ping", 1, 0)         // 1 fail is fine. If it fails second time, send Email. The reason is that while we develop SQWebpage, and start/stop/deploy website, this error triggers too many times. (in DEVELOPMENT, it is better to give some leeway)
+            };
 
         bool m_isCheckWebsitesServiceOutageEmailWasSent = false;  // to avoid sending the same warning email every 9 minutes; send only once
-        
+
         public void CheckWebsitesAndKeepAliveTimer_Elapsed(object p_sender)
         {
             Utils.Logger.Info("CheckWebsitesAndKeepAliveTimer_Elapsed() BEGIN");
             try
             {
                 List<string> failedWebsites = new List<string>();
-
-                foreach (var website in cWebsitesToCheck)
+                for (int i = 0; i < cWebsitesToCheckAndnFail.Length; i++)
                 {
-
                     string hmWebsiteStr = String.Empty;
-                    if (Utils.DownloadStringWithRetry(out hmWebsiteStr, website, 5, TimeSpan.FromSeconds(5), false))
-                        Utils.Logger.Info(website + " returned: " + (hmWebsiteStr.Substring(0, (hmWebsiteStr.Length > 45) ? 45 : hmWebsiteStr.Length)).Replace("\r\n", "").Replace("\n", "")); // it is better to see it as one line in the log file
+                    if (Utils.DownloadStringWithRetry(out hmWebsiteStr, cWebsitesToCheckAndnFail[i].url, 5, TimeSpan.FromSeconds(5), false))
+                    {
+                        cWebsitesToCheckAndnFail[i].nFail = 0;
+                        Utils.Logger.Info(cWebsitesToCheckAndnFail[i].url + " returned: " + (hmWebsiteStr.Substring(0, (hmWebsiteStr.Length > 45) ? 45 : hmWebsiteStr.Length)).Replace("\r\n", "").Replace("\n", "")); // it is better to see it as one line in the log file
+                    }
                     else
                     {
-                        Utils.Logger.Info("Failed download multiple (5x) times :" + website);
-                        failedWebsites.Add(website);
+                        Utils.Logger.Info("Failed download multiple (5x) times :" + cWebsitesToCheckAndnFail[i].url);
+
+                        if (cWebsitesToCheckAndnFail[i].nFail >= cWebsitesToCheckAndnFail[i].maxAllowedFail)
+                        {
+                            failedWebsites.Add(cWebsitesToCheckAndnFail[i].url);
+                        }
+                        else
+                        {
+                            cWebsitesToCheckAndnFail[i].nFail++;
+                        }
                     }
                 }
 

@@ -164,6 +164,8 @@ namespace SQLab
                     return false;
                 if (fullExceptionStr.IndexOf("Authentication failed because the remote party has closed the transport stream") != -1)
                     return false;
+                if (fullExceptionStr.IndexOf(@"The path in 'value' must start with '/'") != -1)
+                    return false;
 
                 return true;
             }

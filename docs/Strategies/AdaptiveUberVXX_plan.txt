@@ -287,9 +287,21 @@ so no need to waste time here with fine details.
 //- catching all JS errors, and logging in JS too
 
 
-	
+
+
+
+
+
+
+
+
+//- upgrade to it: Today we’re happy to announce that we are shipping Angular 2.0.0-rc2.
+
+//- fix that "SQ HealthMonitor: WARNING! The following downloads are failed multiple (5x) times: https://www.snifferquant.net/WebServer/Ping"	
 
 - convert, recreate "HealthMonitor", upgrade to the new Angular2 and TS
+	- keep the Red favico.ico
+
 - Detailed report from VBroker to HealthMonitor.exe  (delay)
 	>HealthMonitor.exe can use this detail
 		in HealthMonitor Daily Report email.

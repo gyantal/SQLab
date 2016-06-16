@@ -103,11 +103,11 @@ namespace HealthMonitor
             {
                 Utils.Logger.Info("ScheduleDailyTimers() BEGIN");
                 // "if I don't hit the site for 10-15 minutes, it goes to sleep"; "default configuration of an IIS Application pool that is set to have an idle-timeout of 20 minutes"
-                m_checkWebsitesAndKeepAliveTimer = new System.Threading.Timer(new TimerCallback(CheckWebsitesAndKeepAliveTimer_Elapsed), null, TimeSpan.Zero, TimeSpan.FromMinutes(9.0));
+                m_checkWebsitesAndKeepAliveTimer = new System.Threading.Timer(new TimerCallback(CheckWebsitesAndKeepAliveTimer_Elapsed), null, TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(9.0));
 
-                m_checkAmazonAwsInstancesTimer = new System.Threading.Timer(new TimerCallback(CheckAmazonAwsInstances_Elapsed), null, TimeSpan.Zero, TimeSpan.FromMinutes(60.0));
+                m_checkAmazonAwsInstancesTimer = new System.Threading.Timer(new TimerCallback(CheckAmazonAwsInstances_Elapsed), null, TimeSpan.FromSeconds(40), TimeSpan.FromMinutes(60.0));
 
-                m_rtpsTimer = new System.Threading.Timer(new TimerCallback(RtpsTimer_Elapsed), null, TimeSpan.FromSeconds(40), TimeSpan.FromMinutes(cRtpsTimerFrequencyMinutes));
+                m_rtpsTimer = new System.Threading.Timer(new TimerCallback(RtpsTimer_Elapsed), null, TimeSpan.FromSeconds(50), TimeSpan.FromMinutes(cRtpsTimerFrequencyMinutes));
 
                 m_heartbeatTimer = new System.Threading.Timer((e) =>    // Heartbeat log is useful to find out when VM was shut down, or when the App crashed
                 {
