@@ -16,7 +16,7 @@ serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtua
 serverPort = 22
 serverUser = "ubuntu"
 
-excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties"])
+excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties", "node_modules"])
 excludeFileExts = set(["sln", "xproj", "log", "sqlog", "ps1", "py", "sh", "user"])
 
 # "mkdir -p" means Create intermediate directories as required. 

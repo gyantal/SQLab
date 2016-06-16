@@ -10,6 +10,8 @@ os.chdir("/home/ubuntu/SQ/Client/SQLab/src")
 print('dotnet restore')
 call(["dotnet", "restore"])
 os.chdir("/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab")
+print('npm install  (restoring folder node_modules...)')
+call(["npm", "install"])
 #print('dotnet run --configuration Release')         # the default is the Debug configuration in the project.json file
 #call(['dotnet', 'run', '--configuration', 'Release']) # before dotnet version #2777, `dotnet run` did Console.IsOutputRedirected, while 'dotnet build' not. That made Console.Colors fail.
 print('dotnet build --configuration Release')         # the default is the Debug configuration in the project.json file

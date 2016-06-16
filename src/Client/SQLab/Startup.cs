@@ -16,6 +16,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using System.Text.Encodings.Web;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.PlatformAbstractions;
+using System.IO;
 
 namespace SQLab
 {
@@ -77,8 +80,36 @@ namespace SQLab
             services.AddSingleton(_ => WebAppGlobals);
         }
 
+        //public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public static void ConfigureStaticFiles(IApplicationBuilder app, IHostingEnvironment hostEnv, ILoggerFactory loggerFactory)
+        {
+            // Configure the options to deploy
+            var fileServerOptions = new FileServerOptions();
+            // Add the physical path to the node_modules folder
+            fileServerOptions.FileProvider = new PhysicalFileProvider(
+                (Utils.RunningPlatform() == SqCommon.Platform.Linux) ?
+                            "/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/node_modules" :
+                            @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\node_modules"
+                //Path.Combine(appEnv.ApplicationBasePath, "node_modules")
+            );
+
+            // Add the request path
+            // (http://docs.asp.net/en/latest/...
+            fileServerOptions.RequestPath = new PathString("/node_modules");
+            // With this setting on ASP will search for the following files upon startup
+            // default.htm
+            // default.html
+            // index.htm
+            // index.html
+            fileServerOptions.EnableDefaultFiles = false;
+            // If we are in development then allow directory browsing
+            fileServerOptions.EnableDirectoryBrowsing = hostEnv.IsDevelopment();
+            // Add those options to the file server
+            app.UseFileServer(fileServerOptions);
+        }
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment hostEnv, ILoggerFactory loggerFactory)
         {
             //loggerFactory.MinimumLevel = LogLevel.Information;
             // root min level: you have to set this the most detailed, because if not ASPlog will not pass it to the NLogExtension
@@ -142,7 +173,8 @@ namespace SQLab
 
             app.UseStaticFiles();   // without it, the Server will not return static files like favicon.ico or other htm files
 
-           
+            ConfigureStaticFiles(app, hostEnv, loggerFactory);
+
             // Choose an authentication type
             app.Map("/login", signoutApp =>
             {
@@ -209,8 +241,11 @@ namespace SQLab
                 });
             });
 
-            // Sign-out to remove the user cookie.
-            app.Map("/logout", signoutApp =>
+         
+
+
+        // Sign-out to remove the user cookie.
+        app.Map("/logout", signoutApp =>
             {
                 signoutApp.Run(async context =>
                 {

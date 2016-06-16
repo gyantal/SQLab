@@ -212,3 +212,5 @@ _Pvt_Extensions/
 ModelManifest.xml
 /logs
 /src/Server/VirtualBroker/Properties/launchSettings.json
+/src/Client/SQLab/typings/globals 
+/src/Client/SQLab/typings/globals

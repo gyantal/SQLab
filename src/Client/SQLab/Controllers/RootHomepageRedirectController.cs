@@ -23,7 +23,10 @@ namespace SQLab.Controllers
     [Route("~/UserDashboard", Name = "UserDashboard")]
     [Route("~/VolatilityIndicesInDifferentMonths", Name = "VolatilityIndicesInDifferentMonths")]
     [Route("~/VXXAdaptiveConnorLiveBacktest", Name = "VXXAdaptiveConnorLiveBacktest")]
+    [Route("~/HealthMonitor", Name = "HealthMonitor")]
+#if !DEBUG
     [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
+#endif
     public class RootHomepageRedirectController : Controller
     {
         private readonly ILogger<Program> m_logger;
@@ -37,8 +40,9 @@ namespace SQLab.Controllers
 
         public ActionResult Index()
         {
+#if !DEBUG
             var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
-
+#endif
             var urlPath = (HttpContext.Request.Path.HasValue) ? HttpContext.Request.Path.Value.ToLower() : String.Empty;
 #if DEBUG   // for the Index page, give Dashboard according to DEBUG or RELEASE
             if (String.IsNullOrWhiteSpace(urlPath) || urlPath == "/")
@@ -62,15 +66,24 @@ namespace SQLab.Controllers
                 case "/vxxadaptiveconnorlivebacktest":
                     fileName = "VXXAdaptiveConnorLiveBacktest.html";
                     break;
+                case "/healthmonitor":
+                    fileName = "HealthMonitor.html";
+                    break;
                 default:
-                    fileName = "UserDashboard.html";
+                    // not recognized, but it is here, because of Prefix. like "GET http://localhost/app/HealthMonintor/systemjs.config.js  "
+                    //fileName = "UserDashboard.html";
                     break;
             }
 
-            string fileStr = System.IO.File.ReadAllText(((Utils.RunningPlatform() == Platform.Linux) ?
-                    $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/{fileName}" :
-                    @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" + fileName));
-            return Content(fileStr, "text/html");
+            if (!String.IsNullOrEmpty(fileName))
+            {
+                string fileStr = System.IO.File.ReadAllText(((Utils.RunningPlatform() == Platform.Linux) ?
+                        $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/{fileName}" :
+                        @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" + fileName));
+                return Content(fileStr, "text/html");
+            }
+            else
+                return NotFound();
         }
 
         

@@ -38,10 +38,16 @@
       ]
     }
   },
-
   "buildOptions": {
     "emitEntryPoint": true,
-    "preserveCompilationContext": true
+    "preserveCompilationContext": true,
+    "compile": { 
+      "exclude": [
+        "wwwroot",
+        "node_modules"
+      ],
+      "excludeFiles": [ "" ]
+    }
   },
 
   "runtimeOptions": {
