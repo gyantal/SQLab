@@ -57,7 +57,7 @@ export class AppComponent implements OnInit {
 
             // Sadly Javascript loves Local time, so work in Local time; easier;
             // 1. StartDate
-            this.m_data.StartDateLoc = new Date(hmData.StartDate); // "2015-12-29 00:49:54.000Z", because of the Z Zero, this UTC string is converted properly to local time
+            this.m_data.StartDateLoc = new Date(hmData.StartDate);  // "2015-12-29 00:49:54.000Z", because of the Z Zero, this UTC string is converted properly to local time
             this.m_data.StartDate = localDateToUtcString_yyyy_mm_dd_hh_mm_ss(this.m_data.StartDateLoc);    // take away the miliseconds from the dateStr
             var localNow = new Date();  // this is local time: <checked>
             //var utcNowGetTime = new Date().getTime();  //getTime() returns the number of seconds in UTC.

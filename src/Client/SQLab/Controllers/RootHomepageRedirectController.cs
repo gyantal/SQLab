@@ -24,6 +24,7 @@ namespace SQLab.Controllers
     [Route("~/VolatilityIndicesInDifferentMonths", Name = "VolatilityIndicesInDifferentMonths")]
     [Route("~/VXXAdaptiveConnorLiveBacktest", Name = "VXXAdaptiveConnorLiveBacktest")]
     [Route("~/HealthMonitor", Name = "HealthMonitor")]
+    [Route("~/QuickTester", Name = "QuickTester")]
 #if !DEBUG
     [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
 #endif
@@ -69,6 +70,9 @@ namespace SQLab.Controllers
                 case "/healthmonitor":
                     fileName = "HealthMonitor.html";
                     break;
+                case "/quicktester":
+                    fileName = "QuickTester.html";
+                    break;
                 default:
                     m_logger.LogWarning($"HttpRequest: '{urlPath}' is not served.");
                     // not recognized, but it is here, because of Prefix. like "GET http://localhost/app/HealthMonintor/systemjs.config.js  "
@@ -86,6 +90,7 @@ namespace SQLab.Controllers
                 {
                     case "/userdashboard":
                     case "/healthmonitor":
+                    case "/quicktester":
 #if !DEBUG
                         string email, ip;
                         ControllerCommon.GetRequestUserAndIP(this, out email, out ip);
