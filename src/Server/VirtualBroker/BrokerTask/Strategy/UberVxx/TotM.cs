@@ -120,13 +120,15 @@ namespace VirtualBroker
             {
                 // In formating numbers you can use "0" as mandatory place and "#" as optional place (not Zero). So:
                 Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"{regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue*100.0:0.##}%.");
-                Utils.Logger.Info($"NextDay: {regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue * 100.0:0.##}%.");
+                Utils.Logger.Info($"{regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue * 100.0:0.##}%.");
+                m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">{regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct * 100:0.0}, T-val:{tValue:F2}, P-val:{pValue * 100:F2}%. Signif. at {significantPvalue * 100.0:0.##}%.</font>");
 
                 forecast = -1.0 * Math.Sign(tValue);    //invert the prediction, because long SPY bullishness means short VXX, and we predict VXX.
             } else
             {
-                Utils.ConsoleWriteLine(null, false, $"{statsToUse.Name}{statsToUse.DayOffset}:{regimeToUse.Name}, SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue * 100:F2}%. NOT Signif. at {significantPvalue * 100.0:0.##}%.");
-                Utils.Logger.Info($"{statsToUse.Name}{statsToUse.DayOffset}:{regimeToUse.Name}, SPY Win%:{winPct*100:0.0}, T-v:{tValue:F2}, P-v:{pValue * 100:F2}%. NOT Signif. at {significantPvalue * 100.0:0.##}%.");
+                Utils.ConsoleWriteLine(null, false, $"{statsToUse.Name}{statsToUse.DayOffset}:{regimeToUse.Name}, SPY Win%:{winPct * 100:0.0}, T-val:{tValue:F2}, P-val:{pValue * 100:F2}%. NOT Signif. at {significantPvalue * 100.0:0.##}%.");
+                Utils.Logger.Info($"{statsToUse.Name}{statsToUse.DayOffset}:{regimeToUse.Name}, SPY Win%:{winPct * 100:0.0}, T-v:{tValue:F2}, P-v:{pValue * 100:F2}%. NOT Signif. at {significantPvalue * 100.0:0.##}%.");
+                m_detailedReportSb.AppendLine($"{statsToUse.Name}{statsToUse.DayOffset}:{regimeToUse.Name}, SPY Win%:{winPct * 100:0.0}, T-val:{tValue:F2}, P-val:{pValue * 100:F2}%. NOT Signif. at {significantPvalue * 100.0:0.##}%.");
             }
 
             return forecast;

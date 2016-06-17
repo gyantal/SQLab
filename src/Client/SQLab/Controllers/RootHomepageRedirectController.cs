@@ -70,6 +70,7 @@ namespace SQLab.Controllers
                     fileName = "HealthMonitor.html";
                     break;
                 default:
+                    m_logger.LogWarning($"HttpRequest: '{urlPath}' is not served.");
                     // not recognized, but it is here, because of Prefix. like "GET http://localhost/app/HealthMonintor/systemjs.config.js  "
                     //fileName = "UserDashboard.html";
                     break;
@@ -80,6 +81,21 @@ namespace SQLab.Controllers
                 string fileStr = System.IO.File.ReadAllText(((Utils.RunningPlatform() == Platform.Linux) ?
                         $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/{fileName}" :
                         @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" + fileName));
+
+                switch (urlPath)
+                {
+                    case "/userdashboard":
+                    case "/healthmonitor":
+#if !DEBUG
+                        string email, ip;
+                        ControllerCommon.GetRequestUserAndIP(this, out email, out ip);
+                        fileStr = fileStr.Replace("unknown@gmail.com", email);
+#endif
+                        break;
+                    default:
+                        break;
+                }
+
                 return Content(fileStr, "text/html");
             }
             else

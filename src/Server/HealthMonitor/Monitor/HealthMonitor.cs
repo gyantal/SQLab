@@ -1,5 +1,6 @@
 ﻿using SqCommon;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -61,7 +62,7 @@ namespace HealthMonitor
             Utils.Logger.Info("****HealthMonitor:Init()");
             m_startTime = DateTime.UtcNow;
 
-            // 1. Get the Current Parameter state from the AzureTable (in case this WebJob was unloaded and restarted)
+            // 1. Get the Current Parameter state from a persisted place (file, or AzureTable) (in case this HealthMonitor was unloaded and restarted)
             //PersistedState = new SavedState().CreateOrOpenEx();
             PersistedState = new SavedState();
             m_mainThreadExitsResetEvent = new ManualResetEventSlim(false);
@@ -217,6 +218,9 @@ namespace HealthMonitor
     color: #FF2020;
     font-weight: bold;
 }
+.sqDetail {
+    font-size: 70%;
+}
     </style>
 </head>
 <body class=""sqNormalText"">
@@ -254,6 +258,8 @@ namespace HealthMonitor
             DateTime utcStartOfToday = DateTime.UtcNow.Date;
             bool wasAllOkToday = true;
             int nReportsToday = 0;
+
+            Dictionary<string, string> lastDetailedVBrokerReports = new Dictionary<string, string>();
             StringBuilder sb2 = new StringBuilder();
             lock (m_VbReport)
             {
@@ -263,16 +269,18 @@ namespace HealthMonitor
                     {
                         wasAllOkToday &= m_VbReport[i].Item2;
                         string strategyName = String.Empty;
-                        int strategyNameInd1 = m_VbReport[i].Item3.ParamStr.IndexOf("BrokerTask ");  // "BrokerTask UberVXX was OK" or "had ERROR"
+                        int strategyNameInd1 = m_VbReport[i].Item3.IndexOf("BrokerTask ");  // "BrokerTask UberVXX was OK" or "had ERROR"
                         if (strategyNameInd1 != -1)
                         {
                             int strategyNameInd2 = strategyNameInd1 + "BrokerTask ".Length;
-                            int strategyNameInd3 = m_VbReport[i].Item3.ParamStr.IndexOf(" ", strategyNameInd2);
+                            int strategyNameInd3 = m_VbReport[i].Item3.IndexOf(" ", strategyNameInd2);
                             if (strategyNameInd3 != -1)
                             {
-                                strategyName = m_VbReport[i].Item3.ParamStr.Substring(strategyNameInd2, strategyNameInd3 - strategyNameInd2);
+                                strategyName = m_VbReport[i].Item3.Substring(strategyNameInd2, strategyNameInd3 - strategyNameInd2);
                             }
                         }
+
+                        lastDetailedVBrokerReports[strategyName] = m_VbReport[i].Item4;
 
                         nReportsToday++;
                         sb2.Append("    - " + m_VbReport[i].Item1.ToString("HH:mm:ss")
@@ -301,6 +309,17 @@ namespace HealthMonitor
             {
                 sb.Append((p_isHtml) ? "<br/>" : Environment.NewLine);
                 sb.Append(sb2);
+            }
+
+            if (lastDetailedVBrokerReports.Count > 0)
+            {
+                sb.AppendLine((p_isHtml) ? @"<br/><hr><br/><span class=""sqDetail""><strong>VBroker Detailed</strong>:<br/>" : "VBroker Detailed:");
+                foreach (var lastDetailedReport in lastDetailedVBrokerReports)
+                {
+                    string detailedRep = lastDetailedReport.Value.Replace("#10ff10", "green");      // on the website: #10ff10 is better, lighter, because of background. In email, background is white. "green" is darker. Better.
+                    sb.Append((p_isHtml) ? $"{detailedRep}<br/>" : detailedRep + Environment.NewLine + Environment.NewLine);        // fine tune later
+                }
+                sb.AppendLine((p_isHtml) ? @"</span>" : $"{Environment.NewLine}");
             }
 
             if (p_isHtml)

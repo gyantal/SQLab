@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Utils = SqCommon.Utils;
 
@@ -32,6 +33,8 @@ namespace VirtualBroker
 
     public partial class UberVxxStrategy : IBrokerStrategy
     {
+        StringBuilder m_detailedReportSb;
+
         Task<Dictionary<string, Tuple<IAssetID, string>>> m_loadAssetIdTask = null;
         Dictionary<string, Tuple<IAssetID, string>> m_tickerToAssetId = null;   // ticker => AssetID : FullTicker mapping
 
@@ -53,8 +56,9 @@ namespace VirtualBroker
             return new UberVxxStrategy();
         }
 
-        public void Init()
+        public void Init(StringBuilder p_detailedReportSb)
         {
+            m_detailedReportSb = p_detailedReportSb;
             m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(new List<string>() { "VXX", "SVXY" }));   // task will start to run on another thread (in the threadpool)
         }
 
@@ -93,6 +97,7 @@ namespace VirtualBroker
 
             Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"Final VXX Forecast:{forecast * 100}%");
             Utils.Logger.Info($"Final VXX Forecast:{forecast * 100}%");
+            m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">Final VXX Forecast:{forecast * 100}%</font>");
 
             List <PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
             if (forecast > 0)   // bullish on VXX: buy VXX or UVXY/TVIX

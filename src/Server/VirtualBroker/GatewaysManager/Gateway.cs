@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Utils = SqCommon.Utils;
+using System.Text;
 
 namespace VirtualBroker
 {
@@ -144,7 +145,7 @@ namespace VirtualBroker
         //+ check the number of Trades in the last 10 minutes < 20; After that, stop everything.
         //+ check the $volume of those trades based on last day price (SQ DB SQL usage).; it should be < 1$ Mil in the last 10 minutes
 
-        internal int PlaceOrder(Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, double p_estimatedPrice, bool p_isSimulatedTrades)
+        internal int PlaceOrder(Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, double p_estimatedPrice, bool p_isSimulatedTrades, StringBuilder p_detailedReportSb)
         {
             // 1. Glitch protections
             int virtualOrderID = GetUniqueVirtualOrderID;
@@ -186,8 +187,10 @@ namespace VirtualBroker
             // 2. Execute different orderTypes MKT, MOC
             // vbOrderId and ibOrderID is different, because some Limit orders, or other tricky orders are executed in real life by many concrete IB orders
             // or there are two opposite vbOrder that cancels each other out at MOC, therefore there is no ibOrder at all
-            Utils.ConsoleWriteLine(null, false, $"Place {(p_isSimulatedTrades ? "Simulated" : "Real")} Order {p_transactionType}  {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
-            Utils.Logger.Info($"Place {(p_isSimulatedTrades?"Simulated":"Real")} Order {p_transactionType} {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
+            Utils.ConsoleWriteLine(null, false, $"{(p_isSimulatedTrades ? "Simulated" : "Real")} {p_transactionType}  {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
+            Utils.Logger.Info($"{(p_isSimulatedTrades?"Simulated":"Real")} {p_transactionType} {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
+            p_detailedReportSb.AppendLine($"{(p_isSimulatedTrades ? "Simulated" : "Real")} {p_transactionType}  {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
+
             if (p_orderExecution == OrderExecution.Market)
             {
                 // Perform minFilter skipped here. But use estimatedTransactionValue. We get the estimatedPrice from the Main Gateway

@@ -25,6 +25,8 @@ namespace VirtualBroker
             Console.WriteLine();
             Utils.Logger.Info($"****  StrategyBrokerTask.Run() starts. BrokerTask Name: {BrokerTaskSchema.Name}");
             Utils.ConsoleWriteLine(ConsoleColor.Cyan, true, $"****  BrokerTask starts: '{BrokerTaskSchema.Name}'");
+            StringBuilder detailedReportSb = new StringBuilder();
+            detailedReportSb.AppendLine($"{DateTime.UtcNow.ToString("MM-dd'T'HH':'mm':'ss': '")}'{BrokerTaskSchema.Name}'");
 
             //************************* 0. Initializations
             var strategyFactoryCreate = (Func<IBrokerStrategy>)BrokerTaskSchema.Settings[BrokerTaskSetting.StrategyFactory];
@@ -58,7 +60,7 @@ namespace VirtualBroker
 
             //************************* 2. Generate futurePortfolios with weights
             // most of the time, it is enough to run the strategy to calculate weights once, and play it for many userPortfolios with the same weights. However, sometimes maybe Strategy has to be run for each user separately
-            Strategy.Init();
+            Strategy.Init(detailedReportSb);
             List<PortfolioPositionSpec> proposedPositionSpecs = null;
             // try to make IsSameStrategyForAllUsers true, because then it is enough to run the complex Strategy calculation only once, 
             // Strategy gives only a guideline for the BrokerTask, who customize it to portfolios. Modify Leverage (1x, 2x), or change trading instrument (long XIV, instead of short VXX)
@@ -89,7 +91,7 @@ namespace VirtualBroker
                 
                 //************************* 3.3 Play transactions, don't play too small transactions, however only VbGateway can decide what is small transaction, not VBroker
                 // For example, selling 2 VXX is small in itself, but if VbGateway has another big VXX (MOC) transaction at the same time from another VBroker, than VbGateway can decide to play that 2 VXX too.
-                PlaceTransactionsViaBroker(portfolios[i]);
+                PlaceTransactionsViaBroker(portfolios[i], detailedReportSb);
             }
 
             //*************************  4. Wait until GatewaysManager tells that orders are ready or until timout from expected time
@@ -109,12 +111,15 @@ namespace VirtualBroker
             WriteAllExecutedTransactionsToDB(portfolios);
 
             // ******************* 6. send OK or Error reports to HealthMonitor
-            if (!Controller.IsRunningAsLocalDevelopment())
+            if (!Controller.IsRunningAsLocalDevelopment())      // When VBroker.exe is developed, we don't want to run HealthMonitor.exe every time on localhost
             {
+                string briefReport = (wasAllOrdersOk) ? $"BrokerTask {BrokerTaskSchema.Name} was OK." : $"BrokerTask {BrokerTaskSchema.Name} had ERROR. {errorStr.ToString()} Inform supervisors to investigate log files for more detail. ";
+                string healthMonitorMsg = $"<BriefReport>{briefReport}</BriefReport><DetailedReport>{detailedReportSb.ToString().Replace(Environment.NewLine, "<br/>")}</DetailedReport>";
+
                 if (!new HealthMonitorMessage()
                 {
                     ID = (wasAllOrdersOk) ? HealthMonitorMessageID.ReportOkFromVirtualBroker : HealthMonitorMessageID.ReportErrorFromVirtualBroker,
-                    ParamStr = (wasAllOrdersOk) ? $"BrokerTask {BrokerTaskSchema.Name} was OK." : $"BrokerTask {BrokerTaskSchema.Name} had ERROR. {errorStr.ToString()} Inform supervisors to investigate log files for more detail. ",
+                    ParamStr = healthMonitorMsg,
                     ResponseFormat = HealthMonitorMessageResponseFormat.None
                 }.SendMessage().Result) // Task.Result will block this calling thread as Wait(), and runs the worker task in another ThreadPool thread. Checked.
                     Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
@@ -253,13 +258,14 @@ namespace VirtualBroker
             p_portfolio.ProposedTransactions = transactions;    // only assign at the end, if everything was right, there was no thrown Exception. It is safer to do transactions: all or nothing, not partial
         }
 
-        private void PlaceTransactionsViaBroker(BrokerTaskPortfolio p_portfolio)
+        private void PlaceTransactionsViaBroker(BrokerTaskPortfolio p_portfolio, StringBuilder p_detailedReportSb)
         {
             var transactions = p_portfolio.ProposedTransactions;
             if (transactions.Count == 0)
             {
-                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"***Proposed transactions: none.");
-                Utils.Logger.Info($"***Proposed transactions: none.");
+                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"***Trades: none.");
+                Utils.Logger.Info($"***Trades: none.");
+                p_detailedReportSb.AppendLine($"<font color=\"#10ff10\">***Trades: none.</font>");
                 return;
             }
 
@@ -281,7 +287,7 @@ namespace VirtualBroker
                 var transaction = transactions[i];
                 Utils.Logger.Info($"Placing Order {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
                 Contract contract = new Contract() { Symbol = Strategy.StockIdToTicker(transaction.SubTableID), SecType = "STK", Currency = "USD", Exchange = "SMART" };
-                transaction.VirtualOrderId = Controller.g_gatewaysWatcher.PlaceOrder(p_portfolio.IbGatewayUserToTrade, contract, transaction.TransactionType, transaction.Volume, orderExecution, orderTif, null, null, isSimulatedTrades);
+                transaction.VirtualOrderId = Controller.g_gatewaysWatcher.PlaceOrder(p_portfolio.IbGatewayUserToTrade, contract, transaction.TransactionType, transaction.Volume, orderExecution, orderTif, null, null, isSimulatedTrades, p_detailedReportSb);
             } // don't do anything here. Return, so other portfolio PlaceOrder()-s can be executed too.
         }
 

@@ -9,6 +9,9 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authorization;
+using System.Net.Sockets;
+using System.IO;
+using SqCommon;
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -26,7 +29,7 @@ namespace SQLab.Controllers
             m_config = p_config;
         }
 
-        [HttpGet]   // Ping is accessed by the WebJob every 5 minutes (to keep it alive), no no GoogleAuth there
+        [HttpGet]   // Ping is accessed by the HealthMonitor every 9 minutes (to keep it alive), no no GoogleAuth there
         public ActionResult Ping()
         {
             // pinging Index.html do IO file operation. Also currently it is a Redirection. There must be a quicker way to ping our Webserver. (for keeping it alive)
@@ -34,7 +37,7 @@ namespace SQLab.Controllers
             return Content(@"<HTML><body>Ping. Webserver UtcNow:" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "</body></HTML>", "text/html");
         }
 
-        [HttpGet]   // Ping is accessed by the WebJob every 5 minutes (to keep it alive), no no GoogleAuth there
+        [HttpGet]
         [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
         public ActionResult UserInfo()
         {
@@ -60,7 +63,7 @@ namespace SQLab.Controllers
             return Content(sb.ToString(), "text/html");
         }
 
-        [HttpGet]   // Ping is accessed by the WebJob every 5 minutes (to keep it alive), no no GoogleAuth there
+        [HttpGet]
         public ActionResult HttpRequestHeader()
         {
             StringBuilder sb = new StringBuilder();
@@ -75,7 +78,7 @@ namespace SQLab.Controllers
             return Content(sb.ToString(), "text/html");
         }
 
-        [HttpGet]   // Ping is accessed by the WebJob every 5 minutes (to keep it alive), no no GoogleAuth there
+        [HttpGet]
         public ActionResult TestHealthMonitorEmailByRaisingException()
         {
             string crash = null;
@@ -88,5 +91,60 @@ namespace SQLab.Controllers
 
             return Content(sb.ToString(), "text/html");
         }
+
+        [HttpPost]
+        public ActionResult ReportHealthMonitorCurrentStateToDashboardInJSON()
+        {
+            long highResWebRequestReceivedTime = System.Diagnostics.Stopwatch.GetTimestamp();
+            m_logger.LogInformation("ReportHealthMonitorCurrentStateToDashboardInJSON() is called");
+
+            try
+            {
+                if (Request.Body.CanSeek)
+                {
+                    Request.Body.Position = 0;                 // Reset the position to zero to read from the beginning.
+                }
+                string jsonToBackEnd = new StreamReader(Request.Body).ReadToEnd();
+
+                try
+                {
+                    string messageFromWebJob = null;
+                    using (var client = new TcpClient())
+                    {
+                        Task task = client.ConnectAsync(HealthMonitorMessage.HealthMonitorServerPublicIpForClients, HealthMonitorMessage.DefaultHealthMonitorServerPort);
+                        if (Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10))).Result != task)
+                        {
+                            m_logger.LogError("Error:HealthMonitor server: client.Connect() timeout.");
+                            return Content(@"{""ResponseToFrontEnd"" : ""Error: Error:HealthMonitor server: client.Connect() timeout.", "application/json");
+                        }
+
+                        BinaryWriter bw = new BinaryWriter(client.GetStream());
+                        bw.Write((Int32)HealthMonitorMessageID.GetHealthMonitorCurrentStateToHealthMonitorWebsite);
+                        bw.Write(jsonToBackEnd);
+                        bw.Write((Int32)HealthMonitorMessageResponseFormat.JSON);
+
+                        BinaryReader br = new BinaryReader(client.GetStream());
+                        messageFromWebJob = br.ReadString();
+                        m_logger.LogDebug("ReportHealthMonitorCurrentStateToDashboardInJSON() returned answer: " + messageFromWebJob);
+                    }
+
+                    m_logger.LogDebug("ReportHealthMonitorCurrentStateToDashboardInJSON() after WaitMessageFromWebJob()");
+                    return Content(messageFromWebJob, "application/json");
+                }
+                catch (Exception e)
+                {
+                    m_logger.LogError("Error:HealthMonitor SendMessage exception:  " + e);
+                    return Content(@"{""ResponseToFrontEnd"" : ""Error:HealthMonitor SendMessage exception. Check log file of the WepApp: " + e.Message, "application/json");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Content(@"{""ResponseToFrontEnd"" : ""Error: " + ex.Message + @"""}", "application/json");
+            }
+
+
+        }
+
+
     }
 }

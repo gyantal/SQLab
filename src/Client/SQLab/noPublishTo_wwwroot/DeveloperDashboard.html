@@ -1,81 +1,45 @@
 ﻿<!DOCTYPE html>
-<html style="background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%); background-repeat: no-repeat; overflow: hidden; /* avoid scrollbars */height: 100%;">
+<html>
+<!--<html style="background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%); background-repeat: no-repeat; overflow: hidden; /* avoid scrollbars */height: 100%;">-->
+
 <head>
     <meta charset="utf-8" />
     <title></title>
 </head>
 <body>
-    
-    <img style="position: absolute; top: 0; left: 0; width: 100%; z-index: -1;  height: 33vh; margin-top: 0; margin-left: 0; margin-right: 0;" src="/images/xceed.tableview.glass.theme.png" />
-    <div style="position:absolute;top: 0px; ">
-        <H3>SQLab Developer Dashboard v. 0.1.01</H3>
 
-        <a href="/VolatilityIndicesInDifferentMonths">Strategy QuickTester (Not Implemented)</a><br />
-        <a href="/VXXAdaptiveConnorLiveBacktest">VXX AdaptiveConnor LiveBacktest</a><br />
-        <a href="/VolatilityIndicesInDifferentMonths">Volatility Indices In Different Months</a><br />
-        <br />
-        <a href="/HealthMonitor">HealthMonitor  (Under Construction)</a><br />
-        <br />
-        <a href="/logout">Logout</a><br />
-        <hr>
-        <br />
+    <!--<img style="position: absolute; top: 0; left: 0; width: 100%; z-index: -1;  height: 33vh; margin-top: 0; margin-left: 0; margin-right: 0;" src="/images/xceed.tableview.glass.theme.png" />
+    <div style="position:absolute;top: 0px; ">-->
+    <H3>SQLab Developer Dashboard v. 0.1.01</H3>
+
+    <a href="/VolatilityIndicesInDifferentMonths">Strategy QuickTester   (Under Construction)</a><br />
+    <a href="/VXXAdaptiveConnorLiveBacktest">VXX AdaptiveConnor LiveBacktest</a><br />
+    <a href="/VolatilityIndicesInDifferentMonths">Volatility Indices In Different Months</a><br />
+    <br />
+    <a href="/HealthMonitor">HealthMonitor</a><br />
+    <br />
+    <span class="loginUserDiv">Logged in as unknown@gmail.com;  <a href="/logout">Logout</a></span>
+    <br />
+    <hr>
+    <br />
+
+    <a href="/UserDashboard">User Dashboard</a><br />
+    <br />
+    <a href="/WebServer/Ping">WebServer/Ping</a><br />
+    <a href="/WebServer/UserInfo">WebServer/Show UserInfo</a><br />
+    <a href="/WebServer/HttpRequestHeader">WebServer/Show HttpRequestHeader</a><br />
+    <a href="/WebServer/TestHealthMonitorEmailByRaisingException">WebServer/ Test C# exception for HealthMonitor Email</a><br />
+    <a href="/VXXAdaptiveConnorLiveBacktest">WebServer/ Test JS exception for HealthMonitor Email (JS Button in the Connor page JS)</a><br />
 
 
-        <br />
-        <br />
-        <br />
-        <br />
-        <hr>
+    <a href="/YahooFinanceForwarder?yffOutFormat=json&yffOutVar=myData1&yffUri=ichart.finance.yahoo.com/table.csv&s=%5EVIX&a=00&b=1&c=2014&d=01&e=21&f=2014&g=d&ignore=.csv">Test YahooFinanceForwarder</a><br />
+    <a href="/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l">Test Realtime Price 1</a><br />
+    <a href="/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction">Test Realtime Price 2</a><br />
+    <hr>
 
-        <a href="/WebServer/Ping">WebServer/Ping</a><br />
-        <a href="/WebServer/UserInfo">WebServer/Show UserInfo</a><br />
-        <a href="/WebServer/HttpRequestHeader">WebServer/Show HttpRequestHeader</a><br />
-        <a href="/WebServer/TestHealthMonitorEmailByRaisingException">WebServer/ Test C# exception for HealthMonitor Email</a><br />
-        <a href="/VXXAdaptiveConnorLiveBacktest">WebServer/ Test JS exception for HealthMonitor Email (JS Button in the Connor page JS)</a><br />
+    <br />
 
- 
-        <a href="/YahooFinanceForwarder?yffOutFormat=json&yffOutVar=myData1&yffUri=ichart.finance.yahoo.com/table.csv&s=%5EVIX&a=00&b=1&c=2014&d=01&e=21&f=2014&g=d&ignore=.csv">Test YahooFinanceForwarder</a><br />
-        <a href="/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l">Test Realtime Price 1</a><br />
-        <a href="/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction">Test Realtime Price 2</a><br />
-        <hr>
 
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-
-        <br />
-        <br />
-        <br />
-        <br />
-        <a href="TestWithoutTypeScript.html">TestWithoutTypeScript.html</a><br />
-        <a href="TestWithTypeScript.html">TestWithTypeScript.html</a><br />
-        <a href="api/values">Test 'API Values' sample of ASP.NET HelloWorld</a><br /><br />
-
-        <a href="TestAuth/ExternalLogin">TestAuth/ExternalLogin    (You have to login to use the other services.)</a><br />
-        <a href="TestAuth/ExternalLogout">TestAuth/ExternalLogout</a><br />
-        <a href="TestAuth/AuthorizationIsNotRequired">TestAuth/AuthorizationIsNotRequired</a><br />
-        <a href="TestAuth/AuthorizationIsRequired">TestAuth/AuthorizationIsRequired</a><br />
-        <a href="TestAuth/AuthorizationIsCheckedInApiCode">TestAuth/AuthorizationIsCheckedInApiCode</a><br /><br />
-
-        <a href="WebServer/TestHardCrashing">WebServer/TestHardCrashing</a><br />
-        <a href="WebServer/ReportRuntimeEnvironment">WebServer/ReportRuntimeEnvironment</a><br />
-        <a href="WebServer/ReportCurrentState">WebServer/ReportCurrentState</a><br /><br />
-
-        WebJob communication is via BusQueue, but currently only works in DNX451, but not in DNXCORE50: <br />
-        <a href="WebJob/TestHardCrashing">WebJob/TestHardCrashing</a><br />
-        <a href="WebJob/TestSendingEmail">WebJob/TestSendingEmail</a><br />
-        <a href="WebJob/TestMakingPhoneCall">WebJob/TestMakingPhoneCall</a><br />
-        <a href="WebJob/TestReportOkFromVBrokerOld">WebJob/TestReportOkFromVBrokerOld</a><br />
-        <a href="WebJob/TestReportErrorFromVBrokerOld">WebJob/TestReportErrorFromVBrokerOld</a><br />
-        <a href="WebJob/ReportRuntimeEnvironment">WebJob/ReportRuntimeEnvironment</a><br />
-        <a href="WebJob/SendDailySummaryReportEmail">WebJob/SendDailySummaryReportEmail</a><br />
-        <br />
-        <a href="WebJob/ReportWebJobHostCurrentState">WebJob/ReportWebJobHostCurrentState</a><br />
-        <a href="WebJob/ReportHealthMonitorCurrentState">WebJob/ReportHealthMonitorCurrentState</a><br />
-    </div>
+    <!--</div>-->
 </body>
 </html>

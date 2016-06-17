@@ -4,6 +4,7 @@ using SqCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using VirtualBroker.Strategy.NeuralSniffer;
 using Utils = SqCommon.Utils;
@@ -19,6 +20,8 @@ namespace VirtualBroker
 
     public class NeuralSniffer1Strategy : IBrokerStrategy
     {
+        StringBuilder m_detailedReportSb;
+
         Task<Dictionary<string, Tuple<IAssetID, string>>> m_loadAssetIdTask = null;
         Dictionary<string, Tuple<IAssetID, string>> m_tickerToAssetId = null;   // ticker => AssetID : FullTicker mapping
 
@@ -51,8 +54,9 @@ namespace VirtualBroker
             return new NeuralSniffer1Strategy();
         }
 
-        public void Init()
+        public void Init(StringBuilder p_detailedReportSb)
         {
+            m_detailedReportSb = p_detailedReportSb;
             m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(new List<string>() { "UWM", "TWM" }));   // task will start to run on another thread (in the threadpool)
         }
 
@@ -129,6 +133,9 @@ namespace VirtualBroker
             if (isNextDayInBullishHolidayRange)
             {
                 forecast = 1;
+                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"Bullish Holiday Range[-3,+3 days] around NewYear, GoodFriday, Thanksgiving, Xmas. Final RUT Forecast: { forecast * 100}%");
+                Utils.Logger.Info($"Bullish Holiday Range[-3,+3 days] around NewYear, GoodFriday, Thanksgiving, Xmas. Final RUT Forecast: { forecast * 100}%");
+                m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">Bullish Holiday Range[-3, +3 days] around NewYear, GoodFriday, Thanksgiving, Xmas.Final RUT Forecast: { forecast * 100}%</font>");
             }
             else
             {
@@ -186,8 +193,6 @@ namespace VirtualBroker
                     dateWeekDays[i] = (byte)(m_rut[i + 1].Date.DayOfWeek) - 1 - 2;     // Monday is -2, Friday is 2
                 }
                 double dailyPercentChange = barChanges[barChanges.Length - 1];
-                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"RUT %Chg:{dailyPercentChange * 100.0:F2}%");
-                Utils.Logger.Info($"RUT %Chg:{dailyPercentChange * 100.0:F2}%");
 
                 // double target = p_barChanges[iRebalance + 1]; // so target is the p_iRebalance+1 day %change; so the last index that can be used in training is p_barChanges[p_iRebalance] as output
                 // so, set p_iRebalance to the last usable day index (the last index)
@@ -201,10 +206,11 @@ namespace VirtualBroker
 
                 nnConfig.nEnsembleRepeat = 21;
                 forecast = new NeuralSniffer().GetEnsembleRepeatForecast(nnConfig.nEnsembleRepeat, nnConfig.ensembleGroups, nnConfig.ensembleAggregation, nnConfig.maxEpoch, dateWeekDays.Length - 1, nnConfig.lookbackWindowSize, nnConfig.outputOutlierThreshold, nnConfig.inputOutlierClipInSD, nnConfig.inputNormalizationBoost, nnConfig.outputNormalizationBoost, nnConfig.notNNStrategy, dateWeekDays, barChanges, true, out avgTrainError);
-            }
 
-            Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"Final RUT Forecast:{forecast * 100}%");
-            Utils.Logger.Info($"Final RUT Forecast:{forecast * 100}%");
+                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"RUT % Chg:{ dailyPercentChange * 100.0:F2}%, Final RUT Forecast: { forecast * 100}%");
+                Utils.Logger.Info($"RUT %Chg:{dailyPercentChange * 100.0:F2}%, Final RUT Forecast:{forecast * 100}%");
+                m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">RUT %Chg:{dailyPercentChange * 100.0:F2}%, Final RUT Forecast:{forecast * 100}%</font>");
+            }
 
             List<PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
             if (forecast > 0) // bullish

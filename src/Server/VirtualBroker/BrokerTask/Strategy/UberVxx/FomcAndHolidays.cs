@@ -29,8 +29,9 @@ namespace VirtualBroker
             if (closestFomcET != null)
             {
                 int offsetInd = CalculateOffsetIndOfTradingDateFromEvent(nextTradingDayET_Date, closestFomcET.DateLoc);       // VXX forecast: Long,Long,Short,Short,Long for days T-3, T-2, T-1, T+0, T+1
-                Utils.Logger.Debug($"Closest FOMC date found: {closestFomcET.DateLoc}, day T{((offsetInd>=0)? "+": "-")}{Math.Abs(offsetInd)}");
-                Utils.ConsoleWriteLine(null, false, $"Closest FOMC date: {closestFomcET.DateLoc}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
+                Utils.ConsoleWriteLine(null, false, $"Closest FOMC date: {closestFomcET.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
+                Utils.Logger.Debug($"Closest FOMC date found: {closestFomcET.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd>=0)? "+": "-")}{Math.Abs(offsetInd)}");
+                m_detailedReportSb.AppendLine($"Closest FOMC date: {closestFomcET.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
                 if (offsetInd == -1 || offsetInd == 0)
                     return -1.0;    // VXX negative short forecast, which is bullish for the market
                 if (offsetInd == -3 || offsetInd == -2 || offsetInd == +1)
@@ -67,6 +68,8 @@ namespace VirtualBroker
                 DatePropertiesFlags holidayFlagOnly = closestHolidayET.Flags & DatePropertiesFlags._KindOfUsaHoliday;
                 Utils.Logger.Debug($"Closest holiday '{holidayFlagOnly}' on {closestHolidayET.DateLoc.ToString("yyyy-MM-dd")}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
                 Utils.ConsoleWriteLine(null, false, $"Closest holiday '{holidayFlagOnly}' on {closestHolidayET.DateLoc.ToString("yyyy-MM-dd")}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
+                m_detailedReportSb.AppendLine($"Closest holiday '{holidayFlagOnly}' on {closestHolidayET.DateLoc.ToString("yyyy-MM-dd")}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
+
                 // Holiday days was revised in 2015-11, based on that here is the latest in 2016-04: https://docs.google.com/document/d/1Kaazv6gjDfffHG3cjNgSMuseoe45UftMKiZP8XPO2pA/edit
                 switch (holidayFlagOnly)
                 {

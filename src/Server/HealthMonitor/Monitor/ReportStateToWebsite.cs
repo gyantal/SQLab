@@ -21,6 +21,7 @@ namespace HealthMonitor
 
         public bool ProcessingVBrokerMessagesEnabled;
         public List<string> VBrokerReports;
+        public List<string> VBrokerDetailedReports;
 
         public string CommandToBackEnd;
         public string ResponseToFrontEnd;   // it is "OK" or the Error message
@@ -55,7 +56,7 @@ namespace HealthMonitor
                 var jsonStr = Utils.SaveToJSON<HMtoDashboardData>(hmDataOut);
                 BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
                 bw.Write(jsonStr);
-                //bw.Write(@"{""AppOk"":""OK"",""StartDate"":""1998-11-16T00:00:00"",""StartDateLoc"":""1998-11-16T00:00:00.000Z"",""StartDateTimeSpanStr"":"""",""DailyEmailReportEnabled"":false,""RtpsOk"":""OK"",""RtpsTimerEnabled"":false,""RtpsTimerFrequencyMinutes"":-999,""RtpsDownloads"":[""aaaaaaaaaaaaaaaaaaaaaaaaaa"",""b""],""VBrokerOk"":""OK"",""ProcessingVBrokerMessagesEnabled"":false,""VBrokerReports"":[""a"",""b""],""CommandToBackEnd"":""OnlyGetData"",""ResponseToFrontEnd"":""OK""}");
+                //bw.Write(@"{""AppOk"":""OK"",""StartDate"":""1998-11-16T00:00:00"",""StartDateLoc"":""1998-11-16T00:00:00.000Z"",""StartDateTimeSpanStr"":"""",""DailyEmailReportEnabled"":false,""RtpsOk"":""OK"",""RtpsTimerEnabled"":false,""RtpsTimerFrequencyMinutes"":-999,""RtpsDownloads"":[""aaaaaaaaaaaaaaaaaaaaaaaaaa"",""b""],""VBrokerOk"":""OK"",""ProcessingVBrokerMessagesEnabled"":false,""VBrokerReports"":[""a"",""b""],""VBrokerDetailedReports"":[""a"",""b""],""CommandToBackEnd"":""OnlyGetData"",""ResponseToFrontEnd"":""OK""}");
             }
         }
 
@@ -101,6 +102,7 @@ namespace HealthMonitor
             p_hmData.ProcessingVBrokerMessagesEnabled = m_persistedState.IsProcessingVBrokerMessagesEnabled;
 
             p_hmData.VBrokerReports = new List<string>();
+            p_hmData.VBrokerDetailedReports = new List<string>();
             lock (m_VbReport)
             {
                 int nReportsToReport = (m_VbReport.Count > 10) ? 10 : m_VbReport.Count;
@@ -108,8 +110,11 @@ namespace HealthMonitor
                 {
                     var report = m_VbReport[m_VbReport.Count - i];    // Item3 is the whole message, but don't report it; the Dashboard should be brief
                     p_hmData.VBrokerReports.Add(report.Item1.ToString("yyyy -MM-dd HH:mm:ss", CultureInfo.InvariantCulture) + " : " + (report.Item2 ? "OK" : "ERROR"));
+                    p_hmData.VBrokerDetailedReports.Add(report.Item4);
                 }
             }
+
+            p_hmData.VBrokerDetailedReports.Reverse();      // to see the latest item first
         }
     }
 }

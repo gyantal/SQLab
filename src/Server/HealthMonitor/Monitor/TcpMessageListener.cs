@@ -146,10 +146,8 @@ namespace HealthMonitor
                 case HealthMonitorMessageID.TestHardCash:
                     throw new Exception("Testing Hard Crash by Throwing this Exception");
                 case HealthMonitorMessageID.ReportErrorFromVirtualBroker:
-                    ErrorFromVirtualBroker(p_tcpClient, p_message);
-                    break;
                 case HealthMonitorMessageID.ReportOkFromVirtualBroker:
-                    OkFromVirtualBroker(p_tcpClient, p_message);
+                    MessageFromVirtualBroker(p_tcpClient, p_message);
                     break;
                 case HealthMonitorMessageID.GetHealthMonitorCurrentStateToHealthMonitorWebsite:
                     CurrentStateToHealthMonitorWebsite(p_tcpClient, p_message);

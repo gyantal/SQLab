@@ -1,0 +1,76 @@
+html {
+    background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%);
+    background-repeat: no-repeat;
+    overflow: hidden; /* avoid scrollbars */
+    height: 100%;
+}
+
+h3 {
+    margin-top: 0.2em;
+    margin-bottom: 0.1em;
+}
+
+
+body {
+    font-size: 125%;
+    /*color: #18212E;*/
+}
+
+a {
+    color: #eeeeff;
+    font-family: Arial;
+    font-size: 16px;
+    font-weight: bold;
+    display:inline-block;
+    padding: 8px 14px;
+    text-decoration: underline;
+    text-shadow: 0px 1px 0px #528ecc;
+}
+
+a:visited, a:link {
+    /*color: #444;*/
+}
+
+a:hover {
+    color: blue;
+    /*background-color: #1171a3;*/
+}
+
+
+.headerBackground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: -1;
+    height: 33vh;
+    margin-top: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.loginUserDiv {
+    font-size: 70%;
+}
+
+.loginUserDiv a {
+    font-size: 100%;
+    color: #000000;
+    text-decoration: none;
+    text-decoration-color: #000000;
+    font-weight: normal;
+}
+
+.sqDeveloperInfo a {
+    /*background-color: #79bbff;*/
+    font-size: 70%;
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* msie */
+
+    color: #000000;
+    font-family: Arial;
+    font-weight: normal;
+    text-shadow: 0px 1px 0px #528ecc;
+    text-decoration: none;
+}
+

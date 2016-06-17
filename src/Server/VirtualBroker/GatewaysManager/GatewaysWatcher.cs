@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Utils = SqCommon.Utils;
@@ -221,7 +222,7 @@ namespace VirtualBroker
             return m_mainGateway.BrokerWrapper.ReqHistoricalData(p_endDateTime, p_lookbackWindowSize, p_whatToShow, p_contract, out p_quotes);
         }
 
-        internal int PlaceOrder(GatewayUser p_gatewayUserToTrade, Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, bool p_isSimulatedTrades)
+        internal int PlaceOrder(GatewayUser p_gatewayUserToTrade, Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, bool p_isSimulatedTrades, StringBuilder p_detailedReportSb)
         {
             if (!m_isReady)
                 return -1;
@@ -235,7 +236,7 @@ namespace VirtualBroker
 
             var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };
             m_mainGateway.BrokerWrapper.GetMktDataSnapshot(p_contract, ref rtPrices);
-            int virtualOrderId = userGateway.PlaceOrder(p_contract, p_transactionType, p_volume, p_orderExecution, p_orderTif, p_limitPrice, p_stopPrice, rtPrices[TickType.MID].Price, p_isSimulatedTrades);
+            int virtualOrderId = userGateway.PlaceOrder(p_contract, p_transactionType, p_volume, p_orderExecution, p_orderTif, p_limitPrice, p_stopPrice, rtPrices[TickType.MID].Price, p_isSimulatedTrades, p_detailedReportSb);
             return virtualOrderId;
         }
 
