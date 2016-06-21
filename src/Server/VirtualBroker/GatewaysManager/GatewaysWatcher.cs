@@ -112,15 +112,24 @@ namespace VirtualBroker
                 // see what is possible to call: 
                 // "g:\temp\_programmingTemp\TWS API_972.12(2016-02-26)\samples\CSharp\IBSamples\IBSamples.sln" 
                 // for UberVXX
-                m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" });
-                m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SVXY", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+                //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+                //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SVXY", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+                ////m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SPY", SecType = "STK", Currency = "USD", Exchange = "SMART" }); // for TotM forecast, but it is not needed just yet
+
+                //// for NeuralSniffer
+                //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL", LocalSymbol="RUT" });
+                //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "UWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+                //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "TWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("VXX"));
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("SVXY"));
                 //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SPY", SecType = "STK", Currency = "USD", Exchange = "SMART" }); // for TotM forecast, but it is not needed just yet
 
                 // for NeuralSniffer
-                m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL", LocalSymbol="RUT" });
-                m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "UWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
-                m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "TWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
-                
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("^RUT"));
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UWM"));
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TWM"));
+
             }
             catch (Exception e)
             {
@@ -262,6 +271,13 @@ namespace VirtualBroker
                 return false;
 
             return userGateway.GetVirtualOrderExecutionInfo(p_virtualOrderId, ref orderStatus, ref executedVolume, ref executedAvgPrice, ref executionTime, p_isSimulatedTrades);
+        }
+
+        public string GetRealtimePriceService(string p_query)
+        {
+            if (!m_isReady)
+                return null;
+            return m_mainGateway.GetRealtimePriceService(p_query);
         }
     }
 }

@@ -27,7 +27,6 @@ namespace HealthMonitor
         DateTime m_startTime;
 
         SavedState m_persistedState = null;
-        ManualResetEventSlim m_mainThreadExitsResetEvent = null;
 
         //Your timer object goes out of scope and gets erased by Garbage Collector after some time, which stops callbacks from firing. Save reference to it in a member of class.
         long m_nHeartbeat = 0;
@@ -65,12 +64,11 @@ namespace HealthMonitor
             // 1. Get the Current Parameter state from a persisted place (file, or AzureTable) (in case this HealthMonitor was unloaded and restarted)
             //PersistedState = new SavedState().CreateOrOpenEx();
             PersistedState = new SavedState();
-            m_mainThreadExitsResetEvent = new ManualResetEventSlim(false);
+
             ScheduleTimers();
-
-            StartTcpMessageListenerThreads();
-
             InitVbScheduler();
+            m_tcpListener = new ParallelTcpListener(HealthMonitorMessage.HealthMonitorServerPrivateIpForListener, HealthMonitorMessage.DefaultHealthMonitorServerPort, ProcessTcpClient);
+            m_tcpListener.StartTcpMessageListenerThreads();
         }
 
         public static bool IsRunningAsLocalDevelopment()
@@ -89,13 +87,12 @@ namespace HealthMonitor
         }
 
         // at graceful shutdown, it is called
-        public void Exit()
+        public void Exit()      // in general exit should happen in the opposite order as Init()
         {
-            m_mainThreadExitsResetEvent.Set();
             //PersistedState.Save();
 
+            m_tcpListener.StopTcpMessageListener();
             ExitVbScheduler();
-            StopTcpMessageListener();
         }
 
         private void ScheduleTimers()

@@ -1,4 +1,5 @@
-﻿using SqCommon;
+﻿using IBApi;
+using SqCommon;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -84,5 +85,36 @@ namespace VirtualBroker
             return true;    // so it is acceptable
         }
 
+        // use YahooFinance ticker terminology (^GSPC instead of SPX); uppercase is a must. Hide it here, so it is not global. threadLock is not required
+        // // VXX,^VIX,^VXV,^GSPC,XIV,#^VIX201610,GOOG
+        public static Contract ParseSqTickerToContract(string p_sqTicker)    
+        {
+            Contract contract;
+            if (p_sqTicker[0] == '^') // if Index, not stock. Index has only LastPrice and TickType.ClosePrice
+            {
+                string symbol = p_sqTicker.Substring(1); // skip the "^"
+                if (symbol == "GSPC")       //
+                    symbol = "SPX";
+                string exchange = (p_sqTicker == "^RUT") ? "RUSSELL" : "CBOE";
+                string localSymbol = symbol;        // maybe it is not necessary. However for RUT, it worked
+                contract = new Contract() { Symbol = symbol, SecType = "IND", Currency = "USD", Exchange = exchange, LocalSymbol = localSymbol };  // remove the ^ when you send to IB
+            }
+            else if (p_sqTicker[0] == '#')    // ?s=^^VIX201404 was converted to ?s=#^VIX201404
+            {
+                // assume last YYYYMM 6 characters is the expiry
+                string symbol = p_sqTicker.Substring(1, p_sqTicker.Length - 6 - 1);
+                if (symbol[0] == '^')
+                    symbol = symbol.Substring(1, symbol.Length - 1);
+                string exchange = "CFE";    // wokrs for VIX futures
+                string expiry = p_sqTicker.Substring(p_sqTicker.Length - 6);
+
+                contract = new Contract() { Symbol = symbol, SecType = "FUT", Currency = "USD", Exchange = exchange, LastTradeDateOrContractMonth = expiry };  // this works for Futures, but we don't want to Fix it as they will expire 
+                //contract = new Contract("VIX", "CFE", SecurityType.Future, "USD", "201404"); // this works for VIX Futures
+            }
+            else
+                contract = new Contract() { Symbol = p_sqTicker, SecType = "STK", Currency = "USD", Exchange = "SMART" };
+
+            return contract;
+        }
     }
 }

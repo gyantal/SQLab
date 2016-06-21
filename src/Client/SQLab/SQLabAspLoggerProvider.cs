@@ -166,6 +166,10 @@ namespace SQLab
                     return false;
                 if (fullExceptionStr.IndexOf(@"The path in 'value' must start with '/'") != -1)
                     return false;
+                if (fullExceptionStr.IndexOf(@"System.Threading.Tasks.TaskCanceledException: The request was aborted") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"The decryption operation failed, see inner exception") != -1)
+                    return false;
 
                 return true;
             }

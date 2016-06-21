@@ -23,10 +23,16 @@ namespace VirtualBroker
 
     public class MktDataSubscription
     {
+        public delegate void MktDataArrivedFunc(int p_mktDataId, MktDataSubscription p_mktDataSubscription, int p_tickType, double p_price);
+        public MktDataArrivedFunc MarketDataArrived;
+
         public Contract Contract { get; set; }
         public int MarketDataId { get; set; }
         public bool IsAnyPriceArrived { get; set; }
         public Timer CheckDataIsAliveTimer { get; set; }
+
+        //public AutoResetEvent m_priceTickARE = new AutoResetEvent(false);
+
         //public int MktDataTickerID { get; set; }
 
         public ConcurrentDictionary<int, PriceAndTime> Prices { get; set; }
@@ -47,7 +53,6 @@ namespace VirtualBroker
             Prices.TryAdd(TickType.HIGH, new PriceAndTime());
             Prices.TryAdd(TickType.LOW, new PriceAndTime());
         }
-       
     }
 
     public class HistDataSubscription
@@ -84,7 +89,8 @@ namespace VirtualBroker
         void Disconnect();
         bool IsConnected();
 
-        int ReqMktDataStream(Contract p_contract);
+        int ReqMktDataStream(Contract p_contract, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null);
+        void CancelMktData(int p_marketDataId);
         bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes);
         bool ReqHistoricalData(DateTime p_endDateTime, int p_lookbackWindowSize, string p_whatToShow, Contract p_contract, out List<QuoteData> p_quotes);
 

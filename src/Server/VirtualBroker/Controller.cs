@@ -13,6 +13,8 @@ namespace VirtualBroker
 {
     public partial class Controller
     {
+        DateTime m_startTime;
+
         // it is better to not store Global State, for example TickerProvider, because it can go stale (the cached copy is not up-to-date), and reqular updating is a lot of problem: when to do it, every 10 minutes or every day?
         // so, don't store State, and cache. When required, fetch it from the SQL server 5 seconds before its is needed
         //internal static DBManager g_dbManager = new DBManager();  // don't cache dbManager state. Max. cache the SqlConnections
@@ -23,11 +25,17 @@ namespace VirtualBroker
         public static List<BrokerTaskSchema> g_taskSchemas = new List<BrokerTaskSchema>();  // the worker bees, the Trading Agents
         
 
-        internal void Start()
+        internal void Init()
         {
+            Utils.Logger.Info("****VBroker:Init()");
+            m_startTime = DateTime.UtcNow;
+
             g_gatewaysWatcher.Init();
             BuildTasks();
             g_brokerScheduler.Init();
+
+            m_tcpListener = new ParallelTcpListener(VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener, VirtualBrokerMessage.DefaultVirtualBrokerServerPort, ProcessTcpClient);
+            m_tcpListener.StartTcpMessageListenerThreads();
         }
 
         public static bool IsRunningAsLocalDevelopment()
@@ -137,8 +145,11 @@ namespace VirtualBroker
 
         }
 
-        internal void Exit()
+       
+
+        internal void Exit() // in general exit should happen in the opposite order as Init()
         {
+            m_tcpListener.StopTcpMessageListener();
             g_brokerScheduler.Exit();
             g_gatewaysWatcher.Exit();
         }

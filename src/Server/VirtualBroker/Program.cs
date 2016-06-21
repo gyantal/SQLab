@@ -44,7 +44,7 @@ namespace VirtualBroker
 
             try
             {
-                Controller.g_controller.Start();
+                Controller.g_controller.Init();
 
                 string userInput = String.Empty;
                 do
@@ -65,17 +65,21 @@ namespace VirtualBroker
                             break;
                         case "4":
                             //Controller.g_controller.TestHardCrash();
-                            Controller.g_controller.EncogXORHelloWorld();
+                            Controller.g_controller.TestRealtimePriceService();
                             break;
                         case "5":
-                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(0);
+                            //Controller.g_controller.TestHardCrash();
+                            Controller.g_controller.EncogXORHelloWorld();
                             break;
                         case "6":
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(0);
+                            break;
+                        case "7":
                             Controller.g_controller.TestElapseFirstTriggerWithSimulation(1);
                             break;
                     }
 
-                } while (userInput != "7" && userInput != "ConsoleIsForcedToShutDown");
+                } while (userInput != "8" && userInput != "ConsoleIsForcedToShutDown");
 
                 Utils.Logger.Info("****** Main() END");
                 Utils.MainThreadIsExiting.Set();
@@ -118,11 +122,11 @@ namespace VirtualBroker
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes");
             Console.WriteLine("2. Test IbGateway Connection");
             Console.WriteLine("3. Test HealthMonitor by sending ErrorFromVirtualBroker");
-            //Console.WriteLine("4. Crash Task Background thread. See if HealthMonitor calls the phone");
-            Console.WriteLine("4. Test Encog");
-            Console.WriteLine("5. Elapse first TaskShema (UberVxx) First Simulation Trigger");
-            Console.WriteLine("6. Elapse second TaskShema (NeuralSniffer1) First Simulation Trigger");
-            Console.WriteLine("7. Exit gracefully (Avoid Ctrl-^C).");
+            Console.WriteLine("4. Test Realtime price service");
+            Console.WriteLine("5. Test Encog");
+            Console.WriteLine("6. Elapse first TaskShema (UberVxx) First Simulation Trigger");
+            Console.WriteLine("7. Elapse second TaskShema (NeuralSniffer1) First Simulation Trigger");
+            Console.WriteLine("8. Exit gracefully (Avoid Ctrl-^C).");
             string result = null;
             try
             {

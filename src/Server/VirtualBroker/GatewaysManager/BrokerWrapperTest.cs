@@ -349,7 +349,7 @@ namespace VirtualBroker
             return true;
         }
 
-        public int ReqMktDataStream(Contract p_contract)
+        public int ReqMktDataStream(Contract p_contract, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null)
         {
             switch (p_contract.Symbol)
             {
@@ -358,6 +358,11 @@ namespace VirtualBroker
                 default:
                     return 4002;
             }
+        }
+
+        public virtual void CancelMktData(int p_marketDataId)
+        {
+            
         }
 
         public void scannerData(int reqId, int rank, ContractDetails contractDetails, string distance, string benchmark, string projection, string legsStr)

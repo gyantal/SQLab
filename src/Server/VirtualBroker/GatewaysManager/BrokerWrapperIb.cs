@@ -14,7 +14,7 @@ using Utils = SqCommon.Utils;
 
 namespace VirtualBroker
 {
-  
+
     public class BrokerWrapperIb : IBrokerWrapper
     {
         EClientSocket clientSocket;
@@ -57,7 +57,7 @@ namespace VirtualBroker
             clientSocket = new EClientSocket(this, Signal);
         }
 
-                
+
         public virtual bool Connect(int p_socketPort, int p_brokerConnectionClientID)
         {
             Utils.Logger.Info($"ClientSocket.eConnect(127.0.0.1, {p_socketPort}, {p_brokerConnectionClientID}, false)");
@@ -80,9 +80,9 @@ namespace VirtualBroker
                 {
                     if (Utils.MainThreadIsExiting.IsSet)
                         return; // if App is exiting gracefully, this Exception is not a problem
-                        Utils.Logger.Error("Exception caught in Gateway Thread that is fetching messages. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
+                    Utils.Logger.Error("Exception caught in Gateway Thread that is fetching messages. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
                     throw;  // else, rethrow. This will Crash the App, which is OK. Without IB connection, there is no point to continue the VBroker App.
-                    }
+                }
             })
             { IsBackground = true }.Start();
 
@@ -104,7 +104,7 @@ namespace VirtualBroker
             return true;
         }
 
-        
+
 
         public bool IsConnected()
         {
@@ -125,7 +125,7 @@ namespace VirtualBroker
         // Exception thrown: System.IO.EndOfStreamException: Unable to read beyond the end of the stream.     (if IBGateways are crashing down.)
         public virtual void error(Exception e)
         {
-            Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e); 
+            Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e);
             Utils.Logger.Info("BrokerWrapperIb.error(). Exception: " + e);  // exception.ToString() writes the Stacktrace, not only the Message, which is OK.
 
             // when VBroker server restarts every morning, the IBGateways are closed too, and as we were keeping a live TcpConnection, we will get an Exception here.
@@ -201,27 +201,33 @@ namespace VirtualBroker
             Console.WriteLine("Current Time: " + time);
         }
 
-        public virtual int ReqMktDataStream(Contract p_contract)
+        public virtual int ReqMktDataStream(Contract p_contract, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null)
         {
             int marketDataId = GetUniqueReqMktDataID;
             ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
             //mainClient.reqMktData(marketDataId, contractSPY, "221", false, null);
-            ClientSocket.reqMktData(marketDataId, p_contract, null, false, null);
+            ClientSocket.reqMktData(marketDataId, p_contract, null, p_snapshot, null);
 
             var mktDataSubscr = new MktDataSubscription()
             {
                 Contract = p_contract,
-                MarketDataId = marketDataId
+                MarketDataId = marketDataId,
+                MarketDataArrived = p_mktDataArrivedFunc
             };
-            // RUT index data comes once ever 5 seconds
-            mktDataSubscr.CheckDataIsAliveTimer = new System.Threading.Timer(new TimerCallback(MktDataIsAliveTimer_Elapsed), mktDataSubscr, TimeSpan.FromSeconds(15), TimeSpan.FromMilliseconds(-1.0));
             MktDataSubscriptions.TryAdd(marketDataId, mktDataSubscr);
+
+            // RUT index data comes once ever 5 seconds
+            if (!p_snapshot)    // only if it is a continous streaming
+                mktDataSubscr.CheckDataIsAliveTimer = new System.Threading.Timer(new TimerCallback(MktDataIsAliveTimer_Elapsed), mktDataSubscr, TimeSpan.FromSeconds(15), TimeSpan.FromMilliseconds(-1.0));
             return marketDataId;
         }
 
         public virtual void CancelMktData(int p_marketDataId)
         {
-            ClientSocket.cancelMktData(p_marketDataId);
+            MktDataSubscription mktDataSubscription;
+            MktDataSubscriptions.TryRemove(p_marketDataId, out mktDataSubscription);
+
+            ClientSocket.cancelMktData(p_marketDataId); // if p_snapshot = true, it is not necessarily to Cancel. However, it doesn't hurt.
         }
 
         //- When streaming realtime price of Data for RUT, the very first time of the day, TWS gives price, but IBGateway does'nt give any price. 
@@ -253,7 +259,7 @@ namespace VirtualBroker
             var mktDataSubscr = MktDataSubscriptions.Values.FirstOrDefault(r => r.Contract.Symbol == p_contract.Symbol && r.Contract.SecType == p_contract.SecType && r.Contract.Currency == p_contract.Currency);
             if (mktDataSubscr == null)
             {
-                Utils.Logger.Error($"Market data for Contract {p_contract.Symbol} was not requested as Stream. Do make that request eariler.");
+                //Utils.Logger.Error($"Market data for Contract {p_contract.Symbol} was not requested as Stream. Do make that request eariler.");
                 return false;
             }
 
@@ -271,7 +277,7 @@ namespace VirtualBroker
                             if (tickData.TryGetValue(TickType.BID, out priceAndTimeBid))
                             {
                                 item.Value.Time = (priceAndTimeAsk.Time < priceAndTimeBid.Time) ? priceAndTimeAsk.Time : priceAndTimeBid.Time;  // use the older, smaller Time
-                                item.Value.Price = (priceAndTimeAsk.Price + priceAndTimeBid.Price)/2.0;
+                                item.Value.Price = (priceAndTimeAsk.Price + priceAndTimeBid.Price) / 2.0;
                             }
                         }
                     }
@@ -315,34 +321,34 @@ namespace VirtualBroker
         //- 233 	RTVolume - contains the last trade price, last trade size, last trade time, total volume, VWAP, and single trade flag. // give price+size too
         // Conclusion: cannot get only AskPrice, BidPrice real-time data without the Size. AskSize, BidSize always comes with it. Fine.
 
-            ////1. These are the received ticks after subscription to realtime data: (high/low/previousClose/Open)
-            //Tick Price.Ticker Id:1001, Field: bidPrice, Price: 22.01, CanAutoExecute: 1
-            //Tick Size. Ticker Id:1001, Field: bidSize, Size: 3
+        ////1. These are the received ticks after subscription to realtime data: (high/low/previousClose/Open)
+        //Tick Price.Ticker Id:1001, Field: bidPrice, Price: 22.01, CanAutoExecute: 1
+        //Tick Size. Ticker Id:1001, Field: bidSize, Size: 3
 
-            //Tick Price. Ticker Id:1001, Field: askPrice, Price: 22.02, CanAutoExecute: 1
-            //Tick Size. Ticker Id:1001, Field: askSize, Size: 217
+        //Tick Price. Ticker Id:1001, Field: askPrice, Price: 22.02, CanAutoExecute: 1
+        //Tick Size. Ticker Id:1001, Field: askSize, Size: 217
 
-            //Tick Price. Ticker Id:1001, Field: lastPrice, Price: 22.01, CanAutoExecute: 0
-            //Tick Size. Ticker Id:1001, Field: lastSize, Size: 2
+        //Tick Price. Ticker Id:1001, Field: lastPrice, Price: 22.01, CanAutoExecute: 0
+        //Tick Size. Ticker Id:1001, Field: lastSize, Size: 2
 
-            //Tick Size. Ticker Id:1001, Field: bidSize, Size: 3
-            //Tick Size. Ticker Id:1001, Field: askSize, Size: 217
-            //Tick Size. Ticker Id:1001, Field: lastSize, Size: 2
+        //Tick Size. Ticker Id:1001, Field: bidSize, Size: 3
+        //Tick Size. Ticker Id:1001, Field: askSize, Size: 217
+        //Tick Size. Ticker Id:1001, Field: lastSize, Size: 2
 
-            //Tick Size. Ticker Id:1001, Field: volume, Size: 724693
-            //Tick Price. Ticker Id:1001, Field: high, Price: 22.08, CanAutoExecute: 0
-            //Tick Price. Ticker Id:1001, Field: low, Price: 20.95, CanAutoExecute: 0
-            //Tick Price. Ticker Id:1001, Field: close, Price: 21.59, CanAutoExecute: 0
-            //Tick Price. Ticker Id:1001, Field: open, Price: 21.31, CanAutoExecute: 0
-            //Tick string. Ticker Id:1001, Type: lastTimestamp, Value: 1457126686
+        //Tick Size. Ticker Id:1001, Field: volume, Size: 724693
+        //Tick Price. Ticker Id:1001, Field: high, Price: 22.08, CanAutoExecute: 0
+        //Tick Price. Ticker Id:1001, Field: low, Price: 20.95, CanAutoExecute: 0
+        //Tick Price. Ticker Id:1001, Field: close, Price: 21.59, CanAutoExecute: 0
+        //Tick Price. Ticker Id:1001, Field: open, Price: 21.31, CanAutoExecute: 0
+        //Tick string. Ticker Id:1001, Type: lastTimestamp, Value: 1457126686
 
-            ////2. These were the initial values. Later, this is the regular changes that comes 
-            //Tick Generic. Ticker Id:1001, Field: halted, Value: 0
-            //Tick Size. Ticker Id:1001, Field: askSize, Size: 206
-            //Tick Generic. Ticker Id:1001, Field: halted, Value: 0
-            //Tick Size. Ticker Id:1001, Field: volume, Size: 724722
-            //Tick Size. Ticker Id:1001, Field: askSize, Size: 204
-            //Tick Size. Ticker Id:1001, Field: bidSize, Size: 8
+        ////2. These were the initial values. Later, this is the regular changes that comes 
+        //Tick Generic. Ticker Id:1001, Field: halted, Value: 0
+        //Tick Size. Ticker Id:1001, Field: askSize, Size: 206
+        //Tick Generic. Ticker Id:1001, Field: halted, Value: 0
+        //Tick Size. Ticker Id:1001, Field: volume, Size: 724722
+        //Tick Size. Ticker Id:1001, Field: askSize, Size: 204
+        //Tick Size. Ticker Id:1001, Field: bidSize, Size: 8
         public virtual void tickPrice(int tickId, int field, double price, int canAutoExecute)
         {
             // This is from old VBrokers code
@@ -397,6 +403,9 @@ namespace VirtualBroker
                 else
                     Console.WriteLine("Tick Price. Ticker Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
             }
+
+            if (mktDataSubscription.MarketDataArrived != null)
+                mktDataSubscription.MarketDataArrived(tickId, mktDataSubscription, field, price);
         }
 
 
@@ -525,7 +534,7 @@ namespace VirtualBroker
                 orderStatus = OrderStatus.Unrecognized;
                 Utils.Logger.Error($"Order status string {status} was not recognised to Enum. We still continue.");
             }
-            orderSubscription.DateTime = DateTime.UtcNow;   
+            orderSubscription.DateTime = DateTime.UtcNow;
             orderSubscription.OrderStatus = orderStatus;
             orderSubscription.Filled = filled;
             orderSubscription.Remaining = remaining;
@@ -799,7 +808,7 @@ namespace VirtualBroker
             Utils.Logger.Info($"ReqHistoricalData() for {p_contract.Symbol}, reqId: {histDataId}");
 
             // durationString = "60 D" is fine, but "61 D" gives the following error "Historical Market Data Service error message:Time length exceed max.", so after 60, change to Months "3 M" or "11 M"
-            string durationString = (p_lookbackWindowSize <=60) ? $"{p_lookbackWindowSize} D" : $"{p_lookbackWindowSize/20 + 1} M"; // dividing by int rounds it down. But we want to round it up, so add 1.
+            string durationString = (p_lookbackWindowSize <= 60) ? $"{p_lookbackWindowSize} D" : $"{p_lookbackWindowSize / 20 + 1} M"; // dividing by int rounds it down. But we want to round it up, so add 1.
             var histDataSubsc = new HistDataSubscription() { Contract = p_contract, QuoteData = new List<QuoteData>(p_lookbackWindowSize) };
             HistDataSubscriptions.TryAdd(histDataId, histDataSubsc);
 
@@ -825,7 +834,7 @@ namespace VirtualBroker
 
             if (histDataSubsc.QuoteData.Count > p_lookbackWindowSize)   // if we got too much data, remove the old ones. Very likely it only do shallow copy of values, but no extra memory allocation is required
                 histDataSubsc.QuoteData.RemoveRange(0, histDataSubsc.QuoteData.Count - p_lookbackWindowSize);
-            
+
             p_quotes = histDataSubsc.QuoteData;
             return true;
         }
@@ -841,7 +850,7 @@ namespace VirtualBroker
                 Utils.Logger.Error($"HistDataSubscriptions reqId { reqId} is not expected");
                 return;
             }
-            histDataSubscription.QuoteData.Add(new QuoteData() {  Date = DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture), AdjClosePrice = close });
+            histDataSubscription.QuoteData.Add(new QuoteData() { Date = DateTime.ParseExact(date, "yyyyMMdd", CultureInfo.InvariantCulture), AdjClosePrice = close });
         }
 
         public virtual void historicalDataEnd(int reqId, string startDate, string endDate)
@@ -906,5 +915,6 @@ namespace VirtualBroker
             if (ClientSocket.AsyncEConnect)
                 ClientSocket.startApi();
         }
+
     }
 }

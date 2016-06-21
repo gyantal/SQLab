@@ -35,6 +35,7 @@ namespace HealthMonitor
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
 
             Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.HealthMonitor.NoGitHub.json", "/home/ubuntu/SQ/Server/HealthMonitor/SQLab.HealthMonitor.NoGitHub.json");
+            Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
             StrongAssert.g_strongAssertEvent += StrongAssertEmailSendingEventHandler;
 
             HealthMonitor.g_healthMonitor.Init();
@@ -65,6 +66,7 @@ namespace HealthMonitor
             } while (userInput != "5" && userInput != "ConsoleIsForcedToShutDown");
 
             Utils.Logger.Info("****** Main() END");
+            Utils.MainThreadIsExiting.Set();
             HealthMonitor.g_healthMonitor.Exit();
             Utils.Logger.Exit();
         }

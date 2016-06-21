@@ -30,7 +30,7 @@ namespace VirtualBroker
         public List<int> VirtualOrderIds { get; set; }  // sometimes one real order has many virtual orders. If one order is Short 10 VXX, other order is long 7 VXX, than the one real order will be short 3 VXX
     }
 
-    public class Gateway
+    public partial class Gateway
     {
         public GatewayUser GatewayUser { get;  }
         public string VbAccountsList { get; set; }
@@ -366,6 +366,8 @@ namespace VirtualBroker
             }
             return false;
         }
+
+      
     }
 
 }

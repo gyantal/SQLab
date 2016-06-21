@@ -160,19 +160,68 @@ namespace VirtualBroker
             string ticker = (p_contract.SecType != "IND") ? p_contract.Symbol : "^" + p_contract.Symbol;
 
             // http://www.canbike.org/information-technology/yahoo-finance-url-download-to-a-csv-file.html
-            // http://download.finance.yahoo.com/d/quotes.csv?s=AAPL&f=sl1d1t1c1ohgv&e=.csv     where s = symbol, l1 – Last Trade Price
+            // http://download.finance.yahoo.com/d/quotes.csv?s=AAPL&f=sl1d1t1c1ohgv&e=.csv     where s = symbol, l1 – Last Trade Price, b2	Ask (Real-time), b3	Bid (Real-time)
             // sometimes, when there is an 1 hour SummerTime setting difference, we have proper real-time price not 20min later, but 1h20min later.
             //"VXX",20.87,"3/15/2016","4:00pm",+0.29,21.19,21.27,20.83,541558
             // but using k1,b2,b3 is no better: http://download.finance.yahoo.com/d/quotes.csv?s=VXX&f=sl1d1t1k1b2b3c1ohgv&e=.csv
             // "VXX",20.87,"3/15/2016","4:00pm",N/A,N/A,N/A,+0.29,21.19,21.27,20.83,541558
-            string uri = $"http://download.finance.yahoo.com/d/quotes.csv?s={ticker}&f=sl1d1t1k1b2b3c1ohgv&e=.csv";
+            //string uri = $"http://download.finance.yahoo.com/d/quotes.csv?s={ticker}&f=sl1d1t1k1b2b3c1ohgv&e=.csv";
+            string uri = $"http://download.finance.yahoo.com/d/quotes.csv?s={ticker}&f=sl1d1t1k1abc1ohgv&e=.csv";
             string csvDownload;
             if (!Utils.DownloadStringWithRetry(out csvDownload, uri, 5, TimeSpan.FromSeconds(5), false))
                 return false;
 
             Utils.Logger.Warn("!YF RT: " + csvDownload.Trim());
             string[] cells = csvDownload.Split(',');
-            p_quotes = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() { Price = Double.Parse(cells[1]), Time = DateTime.UtcNow } } };
+
+            double lastPrice = Double.NaN;
+            Double.TryParse(cells[1], out lastPrice);
+            double askPriceRT = Double.NaN;
+            Double.TryParse(cells[5], out askPriceRT);
+            double bidPriceRT = Double.NaN;
+            Double.TryParse(cells[6], out bidPriceRT);
+
+            foreach (var item in p_quotes)
+            {
+                if (item.Key == TickType.MID)
+                {
+                    item.Value.Time = DateTime.UtcNow;
+                    item.Value.Price = (askPriceRT + bidPriceRT) / 2.0;
+                }
+                else if (item.Key == TickType.LAST)
+                {
+                    item.Value.Time = DateTime.UtcNow;
+                    item.Value.Price = lastPrice;
+                }
+                else if (item.Key == TickType.ASK)
+                {
+                    item.Value.Time = DateTime.UtcNow;
+                    item.Value.Price = askPriceRT;
+                }
+                else if (item.Key == TickType.BID)
+                {
+                    item.Value.Time = DateTime.UtcNow;
+                    item.Value.Price = bidPriceRT;
+                }
+            }
+
+            foreach (var item in p_quotes)
+            {
+                if (item.Value.Price < 0.0)
+                {
+                    Utils.Logger.Warn($"Warning. Something is wrong. Price is negative. Returning False for price.");   // however, VBroker may want to continue, so don't throw Exception or do StrongAssert()
+                    return false;
+                }
+                //// for daily High, Daily Low, Previous Close, etc. don't check this staleness
+                //bool doCheckDataStaleness = item.Key != TickType.LOW && item.Key != TickType.HIGH && item.Key != TickType.CLOSE;
+                //if (doCheckDataStaleness && (DateTime.UtcNow - item.Value.Time).TotalMinutes > 5.0)
+                //{
+                //    Utils.Logger.Warn($"Warning. Something may be wrong. We have the RT price of {item.Key} for '{p_contract.Symbol}' , but it is older than 5 minutes. Maybe Gateway was disconnected. Returning False for price.");
+                //    return false;
+                //}
+            }
+
+            //p_quotes = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() { Price = Double.Parse(cells[1]), Time = DateTime.UtcNow } } };
             return true;
         }
 
@@ -298,7 +347,7 @@ namespace VirtualBroker
             return true;
         }
 
-        public int ReqMktDataStream(Contract p_contract)
+        public int ReqMktDataStream(Contract p_contract, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null)
         {
             switch (p_contract.Symbol)
             {
@@ -315,6 +364,11 @@ namespace VirtualBroker
                 default:
                     return 3999;
             }
+        }
+
+        public virtual void CancelMktData(int p_marketDataId)
+        {
+            
         }
 
         public void scannerData(int reqId, int rank, ContractDetails contractDetails, string distance, string benchmark, string projection, string legsStr)

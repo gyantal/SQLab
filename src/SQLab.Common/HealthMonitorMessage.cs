@@ -33,9 +33,9 @@ namespace SqCommon
         public string ParamStr { get; set; } = String.Empty;
         public HealthMonitorMessageResponseFormat ResponseFormat { get; set; }
 
-        public const int DefaultHealthMonitorServerPort = 52100;    // largest port number: 65535 
+        public const int DefaultHealthMonitorServerPort = 52100;    // largest port number: 65535, HealthMonitor listens on 52100, VBroker on 52101
 
-        // VBroker DEV server: private IP: 172.31.60.145, public static IP (Elastic): 23.20.243.199 == currently http://snifferquant.net/ but what if in the future, the Website and HealthMonitor will be on separate servers. So, use IP, instead of DNS name *.net.
+        // DEV server: private IP: 172.31.60.145, public static IP (Elastic): 23.20.243.199 == currently http://snifferquant.net/ but what if in the future, the Website and HealthMonitor will be on separate servers. So, use IP, instead of DNS name *.net.
         public static string HealthMonitorServerPrivateIpForListener
         {
             get

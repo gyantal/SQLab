@@ -150,7 +150,8 @@ namespace VirtualBroker
                 //Utils.Logger.Info("NeuralSniffer1Strategy.GeneratePositionSpecs() SqlTools.ReqHistoricalData().");
 
                 //You can use IB historical data:     >for stocks OR > popular indices, like SPX, but not the RUT. > So, for RUT, implement getting historical from our SQL DB.
-                 Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL" };
+                //Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL" };
+                Contract contract = VBrokerUtils.ParseSqTickerToContract("^RUT");
                 //Contract contract = new Contract() { Symbol = "SPX", SecType = "IND", Currency = "USD", Exchange = "CBOE" };
                 //Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL", LocalSymbol = "RUT" };
                 //Contract contract = new Contract() { Symbol = "ES", SecType = "IND", Currency = "USD", Exchange = "GLOBEX" };
