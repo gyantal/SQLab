@@ -146,7 +146,7 @@ namespace VirtualBroker
             //m_vxx = vxxQuotesFromSqlDB.Select(item => new QuoteData() { Date = item.Date, AdjClosePrice = item.AdjClosePrice }).ToList(); // Clone the SQL version, not YF
 
             // so, for VXX, for which there is no dividend, I can use the split-adjusted IB prices, but for other cases, I will have to use our SQL database (or YF or GF or all)
-            Contract contract = new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" };
+            Contract contract = VBrokerUtils.ParseSqTickerToContract("VXX");
             if (!Controller.g_gatewaysWatcher.ReqHistoricalData(DateTime.UtcNow, vxxLookbackWindowSize, "TRADES", contract, out m_vxxQuotesFromIB))   // real trades, not the MidPoint = AskBidSpread
             {
                 isOkGettingHistoricalData = false;
@@ -155,7 +155,8 @@ namespace VirtualBroker
             {
                 // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
                 if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
-                    StrongAssert.True(Math.Abs(m_vxxQuotesFromSqlDB[m_vxxQuotesFromSqlDB.Count - 1].AdjClosePrice - m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.02, Severity.NoException, "We continue but yesterday price data doesn't match from IB and SQL DB");
+                    StrongAssert.True(Math.Abs(m_vxxQuotesFromSqlDB[m_vxxQuotesFromSqlDB.Count - 1].AdjClosePrice - m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.02, Severity.NoException,
+                        $"We continue but yesterday price data doesn't match from IB and SQL DB for symbol {contract.Symbol}");
 
                 // log the last 3 values (for later debugging)
                 Utils.Logger.Trace($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].AdjClosePrice}");

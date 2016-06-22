@@ -175,6 +175,14 @@ namespace VirtualBroker
                     return;
                 }
             }
+
+            // after subscribing to Market Snapshot data for a ticker, and we call ClientSocket.cancelMktData(p_marketDataId); that is executed properly
+            // however IBGateway receives prices for the same ticker, and gives back the Error message here.
+            // It occurs after alwayl all CannceMktData(). We should ignore it.
+            // BrokerWrapper.error(). Id: 1010, Code: 300, Msg: Can't find EId with tickerId:1010
+            if (errorCode == 300)
+                return;
+
             Console.WriteLine("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg);
             Utils.Logger.Error("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg);
         }
@@ -204,6 +212,7 @@ namespace VirtualBroker
         public virtual int ReqMktDataStream(Contract p_contract, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null)
         {
             int marketDataId = GetUniqueReqMktDataID;
+            Utils.Logger.Debug($"ReqMktDataStream() { marketDataId} START");
             ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
             //mainClient.reqMktData(marketDataId, contractSPY, "221", false, null);
             ClientSocket.reqMktData(marketDataId, p_contract, null, p_snapshot, null);
@@ -224,10 +233,14 @@ namespace VirtualBroker
 
         public virtual void CancelMktData(int p_marketDataId)
         {
+            Utils.Logger.Debug($"CancelMktData() { p_marketDataId} START");
+            // 1. at first, inform IBGateway to not send data
+            ClientSocket.cancelMktData(p_marketDataId); // if p_snapshot = true, it is not necessarily to Cancel. However, it doesn't hurt.
+
+            // 2. Only after informing IBGateway delete the record from our memory DB
             MktDataSubscription mktDataSubscription;
             MktDataSubscriptions.TryRemove(p_marketDataId, out mktDataSubscription);
-
-            ClientSocket.cancelMktData(p_marketDataId); // if p_snapshot = true, it is not necessarily to Cancel. However, it doesn't hurt.
+            Utils.Logger.Debug($"CancelMktData() { p_marketDataId} END");
         }
 
         //- When streaming realtime price of Data for RUT, the very first time of the day, TWS gives price, but IBGateway does'nt give any price. 
@@ -293,23 +306,28 @@ namespace VirtualBroker
                 }
             }
 
+            bool isOk = true;
             foreach (var item in p_quotes)
             {
+                if (Double.IsNaN(item.Value.Price))
+                    isOk = false;   // expected behaviour. Imagine client asked for ASK, BID, LAST, but we only have LAST. In that case Price=NaN for ASK,BID, but we should return the LAST price
+
                 if (item.Value.Price < 0.0)
                 {
-                    Utils.Logger.Warn($"Warning. Something is wrong. Price is negative. Returning False for price.");   // however, VBroker may want to continue, so don't throw Exception or do StrongAssert()
-                    return false;
+                    Utils.Logger.Warn($"Warning. Something is wrong. Price is negative. Returning False for GetMktDataSnapshot().");   // however, VBroker may want to continue, so don't throw Exception or do StrongAssert()
+                    isOk = false;
                 }
                 // for daily High, Daily Low, Previous Close, etc. don't check this staleness
-                bool doCheckDataStaleness = item.Key != TickType.LOW && item.Key != TickType.HIGH && item.Key != TickType.CLOSE;
+                bool doCheckDataStaleness = !Double.IsNaN(item.Value.Price) &&
+                    (item.Key != TickType.LOW && item.Key != TickType.HIGH && item.Key != TickType.CLOSE);
                 if (doCheckDataStaleness && (DateTime.UtcNow - item.Value.Time).TotalMinutes > 5.0)
                 {
                     Utils.Logger.Warn($"Warning. Something may be wrong. We have the RT price of {item.Key} for '{p_contract.Symbol}' , but it is older than 5 minutes. Maybe Gateway was disconnected. Returning False for price.");
-                    return false;
+                    isOk = false;
                 }
             }
 
-            return true;
+            return isOk;
         }
 
         // After subscribing by reqMktData...
@@ -377,7 +395,7 @@ namespace VirtualBroker
             MktDataSubscription mktDataSubscription = null;
             if (!MktDataSubscriptions.TryGetValue(tickId, out mktDataSubscription))
             {
-                Utils.Logger.Error($"MktDataSubscription tickerID { tickId} is not expected");
+                Utils.Logger.Debug($"tickPrice(). MktDataSubscription tickerID { tickId} is not expected. Although IBGateway can send some prices even after CancelMktData was sent to IBGateway.");
                 return;
             }
 
@@ -424,7 +442,7 @@ namespace VirtualBroker
                 MktDataSubscription mktDataSubscription = null;
                 if (!MktDataSubscriptions.TryGetValue(tickerId, out mktDataSubscription))
                 {
-                    Utils.Logger.Error($"MktDataSubscription tickerID { tickerId} is not expected");
+                    Utils.Logger.Debug($"tickString(). MktDataSubscription tickerID { tickerId} is not expected. Although IBGateway can send some prices even after CancelMktData was sent to IBGateway.");
                     return;
                 }
                 mktDataSubscription.LastTimestampStr = p_value;

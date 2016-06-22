@@ -175,7 +175,8 @@ namespace VirtualBroker
 
                 // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
                 if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
-                    StrongAssert.True(Math.Abs(rutQuotesFromSqlDB[rutQuotesFromSqlDB.Count - 1].AdjClosePrice - m_rut[m_rut.Count - 2].AdjClosePrice) < 0.02, Severity.NoException, "We continue but yesterday price data doesn't match from IB and SQL DB");
+                    StrongAssert.True(Math.Abs(rutQuotesFromSqlDB[rutQuotesFromSqlDB.Count - 1].AdjClosePrice - m_rut[m_rut.Count - 2].AdjClosePrice) < 0.02, Severity.NoException,
+                        $"We continue but yesterday price data doesn't match from IB and SQL DB for symbol {contract.Symbol}");
 
                 // log the last 3 values (for later debugging)
                 Utils.Logger.Trace($"{m_rut[m_rut.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 3].AdjClosePrice}");

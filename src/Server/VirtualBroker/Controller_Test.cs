@@ -170,14 +170,11 @@ namespace VirtualBroker
         internal void TestRealtimePriceService()
         {
             // for futures, we picked: ^^, because other characters are not really allowed in URLs
-            //string s = @"?s=VXX,^VIX,^VXV,XIV,SPY&f=l";
-            //string s = @"?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201404,GOOG&f=l";
-            //string s = @"?s=^^VIX201404&f=l";
-            //string s = @"?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201404,GOOG&f=l"; // without JsonP
-            //string s = @"?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201404,GOOG&f=l&jsonp=MyCallBackFunction";      // with JsonP
 
-            //string s = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP
-            string s = @"?s=VXX,SVXY,UWM,TWM,^RUT,AAPL&f=l"; // without JsonP
+            string s = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
+            //string s = @"?s=VXX,SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l"; // without JsonP, AAPL and GOOGL is not streamed
+            //string s = @"?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l"; // without JsonP, this was the old test 1
+            //string s = @"?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction"; // with JsonP, this was the old test 2
             VirtualBrokerMessage.TcpServerHost = VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener;      // it is a Test inside VBroker server, so use Private IP, not public IP
             string reply = VirtualBrokerMessage.Send(s, VirtualBrokerMessageID.GetRealtimePrice).Result;
 

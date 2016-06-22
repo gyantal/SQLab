@@ -157,6 +157,8 @@ namespace VirtualBroker
 
         public bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
         {
+            if (p_contract.SecType == "FUT")
+                return false;       // there is no way YF can give Futures prices
             string ticker = (p_contract.SecType != "IND") ? p_contract.Symbol : "^" + p_contract.Symbol;
 
             // http://www.canbike.org/information-technology/yahoo-finance-url-download-to-a-csv-file.html

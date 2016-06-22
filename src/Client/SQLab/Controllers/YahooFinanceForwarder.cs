@@ -10,8 +10,7 @@ using SqCommon;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 
-// For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
-
+// https://www.snifferquant.net/YahooFinanceForwarder?yffOutFormat=json&yffOutVar=myData1&yffUri=ichart.finance.yahoo.com/table.csv&s=%5EVIX&a=00&b=1&c=2014&d=01&e=21&f=2014&g=d&ignore=.csv
 namespace SQLab.Controllers
 {
     //[Route("api/[controller]")]

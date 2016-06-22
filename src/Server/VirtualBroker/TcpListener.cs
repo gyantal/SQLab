@@ -53,7 +53,7 @@ namespace VirtualBroker
         {
             string reply = Controller.g_gatewaysWatcher.GetRealtimePriceService(p_message.ParamStr);
             BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
-            bw.Write($"Real time price is 0.  :)");
+            bw.Write(reply);
 
             Console.WriteLine($"<TEMP Until DEV>GetRealtimePrice(). Query:'{p_message.ParamStr}', Reply:'{reply}'.");
         }

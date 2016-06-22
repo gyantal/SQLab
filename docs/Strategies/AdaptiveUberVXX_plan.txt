@@ -295,7 +295,7 @@ so no need to waste time here with fine details.
 //- DetailedReport from VBroker to HealthMonitor.exe  (delay);
 	>it should be a HTML report, so colours can be used. And HTML email, and website can show it
 
-- move the realTime Quotes to VBroker/SQLabWebsite  (keep the current one until Mrs. Charmat IB account is OK. Later, I will have only my secondary account for VBroker + realtime price on Linux)
+//- move the realTime Quotes to VBroker/SQLabWebsite  (keep the current one until Mrs. Charmat IB account is OK. Later, I will have only my secondary account for VBroker + realtime price on Linux)
 	ConnorStrategy should use this RealTime Quotes
 
 - convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core, Angular2 (not 1 as before) and TS

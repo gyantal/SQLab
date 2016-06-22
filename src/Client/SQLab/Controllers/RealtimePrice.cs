@@ -10,8 +10,10 @@ using SqCommon;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 
-// For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
-
+// https://www.snifferquant.net/rtp?s=VXX,SVXY,UWM,TWM,^RUT&f=l  // without JsonP, these tickers are streamed all the time
+// https://www.snifferquant.net/rtp?s=VXX,SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l  // without JsonP, AAPL and GOOGL is not streamed
+// https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l  // without JsonP, this was the old test 1
+// https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction  // with JsonP, this was the old test 2
 namespace SQLab.Controllers
 {
     //[Route("api/[controller]")]
@@ -28,11 +30,6 @@ namespace SQLab.Controllers
         }
 
         [Authorize]
-        // http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l it is only 100ms. 
-        // http://localhost/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l  (this is 700ms, which is weird, while from Authorize or not Authorize doesn't help.)anyway, it is a temporary solution, so it doesn't worth debugging it now.
-        // https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l  (200ms, which is perfect: 100ms to AWS server, and 100ms from AWS server to Azure server.)
-        // http://localhost/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction
-        // https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction
         public ActionResult Index()
         {
             var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
@@ -42,14 +39,31 @@ namespace SQLab.Controllers
 
         }
 
-        // it is temporary simple redirection (untir VBrokerGateway supports real-time price requests.). 
-        //It is needed in SQLab server that HTTPS webpage get code from other HTTPS services. (not HTTP)
         private Tuple<string, string> GenerateRtpResponse()
         {
             try
             {
-                string rtpURI = @"http://hqacompute.cloudapp.net/q/rtp" + this.HttpContext.Request.QueryString;
                 var jsonDownload = string.Empty;
+                //string queryString = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
+                Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending '{this.HttpContext.Request.QueryString.ToString()}'");
+                string reply = VirtualBrokerMessage.Send(this.HttpContext.Request.QueryString.ToString(), VirtualBrokerMessageID.GetRealtimePrice).Result;
+                Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Received '{reply}'");
+                return new Tuple<string, string>(reply, "application/json");
+            }
+            catch (Exception e)
+            {
+                return new Tuple<string, string>(@"{ ""Message"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }", "application/json");
+            }
+        }
+
+        // it is temporary simple redirection (untir VBrokerGateway supports real-time price requests.). 
+        //It is needed in SQLab server that HTTPS webpage get code from other HTTPS services. (not HTTP)
+        private Tuple<string, string> GenerateRtpResponseBySendingToHqaCompute_Azure_Webservice()
+        {
+            try
+            {
+                var jsonDownload = string.Empty;
+                string rtpURI = @"http://hqacompute.cloudapp.net/q/rtp" + this.HttpContext.Request.QueryString;
                 if (!Utils.DownloadStringWithRetry(out jsonDownload, rtpURI, 5, TimeSpan.FromSeconds(5), false))
                 {
                     return new Tuple<string, string>(@"{ ""Message"":  ""Error: rtp download was not succesfull: " + rtpURI + @""" }", "application/json");

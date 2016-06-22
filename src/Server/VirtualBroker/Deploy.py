@@ -9,7 +9,7 @@ rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives
 rootRemoteDir = "/home/ubuntu/SQ/Server/VirtualBroker/src"
 acceptedSubTreeRoots = ["Server\\VirtualBroker", "SQLab.Common", "SQLab.RxCommon","SQLab.DbCommon", "ThirdParty\\Reactive\\System.Reactive.Interfaces", "ThirdParty\\Reactive\\System.Reactive.Core", "ThirdParty\\Reactive\\System.Reactive.Linq", "ThirdParty\\Reactive\\System.Reactive.PlatformServices", "ThirdParty\\IbApiSocketClient"]        # everything under these relPaths is traversed: files or folders too
 
-serverHost = "ec2-54-209-86-129.compute-1.amazonaws.com"
+serverHost = "ec2-52-203-240-30.compute-1.amazonaws.com"
 serverPort = 22
 serverUser = "ubuntu"
 serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerAgentKeyPairName.pem"

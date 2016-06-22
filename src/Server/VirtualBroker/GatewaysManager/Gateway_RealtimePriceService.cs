@@ -119,12 +119,13 @@ namespace VirtualBroker
 
                             for (int i = 0; i < tickerList.Count; i++)
                             {
-                                if (tickerList[i].Item3 != -1) // if it is temporary ticker  (it should be -2, at this point)
+                                if (tickerList[i].Item2 == null) // if it is temporary ticker  (it should be -2, at this point)
                                 {
                                     int mktDataId = BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract(tickerList[i].Item1), true,
                                         (cb_mktDataId, cb_mktDataSubscr, cb_tickType, cb_price) => {
                                             Console.WriteLine($"{cb_mktDataSubscr.Contract.Symbol} : {cb_tickType}: {cb_price}");
-
+                                            if ((cb_tickType == TickType.LAST) || 
+                                                (((cb_tickType == TickType.ASK) || (cb_tickType == TickType.BID)) && (cb_mktDataSubscr.Contract.SecType != "IND"))) // for stocks or for Futures
                                             priceTickARE.Set();
                                         });    // as Snapshot, not streaming data
                                     tickerList[i] = new Tuple<string, Dictionary<int, PriceAndTime>, int>(tickerList[i].Item1, null, mktDataId);
@@ -137,7 +138,7 @@ namespace VirtualBroker
                             DateTime waitStartTime = DateTime.UtcNow;
                             while (iTimeoutCount < 5)    // all these checks usually takes 0.1 seconds = 100msec, so do it every time after connection 
                             {
-                                bool isOneSignalReceived = priceTickARE.WaitOne(500);  // 1 seconds wait, max 5 times.
+                                bool isOneSignalReceived = priceTickARE.WaitOne(400);  // 400ms wait, max 5 times.
                                 if (isOneSignalReceived)   // so, it was not a timeout, but a real signal
                                 {
                                     var waitingDuration = DateTime.UtcNow - waitStartTime;
@@ -148,7 +149,7 @@ namespace VirtualBroker
                                     bool isAllInfoReceived = true;
                                     for (int i = 0; i < tickerList.Count; i++)
                                     {
-                                        if (tickerList[i].Item2 != null) // if it is temporary ticker
+                                        if (tickerList[i].Item2 == null) // if it is temporary ticker
                                         {
                                             string sqTicker = tickerList[i].Item1;
                                             int mktDataId = tickerList[i].Item3;
@@ -174,7 +175,7 @@ namespace VirtualBroker
                                             else
                                             {
                                                 isAllInfoReceived = false;
-                                                break;
+                                                // break;  don't end the for cycle here. Maybe a ticker (VIX futures) will be never received, because IB user doesn't have subscription. However, all tickers AFTER that ticker should be tried too.
                                             }
                                         }
                                     } // for
@@ -202,7 +203,7 @@ namespace VirtualBroker
                         {
                             foreach (var tickerItem in tickerList)
                             {
-                                if (tickerItem.Item3 != -1) // if it is temporary ticker
+                                if (tickerItem.Item3 != -1) // if it was a temporary ticker
                                 {
                                     BrokerWrapper.CancelMktData(tickerItem.Item3);
                                 }
