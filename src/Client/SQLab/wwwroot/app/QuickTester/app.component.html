@@ -1,1 +1,344 @@
-﻿<h1>QuickTester Angular2 App</h1><br /><button (click)="onClickMe()">Click me!</button><br /><br />{{clickMessage }}
+﻿
+<div class="divTitle">SQ Strategy QuickTester ({{m_versionShortInfo}}) <span class="spanTitleSuperscript">*RealTime</span> </div>
+<div style="width: 100%; height: 2px; background: #ffffff; overflow: hidden;"></div>
+<!--//http://jsfiddle.net/rabidGadfly/f8ea6/ this was a good Angular menu, but submenus was not hovering-->
+<!--// jquery horizontal menu is from here (I gave up finding Angular one): http://runnable.com/UdQdRyHniSpKAAXx/create-a-horizontal-navigation-menu-bar-using-jquery-->
+<!-- Use this navigation div as your menu bar div -->
+<div class="navigation">
+    <ul class="sqMenuNav">
+        <li class="sqMenuItemLevel0" id="idStartBacktestButtonLi">
+            <span class="startBacktestButton" id="idStartBacktestButtonA" (click)="MenuItemStartBacktestClicked()">Start Backtest!</span>
+        </li>
+        <li class="sqMenuItemLevel0">
+            <span>Tools</span>
+            <ul class="sqMenuBarLevel1">
+                <li><span>Copy PV to clipboard</span></li>
+                <li><span (click)="MenuItemVersionInfoClicked()">Version info</span></li>
+            </ul>
+        </li>
+        <li class="sqMenuItemLevel0">
+            <span>Debug</span>
+            <ul class="sqMenuBarLevel1">
+                <li><span>See debug info 1</span></li>
+                <li><span>See debug info 2</span></li>
+            </ul>
+        </li>
+        <li class="sqMenuItemLevel0">
+            <span>Strategies</span>
+            <ul class="sqMenuBarLevel1">
+                <li class="sqMenuItemLevel1">
+                    <span>Seasonalities</span>
+                    <ul class="sqMenuBarLevel2">
+                        <li><span id="idMenuItemTotM" (click)="MenuItemStrategyClick($event)">Turn of the Month</span></li>
+                    </ul>
+                </li>
+                <li class="sqMenuItemLevel1">
+                    <span>VIX</span>
+                    <ul class="sqMenuBarLevel2">
+                        <li><span id="idMenuItemVXX_SPY_Controversial" (click)="MenuItemStrategyClick($event)">VXX-SPY Controversial</span></li>
+                    </ul>
+                </li>
+                <li class="sqMenuItemLevel1">
+                    <span>L-ETF</span>
+                    <ul class="sqMenuBarLevel2">
+                        <li><span id="idMenuItemLETFDiscrepancy1" (click)="MenuItemStrategyClick($event)">L-ETF Discrepancy 1</span></li>
+                        <li><span id="idMenuItemLETFDiscrepancy2" (click)="MenuItemStrategyClick($event)">L-ETF Discrepancy 2</span></li>
+                        <li><span id="idMenuItemLETFDiscrepancy3" (click)="MenuItemStrategyClick($event)">L-ETF Discrepancy 3</span></li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+<br>
+<div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
+
+
+
+<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters');" id="idAlwaysVisibleSwitch0">+ Show General Parameters</a>
+<br />
+<div id="idGeneralParameters" style="display: none;">
+    <table id="idGeneralParametersTable">
+        <colgroup>
+            <col class="column1" />
+            <col class="column2" />
+        </colgroup>
+        <thead>
+            <tr>
+                <th>StartDateUtc*</th>
+                <th>EndDateUtc*</th>
+                <th class="xSmallComment">*(UTC-16:00 will be converted to Exchange Time Zone)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" [(ngModel)]="inputStartDateStr" style="width: 100px; padding: 1px; border: 1px solid #A0A0A0" /></td>
+                <td><input type="text" [(ngModel)]="inputEndDateStr" style="width: 100px; padding: 1px; border: 1px solid #A0A0A0" /></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+
+
+<span>SelectedStrategy:</span>
+<span class="spanStrategyDescription"> {{selectedStrategyName}} </span>
+<a id="googleHelpHref" target="_blank" href="{{strategyGoogleDocHelpUri}}"> Help</a>
+
+<span class="spanTitleSuperscript">(GoogleDoc)</span>
+<div style="height: 1px; background: #808080; overflow: hidden;"></div>
+<!--<div style="width: 50%; height: 1px; background: #ffffff; overflow: hidden;"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->    <!--// fast SSI, Server Side Include works in Azure website from 2014: http://azure.microsoft.com/blog/2014/03/26/server-side-includes-ssi-in-windows-azure-web-sites-waws/-->
+<!--#include virtual="/SQQuickTester/Strategies/TotM/TotM.htm"-->
+<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemTotM'" align="left">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>Trading instrument<br />on bullish day</th>
+            <th>Daily mask, Winter<br />(TotM, rel.to 1st day)</th>
+            <th>Daily mask, Winter<br />(TotMM, rel.to 15th day)</th>
+            <th>Daily mask, Summer<br />(TotM, rel.to 1st day)</th>
+            <th>Daily mask, Summer<br />(TotMM, rel.to 15th day)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <select [ngModel]="strategy_TotM.selectedBullishTradingInstrument" (ngModelChange)="strategy_TotM.bullishTradingInstrumentChanged($event)">
+                    <option [value]="i" *ngFor="let i of strategy_TotM.bullishTradingInstrument">{{i}}</option>
+                </select>
+            
+            <!--<select [(ngModel)]="strategy_TotM.selectedBullishTradingInstrument" ng-options="opt as opt for opt in bullishTradingInstrument" ng-change="bullishTradingInstrumentChanged()"></select>-->
+            
+            </td>
+            <td><input type="text" [(ngModel)]="strategy_TotM.dailyMarketDirectionMaskWinterTotM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_TotM.dailyMarketDirectionMaskWinterTotMM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_TotM.dailyMarketDirectionMaskSummerTotM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_TotM.dailyMarketDirectionMaskSummerTotMM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+        </tr>
+    </tbody>
+</table>
+<span class="navigation">
+    <ul class="sqMenuNav">
+        <li class="sqMenuItemLevel0" id="idTotMButtonLi">
+            <a href="" id="idTotMButtonA">Masks</a>
+            <ul class="sqMenuBarLevel1">
+                <li><a href="" (click)="MenuItemPresetMasksClicked('BuyHold')">Buy&Hold</a></li>
+                <li><a href="" (click)="MenuItemPresetMasksClicked('UberVXXOld')">UberVXX old</a></li>
+                <li><a href="" (click)="MenuItemPresetMasksClicked('UberVXXNew')">UberVXX new</a></li>
+                <li><a href="" (click)="MenuItemPresetMasksClicked('SPYDerived')">SPY derived</a></li>
+            </ul>
+        </li>
+    </ul>
+</span>
+
+
+<!--#include virtual="/SQQuickTester/Strategies/VIX/VXX_SPY_Controversial.htm"-->
+<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemVXX_SPY_Controversial'">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>SPY Min %Change</th>
+            <th>VXX Min %Change</th>
+            <th>VXX Long or Short <br /> after controversial days</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><input type="text" [(ngModel)]="strategy_VXX_SPY_Controversial.spyMinPctMove" style="width: 40px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" />%</td>
+            <td><input type="text" [(ngModel)]="strategy_VXX_SPY_Controversial.vxxMinPctMove" style="width: 40px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" />%</td>
+            <td>
+
+                <select [ngModel]="strategy_VXX_SPY_Controversial.selectedVXXLongOrShortTrade" (ngModelChange)="strategy_VXX_SPY_Controversial.vxxLongOrShortTradeChanged($event)">
+                    <option [value]="i" *ngFor="let i of strategy_VXX_SPY_Controversial.vxxLongOrShortTrade">{{i}}</option>
+                </select>
+
+                <!--<select [(ngModel)]="strategy_VXX_SPY_Controversial.selectedVXXLongOrShortTrade" ng-options="opt as opt for opt in vxxLongOrShortTrade" ng-change="vxxLongOrShortTradeChanged()"></select>-->
+
+            </td>
+        </tr>
+    </tbody>
+</table>
+<!--#include virtual="/SQQuickTester/Strategies/L-ETF-Discrepancy/L-ETF-DiscrepancyInput.htm"-->
+<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy1' && selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy2' && selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy3'">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>Selected ETF pair</th>
+            <th>Rebalancing Frequency<br />"5d"-5days,"2w"-2weeks,"6m"-6months</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <select [ngModel]="strategy_LEtfDistcrepancy.selectedEtfPairs" (ngModelChange)="strategy_LEtfDistcrepancy.etfPairsChanged($event)">
+                    <option [value]="i" *ngFor="let i of strategy_LEtfDistcrepancy.etfPairs">{{i}}</option>
+                </select>
+
+            <!--<select [(ngModel)]="strategy_LEtfDistcrepancy.selectedEtfPairs" ng-options="opt as opt for opt in etfPairs" ng-change="etfPairsChanged()"></select>-->
+            
+            </td>
+            <td><input type="text" [(ngModel)]="strategy_LEtfDistcrepancy.rebalancingFrequency" (keypress)="OnParameterInputKeypress($event)" /></td>
+        </tr>
+    </tbody>
+</table>
+<!--// How to Eliminate Whitespace around Server Side Includes when Pages are UTF-8 Encoded? http://stackoverflow.com/questions/7196993/how-to-eliminate-whitespace-around-server-side-includes-when-pages-are-utf-8-enc-->
+<!--<div style="width: 50%; height: 1px; background: #ffffff; overflow: hidden;"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->
+<div style="width: 100%; height: 2px; background: #ffffff; overflow: hidden;"></div>
+<div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
+<!--Ideas what to put here as Statistics come from Portfolio123 http://imarketsignals.com/2015/best8-sp500-min-volatility-large-cap-portfolio-management-system/-->
+
+<table id="statisticsTable">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+        <col class="column3" />
+        <col class="column3" />
+    </colgroup>
+    <thead>
+    </thead>
+    <tbody>
+        <tr class='even'>
+            <td id="idTdGeneral">General:</td>
+            <td>Start Date: <span> {{startDateStr}} </span></td>
+            <td id="idTdRebalanceFrequency">Rebalance Frequency: <span> {{rebalanceFrequencyStr}} </span></td>
+            <td>Benchmark: <span> {{benchmarkStr}} </span></td>
+        </tr>
+    </tbody>
+</table>
+<span id="idSpanStatistics">Statistics (as of {{endDateStr}}):</span>
+<br>
+
+
+<table id="statisticsTable">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+        <col class="column3" />
+    </colgroup>
+    <thead>
+    </thead>
+    <tbody>
+        <tr class='even'>
+            <td>PV Start Value: <span> &#36;{{pvStartValue | number:'.0-2'}} </span></td>
+            <td>PV Final Value: <span> &#36;{{pvEndValue | number:'.0-2'}} </span></td>
+            <td>Total Return: <span> {{100*totalGainPct | number: '.0-2'}}&#37; </span></td>
+        </tr>
+        <tr>
+            <td id="tdCagr">CAGR: <span> {{100*cagr | number:'.0-2'}}% </span></td>
+            <td>Annualized StDev: <span> {{100*annualizedStDev | number:'.0-2'}}% </span></td>
+            <td id="tdSharpe">Sharpe: <span> {{sharpeRatio | number:'.0-2'}} </span></td>
+        </tr>
+        <tr class='even'>
+            <td>Max Drawdown: <span> {{100*maxDD | number:'.0-2'}}% </span></td>
+            <td><a target="_blank" href="http://en.wikipedia.org/wiki/Ulcer_index">Ulcer</a> (Vol=qMean DD): <span> {{100*ulcerInd | number:'.0-2'}}% </span></td>
+            <td>Max.TradingDays in Drawdown: <span> {{maxTradingDaysInDD}} </span></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Winners: <span> {{winnersStr}} </span></td>
+            <td>Losers: <span> {{losersStr}} </span></td>
+            <td>Annualized <a target="_blank" href="http://www.redrockcapital.com/Sortino__A__Sharper__Ratio_Red_Rock_Capital.pdf">Sortino</a>: <span> {{sortinoRatio | number:'.0-2'}} </span></td>
+            <td></td>
+        </tr>
+        <tr class='even'>
+            <td>Benchmark CAGR: <span> {{100*benchmarkCagr | number:'.0-2'}}% </span></td>
+            <td>Benchmark Max Drawdown: <span> {{100*benchmarkMaxDD | number:'.0-2'}}% </span></td>
+            <td>Correlation with Benchmark: <span> {{benchmarkCorrelation | number:'.0-2'}}</span></td>
+        </tr>
+    </tbody>
+</table>
+
+
+<div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
+<div id="tv_chart_container"></div>
+
+<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idNoteFromStrategyDiv', 'idAlwaysVisibleSwitch1', 'note from strategy');" id="idAlwaysVisibleSwitch1">+ Hide note from strategy</a>
+<br />
+<div id="idNoteFromStrategyDiv" style="display: block;">
+    <!--<span ng-bind-html="htmlNoteFromStrategy"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->
+    <span id="idHtmlNoteFromStrategy">  </span>
+</div>
+
+
+
+
+<br>
+<span id="idSpanStatistics">Holdings (as of {{endDateStr}}):</span>
+<br>
+<table id="statisticsTable">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+        <col class="column3" />
+    </colgroup>
+    <thead>
+    </thead>
+    <tbody>
+        <tr class='even'>
+            <td>Cash: <span> ${{pvCash | number:'.0-2'}} </span></td>
+            <td>Number of positions: <span> {{nPositions}} </span></td>
+        </tr>
+    </tbody>
+</table>
+
+
+    Holdings List:
+<span> {{holdingsListStr}} </span>
+<br><br>
+    ErrorMessage:
+<span> {{errorMessage}} </span>
+<br>
+    DebugMessage:
+<span> {{debugMessage}} </span>
+<br>
+    Profiling:
+<span>JS BacktestCallback: {{profilingBacktestCallbackMSec | number}}ms, BacktestAtChartReadyStart(chart removed/created): {{profilingBacktestAtChartReadyStartMSec | number}}ms, BacktestAtChartReadyEnd(TimeFrame clicked): {{profilingBacktestAtChartReadyEndMSec | number}}ms </span>
+<br>
+
+
+<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idDebugInfoDiv', 'idAlwaysVisibleSwitchDebug', 'debug info');" id="idAlwaysVisibleSwitchDebug">+ Show debug info</a>
+<br />
+<div id="idDebugInfoDiv" style="display: none;">
+    <!--<span ng-bind-html="htmlNoteFromStrategy"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->
+    <span id="idDebugInfoSpan">
+        <br>ChartDataInStr:
+        <pre>{{chartDataInStr}} </pre>
+        <br>
+    </span>
+</div>
+
+
+<br>
+<span>{{tipToUser}}</span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<br />
+<button class="mymyButton1Class" (click)="onClickMe()">Click me!</button>
+<br />
+<br />{{clickMessage }}

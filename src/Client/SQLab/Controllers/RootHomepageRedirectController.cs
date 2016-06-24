@@ -52,6 +52,9 @@ namespace SQLab.Controllers
             if (String.IsNullOrWhiteSpace(urlPath) || urlPath == "/")
                 urlPath = "/userdashboard";
 #endif
+            string wwwRootPath = (Utils.RunningPlatform() == Platform.Linux) ?
+                        $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/" :
+                        @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\";
             string fileName = String.Empty;
             switch (urlPath)
             {
@@ -74,7 +77,19 @@ namespace SQLab.Controllers
                     fileName = "QuickTester.html";
                     break;
                 default:
-                    m_logger.LogWarning($"HttpRequest: '{urlPath}' is not served.");
+#if DEBUG   // for the Index page, give Dashboard according to DEBUG or RELEASE
+                    if (urlPath.EndsWith(".ts"))    // urlPath	"/app/quicktester/app.component.ts"
+                    {
+                        wwwRootPath = (Utils.RunningPlatform() == Platform.Linux) ?
+                            $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/" :
+                            @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\";
+                        fileName = urlPath.Substring(1); // remove first char '/'
+                    } else
+                    {
+                        m_logger.LogWarning($"HttpRequest: '{urlPath}' is not served.");
+                    }
+#endif
+      
                     // not recognized, but it is here, because of Prefix. like "GET http://localhost/app/HealthMonintor/systemjs.config.js  "
                     //fileName = "UserDashboard.html";
                     break;
@@ -82,11 +97,9 @@ namespace SQLab.Controllers
 
             if (!String.IsNullOrEmpty(fileName))
             {
-                string fileStr = System.IO.File.ReadAllText(((Utils.RunningPlatform() == Platform.Linux) ?
-                        $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/{fileName}" :
-                        @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" + fileName));
+                string fileStr = System.IO.File.ReadAllText(wwwRootPath + fileName);
 
-                switch (urlPath)
+                switch (urlPath)    // replace unknown@gmail.com with proper gmail user if it is a main page
                 {
                     case "/userdashboard":
                     case "/healthmonitor":

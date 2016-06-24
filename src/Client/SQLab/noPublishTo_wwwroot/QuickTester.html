@@ -1,25 +1,81 @@
-﻿<html>
+﻿<!DOCTYPE html>
+<html>
 <head>
     <title>SQ QuickTester</title>
-    <link href="/images/favicon_healthmonitor1.ico" rel="shortcut icon" type="image/x-icon" />
+    <link href="/images/favicon/graph-icon-248167/favicon.ico" rel="shortcut icon" type="image/x-icon" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/css/QuickTester.css">
-    <!-- 1. Load libraries -->
+
+    <!-- 1. Load 3rd party general libraries. Maybe Angular uses jQuery if it detects it -->
+    <!-- jQuery and chosen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.5.1/chosen.jquery.min.js"></script>-->
+
+    <!-- 2. Load Angular 2 libraries -->
     <!-- Polyfill(s) for older browsers -->
-    
     <!--In the future, serve this from a CDN, not from local website. 
     Either from https://code.angularjs.org/ (not a CDN) or https://cdnjs.com/libraries/angular.js/ or best https://ajax.googleapis.com/ajax/libs/angularjs
     2016-06-17: Angular2 RC2 is not available yet on those CDNs-->
-
     <script src="node_modules/core-js/client/shim.min.js"></script>
     <script src="node_modules/zone.js/dist/zone.js"></script>
     <script src="node_modules/reflect-metadata/Reflect.js"></script>
     <script src="node_modules/systemjs/dist/system.src.js"></script>
     <!-- 2. Configure SystemJS -->
     <script src="/app/QuickTester/systemjs.config.js"></script>
+
+    
+    <!-- 3. Load our own private libraries -->
+    
+    
+    <script type="text/javascript" src="../charting_library/charting_library.min-deobfuscated.js"></script> <!--// deobfuscated is needed for postMessage "loadRangeAgy"-->
+    <script type="text/javascript" src="datafeedQuickTesterChart.js"></script>
+
+    <!--
+    <script type="text/javascript" src="/app/QuickTester/TotM.js"></script>
+    <script type="text/javascript" src="Strategies/VIX/VXX_SPY_Controversial.js"></script>
+    <script type="text/javascript" src="Strategies/L-ETF-Discrepancy/L-ETF-Discrepancy.js"></script>
+    <script type="text/javascript" src="../Utils/Utils.js"></script>
+    <script type="text/javascript" src="QuickTester.js"></script>-->
+
+    
     <script>
         var gSqUserEmail = 'unknown@gmail.com';
+
+        /*      $(document).ready(
+   This is the function that will get executed after the DOM is fully loaded */
+//  function () {
+//      /* Next part of code handles hovering effect and submenu appearing */
+//      $('.sqMenuItemLevel0').hover(
+//        function () { //appearing on hover
+//            $('.sqMenuBarLevel1', this).fadeIn();
+//        },
+//        function () { //disappearing on hover
+//            $('.sqMenuBarLevel1', this).fadeOut();
+//        }
+//      );
+
+//      $('.sqMenuItemLevel1').hover(
+//        function () { //appearing on hover
+//            $('.sqMenuBarLevel2', this).fadeIn();
+//        },
+//        function () { //disappearing on hover
+//            $('.sqMenuBarLevel2', this).fadeOut();
+//        }
+//      );
+
+//      //$('.sqMenuNav li').hover(
+//      //  function () { //appearing on hover
+//      //      $('ul', this).fadeIn();
+//      //  },
+//      //  function () { //disappearing on hover
+//      //      $('ul', this).fadeOut();
+//      //  }
+//      //);
+//  }
+//);
+
+        //onHeadProcessing();
 
         System.import('app').catch(function(err){ console.error(err); });
     </script>
