@@ -7,7 +7,7 @@
 
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>c75aa513-bda1-4e24-a458-b2736a560916</ProjectGuid>
+    <ProjectGuid>83cc1149-bd0b-423d-a0b6-24d8b67fe63e</ProjectGuid>
     <RootNamespace>DotNetCoreTestNetSecurity</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">..\..\..\artifacts\obj</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">..\..\..\artifacts\bin\</OutputPath>

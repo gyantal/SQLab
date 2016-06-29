@@ -7,7 +7,7 @@
 
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>0f633bcf-6c4e-49cb-a6c1-d70d101a65ac</ProjectGuid>
+    <ProjectGuid>73572228-1c3f-4982-ab46-fcbf1c3d1200</ProjectGuid>
     <RootNamespace>VirtualBroker</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">..\..\..\artifacts\obj</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">..\..\..\artifacts\bin\</OutputPath>

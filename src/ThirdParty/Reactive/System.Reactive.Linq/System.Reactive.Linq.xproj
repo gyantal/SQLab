@@ -7,7 +7,7 @@
 
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>a5508ff0-93b9-4241-b666-07b05189c435</ProjectGuid>
+    <ProjectGuid>4942850e-b330-4d1a-8feb-1aafd8b829aa</ProjectGuid>
     <RootNamespace>System.Reactive</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">..\..\..\..\artifacts\obj</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">..\..\..\..\artifacts\bin\</OutputPath>

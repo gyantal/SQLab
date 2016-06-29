@@ -1,10 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Net.Security;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
-
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DotNetCoreTestNetSecurity
 {
@@ -46,7 +44,7 @@ namespace DotNetCoreTestNetSecurity
                 Console.WriteLine("");
                 throw;
             }
-            
+
 
             var email = new HQEmail { ToAddresses = toAddress, Subject = "Test from DotNetCoreTestNetSecurity", Body = "This is a test.", IsBodyHtml = false };
 
@@ -63,9 +61,10 @@ namespace DotNetCoreTestNetSecurity
 
                     email.Subject = "Test from DotNetCoreTestNetSecurity, Linux SslStream.";
                     email.SendWithSystemNetSecuritySslStream(true);
-                    Console.WriteLine("*** 2. BINGO!!!! on Linux. email.SendWithSystemNetSecuritySslStream() seemed succesfull. It seems SslStream bug in DotNetCore is fixed. Rewrite email sending in SQLab Utils.");
+                    Console.WriteLine("*** 2. IF there was no Error message: BINGO!!!! on Linux. email.SendWithSystemNetSecuritySslStream() seemed succesfull. It seems SslStream bug in DotNetCore is fixed. Rewrite email sending in SQLab Utils.");
                 }
-                else {
+                else
+                {
                     email.Subject = "Test from DotNetCoreTestNetSecurity, Windows SslStream.";
                     email.SendWithSystemNetSecuritySslStream(true);  // "\r\n" for non-Unix platforms
                     Console.WriteLine("*** on Windows: email.SendWithSystemNetSecuritySslStream() seemed succesfull. We expected that.");
@@ -76,7 +75,7 @@ namespace DotNetCoreTestNetSecurity
                 Console.WriteLine("*** Too bad. Exception occured. They haven't fixed the SslStream issue in DotNetCore yet. Try again later.");
                 throw;
             }
-            
+
 
 
             Console.WriteLine("*** To exit program: type something and press Enter.");

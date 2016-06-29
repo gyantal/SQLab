@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "DotNetCoreTestNetSecurity": {
-      "commandName": "DotNetCoreTestNetSecurity",
-      "sdkVersion": "dnx-clr-win-x86.1.0.0-rc2-16357"
-    }
-  }
-}

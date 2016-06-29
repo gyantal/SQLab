@@ -139,7 +139,7 @@ namespace VirtualBroker
             }
             else
             {
-                // 1. Get historical RUT data 
+                // 1. Get historical RUT data from SQL db. IB only gives 1 year of historical data, so we better get it from DB.
                 Utils.Logger.Info("NeuralSniffer1Strategy.GeneratePositionSpecs() SqlTools.LoadHistoricalQuotesAsync().");
                 List<QuoteData> rutQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "^RUT", nQuotes =  lookbackWindowSize - 1 }}, DbCommon.AssetType.BenchmarkIndex).Result.
@@ -176,7 +176,7 @@ namespace VirtualBroker
                 // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
                 if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
                     StrongAssert.True(Math.Abs(rutQuotesFromSqlDB[rutQuotesFromSqlDB.Count - 1].AdjClosePrice - m_rut[m_rut.Count - 2].AdjClosePrice) < 0.02, Severity.NoException,
-                        $"We continue but yesterday price data doesn't match from IB and SQL DB for symbol {contract.Symbol}");
+                        $"Yesterday close price for {contract.Symbol} doesn't match between IB ({m_rut[m_rut.Count - 2].AdjClosePrice}) and SQL DB ({rutQuotesFromSqlDB[rutQuotesFromSqlDB.Count - 1].AdjClosePrice}). Something is not right. We compare SQL data to SQL data here, so this warning shouldn't have been tiggered. For RUT, we use SQL (YF) historical data (can be wrong for the previous close temporarily). For UberVXX VXX, we use IB historical data (more trustworthy).");
 
                 // log the last 3 values (for later debugging)
                 Utils.Logger.Trace($"{m_rut[m_rut.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 3].AdjClosePrice}");

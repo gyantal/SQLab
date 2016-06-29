@@ -6,7 +6,7 @@ from colorama import Fore, Back, Style
 # Parameters to change:
 localeProjectBaseDir = "g:/work/Archi-data/GitHubRepos/SQLab/src/Test/DotNetCoreTestNetSecurity/"
 remoteBaseDir = "/home/ubuntu/SQ/Server/Test/TestNetSecurity/src/"
-fixFiles = ["project.json", "../../NuGet.Config"]
+fixFiles = ["project.json"]
 
 # script run
 colorama.init()

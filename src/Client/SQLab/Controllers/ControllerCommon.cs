@@ -14,6 +14,9 @@ namespace SQLab.Controllers
     {
         public static ActionResult CheckAuthorizedGoogleEmail(Controller p_controller, ILogger<Program> p_logger, SqCommon.IConfigurationRoot p_config)
         {
+#if DEBUG
+            return null;
+#endif
             // CookieAuthenticationOptions.AutomaticAuthenticate = true (default) causes User to be set
             //var user = HttpContext.User;
             //// Deny anonymous request beyond this point.

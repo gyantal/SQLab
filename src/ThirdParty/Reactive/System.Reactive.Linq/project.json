@@ -25,15 +25,13 @@
     }
   },
 
-    "dependencies": {
+  "dependencies": {
       "System.Reactive.Core": "3.0.0-*"
-    },
+  },
 
-    "frameworks": {
-      "netstandard1.5": {
-        "imports": "dnxcore50"
-      }
+  "frameworks": {
+    "netstandard1.6": {
+      "imports": "dnxcore50"
     }
-
-
   }
+}

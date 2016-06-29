@@ -38,7 +38,9 @@ namespace SQLab.Controllers
         }
 
         [HttpGet]
+#if !DEBUG
         [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
+#endif
         public ActionResult UserInfo()
         {
             var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;

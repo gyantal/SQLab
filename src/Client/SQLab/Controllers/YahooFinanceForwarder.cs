@@ -25,7 +25,9 @@ namespace SQLab.Controllers
             m_config = p_config;
         }
 
+#if !DEBUG
         [Authorize]
+#endif
         public ActionResult Index()
         {
             var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;

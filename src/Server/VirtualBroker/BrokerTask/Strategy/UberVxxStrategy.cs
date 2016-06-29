@@ -154,10 +154,12 @@ namespace VirtualBroker
             else
             {
                 // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
-                if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
+                if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
+                {// in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
+                    // 2016-06-27: VXX ClosePrice: YF historical: $16.83, all others: GF, Marketwatch, IB, YF main (not historical) page: $16.92
                     StrongAssert.True(Math.Abs(m_vxxQuotesFromSqlDB[m_vxxQuotesFromSqlDB.Count - 1].AdjClosePrice - m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.02, Severity.NoException,
-                        $"We continue but yesterday price data doesn't match from IB and SQL DB for symbol {contract.Symbol}");
-
+                        $"Yesterday close price for {contract.Symbol} doesn't match between IB ({m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice}) and SQL DB ({m_vxxQuotesFromSqlDB[m_vxxQuotesFromSqlDB.Count - 1].AdjClosePrice}). We continue trading and use only the more trustworthy IB data. If you check IB ClosePrice with other sources (GF, Marketwatch), and that is a good value, there is nothing to do. VBroker will use the IB historical price and IB ClosePrice.");
+                }
                 // log the last 3 values (for later debugging)
                 Utils.Logger.Trace($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 3].AdjClosePrice}");
                 Utils.Logger.Trace($"{m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].Date.ToString("yyyy-MM-dd")}: {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice}");

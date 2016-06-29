@@ -1,23 +1,19 @@
-﻿//using System.Reflection;
-//using System.Runtime.CompilerServices;
-//using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-//// General Information about an assembly is controlled through the following
-//// set of attributes. Change these attribute values to modify the information
-//// associated with an assembly.
-//[assembly: AssemblyTitle("DotNetCoreTestNetSecurity")]
-//[assembly: AssemblyDescription("")]
-//[assembly: AssemblyConfiguration("")]
-//[assembly: AssemblyCompany("")]
-//[assembly: AssemblyProduct("DotNetCoreTestNetSecurity")]
-//[assembly: AssemblyCopyright("Copyright ©  2016")]
-//[assembly: AssemblyTrademark("")]
-//[assembly: AssemblyCulture("")]
+// General Information about an assembly is controlled through the following
+// set of attributes. Change these attribute values to modify the information
+// associated with an assembly.
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("DotNetCoreTestNetSecurity")]
+[assembly: AssemblyTrademark("")]
 
-//// Setting ComVisible to false makes the types in this assembly not visible
-//// to COM components.  If you need to access a type in this assembly from
-//// COM, set the ComVisible attribute to true on that type.
-//[assembly: ComVisible(false)]
+// Setting ComVisible to false makes the types in this assembly not visible
+// to COM components.  If you need to access a type in this assembly from
+// COM, set the ComVisible attribute to true on that type.
+[assembly: ComVisible(false)]
 
-//// The following GUID is for the ID of the typelib if this project is exposed to COM
-////[assembly: Guid("c75aa513-bda1-4e24-a458-b2736a560916")]
+// The following GUID is for the ID of the typelib if this project is exposed to COM
+[assembly: Guid("83cc1149-bd0b-423d-a0b6-24d8b67fe63e")]

@@ -1,4 +1,4 @@
-{
+﻿{
   "version": "1.0.0-*",
   "description": "Overmind Console Application",
   "authors": [ "gyantal" ],
@@ -10,6 +10,10 @@
   },
 
   "dependencies": {
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.0"
+    },
     "SQLab.Common": "1.0.0-*"
   },
 
@@ -19,10 +23,10 @@
   // "Can not find runtime target for framework '.NETCoreApp,Version=v1.0' compatible with one of the target runtimes: 'win10-x64, win81-x64, win8-x64, win7-x64'. Possible causes:
   // 1. The project has not been restored or restore failed - run `dotnet restore`
   // 2. The project does not list one of 'win10-x64, win81-x64, win8-x64, win7-x64' in the 'runtimes' section.
-  "runtimes": {
-    "ubuntu.14.04-x64": { },
-    "win10-x64": { }
-  },
+  //"runtimes": {
+  //  "ubuntu.14.04-x64": { },
+  //   "win10-x64": { }
+  // },
 
   "frameworks": {
     "netcoreapp1.0": {
@@ -33,5 +37,4 @@
   "commands": {
     "Overmind": "Overmind"
   }
-
 }

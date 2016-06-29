@@ -1,14 +1,11 @@
-﻿//#if DNXCORE50
-
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace DotNetCoreTestNetSecurity
 {
@@ -38,7 +35,7 @@ namespace DotNetCoreTestNetSecurity
 
         public static string SenderName;
         public static string SenderPwd;
-        
+
         internal void Send(bool p_enableSsl)
         {
             if (Environment.NewLine == "\n")
@@ -46,7 +43,7 @@ namespace DotNetCoreTestNetSecurity
             else
                 SendWithSystemNetSecuritySslStream(p_enableSsl);   // "\r\n" for non-Unix platforms
         }
-        
+
         internal void SendLinuxCommandLine(bool p_enableSsl)
         {
             Console.WriteLine("SendLinuxCommandLine()");
@@ -80,47 +77,53 @@ namespace DotNetCoreTestNetSecurity
             Console.WriteLine("Executed bash: " + result);
         }
 
+        string myNewLine = "\r\n"; // Environment.NewLine : A string containing "\r\n" for non-Unix platforms, or a string containing "\n"
+
         internal async void SendWithSystemNetSecuritySslStream(bool p_enableSsl)
         {
             Console.WriteLine("SendWithSystemNetSecuritySslStream()");
-
-            const string server = "smtp.gmail.com";
-            const int port = 587;
-
             string outputString = "";
-
-            //using (var client = new TcpClient(server, port))
-            using (var client = new TcpClient())
+            try
             {
-                Console.WriteLine("[Client] Attempting to Connect to server");
-                //await client.ConnectAsync(server, port);
-                Task connectTask = client.ConnectAsync(server, port);
-                await connectTask;
-                //connectTask.Wait();
-                //Task timeoutTask = Task.Delay(millisecondsDelay: 10000);
-                //if (Task.WhenAny(connectTask, timeoutTask) == timeoutTask)
-                //{
-                //    throw new TimeoutException();
-                //}
-                Console.WriteLine("[Client] Connected to server");
-                using (var stream = client.GetStream())
-                using (var reader = new StreamReader(stream))
-                using (var writer = new StreamWriter(stream) { AutoFlush = true })
+
+                const string server = "smtp.gmail.com";
+                //const int port = 465;
+                const int port = 587;
+                //const int port = 25;
+                //using (var client = new TcpClient(server, port))
+                using (var client = new TcpClient())
                 {
-                    outputString += "Server-1: " + reader.ReadLine() + Environment.NewLine;
-
-                    writer.WriteLine("HELO " + server);
-                    outputString += "Client: " + "HELO " + server + Environment.NewLine;
-                    outputString += "Server-2: " + reader.ReadLine() + Environment.NewLine;
-
-                    writer.WriteLine("STARTTLS");
-                    outputString += "Client: " + "STARTTLS" + Environment.NewLine;
-                    outputString += "Server-3: " + reader.ReadLine() + Environment.NewLine;
-
-                    // maybe on Linux this SslStream is not a real SslStream(), and somehow I got no error about it
-                    using (var sslStream = new SslStream(client.GetStream(), false))
+                    Console.WriteLine("[Client] Attempting to Connect to server");
+                    //await client.ConnectAsync(server, port);
+                    Task connectTask = client.ConnectAsync(server, port);
+                    await connectTask;
+                    //connectTask.Wait();
+                    //Task timeoutTask = Task.Delay(millisecondsDelay: 10000);
+                    //if (Task.WhenAny(connectTask, timeoutTask) == timeoutTask)
+                    //{
+                    //    throw new TimeoutException();
+                    //}
+                    Console.WriteLine("[Client] Connected to server");
+                    using (var stream = client.GetStream())
+                    using (var reader = new StreamReader(stream))
+                    using (var writer = new StreamWriter(stream) { AutoFlush = true })
                     {
-                        try
+                        outputString += "Server-1: " + reader.ReadLine() + Environment.NewLine;
+
+                        //writer.Write("ehlo " + server + myNewLine);
+                        //outputString += "Client: " + "ehlo " + server + Environment.NewLine;
+                        //outputString += "Server-2: " + reader.ReadLine() + Environment.NewLine;
+
+                        writer.Write("HELO " + server + myNewLine);
+                        outputString += "Client: " + "HELO " + server + Environment.NewLine;
+                        outputString += "Server-2: " + reader.ReadLine() + Environment.NewLine;
+
+                        writer.Write("STARTTLS" + myNewLine);
+                        outputString += "Client: " + "STARTTLS" + Environment.NewLine;
+                        outputString += "Server-3: " + reader.ReadLine() + Environment.NewLine;
+
+                        // maybe on Linux this SslStream is not a real SslStream(), and somehow I got no error about it
+                        using (var sslStream = new SslStream(client.GetStream(), false))
                         {
                             //sslStream.AuthenticateAsClient(server);
                             //sslStream.AuthenticateAsClientAsync(server).Wait();
@@ -135,54 +138,57 @@ namespace DotNetCoreTestNetSecurity
                             using (var secureWriter = new StreamWriter(sslStream) { AutoFlush = true })
                             {
 
-                                secureWriter.WriteLine("AUTH LOGIN");
-                                outputString += "Client: " + "AUTH LOGIN" + Environment.NewLine;
+                                //secureWriter.WriteLine("AUTH LOGIN");
+                                secureWriter.Write("AUTH LOGIN" + myNewLine);
+                                outputString += "Client: " + "AUTH LOGIN" + Environment.NewLine; 
                                 //secureWriter.WriteLine("AUTH PLAIN");
                                 //outputString += "Client: " + "AUTH PLAIN" + Environment.NewLine;
                                 outputString += "Server-4: " + secureReader.ReadLine() + Environment.NewLine;
 
                                 var plainTextBytes1 = System.Text.Encoding.UTF8.GetBytes(SenderName);
                                 string base64Username = System.Convert.ToBase64String(plainTextBytes1);
-                                secureWriter.WriteLine(base64Username);
+                                secureWriter.Write(base64Username + myNewLine);
                                 outputString += "Client: " + base64Username + Environment.NewLine;
                                 outputString += "Server-5: " + secureReader.ReadLine() + Environment.NewLine;
 
                                 var plainTextBytes2 = System.Text.Encoding.UTF8.GetBytes(SenderPwd);
                                 string base64Password = System.Convert.ToBase64String(plainTextBytes2);
-                                secureWriter.WriteLine(base64Password);
+                                secureWriter.Write(base64Password + myNewLine);
                                 outputString += "Client: " + base64Password + Environment.NewLine;
                                 string authReply = secureReader.ReadLine();
                                 outputString += "Server-6: " + authReply + Environment.NewLine;
                                 if (authReply.ToLower().IndexOf("not accepted", 0) != -1)
                                 {
-                                    throw new Exception("ERROR. Google server says: '" + authReply + "'");
+                                    Console.WriteLine("Not accepted is found in " + authReply + ". The OutputString: " + outputString);
+                                    //throw new Exception("ERROR. Google server says: '" + authReply + "'");
+                                    return; // Don't throw exceptions, because Linux hates it. Console is going havoc.
                                 }
 
-                                secureWriter.WriteLine("MAIL FROM:<" + SenderName + ">");
+                                secureWriter.Write("MAIL FROM:<" + SenderName + ">" + myNewLine);
                                 outputString += "Client: " + "MAIL FROM:<" + SenderName + ">" + Environment.NewLine;
                                 outputString += "Server-7: " + secureReader.ReadLine() + Environment.NewLine;
 
                                 //http://www.samlogic.net / articles / smtp - commands - reference.htm
                                 // This command can be repeated multiple times for a given e-mail message in order to deliver a single e-mail message to multiple recipients. 
-                                secureWriter.WriteLine("RCPT TO:<" + ToAddresses + ">");
-                                outputString += "Client: " + "RCPT TO:<" + ToAddresses +  ">" + Environment.NewLine;
+                                secureWriter.Write("RCPT TO:<" + ToAddresses + ">" + myNewLine);
+                                outputString += "Client: " + "RCPT TO:<" + ToAddresses + ">" + Environment.NewLine;
                                 outputString += "Server-8: " + secureReader.ReadLine() + Environment.NewLine;
 
-                                secureWriter.WriteLine("DATA");
+                                secureWriter.Write("DATA" + myNewLine);
                                 outputString += "Client: " + "DATA" + Environment.NewLine;
                                 outputString += "Server-9: " + secureReader.ReadLine() + Environment.NewLine;
 
-                                secureWriter.WriteLine("From: " + SenderName);
+                                secureWriter.Write("From: " + SenderName + myNewLine);
                                 outputString += "Client: " + "From: " + SenderName + Environment.NewLine;
-                                secureWriter.WriteLine("To:  " + ToAddresses);
+                                secureWriter.Write("To:  " + ToAddresses + myNewLine);
                                 outputString += "Client: " + "To:  " + ToAddresses + Environment.NewLine;
-                                secureWriter.WriteLine("Subject: " + Subject);
+                                secureWriter.Write("Subject: " + Subject + myNewLine);
                                 outputString += "Client: " + "Subject: " + Subject + Environment.NewLine;
                                 // Leave one blank line after the subject
-                                secureWriter.WriteLine("");
+                                secureWriter.Write("" + myNewLine);
                                 outputString += "Client: " + "" + Environment.NewLine;
                                 // Start the message body here
-                                secureWriter.WriteLine(Body);
+                                secureWriter.Write(Body + myNewLine);
                                 outputString += "Client: " + Body + Environment.NewLine;
                                 //secureWriter.WriteLine("Hello Luke,");
                                 //secureWriter.WriteLine("");
@@ -192,28 +198,28 @@ namespace DotNetCoreTestNetSecurity
                                 //secureWriter.WriteLine("");
                                 //secureWriter.WriteLine("Luke");
                                 // End the message body by sending a period
-                                secureWriter.WriteLine(".");
+                                secureWriter.Write("." + myNewLine);
                                 outputString += "Client: " + "." + Environment.NewLine;
                                 outputString += "10: " + secureReader.ReadLine() + Environment.NewLine;
 
-                                secureWriter.WriteLine("QUIT");
+                                secureWriter.Write("QUIT" + myNewLine);
                                 //Note, some hosts may require a "<CRLF>.<CRLF>" ending, instead of the proposed ". QUIT".
                                 //writer.WriteLine("\r\n.\r\n");
                                 outputString += "Server-11: " + secureReader.ReadLine() + Environment.NewLine;
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex.Message);
-                            if (ex.InnerException != null)
-                            {
-                                Console.WriteLine("Inner: " + ex.InnerException.Message);
-                            }
-                            throw;
-                        }
-                        
                     }
                 }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("*Exception Message" + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("*Inner: " + ex.InnerException.Message);
+                }
+                //throw;
             }
 
             Console.WriteLine(outputString);
@@ -223,5 +229,3 @@ namespace DotNetCoreTestNetSecurity
 
     }
 }
-//#endif
-

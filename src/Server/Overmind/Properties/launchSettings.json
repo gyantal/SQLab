@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Overmind": {
-      "commandName": "Overmind",
-      "sdkVersion": "dnx-clr-win-x64.1.0.0-rc2-16357"
-    }
-  }
-}
