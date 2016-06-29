@@ -138,7 +138,6 @@ namespace DotNetCoreTestNetSecurity
                             using (var secureWriter = new StreamWriter(sslStream) { AutoFlush = true })
                             {
 
-                                //secureWriter.WriteLine("AUTH LOGIN");
                                 secureWriter.Write("AUTH LOGIN" + myNewLine);
                                 outputString += "Client: " + "AUTH LOGIN" + Environment.NewLine; 
                                 //secureWriter.WriteLine("AUTH PLAIN");
