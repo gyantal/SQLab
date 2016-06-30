@@ -13,6 +13,7 @@ using SqCommon;
 namespace SQLab.Controllers
 {
     //[Route("api/[controller]")]
+    // Logger for Javascript code. This can notify Healthmonitor if Crash occurs in HTML JS in the client side.
     public class JsLogController : Controller
     {
         private readonly ILogger<Program> m_logger;

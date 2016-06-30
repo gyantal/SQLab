@@ -139,7 +139,7 @@ namespace VirtualBroker
 
             // check that the last date in the CSV is what we expect: the previous market Open day
             //DateTime expectedUtcLastDateTime = DBUtils.GetPreviousMarketOpenDay(utcNow, StockExchangeID.NASDAQ, VBroker.g_dbManager); // it needs UTC input, result.TimeOfDay == local 00:00 converted to UTC; so it is <Date>:4:00 (UTC), so we should convert it back to Local
-            //DateTime expectedETLastDateTime = TimeZoneInfo.ConvertTimeFromUtc(expectedUtcLastDateTime, TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time"));
+            //DateTime expectedETLastDateTime = TimeZoneInfo.ConvertTimeFromUtc(expectedUtcLastDateTime, Utils.FindSystemTimeZoneById(TimeZoneId.EST));
             //DateTime expectedETLastDate = expectedETLastDateTime.Date;
             //VBrokerLogger.StrongAssert(taskLogFile, vxxQuotesFromSqlDB.Last().Date == expectedETLastDate, Severity.Exception, "m_vxxQuotesFromSqlDB.Last().Date == m_dateNowInET");             // assert that its last Date is today, VBroker is running all day
 

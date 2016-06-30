@@ -33,8 +33,8 @@ declare var gSqUserEmail: string;
 export class AppComponent implements OnInit, AfterViewInit {
     public m_userEmail: string = 'Unknown user';
 
-    public m_versionShortInfo: string = "v0.2.30";    // strongly typed variables in TS
-    public versionLongInfo: string = "SQ QuickTester  \nVersion 0.2.30  \nDeployed: 2015-07-10T21:00Z";  // Z means Zero UTC offset, so, it is the UTC time, http://en.wikipedia.org/wiki/ISO_8601
+    public m_versionShortInfo: string = "v0.2.31";    // strongly typed variables in TS
+    public versionLongInfo: string = "SQ QuickTester  \nVersion 0.2.31  \nDeployed: 2016-07-01T21:00Z";  // Z means Zero UTC offset, so, it is the UTC time, http://en.wikipedia.org/wiki/ISO_8601
     public tipToUser: string = "Select Strategy and press 'Start Backtest'...";
     public tradingViewChartWidget = null;
 
@@ -247,14 +247,14 @@ export class AppComponent implements OnInit, AfterViewInit {
     MenuItemStartBacktestClicked() {
         console.log("MenuItemStartBacktestClicked() START");
 
-        this.generalInputParameters = "&StartDate=" + this.inputStartDateStr + "&EndDate=" + this.inputEndDateStr;
+        this.generalInputParameters = "StartDate=" + this.inputStartDateStr + "&EndDate=" + this.inputEndDateStr;
 
         this.strategy_TotM.StartBacktest_TotM(this.http);
         this.strategy_VXX_SPY_Controversial.StartBacktest_VXX(this.http);
         this.strategy_LEtfDistcrepancy.StartBacktest_LEtfDistcrepancy(this.http);
 
-        this.profilingBacktestStopWatch = new StopWatch();
-        this.profilingBacktestStopWatch.Start();
+        //this.profilingBacktestStopWatch = new StopWatch();
+        //this.profilingBacktestStopWatch.Start();
     }
 
 
@@ -267,7 +267,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     ProcessStrategyResult(strategyResult: any) {
         console.log("ProcessStrategyResult() START");
 
-        this.profilingBacktestCallbackMSec = this.profilingBacktestStopWatch.GetTimestampInMsec();
+        //this.profilingBacktestCallbackMSec = this.profilingBacktestStopWatch.GetTimestampInMsec();
 
         if (strategyResult.errorMessage != "") {
             alert(strategyResult.errorMessage);
@@ -306,67 +306,68 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.debugMessage = strategyResult.debugMessage;
         this.errorMessage = strategyResult.errorMessage;
 
-        this.chartDataFromServer = strategyResult.chartData;
 
-        this.chartDataToChart = [];
-        var prevDayClose = null;
-        for (var i = 0; i < strategyResult.chartData.length; i++) {
-            var rowParts = strategyResult.chartData[i].split(",");
-            var dateParts = rowParts[0].split("-");
-            var dateUtc = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]), 0, 0, 0));
+        //this.chartDataFromServer = strategyResult.chartData;
 
-            var closePrice = parseFloat(rowParts[1]);
-            var barValue = {
-                time: dateUtc.getTime(),  // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
-                close: closePrice,
-                open: (i == 0) ? closePrice : prevDayClose,
-                high: (i == 0) ? closePrice : ((barValue.open > barValue.close) ? barValue.open : barValue.close),
-                low: (i == 0) ? closePrice : ((barValue.open < barValue.close) ? barValue.open : barValue.close)
-            }
+        //this.chartDataToChart = [];
+        //var prevDayClose = null;
+        //for (var i = 0; i < strategyResult.chartData.length; i++) {
+        //    var rowParts = strategyResult.chartData[i].split(",");
+        //    var dateParts = rowParts[0].split("-");
+        //    var dateUtc = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]), 0, 0, 0));
 
-            prevDayClose = barValue.close;
-            this.chartDataToChart.push(barValue);
-        }
+        //    var closePrice = parseFloat(rowParts[1]);
+        //    var barValue = {
+        //        time: dateUtc.getTime(),  // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
+        //        close: closePrice,
+        //        open: (i == 0) ? closePrice : prevDayClose,
+        //        high: (i == 0) ? closePrice : ((barValue.open > barValue.close) ? barValue.open : barValue.close),
+        //        low: (i == 0) ? closePrice : ((barValue.open < barValue.close) ? barValue.open : barValue.close)
+        //    }
 
-        // calculate number of months in the range
-        var startDateUtc = new Date(this.chartDataToChart[0].time);
-        var endDateUtc = new Date(this.chartDataToChart[this.chartDataToChart.length - 1].time);
-        var nMonths = (endDateUtc.getFullYear() - startDateUtc.getFullYear()) * 12;
-        nMonths -= startDateUtc.getMonth() + 1;
-        nMonths += endDateUtc.getMonth();
-        nMonths = nMonths <= 0 ? 1 : nMonths;   // if month is less than 0, tell the chart to have 1 month
+        //    prevDayClose = barValue.close;
+        //    this.chartDataToChart.push(barValue);
+        //}
 
-        this.chartDataInStr = strategyResult.chartData.reverse().join("\n");
+        //// calculate number of months in the range
+        //var startDateUtc = new Date(this.chartDataToChart[0].time);
+        //var endDateUtc = new Date(this.chartDataToChart[this.chartDataToChart.length - 1].time);
+        //var nMonths = (endDateUtc.getFullYear() - startDateUtc.getFullYear()) * 12;
+        //nMonths -= startDateUtc.getMonth() + 1;
+        //nMonths += endDateUtc.getMonth();
+        //nMonths = nMonths <= 0 ? 1 : nMonths;   // if month is less than 0, tell the chart to have 1 month
 
-        this.nMonthsInTimeFrame = nMonths.toString();
+        //this.chartDataInStr = strategyResult.chartData.reverse().join("\n");
 
-        // click the first item on the TimeFrames toolbar
-        // this is better than the gTradingViewChartWidget.postMessage.post(gTradingViewChartWidget._messageTarget(), "loadRangeAgy", because the 'loading data' bug doesn't effect it
-        //var z1 = document.getElementById("tv_chart_container");
-        //var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['1'].children['1'];
-        //dateRangeDiv.children['0'].click();
-        //dateRangeDiv.children['0'].innerHTML = "All";   // it takes effect, but if I click it Afterwards, than it will change back to original; so modify the Text After the Click
+        //this.nMonthsInTimeFrame = nMonths.toString();
+
+        //// click the first item on the TimeFrames toolbar
+        //// this is better than the gTradingViewChartWidget.postMessage.post(gTradingViewChartWidget._messageTarget(), "loadRangeAgy", because the 'loading data' bug doesn't effect it
+        ////var z1 = document.getElementById("tv_chart_container");
+        ////var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['1'].children['1'];
+        ////dateRangeDiv.children['0'].click();
+        ////dateRangeDiv.children['0'].innerHTML = "All";   // it takes effect, but if I click it Afterwards, than it will change back to original; so modify the Text After the Click
 
 
 
-        //////***!!!!This is the best if we have to work with the official Chart, but postMessage works without this
-        //////  Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
-        // this part will set up the Timeframes bar properly, but later is chart.onChartReady() you have to click the first button by "dateRangeDiv.children['0'].click();"
-        this.tradingViewChartWidget.remove();       // this is the way to the widget.options to be effective
-        //gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
-        this.tradingViewChartWidget.options.time_frames[0].text = nMonths + "m";
-        this.tradingViewChartWidget.options.time_frames[1].text = nMonths + "m";
-        this.tradingViewChartWidget.options.time_frames[2].text = nMonths + "m";
-        //this.tradingViewChartWidget.options.time_frames[1].text = "61m";    // I can calculate dynamically, but not important now.
-        //gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
-        this.tradingViewChartWidget.create()
+        ////////***!!!!This is the best if we have to work with the official Chart, but postMessage works without this
+        ////////  Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
+        //// this part will set up the Timeframes bar properly, but later is chart.onChartReady() you have to click the first button by "dateRangeDiv.children['0'].click();"
+        //this.tradingViewChartWidget.remove();       // this is the way to the widget.options to be effective
+        ////gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
+        //this.tradingViewChartWidget.options.time_frames[0].text = nMonths + "m";
+        //this.tradingViewChartWidget.options.time_frames[1].text = nMonths + "m";
+        //this.tradingViewChartWidget.options.time_frames[2].text = nMonths + "m";
+        ////this.tradingViewChartWidget.options.time_frames[1].text = "61m";    // I can calculate dynamically, but not important now.
+        ////gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
+        //this.tradingViewChartWidget.create()
 
-        ////***!!!! This can be used only with the updated Chart, but the time-frame bar will not update visually, but re-creation will not Blink, as it will not create a short-term version of the chart for 1second
-        ////***!!! cannot be used.... because once it goes to the 'loading data' bug, after, it will never refresh the chart. Because it will not ask getBars() ever. So, we have to re-create the chart.
-        ////this.tradingViewChartWidget.postMessage.post(this.tradingViewChartWidget._messageTarget(), "loadRangeAgy", {  // don't post this message until the chart is ready() again. Post it later in the onReady() callback.
-        ////    res: "D",
-        ////    val: nMonths + "m"
-        ////})
+        //////***!!!! This can be used only with the updated Chart, but the time-frame bar will not update visually, but re-creation will not Blink, as it will not create a short-term version of the chart for 1second
+        //////***!!! cannot be used.... because once it goes to the 'loading data' bug, after, it will never refresh the chart. Because it will not ask getBars() ever. So, we have to re-create the chart.
+        //////this.tradingViewChartWidget.postMessage.post(this.tradingViewChartWidget._messageTarget(), "loadRangeAgy", {  // don't post this message until the chart is ready() again. Post it later in the onReady() callback.
+        //////    res: "D",
+        //////    val: nMonths + "m"
+        //////})
     }
 
 
@@ -411,6 +412,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 
     SQToggle(hiddenTextID: any, alwaysVisibleSwitchID: any, switchDisplayText: any) {
+        console.log("SQToggle() START");
+
         var hiddenText = document.getElementById(hiddenTextID);
         var switchElement = document.getElementById(alwaysVisibleSwitchID);
         if (hiddenText.style.display == "block") {

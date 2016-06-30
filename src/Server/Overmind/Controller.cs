@@ -261,6 +261,7 @@ namespace Overmind
             return todayPercentChange;
         }
 
+        // Amazon UK price history can be checked in uk.camelcamelcamel.com, for example: http://uk.camelcamelcamel.com/Sennheiser-Professional-blocking-gaming-headset-Black/product/B00JQDOANK
         private static double? GetAmazonProductPrice(string p_amazonProductUrl)
         {
             string errorMessage = String.Empty;

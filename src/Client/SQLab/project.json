@@ -4,7 +4,8 @@
       "version": "1.0.0",
       "type": "platform" // if type = platform, the runtimes section is not required. The current installed platform will be used for build. It is safer to use the installed RC2 than experiment with the latest ASP.Net components on Linux
     },
-    "SQLab.Common": "1.0.0-*",
+    "SQLab.Common": { "version": "1.0.0-*", "target": "project" },
+    "SQLab.DbCommon": { "version": "1.0.0-*", "target": "project" },
     "Microsoft.AspNetCore.Mvc": "1.0.0",
     "Microsoft.AspNetCore.Server.IISIntegration": "1.0.0",
     "Microsoft.AspNetCore.Server.Kestrel": "1.0.0",

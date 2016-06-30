@@ -42,6 +42,17 @@
     <script>
         var gSqUserEmail = 'unknown@gmail.com';
 
+        
+        let GlobalScopeInvertVisibilityOfTableRow = function (paramID) {      // to hook to Angular2 (click) event is not good, because after initial load, Angular2 doesn't re-parse the HTML file for those (click) events. Use the General onclick event instead.
+            console.log("GlobalScopeInvertVisibilityOfTableRow() START:" + paramID);
+
+            var tableRow = document.getElementById(paramID);
+            if (tableRow.style.display == 'none')
+                tableRow.style.display = 'table-row';
+            else
+                tableRow.style.display = 'none';
+        };
+
         /*      $(document).ready(
    This is the function that will get executed after the DOM is fully loaded */
 //  function () {

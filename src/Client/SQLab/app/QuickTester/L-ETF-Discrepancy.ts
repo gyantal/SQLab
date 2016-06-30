@@ -41,21 +41,26 @@ export class LEtfDistcrepancy {
     }
 
     public StartBacktest_LEtfDistcrepancy(http: Http) {
+        console.log("StartBacktest_LEtfDistcrepancy()");
         if (this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy1" && this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy2" && this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy3")
             return;
 
-        //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
-        //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "///q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        var url = "/q/qt?jsonp=JSON_CALLBACK" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName + "&ETFPairs=" + this.selectedEtfPairs + "&rebalancingFrequency=" + this.rebalancingFrequency;
+        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
+        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
+        //var url = "///qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
+        //var url = "/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
+        //var url = "/qt?jsonp=JSON_CALLBACK" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName + "&ETFPairs=" + this.selectedEtfPairs + "&rebalancingFrequency=" + this.rebalancingFrequency;
+        var url = "/qt?" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName + "&ETFPairs=" + this.selectedEtfPairs + "&rebalancingFrequency=" + this.rebalancingFrequency;
 
         http.get(url)
             .map(res => res.json()) // Call map on the response observable to get the parsed people object
             .subscribe(data => { // Subscribe to the observable to get the parsed people object and attach it to the component
                 this.app.tradingViewChartName = "L-ETF Discrepancy 1";
                 this.app.ProcessStrategyResult(data);
-            }, error => { this.app.errorMessage = error; });
+            }, error => {
+                console.log("ERROR. StartBacktest(): data received error: " + error);
+                this.app.errorMessage = error;
+            });
     }
 }
 

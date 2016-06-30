@@ -55,7 +55,8 @@
 
 
 
-<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters');" id="idAlwaysVisibleSwitch0">+ Show General Parameters</a>
+<!--<a id="idAlwaysVisibleSwitch0" class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters');" >+ Show General Parameters</a>-->
+<span id="idAlwaysVisibleSwitch0" class="alwaysVisibleSwitchClass" (click)="SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters')">+ Show General Parameters</span>
 <br />
 <div id="idGeneralParameters" style="display: none;">
     <table id="idGeneralParametersTable">
@@ -124,12 +125,12 @@
 <span class="navigation">
     <ul class="sqMenuNav">
         <li class="sqMenuItemLevel0" id="idTotMButtonLi">
-            <a href="" id="idTotMButtonA">Masks</a>
+            <span id="idTotMButtonA">Masks</span>
             <ul class="sqMenuBarLevel1">
-                <li><a href="" (click)="MenuItemPresetMasksClicked('BuyHold')">Buy&Hold</a></li>
-                <li><a href="" (click)="MenuItemPresetMasksClicked('UberVXXOld')">UberVXX old</a></li>
-                <li><a href="" (click)="MenuItemPresetMasksClicked('UberVXXNew')">UberVXX new</a></li>
-                <li><a href="" (click)="MenuItemPresetMasksClicked('SPYDerived')">SPY derived</a></li>
+                <li><span id="idMaskBuyHold" (click)="strategy_TotM.MenuItemPresetMasksClicked($event)">Buy&Hold</span></li>
+                <li><span id="idMaskUberVXXOld" (click)="strategy_TotM.MenuItemPresetMasksClicked($event)">UberVXX old</span></li>
+                <li><span id="idMaskBuyUberVXXNew" (click)="strategy_TotM.MenuItemPresetMasksClicked($event)">UberVXX new</span></li>
+                <li><span id="idMaskSPYDerived" (click)="strategy_TotM.MenuItemPresetMasksClicked($event)">SPY derived</span></li>
             </ul>
         </li>
     </ul>
@@ -230,6 +231,7 @@
     <tbody>
         <tr class='even'>
             <td>PV Start Value: <span> &#36;{{pvStartValue | number:'.0-2'}} </span></td>
+            <!--<td class='green' onclick="GlobalScopeInvertVisibilityOfTableRow('idWinter__TotMT-17')">0.008%<span style="color: #2581cc; font-size: x-small; vertical-align:super;">i</span></td>-->
             <td>PV Final Value: <span> &#36;{{pvEndValue | number:'.0-2'}} </span></td>
             <td>Total Return: <span> {{100*totalGainPct | number: '.0-2'}}&#37; </span></td>
         </tr>
@@ -262,7 +264,9 @@
 <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
 <div id="tv_chart_container"></div>
 
-<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idNoteFromStrategyDiv', 'idAlwaysVisibleSwitch1', 'note from strategy');" id="idAlwaysVisibleSwitch1">+ Hide note from strategy</a>
+<span id="idAlwaysVisibleSwitch1" class="alwaysVisibleSwitchClass" (click)="SQToggle('idNoteFromStrategyDiv', 'idAlwaysVisibleSwitch1', 'note from strategy')">+ Show General Parameters</span>
+
+<!--<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idNoteFromStrategyDiv', 'idAlwaysVisibleSwitch1', 'note from strategy');" id="idAlwaysVisibleSwitch1">+ Hide note from strategy</a>-->
 <br />
 <div id="idNoteFromStrategyDiv" style="display: block;">
     <!--<span ng-bind-html="htmlNoteFromStrategy"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->
@@ -305,8 +309,9 @@
 <span>JS BacktestCallback: {{profilingBacktestCallbackMSec | number}}ms, BacktestAtChartReadyStart(chart removed/created): {{profilingBacktestAtChartReadyStartMSec | number}}ms, BacktestAtChartReadyEnd(TimeFrame clicked): {{profilingBacktestAtChartReadyEndMSec | number}}ms </span>
 <br>
 
+<span id="idAlwaysVisibleSwitchDebug" class="alwaysVisibleSwitchClass" (click)="SQToggle('idDebugInfoDiv', 'idAlwaysVisibleSwitchDebug', 'debug info')">+ Show debug info</span>
 
-<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idDebugInfoDiv', 'idAlwaysVisibleSwitchDebug', 'debug info');" id="idAlwaysVisibleSwitchDebug">+ Show debug info</a>
+<!--<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idDebugInfoDiv', 'idAlwaysVisibleSwitchDebug', 'debug info');" id="idAlwaysVisibleSwitchDebug">+ Show debug info</a>-->
 <br />
 <div id="idDebugInfoDiv" style="display: none;">
     <!--<span ng-bind-html="htmlNoteFromStrategy"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->
@@ -319,7 +324,7 @@
 
 
 <br>
-<span>{{tipToUser}}</span>
+<!--<span>{{tipToUser}}</span>-->
 
 
 
@@ -338,7 +343,7 @@
 
 
 
-<br />
+<!--<br />
 <button class="mymyButton1Class" (click)="onClickMe()">Click me!</button>
 <br />
-<br />{{clickMessage }}
+<br />{{clickMessage }}-->

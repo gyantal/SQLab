@@ -35,25 +35,32 @@ namespace SQLab.Controllers
         public ActionResult Index()
         {
             var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
-            Tuple<string, string> contentAndType = GenerateRtpResponse();
-            return Content(contentAndType.Item1, contentAndType.Item2);
+            string content = GenerateRtpResponse(this.HttpContext.Request.QueryString.ToString());
+            return Content(content, "application/json");
 
         }
 
-        private Tuple<string, string> GenerateRtpResponse()
+        public static string GenerateRtpResponse(string p_queryString)
         {
             try
             {
                 var jsonDownload = string.Empty;
                 //string queryString = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
-                Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending '{this.HttpContext.Request.QueryString.ToString()}'");
-                string reply = VirtualBrokerMessage.Send(this.HttpContext.Request.QueryString.ToString(), VirtualBrokerMessageID.GetRealtimePrice).Result;
+                Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending '{p_queryString}'");
+                string reply = VirtualBrokerMessage.Send(p_queryString, VirtualBrokerMessageID.GetRealtimePrice).Result;
+                
+                if (String.IsNullOrEmpty(reply))
+                {
+                    string errorMsg = $"RealtimePrice.GenerateRtpResponse(). Received Null or Empty from VBroker. Check that the VirtualBroker is listering on IP: {VirtualBrokerMessage.TcpServerHost}:{VirtualBrokerMessage.TcpServerPort}";
+                    Utils.Logger.Error(errorMsg);
+                    return @"{ ""Message"":  """ + errorMsg + @""" }";
+                }
                 Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Received '{reply}'");
-                return new Tuple<string, string>(reply, "application/json");
+                return reply;
             }
             catch (Exception e)
             {
-                return new Tuple<string, string>(@"{ ""Message"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }", "application/json");
+                return @"{ ""Message"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }";
             }
         }
 

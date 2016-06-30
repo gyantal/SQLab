@@ -43,15 +43,20 @@ export class TotM {
         this.app.tipToUser = this.selectedBullishTradingInstrument;
     }
 
-    public MenuItemPresetMasksClicked(predefMaskString: string) {
-        switch (predefMaskString) {
-            case "BuyHold":
+    public MenuItemPresetMasksClicked(event) {
+        console.log("MenuItemPresetMasksClicked()");
+        var target = event.target || event.srcElement || event.currentTarget;
+        var idAttr = target.attributes.id;
+        var idValue = idAttr.nodeValue;
+
+        switch (idValue) {
+            case "idMaskBuyHold":
                 this.dailyMarketDirectionMaskWinterTotM = "UUUUUUUUUUUUUUUUUUUU.UUUUUUUUUUUUUUUUUUUU";    // 20 days before and 20 days after Turn of the Month is set (to be sure)
                 this.dailyMarketDirectionMaskWinterTotMM = "UUUUUUUUUUUUUUUUUUUU.UUUUUUUUUUUUUUUUUUUU";
                 this.dailyMarketDirectionMaskSummerTotM = "UUUUUUUUUUUUUUUUUUUU.UUUUUUUUUUUUUUUUUUUU";
                 this.dailyMarketDirectionMaskSummerTotMM = "UUUUUUUUUUUUUUUUUUUU.UUUUUUUUUUUUUUUUUUUU";
                 break;
-            case "UberVXXOld":
+            case "idMaskUberVXXOld":
                 // TotM:
                 //•	Long VXX on Day -1 (last trading day of the month) with 100%;
                 //•	Short VXX on Day 1-3 (first three trading days of the month) with 100%.
@@ -60,7 +65,7 @@ export class TotM {
                 this.dailyMarketDirectionMaskSummerTotM = "D.UUU";
                 this.dailyMarketDirectionMaskSummerTotMM = ".";
                 break;
-            case "UberVXXNew":      // Correlation and Significance Analysis of Uber VXX Strategy Parts.docx
+            case "idMaskBuyUberVXXNew":      // Correlation and Significance Analysis of Uber VXX Strategy Parts.docx
                 // TotM:
                 //•	Day -1: long VXX - both in winter and summer;
                 //•	Day +1: short VXX only at turn of the quarter - both in winter and summer;
@@ -79,8 +84,9 @@ export class TotM {
                 this.dailyMarketDirectionMaskSummerTotM = "DD00U00.U";
                 this.dailyMarketDirectionMaskSummerTotMM = "D0UU.0U";
         }
-    }
 
+    }
+    
     public SubStrategySelected_TotM() {
         if (this.app.selectedStrategyMenuItemId == "idMenuItemTotM") {
             this.app.selectedStrategyName = "Turn of the Month (mask based). Typical: Bearish:T-1, Bullish: T+1,T+2,T+3";
@@ -90,39 +96,73 @@ export class TotM {
     }
 
     public StartBacktest_TotM(http: Http) {
+        console.log("StartBacktest_TotM() 1");
         if (this.app.selectedStrategyMenuItemId != "idMenuItemTotM")
             return;
 
-        //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
-        //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "///q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        var url = "/q/qt?jsonp=JSON_CALLBACK" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName + "&BullishTradingInstrument=" + this.selectedBullishTradingInstrument
+        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
+        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
+        //var url = "///qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
+        //var url = "/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
+        var url = "/qt?" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName + "&BullishTradingInstrument=" + this.selectedBullishTradingInstrument
             + "&DailyMarketDirectionMaskSummerTotM=" + this.dailyMarketDirectionMaskSummerTotM + "&DailyMarketDirectionMaskSummerTotMM=" + this.dailyMarketDirectionMaskSummerTotMM
             + "&DailyMarketDirectionMaskWinterTotM=" + this.dailyMarketDirectionMaskWinterTotM + "&DailyMarketDirectionMaskWinterTotMM=" + this.dailyMarketDirectionMaskWinterTotMM;
+
+        console.log("StartBacktest_TotM() 2");
+        //http.get(url)   // this is for debugging. To see the returned proper text.
+        //    .map(res => res.text())
+        //    .subscribe(data => { // Subscribe to the observable to get the parsed people object and attach it to the component
+        //        console.log("StartBacktest_TotM(): data received 1: " + data);
+        //    }, error => {
+        //        console.log("ERROR. StartBacktest(): data received error: " + error);
+        //        this.app.errorMessage = error;
+        //    });
 
         http.get(url)
             .map(res => res.json()) // Call map on the response observable to get the parsed people object
             .subscribe(data => { // Subscribe to the observable to get the parsed people object and attach it to the component
+                console.log("StartBacktest_TotM(): data received 1: " + data);
                 this.app.tradingViewChartName = "Turn of the Month";
                 this.app.ProcessStrategyResult(data);
-            }, error => { this.app.errorMessage = error; });
+            }, error => {
+                console.log("ERROR. StartBacktest(): data received error: " + error);
+                this.app.errorMessage = error;
+            });
+    }
+
+    //public InvertVisibilityOfTableRow(event) {
+    //    console.log("InvertVisibilityOfTableRow() START)");
+    //    var target = event.target || event.srcElement || event.currentTarget;
+    //    var idAttr = target.attributes.id;
+    //    var idValue = idAttr.nodeValue;
+
+    //    var tableRow = document.getElementById(idValue);
+    //    if (tableRow.style.display == 'none')
+    //        tableRow.style.display = 'table-row';
+    //    else
+    //        tableRow.style.display = 'none';
+    //}
+
+    // Angular2 (click) event didn't call these. We have to force somehow Angular2 to reparse the DOM for (onclicks) after we inserted the extra table. 
+    // I found a workaround now in global JS, not in TS.Angular2 is still not final.Fix this after Angular2 is final.
+    public InvertVisibilityOfTableRow(paramID: string) {       
+        console.log("InvertVisibilityOfTableRow() START");
+    
+        var tableRow = document.getElementById(paramID);
+        if (tableRow.style.display == 'none')
+            tableRow.style.display = 'table-row';
+        else
+            tableRow.style.display = 'none';
     }
 
 }
 
-export function InvertVisibilityOfTableRow(paramID: string) {
-    console.log("InvertVisibilityOfTableRow() START)");
+let GlobalScopeInvertVisibilityOfTableRow_SomehowItDidntWorkYet = function (paramID: any) {      // to hook to Angular2 (click) event is not good, because after initial load, Angular2 doesn't re-parse the HTML file for those (click) events. Use the General onclick event instead.
+    console.log("GlobalScopeInvertVisibilityOfTableRow() START");
+
     var tableRow = document.getElementById(paramID);
     if (tableRow.style.display == 'none')
         tableRow.style.display = 'table-row';
     else
         tableRow.style.display = 'none';
-}
-
-export function MenuItemPresetMasksClicked(predefMaskString: string) {
-    // Refresh Angular DOM view maybe not needed in Angular2
-    //var controllerElement = document.querySelector('body');
-    //var controllerScope = angular.element(controllerElement).scope();
-    //controllerScope.$apply(controllerScope.MenuItemPresetMasksClicked(predefMaskString));  // use Apply from MenuClick, but you don't have to use it from an Angular function
-}
+};

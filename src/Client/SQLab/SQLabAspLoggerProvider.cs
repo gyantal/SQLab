@@ -170,6 +170,12 @@ namespace SQLab
                     return false;
                 if (fullExceptionStr.IndexOf(@"The decryption operation failed, see inner exception") != -1)
                     return false;
+                if (fullExceptionStr.IndexOf(@"Unrecognized HTTP version") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"Malformed request: MethodIncomplete") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"SSL Read BIO failed with OpenSSL error") != -1)
+                    return false;
 
                 return true;
             }

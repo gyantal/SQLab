@@ -385,8 +385,8 @@ namespace VirtualBroker
                 //p_sb.AppendFormat(@"<td onclick=""document.getElementById('{0}').style.display = 'table-row'"">" + p_maskItem.AMean.ToString("#0.000%") + @"</td>", aMeanPerYearRowId);
                 //p_sb.AppendFormat(@"<td>" + p_maskItem.AMean.ToString("#0.000%") + @"<a href="""" onclick=""document.getElementById('{0}').style.display = 'table-row'"">*</a></td>", aMeanPerYearRowId);
                 //p_sb.AppendFormat(@"<td onclick=""document.getElementById('{0}').style.display = 'table-row'"">" + p_maskItem.AMean.ToString("#0.000%") + @"<span style=""color: #2581cc; font-size: x-small; vertical-align:super;"">i</span></td>", aMeanPerYearRowId);
-                p_sb.AppendFormat(@"<td{0} onclick=""InvertVisibilityOfTableRow('{1}')"">" + p_stat.AMean.ToString("#0.000%") + @"<span style=""color: #2581cc; font-size: x-small; vertical-align:super;"">i</span></td>", (p_stat.AMean > 0.0) ? " class='green'" : " class='red'", aMeanPerYearRowId);
-
+                //p_sb.AppendFormat(@"<td{0} onclick=""InvertVisibilityOfTableRow('{1}')"">" + p_stat.AMean.ToString("#0.000%") + @"<span style=""color: #2581cc; font-size: x-small; vertical-align:super;"">i</span></td>", (p_stat.AMean > 0.0) ? " class='green'" : " class='red'", aMeanPerYearRowId);
+                p_sb.AppendFormat(@"<td{0} onclick=""GlobalScopeInvertVisibilityOfTableRow('{1}')"">" + p_stat.AMean.ToString("#0.000%") + @"<span style=""color: #2581cc; font-size: x-small; vertical-align:super;"">i</span></td>", (p_stat.AMean > 0.0) ? " class='green'" : " class='red'", aMeanPerYearRowId);
 
                 p_sb.Append("<td>" + p_stat.GMean.ToString("#0.000%") + "</td>");
                 p_sb.Append("<td>" + p_stat.Median.ToString("#0.000%") + "</td>");

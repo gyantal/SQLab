@@ -45,8 +45,8 @@ namespace SqCommon
         {
             get {
                 if (Utils.RunningPlatform() == Platform.Windows)
-                    return "localhost";       // sometimes for clients running on Windows (in development), we want localHost if Testing new VirtualBroker features
-                                              //return "23.20.243.199";      // sometimes for clients running on Windows (in development), we want the proper VirtualBroker if Testing runnig VBroker locally
+                    //return "localhost";       // sometimes for clients running on Windows (in development), we want localHost if Testing new VirtualBroker features
+                    return "52.203.240.30";      // sometimes for clients running on Windows (in development), we want the proper VirtualBroker if Testing runnig VBroker locally
                 else
                     return "52.203.240.30";
             }

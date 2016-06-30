@@ -35,21 +35,25 @@ export class VXX_SPY_Controversial {
     }
 
     public StartBacktest_VXX(http: Http) {
+        console.log("StartBacktest_VXX()");
         if (this.app.selectedStrategyMenuItemId != "idMenuItemVXX_SPY_Controversial")
             return;
 
-        //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
-        //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "///q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app`.rebalancingFrequency;
-        var url = "/q/qt?jsonp=JSON_CALLBACK" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName + "&SpyMinPctMove=" + this.spyMinPctMove + "&VxxMinPctMove=" + this.vxxMinPctMove + "&LongOrShortTrade=" + this.selectedVXXLongOrShortTrade;
+        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
+        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
+        //var url = "///qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
+        //var url = "/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app`.rebalancingFrequency;
+        var url = "/qt?" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName + "&SpyMinPctMove=" + this.spyMinPctMove + "&VxxMinPctMove=" + this.vxxMinPctMove + "&LongOrShortTrade=" + this.selectedVXXLongOrShortTrade;
 
         http.get(url)
             .map(res => res.json()) // Call map on the response observable to get the parsed people object
             .subscribe(data => { // Subscribe to the observable to get the parsed people object and attach it to the component
                 this.app.tradingViewChartName = "VXX-SPY ControversialDay";
                 this.app.ProcessStrategyResult(data);
-            }, error => { this.app.errorMessage = error; });
+            }, error => {
+                console.log("ERROR. StartBacktest(): data received error: " + error);
+                this.app.errorMessage = error;
+            });
     }
 
 

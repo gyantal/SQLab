@@ -248,6 +248,7 @@ body {
     font-size: 110%;  /* Sets the font-size to a percent of  the parent element's font size */
     font-weight: bold;
     color: #ffea00;
+    cursor: pointer;
 
     background-color: #45a1ec;
     background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#2B7BC1), to(#214258));
@@ -280,6 +281,10 @@ body {
 }*/
 
 .alwaysVisibleSwitchClass {
+    color: #0000EE; /* HTML5 recommended visited link colour */
+    text-decoration: underline;
+    cursor: pointer;
+
     font-size: x-small;
     font-weight: normal;
 }
