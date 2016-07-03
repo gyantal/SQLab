@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using SqCommon;
 using System.Text;
 using SQLab.Controllers.QuickTester.Strategies;
+using Microsoft.AspNetCore.Authorization;
 
 // http://localhost:5000/qt?jsonp=JSON_CALLBACK&StartDate=&EndDate=&strategy=TotM&BullishTradingInstrument=Long%20SPY&DailyMarketDirectionMaskSummerTotM=DD00U00.U&DailyMarketDirectionMaskSummerTotMM=D0UU.0U&DailyMarketDirectionMaskWinterTotM=UUUD.UUU&DailyMarketDirectionMaskWinterTotMM=DDUU.UU00UU
 // http://localhost:5000/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d

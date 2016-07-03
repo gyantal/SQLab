@@ -153,7 +153,8 @@ namespace SQLab
                 // anonymous people sometimes connect and we have SSL or authentication errors
                 // also we are not interested in Kestrel Exception. Some of these exceptions are not bugs, but correctSSL or Authentication fails.
                 // we only interested in our bugs our Controller C# code
-                string fullExceptionStr = p_exception.ToString();
+                string fullExceptionStr = p_exception.ToString();   // You can simply print exception.ToString() -- that will also include the full text for all the nested InnerExceptions.
+                Utils.Logger.Debug($"IsSendableToHealthMonitorForEmailing(). Checking fullExceptionStr:'{fullExceptionStr}'");
                 if (fullExceptionStr.IndexOf("SSL Handshake failed with OpenSSL error") != -1)
                     return false;
                 if (fullExceptionStr.IndexOf("ECONNRESET connection reset by peer") != -1)
@@ -173,6 +174,10 @@ namespace SQLab
                 if (fullExceptionStr.IndexOf(@"Unrecognized HTTP version") != -1)
                     return false;
                 if (fullExceptionStr.IndexOf(@"Malformed request: MethodIncomplete") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"Malformed request: TargetIncomplete") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"Malformed request: VersionIncomplete") != -1)
                     return false;
                 if (fullExceptionStr.IndexOf(@"SSL Read BIO failed with OpenSSL error") != -1)
                     return false;

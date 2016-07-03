@@ -43,7 +43,7 @@ namespace SqCommon
                 if (Utils.RunningPlatform() == Platform.Windows)
                     return "127.0.0.1";
                 else
-                    return "172.31.60.145";     // private IP of the DEV Linux (where the HealthMonitor App runs)
+                    return "172.31.60.145";     // private IP of the VBrokerDEV server (where the HealthMonitor App runs)
             }
         }
 
@@ -52,9 +52,9 @@ namespace SqCommon
             get {
                 if (Utils.RunningPlatform() == Platform.Windows)
                     return "localhost";       // sometimes for clients running on Windows (in development), we want localHost if Testing new HealthMonitor features
-                    //return "23.20.243.199";      // sometimes for clients running on Windows (in development), we want the proper Healthmonitor if Testing runnig VBroker locally
+                    //return "23.20.243.199";      // public IP for the VBrokerDEV server, sometimes for clients running on Windows (in development), we want the proper Healthmonitor if Testing runnig VBroker locally
                 else
-                    return "23.20.243.199";
+                    return "23.20.243.199";     // public IP for the VBrokerDEV server
             }
         }
 

@@ -29,12 +29,19 @@ namespace SQLab.Controllers
             m_config = p_config;
         }
 
-#if !DEBUG
-        [Authorize]
-#endif
+//#if !DEBUG
+//        [Authorize]
+//#endif
         public ActionResult Index()
         {
-            var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
+            // if the query is from the HealthMonitor.exe as a heartbeat, we allow it without Gmail Authorization
+            string callerIP = ControllerCommon.GetRequestIP(this);
+            Utils.Logger.Info($"RealtimePrice is called from IP {callerIP}");
+            if (!String.Equals(callerIP, "23.20.243.199", StringComparison.CurrentCultureIgnoreCase))       // If not from (public IP for the VBrokerDEV server (HealthMonitor heartbeat check), check GoogleAuth
+            {
+                var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
+            }
+
             string content = GenerateRtpResponse(this.HttpContext.Request.QueryString.ToString());
             return Content(content, "application/json");
 

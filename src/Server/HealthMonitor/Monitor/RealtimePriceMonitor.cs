@@ -39,7 +39,8 @@ namespace HealthMonitor
             }
 
 
-            string url = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
+            //string url = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
+            string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
             string rtpsReply = String.Empty;
             if (Utils.DownloadStringWithRetry(out rtpsReply, url, 5, TimeSpan.FromSeconds(5), false))
                 Utils.Logger.Info(url + " returned: " + (rtpsReply.Substring(0, (rtpsReply.Length > 45) ? 45 : rtpsReply.Length)).Replace("\r\n", "").Replace("\n", ""));   // it is better to see it as one line in the log file
@@ -67,7 +68,7 @@ namespace HealthMonitor
                     {
                         ToAddresses = Utils.Configuration["EmailGyantal"],
                         Subject = "SQ HealthMonitor: WARNING! RealTime Price Service stopped working.",
-                        Body = "SQ HealthMonitor: WARNING! RealTime Price Service stopped working.\nhttp://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l \n returned this: '" + rtpsReply + "'",
+                        Body = $"SQ HealthMonitor: WARNING! RealTime Price Service stopped working.\n{url}\n returned this: '" + rtpsReply + "'",
                         IsBodyHtml = false
                     }.Send();
                     m_isThisServiceOutageWarningEmailWasSent = true;
