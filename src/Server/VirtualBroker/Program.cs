@@ -26,14 +26,16 @@ namespace VirtualBroker
 
             if (!Controller.IsRunningAsLocalDevelopment())
             {
-                // if it is Saturday, Sunday, don't start VBroker, because often IB makes maintenance on the weekends and IBGateway cannot connect, therefore VBroker will raise an error anyway.
-                // however, don't consider USA holidays. It is better to start VBroker, because it may not be a UK, German, French holiday, so maybe a DAX trader would like to trade on that day
-                DateTime dateNowInET = Utils.ConvertTimeFromUtcToEt(DateTime.UtcNow);
-                if (dateNowInET.DayOfWeek == DayOfWeek.Saturday || dateNowInET.DayOfWeek == DayOfWeek.Sunday)
-                {
-                    Utils.Logger.Info($"Assuming morning restart of VBroker every day!!!, if today is the weekend, there is no reason to start. Ending execution now.");
-                    return;
-                }
+                // Should we start VBroker at the weekend? Decision: Yes.  (because we need VBroker Realtime data on the weekend or we may want to trade Futures that are traded on the weekend)
+                // Against it:                 // if it is Saturday, Sunday, we can think about not starting VBroker, because often IB makes maintenance on the weekends and IBGateway cannot connect, therefore VBroker will raise an error anyway.
+                // However, if it is true that IB gives many false maintenance errors, we should find a solution there. Maybe report error only if it is weekdays, not weekends
+                // however, don't consider USA holidays. It is better to start VBroker, because it may not be a UK, German, French holiday, so maybe a DAX trader would like to trade on that day   
+                //DateTime dateNowInET = Utils.ConvertTimeFromUtcToEt(DateTime.UtcNow);
+                //if (dateNowInET.DayOfWeek == DayOfWeek.Saturday || dateNowInET.DayOfWeek == DayOfWeek.Sunday)
+                //{
+                //    Utils.Logger.Info($"Assuming morning restart of VBroker every day!!!, if today is the weekend, there is no reason to start. Ending execution now.");
+                //    return;
+                //}
             }
 
             Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.VirtualBroker.NoGitHub.json", "/home/ubuntu/SQ/Server/VirtualBroker/SQLab.VirtualBroker.NoGitHub.json");
