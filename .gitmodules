@@ -1,0 +1,3 @@
+[submodule "src/Client/SQLab/wwwroot/charting_library"]
+	path = src/Client/SQLab/wwwroot/charting_library
+	url = https://github.com/gyantal/charting_library
