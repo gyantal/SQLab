@@ -181,6 +181,8 @@ namespace SQLab
                     return false;
                 if (fullExceptionStr.IndexOf(@"SSL Read BIO failed with OpenSSL error") != -1)
                     return false;
+                if (fullExceptionStr.IndexOf(@"The input string contains non-ASCII or null characters") != -1)
+                    return false;
 
                 return true;
             }
