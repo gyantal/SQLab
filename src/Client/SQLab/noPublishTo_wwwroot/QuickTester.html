@@ -28,8 +28,8 @@
     <!-- 3. Load our own private libraries -->
     
     
-    <script type="text/javascript" src="../charting_library/charting_library.min-deobfuscated.js"></script> <!--// deobfuscated is needed for postMessage "loadRangeAgy"-->
-    <script type="text/javascript" src="datafeedQuickTesterChart.js"></script>
+    <script type="text/javascript" src="/charting_library/charting_library/charting_library.min.js"></script> <!--// deobfuscated is needed for postMessage "loadRangeAgy"-->
+    <script type="text/javascript" src="/app/QuickTester/datafeedQuickTesterChart.js"></script>
 
     <!--
     <script type="text/javascript" src="/app/QuickTester/TotM.js"></script>
@@ -41,6 +41,7 @@
     
     <script>
         var gSqUserEmail = 'unknown@gmail.com';
+        var gTradingViewOnreadyCalled = false;
 
         
         let GlobalScopeInvertVisibilityOfTableRow = function (paramID) {      // to hook to Angular2 (click) event is not good, because after initial load, Angular2 doesn't re-parse the HTML file for those (click) events. Use the General onclick event instead.
@@ -52,6 +53,14 @@
             else
                 tableRow.style.display = 'none';
         };
+
+        TradingView.onready(function () {
+            console.log("TradingView.onready()");   // this is called very early by TradingView. ngOnInit() START and ngAfterViewInit() START is called much later by Angular2
+            gTradingViewOnreadyCalled = true;
+            //var controllerElement = document.querySelector('body');
+            //var controllerScope = angular.element(controllerElement).scope();
+            //controllerScope.TradingViewOnready();
+        });
 
         /*      $(document).ready(
    This is the function that will get executed after the DOM is fully loaded */
