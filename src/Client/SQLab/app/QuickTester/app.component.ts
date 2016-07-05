@@ -218,7 +218,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         widget.onChartReady(function () {
             console.log("widget.onChartReady()");
             //this.tradingViewChartWidget = widget;   // this = widget here, so this.tradingViewChartWidget would be a field inside the Widget
-            this.createStudy('Moving Average Exponential', false, false, [26]);  
+            this.chart().createStudy('Moving Average Exponential', false, false, [26]);  
             //widget.createStudy('Moving Average Exponential', false, false, [26]);       //inputs: (since version 1.2) an array of study inputs.
         });
 
