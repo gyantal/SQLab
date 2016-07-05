@@ -40,10 +40,17 @@
 
     
     <script>
+        //onHeadProcessing();
         var gSqUserEmail = 'unknown@gmail.com';
-        var gTradingViewOnreadyCalled = false;
+        var gTradingViewChartOnreadyCalled = false;
+        TradingView.onready(function () {
+            console.log("TradingView.onready()");   // this is called very early by TradingView. ngOnInit() START and ngAfterViewInit() START is called much later by Angular2
+            gTradingViewChartOnreadyCalled = true;
+            //var controllerElement = document.querySelector('body');
+            //var controllerScope = angular.element(controllerElement).scope();
+            //controllerScope.TradingViewOnready();
+        });
 
-        
         let GlobalScopeInvertVisibilityOfTableRow = function (paramID) {      // to hook to Angular2 (click) event is not good, because after initial load, Angular2 doesn't re-parse the HTML file for those (click) events. Use the General onclick event instead.
             console.log("GlobalScopeInvertVisibilityOfTableRow() START:" + paramID);
 
@@ -53,49 +60,6 @@
             else
                 tableRow.style.display = 'none';
         };
-
-        TradingView.onready(function () {
-            console.log("TradingView.onready()");   // this is called very early by TradingView. ngOnInit() START and ngAfterViewInit() START is called much later by Angular2
-            gTradingViewOnreadyCalled = true;
-            //var controllerElement = document.querySelector('body');
-            //var controllerScope = angular.element(controllerElement).scope();
-            //controllerScope.TradingViewOnready();
-        });
-
-        /*      $(document).ready(
-   This is the function that will get executed after the DOM is fully loaded */
-//  function () {
-//      /* Next part of code handles hovering effect and submenu appearing */
-//      $('.sqMenuItemLevel0').hover(
-//        function () { //appearing on hover
-//            $('.sqMenuBarLevel1', this).fadeIn();
-//        },
-//        function () { //disappearing on hover
-//            $('.sqMenuBarLevel1', this).fadeOut();
-//        }
-//      );
-
-//      $('.sqMenuItemLevel1').hover(
-//        function () { //appearing on hover
-//            $('.sqMenuBarLevel2', this).fadeIn();
-//        },
-//        function () { //disappearing on hover
-//            $('.sqMenuBarLevel2', this).fadeOut();
-//        }
-//      );
-
-//      //$('.sqMenuNav li').hover(
-//      //  function () { //appearing on hover
-//      //      $('ul', this).fadeIn();
-//      //  },
-//      //  function () { //disappearing on hover
-//      //      $('ul', this).fadeOut();
-//      //  }
-//      //);
-//  }
-//);
-
-        //onHeadProcessing();
 
         System.import('app').catch(function(err){ console.error(err); });
     </script>

@@ -55,7 +55,6 @@
 
 
 
-<!--<a id="idAlwaysVisibleSwitch0" class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters');" >+ Show General Parameters</a>-->
 <span id="idAlwaysVisibleSwitch0" class="alwaysVisibleSwitchClass" (click)="SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters')">+ Show General Parameters</span>
 <br />
 <div id="idGeneralParameters" style="display: none;">
@@ -112,8 +111,6 @@
                     <option [value]="i" *ngFor="let i of strategy_TotM.bullishTradingInstrument">{{i}}</option>
                 </select>
             
-            <!--<select [(ngModel)]="strategy_TotM.selectedBullishTradingInstrument" ng-options="opt as opt for opt in bullishTradingInstrument" ng-change="bullishTradingInstrumentChanged()"></select>-->
-            
             </td>
             <td><input type="text" [(ngModel)]="strategy_TotM.dailyMarketDirectionMaskWinterTotM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
             <td><input type="text" [(ngModel)]="strategy_TotM.dailyMarketDirectionMaskWinterTotMM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
@@ -159,9 +156,6 @@
                 <select [ngModel]="strategy_VXX_SPY_Controversial.selectedVXXLongOrShortTrade" (ngModelChange)="strategy_VXX_SPY_Controversial.vxxLongOrShortTradeChanged($event)">
                     <option [value]="i" *ngFor="let i of strategy_VXX_SPY_Controversial.vxxLongOrShortTrade">{{i}}</option>
                 </select>
-
-                <!--<select [(ngModel)]="strategy_VXX_SPY_Controversial.selectedVXXLongOrShortTrade" ng-options="opt as opt for opt in vxxLongOrShortTrade" ng-change="vxxLongOrShortTradeChanged()"></select>-->
-
             </td>
         </tr>
     </tbody>
@@ -185,9 +179,7 @@
                     <option [value]="i" *ngFor="let i of strategy_LEtfDistcrepancy.etfPairs">{{i}}</option>
                 </select>
 
-            <!--<select [(ngModel)]="strategy_LEtfDistcrepancy.selectedEtfPairs" ng-options="opt as opt for opt in etfPairs" ng-change="etfPairsChanged()"></select>-->
-            
-            </td>
+              </td>
             <td><input type="text" [(ngModel)]="strategy_LEtfDistcrepancy.rebalancingFrequency" (keypress)="OnParameterInputKeypress($event)" /></td>
         </tr>
     </tbody>
@@ -266,7 +258,6 @@
 
 <span id="idAlwaysVisibleSwitch1" class="alwaysVisibleSwitchClass" (click)="SQToggle('idNoteFromStrategyDiv', 'idAlwaysVisibleSwitch1', 'note from strategy')">+ Show General Parameters</span>
 
-<!--<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idNoteFromStrategyDiv', 'idAlwaysVisibleSwitch1', 'note from strategy');" id="idAlwaysVisibleSwitch1">+ Hide note from strategy</a>-->
 <br />
 <div id="idNoteFromStrategyDiv" style="display: block;">
     <!--<span ng-bind-html="htmlNoteFromStrategy"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->
@@ -311,7 +302,6 @@
 
 <span id="idAlwaysVisibleSwitchDebug" class="alwaysVisibleSwitchClass" (click)="SQToggle('idDebugInfoDiv', 'idAlwaysVisibleSwitchDebug', 'debug info')">+ Show debug info</span>
 
-<!--<a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idDebugInfoDiv', 'idAlwaysVisibleSwitchDebug', 'debug info');" id="idAlwaysVisibleSwitchDebug">+ Show debug info</a>-->
 <br />
 <div id="idDebugInfoDiv" style="display: none;">
     <!--<span ng-bind-html="htmlNoteFromStrategy"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->

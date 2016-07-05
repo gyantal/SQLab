@@ -1,5 +1,4 @@
 ﻿import {Component, OnInit, AfterViewInit} from '@angular/core';
-//import {Http, Response, Headers} from '@angular/http';
 import {Http,HTTP_PROVIDERS} from '@angular/http';
 import {Observable} from 'rxjs/Observable';
 import {TotM} from './TotM'
@@ -7,14 +6,10 @@ import {LEtfDistcrepancy, AngularInit_LEtfDistcrepancy} from './L-ETF-Discrepanc
 import {VXX_SPY_Controversial} from './VXX_SPY_Controversial'
 import {StopWatch} from './Utils'
 
-//import {widget} from "./../../wwwroot/charting_library/charting_library/charting_library.min.js";
 declare var TradingView: any;
 declare var Datafeeds: any;
-
 declare var gSqUserEmail: string;
-declare var gTradingViewOnreadyCalled: boolean;
-//declare var $: JQueryStatic;    // Declaring $ (or jQuery) as JQueryStatic will give you a typed reference to jQuery.
-// good demos here: http://www.syntaxsuccess.com/angular-2-samples/#/demo/http
+declare var gTradingViewChartOnreadyCalled: boolean;
 
 //ZONES
 //In Angular 1 you have to tell the framework that it needs to run this check by doing scope.$apply.
@@ -117,12 +112,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.strategy_TotM = new TotM(this);
 
         this.SelectStrategy("idMenuItemTotM");
-
-        //AngularInit_TotM(this);
-        //AngularInit_VXX(this);
-        //AngularInit_LEtfDistcrepancy(this);
-
-        this.TradingViewOnready();
+        this.TradingViewChartOnready();
     }
 
     ngAfterViewInit() {     // equivalent to $(document).ready()
@@ -161,8 +151,8 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
 
-    TradingViewOnready() {
-        console.log("TradingViewOnready() called by ngOnInit(). Global gTradingViewOnreadyCalled: " + gTradingViewOnreadyCalled);
+    TradingViewChartOnready() {
+        console.log("TradingViewChartOnready() called by ngOnInit(). Global gTradingViewOnreadyCalled: " + gTradingViewChartOnreadyCalled);
         //https://github.com/tradingview/charting_library/wiki/Widget-Constructor
         var widget = new TradingView.widget({
             //fullscreen: true,
@@ -171,38 +161,34 @@ export class AppComponent implements OnInit, AfterViewInit {
             interval: 'D',
             container_id: "tv_chart_container",
             //	BEWARE: no trailing slash is expected in feed URL
-            //datafeed: new Datafeeds.UDFCompatibleDatafeed($scope, "http://demo_feed.tradingview.com"),
             datafeed: new Datafeeds.UDFCompatibleDatafeed(this, "http://demo_feed.tradingview.com"),
             library_path: "/charting_library/charting_library/",
             locale: getParameterByName('lang') || "en",
-            //	Regression Trend-related functionality is not implemented yet, so it's hidden for a while
-            drawings_access: { type: 'black', tools: [{ name: "Regression Trend" }] },
+            drawings_access: { type: 'black', tools: [{ name: "Regression Trend" }] },   //	Regression Trend-related functionality is not implemented yet, so it's hidden for a while
 
             charts_storage_url: 'http://saveload.tradingview.com',
             charts_storage_api_version: "1.1",
             client_id: 'tradingview.com',
             user_id: 'public_user_id'
 
-
             , width: "90%"        //Remark: if you want the chart to occupy all the available space, do not use '100%' in those field. Use fullscreen parameter instead (see below). It's because of issues with DOM nodes resizing in different browsers.
             , height: 400
             //https://github.com/tradingview/charting_library/wiki/Featuresets
             //,enabled_features: ["trading_options"]    
             //, enabled_features: ["charting_library_debug_mode", "narrow_chart_enabled", "move_logo_to_main_pane"] //narrow_chart_enabled and move_logo_to_main_pane doesn't do anything to me
-        //    , enabled_features: ["charting_library_debug_mode"]
+            //, enabled_features: ["charting_library_debug_mode"]
             //, disabled_features: ["use_localstorage_for_settings", "volume_force_overlay", "left_toolbar", "control_bar", "timeframes_toolbar", "border_around_the_chart", "header_widget"]
             , disabled_features: ["border_around_the_chart"]
             , debug: true   // Setting this property to true makes the chart to write detailed API logs to console. Feature charting_library_debug_mode is a synonym for this field usage.
             , time_frames: [
-                //{ text: "All", resolution: "6M" }, crash: first character should be a Number
-                //{ text: "600m", resolution: "D" },   // "600m" 50 years : Put an insanely high value here. But later in the calculateHistoryDepth() we will decrease it to backtested range
-                //{ text: "601m", resolution: "D" },   // "601m" 50 years : Put an insanely high value here. But later in the calculateHistoryDepth() we will decrease it to backtested range
                 { text: this.nMonthsInTimeFrame + "m", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
                 { text: this.nMonthsInTimeFrame + "m", resolution: "W" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
                 { text: this.nMonthsInTimeFrame + "m", resolution: "M" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
+                //{ text: "All", resolution: "6M" }, crash: first character should be a Number
+                //{ text: "600m", resolution: "D" },   // "600m" 50 years : Put an insanely high value here. But later in the calculateHistoryDepth() we will decrease it to backtested range
+                //{ text: "601m", resolution: "D" },   // "601m" 50 years : Put an insanely high value here. But later in the calculateHistoryDepth() we will decrease it to backtested range
                 //{ text: "12y", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month.
                 //{ text: "6000d", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO NOT WORK. Max days: 350
-
                 //{ text: "50y", resolution: "6M" },
                 //{ text: "3y", resolution: "W" },
                 //{ text: "8m", resolution: "D" },
@@ -218,14 +204,12 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.tradingViewChartWidget = widget;
 
         var that = this;
-        widget.onChartReady(function () {   // this = widget, that = AppComponent
+        widget.onChartReady(function () {   // inside this scope: this = widget, that = AppComponent
             console.log("widget.onChartReady()");
-            //this.tradingViewChartWidget = widget;   // this = widget here, so this.tradingViewChartWidget would be a field inside the Widget
-            this.chart().createStudy('Moving Average Exponential', false, false, [26]);  
-            //widget.createStudy('Moving Average Exponential', false, false, [26]);       //inputs: (since version 1.2) an array of study inputs.
+            this.chart().createStudy('Moving Average Exponential', false, false, [26]);     //inputs: (since version 1.2) an array of study inputs.
 
-            // Decision: don't use setVisibleRange(), because even if we set up EndDate as 5 days in the future, it cuts that to 'today'.
-            // leave the chart as default, that gives about 5 empty days in the future, which we want.
+            // Decision: don't use setVisibleRange(), because even if we set up EndDate as 5 days in the future, it cuts the chart until 'today' sharp.
+            // leave the chart as default, that gives about 5 empty days in the future, which we want. Which looks nice.
             //if (that.endDateUtc != null) {
             //    var visibleRangeStartDateUtc = new Date();
             //    visibleRangeStartDateUtc.setTime(that.endDateUtc.getTime() - 365 * 24 * 1000 * 60 * 60);       // assuming 365 calendar days per year, set the visible range for the last 1 year
@@ -249,36 +233,7 @@ export class AppComponent implements OnInit, AfterViewInit {
             //}
         });
 
-       // widget.onChartReady(function () {   // this click() takes about 680msec, because the click will ask for the whole data, and redraw itself. So, it is understandable: sort of, but slow. Why it takes almost a second for TradingView to do this.
-       //     console.log("widget.onChartReady()");
-        //    if ($scope.profilingBacktestStopWatch != null) {
-        //        $scope.$apply(function () {
-        //            $scope.profilingBacktestAtChartReadyStartMSec = $scope.profilingBacktestStopWatch.GetTimestampInMsec();
-        //        });
-        //    }
-
-        //    $scope.tradingViewChartWidget = widget;
-        //    widget.createStudy('Moving Average Exponential', false, false, [26]);       //inputs: (since version 1.2) an array of study inputs.
-
-        //    //////if (gBacktestIsReady) {
-        //    //$scope.tradingViewChartWidget.postMessage.post($scope.tradingViewChartWidget._messageTarget(), "loadRangeAgy", {
-        //    //    res: "D",
-        //    //    val: $scope.nMonthsInTimeFrame + "m"  // the updated range after backtest is ready
-        //    //})
-
-        //    // this is better than the gTradingViewChartWidget.postMessage.post(gTradingViewChartWidget._messageTarget(), "loadRangeAgy", because the 'loading data' bug doesn't effect it, and because I can use the minified TV library
-        //    // however, Chart Cache-s the getBars() data for every Time-Frame button, so it will not ask later for the new data. So, Removing(), Creating() chart is still necessary
-        //    var z1 = document.getElementById("tv_chart_container");
-        //    //var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['1'].children['1'];
-        //    var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['0'].children['1'];
-        //    dateRangeDiv.children['0'].click();
-        //    dateRangeDiv.children['0'].innerHTML = "All";   // it takes effect, but if I click it Afterwards, than it will change back to original; so modify the Text After the Click
-
-        //    if ($scope.profilingBacktestStopWatch != null) {
-        //        $scope.$apply(function () {
-        //            $scope.profilingBacktestAtChartReadyEndMSec = $scope.profilingBacktestStopWatch.GetTimestampInMsec();
-        //        });
-    }   // TradingViewOnready()
+    }   // TradingViewChartOnready()
      
 
 
@@ -286,11 +241,9 @@ export class AppComponent implements OnInit, AfterViewInit {
         console.log("MenuItemStartBacktestClicked() START");
 
         this.generalInputParameters = "StartDate=" + this.inputStartDateStr + "&EndDate=" + this.inputEndDateStr;
-
         this.strategy_TotM.StartBacktest_TotM(this.http);
         this.strategy_VXX_SPY_Controversial.StartBacktest_VXX(this.http);
         this.strategy_LEtfDistcrepancy.StartBacktest_LEtfDistcrepancy(this.http);
-
         //this.profilingBacktestStopWatch = new StopWatch();
         //this.profilingBacktestStopWatch.Start();
     }
@@ -380,20 +333,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 
         this.nMonthsInTimeFrame = nMonths.toString();
 
-        // click the first item on the TimeFrames toolbar
-        // this is better than the gTradingViewChartWidget.postMessage.post(gTradingViewChartWidget._messageTarget(), "loadRangeAgy", because the 'loading data' bug doesn't effect it
-        //var z1 = document.getElementById("tv_chart_container");
-        //var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['1'].children['1'];
-        //dateRangeDiv.children['0'].click();
-        //dateRangeDiv.children['0'].innerHTML = "All";   // it takes effect, but if I click it Afterwards, than it will change back to original; so modify the Text After the Click
-
-
-
         //////***!!!!This is the best if we have to work with the official Chart, but postMessage works without this
         //////  Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
         // this part will set up the Timeframes bar properly, but later is chart.onChartReady() you have to click the first button by "dateRangeDiv.children['0'].click();"
         if (this.tradingViewChartWidget._ready == true) {
-            
+            // we have 2 options: 1. or 2. to refresh chart after data arrived:
             // 1. update chart without recreating the whole chartWidget. This would be smooth and not blink.
             // setVisibleRange() nicely works, by our request, but the time_frames[] are not updated. So, it is not ideal. So, choose to remove and recreate the chart instead.
             //this.tradingViewChartWidget.options.time_frames[0].text = nMonths + "m";
@@ -416,13 +360,6 @@ export class AppComponent implements OnInit, AfterViewInit {
             ////gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
             this.tradingViewChartWidget.create() 
         }
-
-        //////***!!!! This can be used only with the updated Chart, but the time-frame bar will not update visually, but re-creation will not Blink, as it will not create a short-term version of the chart for 1second
-        //////***!!! cannot be used.... because once it goes to the 'loading data' bug, after, it will never refresh the chart. Because it will not ask getBars() ever. So, we have to re-create the chart.
-        //////this.tradingViewChartWidget.postMessage.post(this.tradingViewChartWidget._messageTarget(), "loadRangeAgy", {  // don't post this message until the chart is ready() again. Post it later in the onReady() callback.
-        //////    res: "D",
-        //////    val: nMonths + "m"
-        //////})
         console.log("ProcessStrategyResult() END");
     }
 
@@ -433,20 +370,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
 
-    
-
-
-    //TradingView.onready(function() {
-    //    var controllerElement = document.querySelector('body');
-    //    var controllerScope = angular.element(controllerElement).scope();
-
-    //    controllerScope.TradingViewOnready();
-
-    //})
-
-
-
-    MenuItemStrategyClick(event) {
+   MenuItemStrategyClick(event) {
         console.log("MenuItemStrategyClick() START");
 
         $(".sqMenuBarLevel2").hide();
@@ -456,13 +380,6 @@ export class AppComponent implements OnInit, AfterViewInit {
         var idAttr = target.attributes.id;
         var value = idAttr.nodeValue;
         this.SelectStrategy(value);
-
-        //var controllerElement = document.querySelector('body');
-        //var controllerScope = angular.element(controllerElement).scope();
-
-        ////http://jimhoskins.com/2012/12/17/angularjs-and-apply.html
-        //controllerScope.$apply(controllerScope.SelectStrategy(element.id));  // use Apply from MenuClick, but you don't have to use it from an Angular function
-
     }
 
 
@@ -489,22 +406,6 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //public m_data: HMData;
-    
-
     // debug info here
     m_webAppResponse: string;
     m_wasRefreshClicked: any;
@@ -513,99 +414,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     onClickMe() {
         this.clickMessage = 'You are my hero!';
     }
-
-    ////constructor(http: Http) {        //Exception was thrown at line 4, column 10194 in https://code.angularjs.org/tools/system.js //        0x80000000 - JavaScript runtime error: undefined
-    //constructor(private m_HMDataService: HMDataService) {   // private variables become members; sythetic sugar for this.m_a = p_a;
-    //    //this.m_http = http;
-    //    this.m_wasRefreshClicked = "Refresh was not yet clicked.";
-    //}
-
-   
-
-    //getHMData(p_hmDataToSend) {
-    //    //this.m_HMDataService.getHttpHMData().then(hmDataReturned => {
-
-    //    this.m_HMDataService.getHttpWithPostHMData(p_hmDataToSend).then(hmDataReturned => {
-    //        // don't worry if view is not updated in IE. Angula2 bug in IE. In Chrome and Edge it works.
-    //        //console.log("getHttpWithPostHMData() returned");
-    //        var hmData: HMData = <HMData>hmDataReturned; // Typescript cast: remember that this is a compile-time cast, and not a runtime cast.
-    //        this.m_data = hmData;
-
-    //        // Sadly Javascript loves Local time, so work in Local time; easier;
-    //        // 1. StartDate
-    //        this.m_data.StartDateLoc = new Date(hmData.StartDate);  // "2015-12-29 00:49:54.000Z", because of the Z Zero, this UTC string is converted properly to local time
-    //        this.m_data.StartDate = localDateToUtcString_yyyy_mm_dd_hh_mm_ss(this.m_data.StartDateLoc);    // take away the miliseconds from the dateStr
-    //        var localNow = new Date();  // this is local time: <checked>
-    //        //var utcNowGetTime = new Date().getTime();  //getTime() returns the number of seconds in UTC.
-    //        this.m_data.StartDateTimeSpanStr = getTimeSpanStr(this.m_data.StartDateLoc, localNow);
-
-    //        //this.m_data.ResponseToFrontEnd = "ERROR";
-
-    //        this.m_data.AppOk = 'OK';
-    //        if (this.m_data.ResponseToFrontEnd.toUpperCase().indexOf('ERROR') >= 0)
-    //            this.m_data.AppOk = 'ERROR';
-
-    //        this.m_data.RtpsOk = 'OK';
-    //        for (var i in this.m_data.RtpsDownloads) {
-    //            if (this.m_data.RtpsDownloads[i].indexOf('OK') >= 0) {  // if 'OK' is found
-    //                continue;
-    //            }
-    //            this.m_data.RtpsOk = 'ERROR';
-    //        }
-
-    //        this.m_data.VBrokerOk = 'OK';
-    //        for (var i in this.m_data.VBrokerReports) {
-    //            if (this.m_data.VBrokerReports[i].indexOf('OK') >= 0) {  // if 'OK' is found
-    //                continue;
-    //            }
-    //            this.m_data.VBrokerOk = 'ERROR';
-    //        }
-
-    //        this.m_webAppResponse = JSON.stringify(hmData);
-    //    });
-    //}
-
-    //setControlValue(controlName, value) {
-    //    console.log("setControlValue():" + controlName + "/" + value);
-    //    console.log("setControlValue():" + controlName + "/" + value + "/" + this.m_data.DailyEmailReportEnabled);
-    //    if (controlName == 'chkDailyEmail') {
-    //        if (this.m_data.DailyEmailReportEnabled != value) {
-    //            this.m_data.DailyEmailReportEnabled = value;
-    //            this.m_data.CommandToBackEnd = "ApplyTheDifferences";
-    //            this.getHMData(this.m_data);
-    //        }
-    //    } else if (controlName == 'chkRtps') {
-    //        if (this.m_data.RtpsTimerEnabled != value) {
-    //            this.m_data.RtpsTimerEnabled = value;
-    //            this.m_data.CommandToBackEnd = "ApplyTheDifferences";
-    //            this.getHMData(this.m_data);
-    //        }
-    //    } else if (controlName == 'chkVBroker') {
-    //        if (this.m_data.ProcessingVBrokerMessagesEnabled != value) {
-    //            this.m_data.ProcessingVBrokerMessagesEnabled = value;
-    //            this.m_data.CommandToBackEnd = "ApplyTheDifferences";
-    //            this.getHMData(this.m_data);
-    //        }
-    //    }
-
-
-
-
-    //    //this.todo.controls[controlName].updateValue(value);
-    //    //this.todo.controls[controlName].markAsDirty();
-    //}
-
-    //refreshViewClicked() {
-    //    console.log("refreshViewClicked");
-    //    this.m_wasRefreshClicked = "refreshViewClicked";
-    //}
-
-    //refreshDataClicked() {
-    //    console.log("refreshDataClicked");
-    //    this.m_wasRefreshClicked = "refreshDataClicked";
-    //    this.m_data.CommandToBackEnd = "OnlyGetData";
-    //    this.getHMData(this.m_data);
-    //}
+ 
 }
 
 
@@ -616,66 +425,14 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 
 
-// ************** Utils section
+// ************** Utils section with Global functions
 
-function getParameterByName(name: string) {
+function getParameterByName(name: string) {         // copyed from Tradingview's Test.html
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
         results = regex.exec(location.search);
     return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
-function localDateToUtcString_yyyy_mm_dd_hh_mm_ss(p_date: Date) {
-    var year = "" + p_date.getUTCFullYear();
-    var month = "" + (p_date.getUTCMonth() + 1); if (month.length == 1) { month = "0" + month; }
-    var day = "" + p_date.getUTCDate(); if (day.length == 1) { day = "0" + day; }
-    var hour = "" + p_date.getUTCHours(); if (hour.length == 1) { hour = "0" + hour; }
-    var minute = "" + p_date.getUTCMinutes(); if (minute.length == 1) { minute = "0" + minute; }
-    var second = "" + p_date.getUTCSeconds(); if (second.length == 1) { second = "0" + second; }
-    return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
-}
-
-// Started on 2015-12-23 00:44 (0days 0h 12m ago)
-function getTimeSpanStr(date1: Date, date2: Date) {
-    var diff = date2.getTime() - date1.getTime();
-
-    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    diff -= days * (1000 * 60 * 60 * 24);
-
-    var hours = Math.floor(diff / (1000 * 60 * 60));
-    diff -= hours * (1000 * 60 * 60);
-
-    var mins = Math.floor(diff / (1000 * 60));
-    diff -= mins * (1000 * 60);
-
-    var seconds = Math.floor(diff / (1000));
-    diff -= seconds * (1000);
-
-    return "(" + days + "days " + hours + "h " + mins + "m " + seconds + "s ago)";
-}
-
-
-
-
-//var gDefaultHMData: HMData = {
-//    AppOk: "OK",
-//    StartDate: '1998-11-16T00:00:00',
-//    StartDateLoc: new Date('1998-11-16T00:00:00'),
-//    StartDateTimeSpanStr: '',
-//    DailyEmailReportEnabled: false,
-
-//    RtpsOk: 'OK',
-//    RtpsTimerEnabled: false,
-//    RtpsTimerFrequencyMinutes: -999,
-//    RtpsDownloads: ['a', 'b'],
-
-//    VBrokerOk: 'OK',
-//    ProcessingVBrokerMessagesEnabled: false,
-//    VBrokerReports: ['a', 'b'],
-//    VBrokerDetailedReports: ['a', 'b'],
-
-//    CommandToBackEnd: "OnlyGetData",
-//    ResponseToFrontEnd: "OK"
-//};
 
 
