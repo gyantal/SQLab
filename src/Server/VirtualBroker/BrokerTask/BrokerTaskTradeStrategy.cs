@@ -134,7 +134,7 @@ namespace VirtualBroker
 
         public void CalculatePortfolioUsdSizeFromRealTime(BrokerTaskPortfolio p_portfolio)
         {
-            var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };    // we are interested in the following Prices
+            var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };    // MID is the most honest price. LAST may happened 1 hours ago
 
             double portfolioUsdSize = 0;
             foreach (PortfolioPosition pip in p_portfolio.TodayPositions)
@@ -168,7 +168,7 @@ namespace VirtualBroker
         {
             double leverage = Strategy.GetPortfolioLeverage(p_proposedPositionSpecs, p_portfolio.Param);
             double totalRiskedCapital = p_portfolio.PortfolioUsdSize * leverage;
-            var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };
+            var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };   // MID is the most honest price. LAST may happened 1 hours ago
             p_portfolio.ProposedPositions = p_proposedPositionSpecs.Select(r =>
             {
                 int volume = 0;

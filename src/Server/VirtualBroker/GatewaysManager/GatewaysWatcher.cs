@@ -243,7 +243,7 @@ namespace VirtualBroker
                 return -1;
             }
 
-            var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };
+            var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };   // MID is the most honest price. LAST may happened 1 hours ago
             m_mainGateway.BrokerWrapper.GetMktDataSnapshot(p_contract, ref rtPrices);
             int virtualOrderId = userGateway.PlaceOrder(p_contract, p_transactionType, p_volume, p_orderExecution, p_orderTif, p_limitPrice, p_stopPrice, rtPrices[TickType.MID].Price, p_isSimulatedTrades, p_detailedReportSb);
             return virtualOrderId;

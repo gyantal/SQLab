@@ -123,6 +123,9 @@ namespace VirtualBroker
             // 1. Get VXX price data
             // we can get histical data from these sources and compare them
             // 1. IB: quickest, but 'Historical data request for greater than 365 days rejected.' and it is split adjusted, but if dividend is less than 10%, it is not adjusted.
+            //      checked that: the today (last day) of IB.ReqHistoricalData() is not always correct. And it is not always the last real time price. It only works 90% of the time.
+            //      2016-07-05: after a 3 days weekend: "Historical data end - 1001 from 20160105  13:50:01 to 20160705  13:50:01 ", and that time (before Market open), realtime price was 13.39.
+            //         later on that day, it always give 13.39 for today's last price in ClientSocket.reqHistoricalData. So, don't trust the last day. Asks for a real time price separately from stream.
             // 2. YahooFinance as CSV, but twice every year YahooFinance doesn't have the data, or one date is missing from the 200 values
             // 3. GoogleFinance as HttpDownload
             // 4. Our SQL server.
@@ -153,6 +156,15 @@ namespace VirtualBroker
             }
             else
             {
+                var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };    // MID is the most honest price. LAST may happened 1 hours ago
+                double rtPrice = 0.0;
+                StrongAssert.True(Controller.g_gatewaysWatcher.GetMktDataSnapshot(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if rtPrice cannot be obtained.");
+                rtPrice = rtPrices[TickType.MID].Price;
+                StrongAssert.True(Math.Abs((m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice - rtPrice) / m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.006, Severity.NoException,  // should be less than 0.6%
+                    $"VXX rt price from stream ({rtPrice}) is too far away from lastPrice from IB.ReqHistoricalData() {m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice}. We continue using rt price anyway. Make a comment into BrokerWrapperIb.cs/ReqHistoricalData() function in the source code with this example and date.");
+
+                m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1] = new QuoteData() { Date = m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].Date, AdjClosePrice = rtPrice };   // but we use the streamed rtPrice anyway
+
                 // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
                 if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
                 {// in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.

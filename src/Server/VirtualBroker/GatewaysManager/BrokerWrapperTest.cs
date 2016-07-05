@@ -158,10 +158,10 @@ namespace VirtualBroker
             switch (p_contract.Symbol)
             {
                 case "VXX":
-                    p_quotes = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() { Price = 20.58, Time = DateTime.UtcNow } } };
+                    p_quotes = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() { Price = 20.58, Time = DateTime.UtcNow } } };   // MID is the most honest price. LAST may happened 1 hours ago
                     break;
                 case "SVXY":
-                    p_quotes = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() { Price = 43.83, Time = DateTime.UtcNow } } };
+                    p_quotes = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() { Price = 43.83, Time = DateTime.UtcNow } } };    // MID is the most honest price. LAST may happened 1 hours ago
                     break;
                 default:
                     break;

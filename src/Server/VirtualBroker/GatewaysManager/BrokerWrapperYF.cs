@@ -338,8 +338,8 @@ namespace VirtualBroker
 
                 //if (Utils.IsInRegularTradingHoursNow(TimeSpan.FromDays(3))) // in regular trading hours, IB gateway adds today lastPrice as a ClosePrice of this historical. Attach to it.
                 //{
-                    var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };    // we are interested in the following Prices
-                    if (!GetMktDataSnapshot(p_contract, ref rtPrices))
+                    var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };    // MID is the most honest price. LAST may happened 1 hours ago
+                if (!GetMktDataSnapshot(p_contract, ref rtPrices))
                         return false;
                     p_quotes.Add(new QuoteData() { Date = rtPrices[TickType.MID].Time, AdjClosePrice = rtPrices[TickType.MID].Price });
                 //}

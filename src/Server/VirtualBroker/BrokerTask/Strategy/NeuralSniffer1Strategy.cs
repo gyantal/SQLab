@@ -147,8 +147,6 @@ namespace VirtualBroker
 
                 m_rut = rutQuotesFromSqlDB.Select(item => new QuoteData() { Date = item.Date, AdjClosePrice = item.AdjClosePrice }).ToList(); // Clone the SQL version, not YF
 
-                //Utils.Logger.Info("NeuralSniffer1Strategy.GeneratePositionSpecs() SqlTools.ReqHistoricalData().");
-
                 //You can use IB historical data:     >for stocks OR > popular indices, like SPX, but not the RUT. > So, for RUT, implement getting historical from our SQL DB.
                 //Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL" };
                 Contract contract = VBrokerUtils.ParseSqTickerToContract("^RUT");
