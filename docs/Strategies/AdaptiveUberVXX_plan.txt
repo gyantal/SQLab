@@ -298,40 +298,32 @@ so no need to waste time here with fine details.
 //- move the realTime Quotes to VBroker/SQLabWebsite  (keep the current one until Mrs. Charmat IB account is OK. Later, I will have only my secondary account for VBroker + realtime price on Linux)
 	ConnorStrategy should use this RealTime Quotes
 
-- convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core, Angular2 (not 1 as before) and TS
+//- convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core, Angular2 (not 1 as before) and TS
 	
 5. 
-with the new "SQ Strategy QuickTester" Website on Linux implement:
-- AdaptiveUberVXX v1.0: Implement the Learning version (Basic TotM (18%) + TotMM (32%): 50% R) in "SQ Strategy QuickTester", so that C# code is re-usable in VBroker
+with the new "SQ Strategy QuickTester" Website on Linux implement: Implement learning versions:
 - UI change: for any adaptive implementation, StartDate, EndDate is not enough. We need start-end date for training set/ testing set (in-sample period, out of sample period).
 	we also need trainingSet_ticker (SPY), testingSetTicker = VXX differentiation
 - Quicktester should give a forecast of that exact strategy that is played live for Today,
 with a separate page in which the steps are detailed as log files. (in essence, I can check a log files of VBroker in a web browser, because the same code is running)
 So, a user who wants to check what will be played today, don't have to go to Linux Console and start Simulation,
 because the same Log file messages and calculation can be observed on a Website.
-- implement FOMC version (Mr. C. asked for it.)
 
+5.1.
+- AdaptiveUberVXX v1.0: Implement a New Strategy, new Menu: the Learning version (Basic TotM (18%) + TotMM (32%): 50% R) in "SQ Strategy QuickTester", so that C# code is re-usable in VBroker
+5.2
+- implement FOMC version (Mr. C. asked for it.). Base is the TotM, but on top of that FOMC is a hierarchical overlay. 
+TotM is learning, FOMC is learnig, but the combination is a hierarchy. (as it is currently played).
+Don't do Holidays. It will be implemented in Task 7, later. For Testing Combining signals, it is better to work with only FOMC, which has more samples than holidays.
+
+- write a document chapter gDoc, how the Learning version performance related to the biased, overfit version (non-realistic one). If we can have half the performance, we would be happy.
+It should also be better than Buy&hold.
 
 6. Improve (1) Basic TotM+TotMM things (VBroker + Quicktester) with extensions:
 > and make comparisions in Quicktester as I develop improved versions of the strategy. Write a gDoc study chapters. Start a new gDoc: "Adaptive UberVXX with SQLab" (QuickTester+VBroker)
-- Close short VXX for the weekend (to sleep better): (do trainig for that 'phenonema', adaptive) close the short position at close on Friday and reopen it at open on Monday, 
-	so VBroker should run 20 min. before market open
-	in 2015: "Weekend: We do not play short VXX at the weekend but in backtest we play. It caused 30.00% gain."
-	>try to implement it in an adaptive way, not with a fixed rule. So, if in the future weekends will be good for VXX shorts, we will adapt to it.
-- implement advanced outlier elimination, improve the Basic one, research it, and Improve it and backtest the different version in Quicktester, and rewrite it in Step 6.
-	Maybe AdvancedOutlier elimination is not even needed because with the BasicZscore, here are how many samples are eliminated:
-	OutlierBasicZscore_Zscore = 2.7: SPY outliers skipped at 3.21%. Pos:70,Neg:57, 2.17% of samples.
-	OutlierBasicZscore_Zscore = 3.0: SPY outliers skipped at 3.57%. Pos:45,Neg:42, 1.49% of samples.  (I try to use this)
-	OutlierBasicZscore_Zscore = 4.0: SPY outliers skipped at 4.76%. Pos:17,Neg:18, 0.6% of samples.
-	OutlierBasicZscore_Zscore = 5.0: SPY outliers skipped at 5.95%. Pos:8,Neg:9, 0.29% of samples.
-	Note that the ratio of Positive to Negative is very even. Because it is true that there are big panic days, but there are big upside days too. e.g.: Oct 13, 2008: up +14.5%
-- Consider neighbour days too (Step 6 task) (do I want that? not necessarily, backtest it): 
-	if a Neutral / Cash day is between 2 bullish days. The Neutral day can be played as Bullish too. 
-	I personally would think about playing this way in real life. Can we backtest in Quicktester? Does it worth doing it?
-- Combining signals: incorporate Contango Observer, 
-	which is unlikely to go against Contango direction, but decreases invested days,
-	because there is not enough samples
-- think about how to solve the problems of 'not enough samples', so the prediction is unreliable.
+- Combining Events (TotM, FOMC) without hierarchy. Prove that this is better than the hierarchy, because we don't have to choose subjectively, which has bigger priority. 
+Totm_Over_FOMC() vs. FOMC()_over_TotM() vs. Combination_without_hierarchy. Combination is adaptive. If we chose a hierarchical priority that will not adapt to the future.
+Think about how to solve the problems of 'not enough samples', so the prediction is unreliable.
 A. Imagine TotM T-1 days occurs 40 times (enough sample)
 	>If we slice & Dice it to Contango/Backwardation, there will be 30 samples in Contango, 10 in Backwardation
 	>The samples of TotM T-1 Days in Contango = 30, so we have a prediction
@@ -354,6 +346,24 @@ C. There should be a mathemitacal idea how to combine the probabilities of these
 	a higher weight in the final average, in the final Estimate of %change, final estimate of StDev.
 	Is there a framework for this? Talk with Balazs, the mathematician. How to use all the samples, but giving
 	move weight to the samples which is selected by both A and B.
+- Close short VXX for the weekend (to sleep better): (do trainig for that 'phenonema', adaptive) close the short position at close on Friday and reopen it at open on Monday, 
+	so VBroker should run 20 min. before market open
+	in 2015: "Weekend: We do not play short VXX at the weekend but in backtest we play. It caused 30.00% gain."
+	>try to implement it in an adaptive way, not with a fixed rule. So, if in the future weekends will be good for VXX shorts, we will adapt to it.
+- implement advanced outlier elimination, improve the Basic one, research it, and Improve it and backtest the different version in Quicktester, and rewrite it in Step 6.
+	Maybe AdvancedOutlier elimination is not even needed because with the BasicZscore, here are how many samples are eliminated:
+	OutlierBasicZscore_Zscore = 2.7: SPY outliers skipped at 3.21%. Pos:70,Neg:57, 2.17% of samples.
+	OutlierBasicZscore_Zscore = 3.0: SPY outliers skipped at 3.57%. Pos:45,Neg:42, 1.49% of samples.  (I try to use this)
+	OutlierBasicZscore_Zscore = 4.0: SPY outliers skipped at 4.76%. Pos:17,Neg:18, 0.6% of samples.
+	OutlierBasicZscore_Zscore = 5.0: SPY outliers skipped at 5.95%. Pos:8,Neg:9, 0.29% of samples.
+	Note that the ratio of Positive to Negative is very even. Because it is true that there are big panic days, but there are big upside days too. e.g.: Oct 13, 2008: up +14.5%
+- Consider neighbour days too (Step 6 task) (do I want that? not necessarily, backtest it): 
+	if a Neutral / Cash day is between 2 bullish days. The Neutral day can be played as Bullish too. 
+	I personally would think about playing this way in real life. Can we backtest in Quicktester? Does it worth doing it?
+- Combining signals: incorporate Contango Observer, 
+	which is unlikely to go against Contango direction, but decreases invested days,
+	because there is not enough samples
+
 
 
 7.

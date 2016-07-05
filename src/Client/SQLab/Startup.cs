@@ -207,25 +207,8 @@ namespace SQLab
                         // send them to the home page instead (/).
                         await context.Authentication.ChallengeAsync(authType, new AuthenticationProperties() {
 
-                            //IsPersistent = true,    // default: false. whether the authentication session cookie is persisted across multiple Browser sessions/requests.
-                            //!!! 2016-06-09: IsPersist  Google Auth accross Browser sessions. Wait until RC3. It is fixed.
-                            //!!!With exactly the same source code as startup.cs as the SocialSample.
-                            //-IsPersist doesn't work with RC2.
-                            //	This can be a Platform type, and so, compile time dependencies are installed. no "net451" required
-                            //-It works locally with RC3-2132. 
-                            //	However that Cannot be Platform type, asd compile time dependencies will fail.
-                            //	But as Non Platform, there is a
-                            //	Microsoft.DotNet.ProjectModel 1.0.0-rc3-002996 is not compatible with netcoreapp1.0 (.NETCoreApp,Version=v1.0). Package Microsoft.DotNet.ProjectModel 1.0.0-rc3-002996 supports:
-                            //      - net451 (.NETFramework,Version=v4.5.1)
-                            //      - netstandard1.6 (.NETStandard,Version=v1.6)
-                            //The samples use ""net451" in Frameworks", but on Linux it is not allowed, so I cannot use that.
-                            //>Conclusion. IsPersist accross browser sessions is probably fixed in RC3. However I cannot use it now.
-                            //It will be released on 26 June, which is 3 week. Wait until that and fix this.
-
+                            IsPersistent = true,    // default: false. whether the authentication session cookie is persisted across multiple Browser sessions/requests (when user closes and restart Chrome). It was fixed in AspDotNetCore RC3
                             RedirectUri = "/" });
-                        //await context.Authentication.ChallengeAsync(authType, new AuthenticationProperties() {
-                        //    RedirectUri = cloudFrontSuccessfulAuthUri + "/"
-                        //});
                         return;
                     }
 
