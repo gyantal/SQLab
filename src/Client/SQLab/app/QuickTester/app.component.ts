@@ -94,6 +94,8 @@ export class AppComponent implements OnInit, AfterViewInit {
     public chartDataInStr = null;   // for showing it in HTML for debug porposes
     public chartDataToChart = null; // processed: it has time: close, open values, so we have to process it only once
     public nMonthsInTimeFrame: string = "24";
+    public startDateUtc: Date = null;
+    public endDateUtc: Date = null;
 
     public generalInputParameters: string = "";
     public debugMessage: string = "";
@@ -191,21 +193,21 @@ export class AppComponent implements OnInit, AfterViewInit {
             //, disabled_features: ["use_localstorage_for_settings", "volume_force_overlay", "left_toolbar", "control_bar", "timeframes_toolbar", "border_around_the_chart", "header_widget"]
             , disabled_features: ["border_around_the_chart"]
             , debug: true   // Setting this property to true makes the chart to write detailed API logs to console. Feature charting_library_debug_mode is a synonym for this field usage.
-            //, time_frames: [
-            //    //{ text: "All", resolution: "6M" }, crash: first character should be a Number
-            //    //{ text: "600m", resolution: "D" },   // "600m" 50 years : Put an insanely high value here. But later in the calculateHistoryDepth() we will decrease it to backtested range
-            //    //{ text: "601m", resolution: "D" },   // "601m" 50 years : Put an insanely high value here. But later in the calculateHistoryDepth() we will decrease it to backtested range
-            //    { text: $scope.nMonthsInTimeFrame + "m", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
-            //    { text: $scope.nMonthsInTimeFrame + "m", resolution: "W" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
-            //    { text: $scope.nMonthsInTimeFrame + "m", resolution: "M" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
-            //    //{ text: "12y", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month.
-            //    //{ text: "6000d", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO NOT WORK. Max days: 350
+            , time_frames: [
+                //{ text: "All", resolution: "6M" }, crash: first character should be a Number
+                //{ text: "600m", resolution: "D" },   // "600m" 50 years : Put an insanely high value here. But later in the calculateHistoryDepth() we will decrease it to backtested range
+                //{ text: "601m", resolution: "D" },   // "601m" 50 years : Put an insanely high value here. But later in the calculateHistoryDepth() we will decrease it to backtested range
+                { text: this.nMonthsInTimeFrame + "m", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
+                { text: this.nMonthsInTimeFrame + "m", resolution: "W" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
+                { text: this.nMonthsInTimeFrame + "m", resolution: "M" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
+                //{ text: "12y", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month.
+                //{ text: "6000d", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO NOT WORK. Max days: 350
 
-            //    //{ text: "50y", resolution: "6M" },
-            //    //{ text: "3y", resolution: "W" },
-            //    //{ text: "8m", resolution: "D" },
-            //    //{ text: "2m", resolution: "D" }
-            //]
+                //{ text: "50y", resolution: "6M" },
+                //{ text: "3y", resolution: "W" },
+                //{ text: "8m", resolution: "D" },
+                //{ text: "2m", resolution: "D" }
+            ]
             , overrides: {
                 "mainSeriesProperties.style": 3,    // area style
                 "symbolWatermarkProperties.color": "#644",
@@ -215,11 +217,36 @@ export class AppComponent implements OnInit, AfterViewInit {
 
         this.tradingViewChartWidget = widget;
 
-        widget.onChartReady(function () {
+        var that = this;
+        widget.onChartReady(function () {   // this = widget, that = AppComponent
             console.log("widget.onChartReady()");
             //this.tradingViewChartWidget = widget;   // this = widget here, so this.tradingViewChartWidget would be a field inside the Widget
             this.chart().createStudy('Moving Average Exponential', false, false, [26]);  
             //widget.createStudy('Moving Average Exponential', false, false, [26]);       //inputs: (since version 1.2) an array of study inputs.
+
+            // Decision: don't use setVisibleRange(), because even if we set up EndDate as 5 days in the future, it cuts that to 'today'.
+            // leave the chart as default, that gives about 5 empty days in the future, which we want.
+            //if (that.endDateUtc != null) {
+            //    var visibleRangeStartDateUtc = new Date();
+            //    visibleRangeStartDateUtc.setTime(that.endDateUtc.getTime() - 365 * 24 * 1000 * 60 * 60);       // assuming 365 calendar days per year, set the visible range for the last 1 year
+            //    visibleRangeStartDateUtc.setHours(0, 0, 0, 0);
+            //    var visibleRangeEndDateUtc = new Date();
+            //    visibleRangeEndDateUtc.setTime(that.endDateUtc.getTime() + 5 * 24 * 1000 * 60 * 60);       // it is nice (and by default) the visible endDate is about 5 days in the future (after today)
+            //    visibleRangeEndDateUtc.setHours(0, 0, 0, 0);
+            //    if (visibleRangeStartDateUtc < visibleRangeEndDateUtc) {
+            //        console.log("widget.onChartReady(): chart().setVisibleRange()");
+
+            //        var oldVisibleRange = that.tradingViewChartWidget.chart().getVisibleRange();       
+            //        // getVisibleRange gives back Wrong time range: {"from":1459814400,"to":0} but 
+            //        // setVisibleRange doesn't accept that: gives back to Console: "Wrong time range: {"from":1459814400,"to":0} ". So it is buggy.
+
+            //        that.tradingViewChartWidget.chart().setVisibleRange({       // this was introduced per my request: https://github.com/tradingview/charting_library/issues/320
+            //            from: visibleRangeStartDateUtc.getTime() / 1000,
+            //            to: oldVisibleRange.to                                      // if we give '0', it says: "Wrong time range:
+            //            //to: visibleRangeEndDateUtc.getTime() / 1000               // if we give 'today + 5 days' in the future, it still cuts the chart at today. Bad.
+            //        });
+            //    }
+            //}
         });
 
        // widget.onChartReady(function () {   // this click() takes about 680msec, because the click will ask for the whole data, and redraw itself. So, it is understandable: sort of, but slow. Why it takes almost a second for TradingView to do this.
@@ -342,11 +369,11 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
 
         // calculate number of months in the range
-        var startDateUtc = new Date(this.chartDataToChart[0].time);
-        var endDateUtc = new Date(this.chartDataToChart[this.chartDataToChart.length - 1].time);
-        var nMonths = (endDateUtc.getFullYear() - startDateUtc.getFullYear()) * 12;
-        nMonths -= startDateUtc.getMonth() + 1;
-        nMonths += endDateUtc.getMonth();
+        this.startDateUtc = new Date(this.chartDataToChart[0].time);
+        this.endDateUtc = new Date(this.chartDataToChart[this.chartDataToChart.length - 1].time);
+        var nMonths = (this.endDateUtc.getFullYear() - this.startDateUtc.getFullYear()) * 12;
+        nMonths -= this.startDateUtc.getMonth() + 1;
+        nMonths += this.endDateUtc.getMonth();
         nMonths = nMonths <= 0 ? 1 : nMonths;   // if month is less than 0, tell the chart to have 1 month
 
         this.chartDataInStr = strategyResult.chartData.reverse().join("\n");
@@ -366,14 +393,28 @@ export class AppComponent implements OnInit, AfterViewInit {
         //////  Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
         // this part will set up the Timeframes bar properly, but later is chart.onChartReady() you have to click the first button by "dateRangeDiv.children['0'].click();"
         if (this.tradingViewChartWidget._ready == true) {
+            
+            // 1. update chart without recreating the whole chartWidget. This would be smooth and not blink.
+            // setVisibleRange() nicely works, by our request, but the time_frames[] are not updated. So, it is not ideal. So, choose to remove and recreate the chart instead.
+            //this.tradingViewChartWidget.options.time_frames[0].text = nMonths + "m";
+            //this.tradingViewChartWidget.options.time_frames[1].text = nMonths + "m";
+            //this.tradingViewChartWidget.options.time_frames[2].text = nMonths + "m";
+            //this.tradingViewChartWidget.removeAllStudies();
+            //this.tradingViewChartWidget.setSymbol("PV", 'D');
+            //this.tradingViewChartWidget.chart().setVisibleRange({       // this was introduced per my request: https://github.com/tradingview/charting_library/issues/320
+            //    from: Date.UTC(2012, 2, 3) / 1000,
+            //    to: Date.UTC(2015, 3, 3) / 1000
+            //});
+            //this.tradingViewChartWidget.createStudy('Moving Average Exponential', false, false, [26]);
+
+            // 2. Update the chart with recreating the whole frame. This will blink, as the frame part will disappear. However, it is quite quick, so it is ok.
             this.tradingViewChartWidget.remove();       // this is the way to the widget.options to be effective
-            //gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
+            ////gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
             this.tradingViewChartWidget.options.time_frames[0].text = nMonths + "m";
             this.tradingViewChartWidget.options.time_frames[1].text = nMonths + "m";
             this.tradingViewChartWidget.options.time_frames[2].text = nMonths + "m";
-            //this.tradingViewChartWidget.options.time_frames[1].text = "61m";    // I can calculate dynamically, but not important now.
-            //gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
-            this.tradingViewChartWidget.create()
+            ////gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
+            this.tradingViewChartWidget.create() 
         }
 
         //////***!!!! This can be used only with the updated Chart, but the time-frame bar will not update visually, but re-creation will not Blink, as it will not create a short-term version of the chart for 1second
@@ -382,6 +423,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         //////    res: "D",
         //////    val: nMonths + "m"
         //////})
+        console.log("ProcessStrategyResult() END");
     }
 
 
