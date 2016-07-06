@@ -301,8 +301,9 @@ so no need to waste time here with fine details.
 //- convert, recreate "SQ Strategy QuickTester" Website to DotNetCore, into SQLab, and ASP.Net Core, Angular2 (not 1 as before) and TS
 	
 5. 
-with the new "SQ Strategy QuickTester" Website on Linux implement: Implement learning versions:
+"SQ Strategy QuickTester": Implement learning, adaptive versions of strategies:
 - UI change: for any adaptive implementation, StartDate, EndDate is not enough. We need start-end date for training set/ testing set (in-sample period, out of sample period).
+	Or ratio of training set: like using 20% of the samples for initial training, and at least 200 days minimum.
 	we also need trainingSet_ticker (SPY), testingSetTicker = VXX differentiation
 - Quicktester should give a forecast of that exact strategy that is played live for Today,
 with a separate page in which the steps are detailed as log files. (in essence, I can check a log files of VBroker in a web browser, because the same code is running)

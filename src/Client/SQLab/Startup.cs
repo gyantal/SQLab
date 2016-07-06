@@ -203,10 +203,11 @@ namespace SQLab
                         //var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "bob") }, CookieAuthenticationDefaults.AuthenticationScheme));
                         //await context.Authentication.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, user);
 
-                        // By default the client will be redirect back to the URL that issued the challenge (/login?authtype=foo),
+                        // By default the client will be redirected back to the URL that issued the challenge (/login?authtype=foo),
                         // send them to the home page instead (/).
                         await context.Authentication.ChallengeAsync(authType, new AuthenticationProperties() {
-
+                            AllowRefresh = true,
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30),
                             IsPersistent = true,    // default: false. whether the authentication session cookie is persisted across multiple Browser sessions/requests (when user closes and restart Chrome). It was fixed in AspDotNetCore RC3
                             RedirectUri = "/" });
                         return;

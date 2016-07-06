@@ -217,91 +217,95 @@ namespace VirtualBroker
                 bool isFirstTickerWrittenToOutput = false;
                 foreach (var tickerItem in tickerList)
                 {
+                    if (isFirstTickerWrittenToOutput)
+                        jsonResultBuilder.AppendFormat(",");
+
                     string sqTicker = tickerItem.Item1;
                     var rtPrices = tickerItem.Item2;
                     bool isTemporaryTicker = (tickerItem.Item3 != -1); // if it is temporary ticker
                     if (rtPrices == null)
                     {
                         jsonResultBuilder.AppendFormat(@"{{""Symbol"":""{0}""}}", sqTicker);  // Data is not given
-                        continue;   // we can give back Error if we want, but decided to not give back price
-                    }
-
-                    // I wanted to return only Ask/Bid, but because Indices has only LastPrice (no Ask, Bid), I gave up: let's return LastPrice for stocks too
-                    //PriceAndTime ask, bid;
-                    //isFound = priceInfo.TryGetValue(TickType.AskPrice, out ask);
-                    //if (!isFound)
-                    //    return @"{ ""Message"":  ""No askprice yet. Maybe later."" }";
-                    //isFound = priceInfo.TryGetValue(TickType.BidPrice, out bid);
-                    //if (!isFound)
-                    //    return @"{ ""Message"":  ""No bidprice yet. Maybe later."" }";
-                    //jsonResultBuilder.AppendFormat(@"{{""Symbol"": ""{0}"", ""Ask"": {1}, ""Bid"", {2} }}", ticker, ask.Price, bid.Price);
-
-                    PriceAndTime last, ask = null, bid = null;
-                    bool isFound = rtPrices.TryGetValue(TickType.LAST, out last);
-                    if (!isFound)
-                        return resultPrefix + @"{ ""Message"":  ""No last price yet. Maybe later."" }" + resultPostfix;    // this didn't happen with the Fixed tickers, as the records are already in the Array at Program start
-                    if (sqTicker[0] != '^')
-                    {
-                        isFound = rtPrices.TryGetValue(TickType.ASK, out ask);
-                        if (!isFound)
-                            return resultPrefix + @"{ ""Message"":  ""No ask price yet. Maybe later."" }" + resultPostfix;
-                        isFound = rtPrices.TryGetValue(TickType.BID, out bid);
-                        if (!isFound)
-                            return resultPrefix + @"{ ""Message"":  ""No bid price yet. Maybe later."" }" + resultPostfix;
-                    }
-
-                    if (isFirstTickerWrittenToOutput)
-                        jsonResultBuilder.AppendFormat(",");
-                    // Robin suggested that don't send "NaN", and 00:00:00 in cases where there is nothing, just send the ticker back
-                    // also, if data in memory cache is 10 hours old: say we don't have Realtime price. That is not realtime
-                    // for GOOG as a snapshot price, IB gives Ask, Bid instantly, but sometimes it doesn't give Last (as last didn't occur or what). In that case, we want to give back Ask, Bid at least
-                    DateTime highestOfAllTime = last.Time;
-                    if (ask != null && ask.Time > highestOfAllTime)
-                        highestOfAllTime = ask.Time;
-                    if (bid != null && bid.Time > highestOfAllTime)
-                        highestOfAllTime = bid.Time;
-                    if (highestOfAllTime.AddHours(11) < DateTime.UtcNow)    // it was 10 hours at the beginning, but Robert wanted 17 hours; I still disagree, but increased from 10 to 11. It doesn't help with Snapshot prices, because IBGateway doesn't give price for them 10 hours after market close
-                    {
-                        jsonResultBuilder.AppendFormat(@"{{""Symbol"":""{0}""}}", sqTicker);  // Data is too old.
                     }
                     else
-                    {   // last Data is not too old (we could have checked the Ask or Bid data, but Indices have only Last data
-                        if (sqTicker[0] == '^') // if Index, not stock. Index has only LastPrice and TickType.ClosePrice
+                    {
+
+                        // I wanted to return only Ask/Bid, but because Indices has only LastPrice (no Ask, Bid), I gave up: let's return LastPrice for stocks too
+                        //PriceAndTime ask, bid;
+                        //isFound = priceInfo.TryGetValue(TickType.AskPrice, out ask);
+                        //if (!isFound)
+                        //    return @"{ ""Message"":  ""No askprice yet. Maybe later."" }";
+                        //isFound = priceInfo.TryGetValue(TickType.BidPrice, out bid);
+                        //if (!isFound)
+                        //    return @"{ ""Message"":  ""No bidprice yet. Maybe later."" }";
+                        //jsonResultBuilder.AppendFormat(@"{{""Symbol"": ""{0}"", ""Ask"": {1}, ""Bid"", {2} }}", ticker, ask.Price, bid.Price);
+
+                        // Warning. I am not sure why this return "" things is here inside the for loop. We may have to eliminate it. or change it to continue.
+                        PriceAndTime last, ask = null, bid = null;
+                        bool isFound = rtPrices.TryGetValue(TickType.LAST, out last);
+                        if (!isFound)
+                            return resultPrefix + @"{ ""Message"":  ""No last price yet. Maybe later."" }" + resultPostfix;    // this didn't happen with the Fixed tickers, as the records are already in the Array at Program start
+                        if (sqTicker[0] != '^')
                         {
-                            if (Double.IsNaN(last.Price))
-                                jsonResultBuilder.AppendFormat(@"{{""Symbol"":""{0}""}}", sqTicker);
-                            else
-                                jsonResultBuilder.AppendFormat(@"{{""Symbol"":""{0}"",""LastUtc"":""{1:yyyy'-'MM'-'dd'T'HH:mm:ss}"",""Last"":{2},""UtcTimeType"":""{3}""}}", sqTicker, last.Time, last.Price, (isTemporaryTicker) ? "SnapshotTime" : "LastChangedTime");
+                            isFound = rtPrices.TryGetValue(TickType.ASK, out ask);
+                            if (!isFound)
+                                return resultPrefix + @"{ ""Message"":  ""No ask price yet. Maybe later."" }" + resultPostfix;
+                            isFound = rtPrices.TryGetValue(TickType.BID, out bid);
+                            if (!isFound)
+                                return resultPrefix + @"{ ""Message"":  ""No bid price yet. Maybe later."" }" + resultPostfix;
+                        }
+
+                        // Robin suggested that don't send "NaN", and 00:00:00 in cases where there is nothing, just send the ticker back
+                        // also, if data in memory cache is 10 hours old: say we don't have Realtime price. That is not realtime
+                        // for GOOG as a snapshot price, IB gives Ask, Bid instantly, but sometimes it doesn't give Last (as last didn't occur or what). In that case, we want to give back Ask, Bid at least
+                        DateTime highestOfAllTime = last.Time;
+                        if (ask != null && ask.Time > highestOfAllTime)
+                            highestOfAllTime = ask.Time;
+                        if (bid != null && bid.Time > highestOfAllTime)
+                            highestOfAllTime = bid.Time;
+                        if (highestOfAllTime.AddHours(11) < DateTime.UtcNow)    // it was 10 hours at the beginning, but Robert wanted 17 hours; I still disagree, but increased from 10 to 11. It doesn't help with Snapshot prices, because IBGateway doesn't give price for them 10 hours after market close
+                        {
+                            jsonResultBuilder.AppendFormat(@"{{""Symbol"":""{0}""}}", sqTicker);  // Data is too old.
                         }
                         else
-                        {   // stock or Futures, not Index
-                            jsonResultBuilder.AppendFormat(@"{{""Symbol"":""{0}""", sqTicker);
+                        {   // last Data is not too old (we could have checked the Ask or Bid data, but Indices have only Last data
+                            if (sqTicker[0] == '^') // if Index, not stock. Index has only LastPrice and TickType.ClosePrice
+                            {
+                                if (Double.IsNaN(last.Price))
+                                    jsonResultBuilder.AppendFormat(@"{{""Symbol"":""{0}""}}", sqTicker);
+                                else
+                                    jsonResultBuilder.AppendFormat(@"{{""Symbol"":""{0}"",""LastUtc"":""{1:yyyy'-'MM'-'dd'T'HH:mm:ss}"",""Last"":{2},""UtcTimeType"":""{3}""}}", sqTicker, last.Time, last.Price, (isTemporaryTicker) ? "SnapshotTime" : "LastChangedTime");
+                            }
+                            else
+                            {   // stock or Futures, not Index
+                                jsonResultBuilder.AppendFormat(@"{{""Symbol"":""{0}""", sqTicker);
 
-                            bool isWrittenAnythingToOutput = false;
-                            if (!Double.IsNaN(last.Price))
-                            {
-                                jsonResultBuilder.AppendFormat(@",""LastUtc"":""{0:yyyy'-'MM'-'dd'T'HH:mm:ss}"",""Last"":{1}", last.Time, last.Price);
-                                isWrittenAnythingToOutput = true;
-                            }
-                            if (!Double.IsNaN(bid.Price))
-                            {
-                                jsonResultBuilder.AppendFormat(@",""BidUtc"":""{0:yyyy'-'MM'-'dd'T'HH:mm:ss}"",""Bid"":{1}", bid.Time, bid.Price);   // Bid is the smaller than Ask; start with that
-                                isWrittenAnythingToOutput = true;
-                            }
-                            if (!Double.IsNaN(ask.Price))
-                            {
-                                jsonResultBuilder.AppendFormat(@",""AskUtc"":""{0:yyyy'-'MM'-'dd'T'HH:mm:ss}"",""Ask"":{1}", ask.Time, ask.Price);
-                                isWrittenAnythingToOutput = true;
-                            }
+                                bool isWrittenAnythingToOutput = false;
+                                if (!Double.IsNaN(last.Price))
+                                {
+                                    jsonResultBuilder.AppendFormat(@",""LastUtc"":""{0:yyyy'-'MM'-'dd'T'HH:mm:ss}"",""Last"":{1}", last.Time, last.Price);
+                                    isWrittenAnythingToOutput = true;
+                                }
+                                if (!Double.IsNaN(bid.Price))
+                                {
+                                    jsonResultBuilder.AppendFormat(@",""BidUtc"":""{0:yyyy'-'MM'-'dd'T'HH:mm:ss}"",""Bid"":{1}", bid.Time, bid.Price);   // Bid is the smaller than Ask; start with that
+                                    isWrittenAnythingToOutput = true;
+                                }
+                                if (!Double.IsNaN(ask.Price))
+                                {
+                                    jsonResultBuilder.AppendFormat(@",""AskUtc"":""{0:yyyy'-'MM'-'dd'T'HH:mm:ss}"",""Ask"":{1}", ask.Time, ask.Price);
+                                    isWrittenAnythingToOutput = true;
+                                }
 
-                            if (isWrittenAnythingToOutput)  // if we had no data, there is no point of writing the TimeType
-                            {
-                                jsonResultBuilder.AppendFormat(@",""UtcTimeType"":""{0}""", (isTemporaryTicker) ? "SnapshotTime" : "LastChangedTime");
-                            }
+                                if (isWrittenAnythingToOutput)  // if we had no data, there is no point of writing the TimeType
+                                {
+                                    jsonResultBuilder.AppendFormat(@",""UtcTimeType"":""{0}""", (isTemporaryTicker) ? "SnapshotTime" : "LastChangedTime");
+                                }
 
-                            jsonResultBuilder.Append(@"}");
-                        }
-                    }   // last data is not too old
+                                jsonResultBuilder.Append(@"}");
+                            }
+                        }   // last data is not too old
+                    }
 
                     isFirstTickerWrittenToOutput = true;
                 }
