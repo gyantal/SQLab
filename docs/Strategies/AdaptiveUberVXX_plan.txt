@@ -303,8 +303,21 @@ so no need to waste time here with fine details.
 5. 
 "SQ Strategy QuickTester": Implement learning, adaptive versions of strategies:
 - UI change: for any adaptive implementation, StartDate, EndDate is not enough. We need start-end date for training set/ testing set (in-sample period, out of sample period).
-	Or ratio of training set: like using 20% of the samples for initial training, and at least 200 days minimum.
-	we also need trainingSet_ticker (SPY), testingSetTicker = VXX differentiation
+	UI of AdaptiveUberVXX strategy: Components:
+	TotM, FOMC, Holiday, Opex, VixFutex, WeekendSkip, VXXMixOfContango(it lags the contango), DailyContango, 
+	Each has the following fields:  (a combination of Hierarchy and Convolution can be achieved)
+		- Priority: 0 (don't play), other: a number between 1-10.	// if Component clash at the same priority, those will be Convolved by default: added together
+		- CombinationWithSamePririties: Averaging, SimpleConvolution (adding), InterpolationOfConvolutionAndProperIntersectionPdf
+		- TrainingSetTicker: SPY, InverseVXX
+		- TradingTicker: SPX, InverseVXX
+		- TrainingStartDate: 
+		- TradingStartDate:
+		- TrainingSetRatioUntil_TradingStartDate (%): 20%		// 20% of the samples is for training set  ("at least 200 days minimum." will be not considered, but give a warning if training set is too little later, suggesting  the user to increase 20% to more)
+		- TradingEndDate:
+		- OtherParamStr: (like OutlierEliminationThreshold), TotM_ConsiderNeighbourDays=true
+	Global AdaptiveUberVXX(not for components)
+		ParamStr: UseKellyLeverage = true & MaxLeverage = 1.5
+
 - Quicktester should give a forecast of that exact strategy that is played live for Today,
 with a separate page in which the steps are detailed as log files. (in essence, I can check a log files of VBroker in a web browser, because the same code is running)
 So, a user who wants to check what will be played today, don't have to go to Linux Console and start Simulation,
@@ -319,6 +332,11 @@ Don't do Holidays. It will be implemented in Task 7, later. For Testing Combinin
 
 - write a document chapter gDoc, how the Learning version performance related to the biased, overfit version (non-realistic one). If we can have half the performance, we would be happy.
 It should also be better than Buy&hold.
+So, compare TotM vs. Adaptive TotM, FOMC vs. adaptive FOMC, and HierarchicalFomc+Totm vs. adaptive version of it.
+
+
+
+
 
 6. Improve (1) Basic TotM+TotMM things (VBroker + Quicktester) with extensions:
 > and make comparisions in Quicktester as I develop improved versions of the strategy. Write a gDoc study chapters. Start a new gDoc: "Adaptive UberVXX with SQLab" (QuickTester+VBroker)
@@ -361,7 +379,7 @@ C. There should be a mathemitacal idea how to combine the probabilities of these
 - Consider neighbour days too (Step 6 task) (do I want that? not necessarily, backtest it): 
 	if a Neutral / Cash day is between 2 bullish days. The Neutral day can be played as Bullish too. 
 	I personally would think about playing this way in real life. Can we backtest in Quicktester? Does it worth doing it?
-- Combining signals: incorporate Contango Observer, 
+- DailyContango: Combining signals: incorporate Contango Observer, 
 	which is unlikely to go against Contango direction, but decreases invested days,
 	because there is not enough samples
 

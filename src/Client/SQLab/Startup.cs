@@ -19,6 +19,8 @@ using System.Text.Encodings.Web;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.PlatformAbstractions;
 using System.IO;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace SQLab
 {
@@ -130,8 +132,8 @@ namespace SQLab
             // using https://github.com/aspnet/Security/blob/59fc691f4152e6d5017176c0b700ee9834640481/samples/SocialSample/Startup.cs
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
-                //AuthenticationScheme = "MyCookieMiddlewareInstance",
-                CookieName = ".SQ.AspNetCore.Cookies", // ".AspNetCore.Cookies"
+                //AuthenticationScheme = "MyCookieMiddlewareInstance",    // by default "Cookies"
+                //CookieName = ".SQ.AspNetCore.Cookies", // ".AspNetCore.Cookies"
                 AutomaticAuthenticate = true,   // default is true
                 AutomaticChallenge = true,
                 LoginPath = new PathString("/login"),    // if CloudFront string is in the Request Header, then the "/login" should be "https:www.snifferquant.net/login". However, this is a global setting, not URL request dependent. 
@@ -147,19 +149,32 @@ namespace SQLab
                 //mStartupLogger.LogInformation("A_G_CId and A_G_CSe from Config has been found. Initializing GoogelAuthentication.");
                 app.UseGoogleAuthentication(new GoogleOptions
                 {
+                    //AuthenticationScheme = "MyCookieMiddlewareInstance",    // by default "Google"
+                    SignInScheme = "Cookies",       // this will connect to the AuthenticationScheme field of the cookieAuth
                     ClientId = Utils.Configuration["GoogleClientId"],
                     ClientSecret = Utils.Configuration["GoogleClientSecret"],
+                    //RemoteAuthenticationTimeout = TimeSpan.FromDays(30),    // Workaround1 for ExpireTimeSpan is not honored bug. Yes. This fixes that cookie.ExpireTimeSpan is not honored. Having the same issue. Effectively RemoteAuthenticationOptions.RemoteAuthenticationTimeout is used for cookie ticket lifetime.
 
                     //     SaveTokens: Defines whether access and refresh tokens should be stored in the Microsoft.AspNetCore.Http.Authentication.AuthenticationProperties
                     //     after a successful authorization. This property is set to false by default to
                     //     reduce the size of the final authentication cookie.
-                    SaveTokens = true,                    
+                    //SaveTokens = true,     
+
                     Events = new OAuthEvents()
                     {
                         OnRemoteFailure = ctx =>
                         {
                             ctx.Response.Redirect("/error?FailureMessage=" + UrlEncoder.Default.Encode(ctx.Failure.Message));
                             ctx.HandleResponse();
+                            return Task.FromResult(0);
+                        },
+                        // https://github.com/aspnet/Security/issues/855
+                        // Having the same issue. Effectively RemoteAuthenticationOptions.RemoteAuthenticationTimeout is used for cookie ticket lifetime.
+                        // You can workaround this in IRemoteAuthenticationEvents.OnTicketReceived callback, this works for me...
+                        OnTicketReceived = ctx =>
+                        {
+                            // Workaround2 for ExpireTimeSpan is not honored bug. Reset ticket authentication properties
+                            ctx.Properties = new AuthenticationProperties() { IsPersistent=true };
                             return Task.FromResult(0);
                         }
                     }
@@ -194,22 +209,28 @@ namespace SQLab
 
 
 
-                    var authType = context.Request.Query["authscheme"];
-                    if (!string.IsNullOrEmpty(authType))
+                    var authenticationScheme = context.Request.Query["authscheme"];     // "Google" or "Facebook"
+                    if (!string.IsNullOrEmpty(authenticationScheme))
                     {
-                        //To create a cookie holding your user information you must construct a ClaimsPrincipal holding the information you wish to be serialized in the cookie. Once you have a suitable ClaimsPrincipal inside your controller method call
-                        //await HttpContext.Authentication.SignInAsync("MyCookieMiddlewareInstance", principal);
-                        //await context.Authentication.SignInAsync(authType, )
-                        //var user = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "bob") }, CookieAuthenticationDefaults.AuthenticationScheme));
-                        //await context.Authentication.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, user);
-
-                        // By default the client will be redirected back to the URL that issued the challenge (/login?authtype=foo),
-                        // send them to the home page instead (/).
-                        await context.Authentication.ChallengeAsync(authType, new AuthenticationProperties() {
-                            AllowRefresh = true,
-                            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30),
+                        // By default the client will be redirected back to the URL that issued the challenge (/login?authtype=foo), send them to the home page instead (/).
+                        // you can view the Cookie's ExpirationDate in Chrome/F12/Resources/Cookies/localhost http://stackoverflow.com/questions/37086645/how-to-set-asp-net-identity-cookies-expires-time
+                        // 2016-07-06: without setting IsPersistent = true, Expiration = Session, which is bad. With IsPersistent=true, expiration is 15 minute in the future. At least, not Session. However ExpiresUtc is not honored
+                        // This is exactly my case. 1 month ago. on 2016-07-06. Wait until they fix it. It is a proper bug.
+                        // https://github.com/aspnet/Security/issues/855
+                        // This is all works fine and authenticates the user correctly etc however this is issuing the auth token (and cookie) with a 15 minute expiry and ignoring my 2 hour expiry that I have tried setting.
+                        // I have been referring to the latest source examples from GitHub from the aspnet/ security repository for examples....however none of these mention anything about overriding the default expiry issued.
+                        // Some articles suggest that using the SignInAsync with persistent set to True allows the ExpireTimeSpan to be honored, however this throws a "Not Supported Exception" when calling it. Perhaps SignInAsync is not supported via Azure AD?
+                        // Not sure why your CookieAuthenticationOptions.ExpireTimeSpan isn't working.
+                        // Having the same issue. Effectively RemoteAuthenticationOptions.RemoteAuthenticationTimeout is used for cookie ticket lifetime.
+                        await context.Authentication.ChallengeAsync(authenticationScheme, new AuthenticationProperties()
+                        {
                             IsPersistent = true,    // default: false. whether the authentication session cookie is persisted across multiple Browser sessions/requests (when user closes and restart Chrome). It was fixed in AspDotNetCore RC3
-                            RedirectUri = "/" });
+                            // "AllowRefresh , IssuedUtc and ExpiresUtc do not apply for ChallengeAsync, only SignInAsync."
+                            //AllowRefresh = true,
+                            //ExpiresUtc = DateTimeOffset.UtcNow.AddDays(30),  //if this is set, then CookieAuthenticationOptions.ExpireTimeSpan (default 14 days) is not used
+                            //ExpiresUtc = new DateTimeOffset(DateTime.UtcNow.AddDays(30)),   // ASP bug. It is not honored
+                            RedirectUri = "/"       // checked: this is honored by ASP
+                        });
                         return;
                     }
 
