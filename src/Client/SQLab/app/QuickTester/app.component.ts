@@ -1,9 +1,10 @@
 ﻿import {Component, OnInit, AfterViewInit} from '@angular/core';
 import {Http,HTTP_PROVIDERS} from '@angular/http';
 import {Observable} from 'rxjs/Observable';
-import {TotM} from './TotM'
-import {LEtfDistcrepancy, AngularInit_LEtfDistcrepancy} from './L-ETF-Discrepancy'
 import {VXX_SPY_Controversial} from './VXX_SPY_Controversial'
+import {LEtfDistcrepancy, AngularInit_LEtfDistcrepancy} from './L-ETF-Discrepancy'
+import {TotM} from './TotM'
+import {AdaptiveUberVxx} from './AdaptiveUberVxx'
 import {StopWatch} from './Utils'
 
 declare var TradingView: any;
@@ -99,6 +100,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     public strategy_LEtfDistcrepancy: LEtfDistcrepancy;
     public strategy_VXX_SPY_Controversial: VXX_SPY_Controversial;
     public strategy_TotM: TotM;
+    public strategy_AdaptiveUberVxx: AdaptiveUberVxx;
 
     constructor(private http: Http) { }
 
@@ -110,8 +112,9 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.strategy_LEtfDistcrepancy = new LEtfDistcrepancy(this);
         this.strategy_VXX_SPY_Controversial = new VXX_SPY_Controversial(this);
         this.strategy_TotM = new TotM(this);
+        this.strategy_AdaptiveUberVxx = new AdaptiveUberVxx(this);
 
-        this.SelectStrategy("idMenuItemTotM");
+        this.SelectStrategy("idMenuItemAdaptiveUberVxx"); // there is no #if DEBUG in TS yet. We use TotM rarely in production anyway, so UberVXX can be the default, even while developing it.
         this.TradingViewChartOnready();
     }
 
@@ -145,6 +148,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     SelectStrategy(menuItemId: string) {
         this.selectedStrategyMenuItemId = menuItemId;
 
+        this.strategy_AdaptiveUberVxx.SubStrategySelected_AdaptiveUberVxx();
         this.strategy_TotM.SubStrategySelected_TotM();
         this.strategy_VXX_SPY_Controversial.SubStrategySelected_VXX();
         this.strategy_LEtfDistcrepancy.SubStrategySelected_LEtfDistcrepancy();
@@ -241,6 +245,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         console.log("MenuItemStartBacktestClicked() START");
 
         this.generalInputParameters = "StartDate=" + this.inputStartDateStr + "&EndDate=" + this.inputEndDateStr;
+        this.strategy_AdaptiveUberVxx.StartBacktest_AdaptiveUberVxx(this.http);
         this.strategy_TotM.StartBacktest_TotM(this.http);
         this.strategy_VXX_SPY_Controversial.StartBacktest_VXX(this.http);
         this.strategy_LEtfDistcrepancy.StartBacktest_LEtfDistcrepancy(this.http);

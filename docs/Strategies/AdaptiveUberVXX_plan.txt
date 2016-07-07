@@ -302,40 +302,56 @@ so no need to waste time here with fine details.
 	
 5. 
 "SQ Strategy QuickTester": Implement learning, adaptive versions of strategies:
-- UI change: for any adaptive implementation, StartDate, EndDate is not enough. We need start-end date for training set/ testing set (in-sample period, out of sample period).
+//- UI change: for any adaptive implementation, StartDate, EndDate is not enough. We need start-end date for training set/ testing set (in-sample period, out of sample period).
 	UI of AdaptiveUberVXX strategy: Components:
-	TotM, FOMC, Holiday, Opex, VixFutex, WeekendSkip, VXXMixOfContango(it lags the contango), DailyContango, 
+	TotM, FOMC, Holiday, Opex, VixFutex, WeekendSkip, Connor, VXXMixOfContango(it lags the contango), DailyContango, 
 	Each has the following fields:  (a combination of Hierarchy and Convolution can be achieved)
 		- Priority: 0 (don't play), other: a number between 1-10.	// if Component clash at the same priority, those will be Convolved by default: added together
-		- CombinationWithSamePririties: Averaging, SimpleConvolution (adding), InterpolationOfConvolutionAndProperIntersectionPdf
+		- CombinationWithSamePriorities: Averaging, SimpleConvolution (adding), InterpolationOfConvolutionAndProperIntersectionPdf
 		- TrainingSetTicker: SPY, InverseVXX
 		- TradingTicker: SPX, InverseVXX
 		- TrainingStartDate: 
 		- TradingStartDate:
+		- TrainingSetCalendarDays: == 2*365= 2 years
 		- TrainingSetRatioUntil_TradingStartDate (%): 20%		// 20% of the samples is for training set  ("at least 200 days minimum." will be not considered, but give a warning if training set is too little later, suggesting  the user to increase 20% to more)
 		- TradingEndDate:
 		- OtherParamStr: (like OutlierEliminationThreshold), TotM_ConsiderNeighbourDays=true
 	Global AdaptiveUberVXX(not for components)
 		ParamStr: UseKellyLeverage = true & MaxLeverage = 1.5
 
-- Quicktester should give a forecast of that exact strategy that is played live for Today,
-with a separate page in which the steps are detailed as log files. (in essence, I can check a log files of VBroker in a web browser, because the same code is running)
-So, a user who wants to check what will be played today, don't have to go to Linux Console and start Simulation,
-because the same Log file messages and calculation can be observed on a Website.
 
-5.1.
-- AdaptiveUberVXX v1.0: Implement a New Strategy, new Menu: the Learning version (Basic TotM (18%) + TotMM (32%): 50% R) in "SQ Strategy QuickTester", so that C# code is re-usable in VBroker
-5.2
-- implement FOMC version (Mr. C. asked for it.). Base is the TotM, but on top of that FOMC is a hierarchical overlay. 
-TotM is learning, FOMC is learnig, but the combination is a hierarchy. (as it is currently played).
-Don't do Holidays. It will be implemented in Task 7, later. For Testing Combining signals, it is better to work with only FOMC, which has more samples than holidays.
+5.1 Learning versions vs. Overfit versions performance:
+
+- a <ParameterPreset> button like  should switch to strategy Params instantly: LiveTraded vs. AllAdaptive vs. AllFixed vs. TotmOnly etc. FixTotMFomc (Mr.C. asked for it)
+
+- implement a separate Adaptive and non-adaptive Connor  (Param=FixFT or FixMR)	// this final mask is determined by which (FT, MR) is successful at the time of backtest
+
+- implement a separate Adaptive and non-adaptive FOMC    (Param=Mask=DDU.UD)
+
+- implement a separate Adaptive and non-adaptive TotM	 (Param=Mask=...)
+	 (Basic TotM (18%) + TotMM (32%): 50% R) . C# code should be re-usable (shared) in VBroker
+
+- <FixTotMFixFomc>: implement hierarchy (no combination yet). implement FOMC version (Mr. C. asked for it.) into TotM, but on top of that FOMC is a hierarchical overlay. 
 
 - write a document chapter gDoc, how the Learning version performance related to the biased, overfit version (non-realistic one). If we can have half the performance, we would be happy.
 It should also be better than Buy&hold.
-So, compare TotM vs. Adaptive TotM, FOMC vs. adaptive FOMC, and HierarchicalFomc+Totm vs. adaptive version of it.
+So, compare Connor vs. AdaptiveConnor, FOMC vs. adaptive FOMC, TotM vs. Adaptive TotM, and HierarchicalFomc+Totm vs. adaptive version of it.
+
+
+5.2 Live trading related:
+- Change VBroker Live trading from FixFomc to AdaptiveFomc. Using the Code from QuickTester
+
+- <LiveTraded> parameterset into the <ParameterPreset> button: = AdaptiveConnor,AdaptiveTotm,FixOrAdaptiveFomc,WithHierarchy
+Quicktester should give a forecast of that exact strategy that is played live for Today, (Adaptive Connor, fix FOMC, adaptive TotM))
+
+- <LiveTraded>: a separate page in which the steps are detailed as log files. (in essence, I can check a log files of VBroker in a web browser, because the same code is running)
+So, a user who wants to check what will be played today, don't have to go to Linux Console and start Simulation,
+because the same Log file messages and calculation can be observed on a Website. Healthmonitor website is fine, but it is not on-demand. With this, we can ask for future MOC trade any time.
 
 
 
+
+//Don't do Holidays. It will be implemented in Task 7, later. For Testing Combining signals, it is better to work with only FOMC, which has more samples than holidays.
 
 
 6. Improve (1) Basic TotM+TotMM things (VBroker + Quicktester) with extensions:

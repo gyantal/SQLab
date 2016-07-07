@@ -131,12 +131,14 @@ namespace SQLab.Controllers
 
                 GeneralStrategyParameters generalParams = new GeneralStrategyParameters() { startDateUtc = startDate, endDateUtc = endDate };
 
-                string jsonString = await VXX_SPY_Controversial.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams);
-                if (jsonString == null)
-                    jsonString = (await LEtfDistcrepancy.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
+                string jsonString = (await AdaptiveUberVxx.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
                 if (jsonString == null)
                     jsonString = (await TotM.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
-
+                if (jsonString == null)
+                    jsonString = await VXX_SPY_Controversial.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams);
+                if (jsonString == null)
+                    jsonString = (await LEtfDistcrepancy.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
+                
                 if (jsonString == null)
                     throw new Exception("Strategy was not found in the WebApi: " + strategyName);
 

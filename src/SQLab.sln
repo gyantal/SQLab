@@ -25,8 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Strategies", "Strategies", "{7CA4DF01-5F86-4A0D-8322-F2A2906BC44A}"
 	ProjectSection(SolutionItems) = preProject
-		..\docs\Strategies\AdaptiveUberVXX_livePerformance.txt = ..\docs\Strategies\AdaptiveUberVXX_livePerformance.txt
-		..\docs\Strategies\AdaptiveUberVXX_plan.txt = ..\docs\Strategies\AdaptiveUberVXX_plan.txt
+		..\docs\Strategies\AdaptiveUberVxx_livePerformance.txt = ..\docs\Strategies\AdaptiveUberVxx_livePerformance.txt
+		..\docs\Strategies\AdaptiveUberVxx_plan.txt = ..\docs\Strategies\AdaptiveUberVxx_plan.txt
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VirtualBroker", "VirtualBroker", "{DEB575A9-36B7-4DF0-8758-7C941ED05ABC}"

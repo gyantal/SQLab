@@ -27,6 +27,12 @@
             <span>Strategies</span>
             <ul class="sqMenuBarLevel1">
                 <li class="sqMenuItemLevel1">
+                    <span>Adaptive</span>
+                    <ul class="sqMenuBarLevel2">
+                        <li><span id="idMenuItemAdaptiveUberVxx" (click)="MenuItemStrategyClick($event)">UberVxx</span></li>
+                    </ul>
+                </li>
+                <li class="sqMenuItemLevel1">
                     <span>Seasonalities</span>
                     <ul class="sqMenuBarLevel2">
                         <li><span id="idMenuItemTotM" (click)="MenuItemStrategyClick($event)">Turn of the Month</span></li>
@@ -89,6 +95,86 @@
 <span class="spanTitleSuperscript">(GoogleDoc)</span>
 <div style="height: 1px; background: #808080; overflow: hidden;"></div>
 <!--<div style="width: 50%; height: 1px; background: #ffffff; overflow: hidden;"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->    <!--// fast SSI, Server Side Include works in Azure website from 2014: http://azure.microsoft.com/blog/2014/03/26/server-side-includes-ssi-in-windows-azure-web-sites-waws/-->
+<!--#include virtual="/SQQuickTester/Strategies/AdaptiveUberVXX/AdaptiveUberVXX.htm"-->
+<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'" align="left">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>Trading instrument on bullish day</th>
+            <th>Param</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <select [ngModel]="strategy_AdaptiveUberVxx.selectedBullishTradingInstrument" (ngModelChange)="strategy_AdaptiveUberVxx.bullishTradingInstrumentChanged($event)">
+                    <option [value]="i" *ngFor="let i of strategy_AdaptiveUberVxx.bullishTradingInstrument">{{i}}</option>
+                </select>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.param" style="width: 280px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+        </tr>
+    </tbody>
+</table>
+<div [hidden]="selectedStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'" align="left"><br /><br /><br /></div>
+<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'" align="left">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>Component</th>
+            <th>Priority</th>
+            <th>Combination</th>
+            <th>StartDate</th>
+            <th>EndDate</th>
+            <th>TradingStartAt</th>
+             <th>Param</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{strategy_AdaptiveUberVxx.fomc.Name}}</td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.fomc.Priority" style="width: 20px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.fomc.Combination" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.fomc.StartDate" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.fomc.EndDate" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.fomc.TradingStartAt" style="width: 40px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.fomc.Param" style="width: 200px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+        </tr>
+        <tr>
+            <td>{{strategy_AdaptiveUberVxx.holiday.Name}}</td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.holiday.Priority" style="width: 20px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.holiday.Combination" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.holiday.StartDate" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.holiday.EndDate" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.holiday.TradingStartAt" style="width: 40px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.holiday.Param" style="width: 200px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+        </tr>
+        <tr>
+            <td>{{strategy_AdaptiveUberVxx.totm.Name}}</td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.totm.Priority" style="width: 20px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.totm.Combination" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.totm.StartDate" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.totm.EndDate" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.totm.TradingStartAt" style="width: 40px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.totm.Param" style="width: 200px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+         </tr>  
+        <tr>
+            <td>{{strategy_AdaptiveUberVxx.connor.Name}}</td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.connor.Priority" style="width: 20px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.connor.Combination" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.connor.StartDate" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.connor.EndDate" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.connor.TradingStartAt" style="width: 40px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_AdaptiveUberVxx.connor.Param" style="width: 200px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+        </tr>
+    </tbody>
+</table>
+
+
 <!--#include virtual="/SQQuickTester/Strategies/TotM/TotM.htm"-->
 <table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemTotM'" align="left">
     <colgroup>
@@ -110,7 +196,7 @@
                 <select [ngModel]="strategy_TotM.selectedBullishTradingInstrument" (ngModelChange)="strategy_TotM.bullishTradingInstrumentChanged($event)">
                     <option [value]="i" *ngFor="let i of strategy_TotM.bullishTradingInstrument">{{i}}</option>
                 </select>
-            
+
             </td>
             <td><input type="text" [(ngModel)]="strategy_TotM.dailyMarketDirectionMaskWinterTotM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
             <td><input type="text" [(ngModel)]="strategy_TotM.dailyMarketDirectionMaskWinterTotMM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
@@ -119,7 +205,7 @@
         </tr>
     </tbody>
 </table>
-<span class="navigation">
+<span class="navigation" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemTotM'">
     <ul class="sqMenuNav">
         <li class="sqMenuItemLevel0" id="idTotMButtonLi">
             <span id="idTotMButtonA">Masks</span>
@@ -179,7 +265,7 @@
                     <option [value]="i" *ngFor="let i of strategy_LEtfDistcrepancy.etfPairs">{{i}}</option>
                 </select>
 
-              </td>
+            </td>
             <td><input type="text" [(ngModel)]="strategy_LEtfDistcrepancy.rebalancingFrequency" (keypress)="OnParameterInputKeypress($event)" /></td>
         </tr>
     </tbody>
@@ -315,24 +401,6 @@
 
 <br>
 <!--<span>{{tipToUser}}</span>-->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!--<br />
 <button class="mymyButton1Class" (click)="onClickMe()">Click me!</button>
 <br />
