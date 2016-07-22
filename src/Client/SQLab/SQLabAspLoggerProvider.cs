@@ -183,7 +183,12 @@ namespace SQLab
                     return false;
                 if (fullExceptionStr.IndexOf(@"The input string contains non-ASCII or null characters") != -1)
                     return false;
-
+                if (fullExceptionStr.IndexOf(@"Error -110 ETIMEDOUT connection timed out") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"UvException: Error -32 EPIPE broken pipe") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"Received an unexpected EOF or 0 bytes from the transport stream") != -1)
+                    return false;
                 return true;
             }
 

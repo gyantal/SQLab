@@ -54,9 +54,9 @@ namespace SQLab.Controllers
                 var jsonDownload = string.Empty;
                 //string queryString = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
                 Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending '{p_queryString}'");
-                string reply = VirtualBrokerMessage.Send(p_queryString, VirtualBrokerMessageID.GetRealtimePrice).Result;
-                
-                if (String.IsNullOrEmpty(reply))
+                Task<string> vbMessageTask = VirtualBrokerMessage.Send(p_queryString, VirtualBrokerMessageID.GetRealtimePrice);
+                string reply = vbMessageTask.Result;
+                if (vbMessageTask.Exception != null || String.IsNullOrEmpty(reply))
                 {
                     string errorMsg = $"RealtimePrice.GenerateRtpResponse(). Received Null or Empty from VBroker. Check that the VirtualBroker is listering on IP: {VirtualBrokerMessage.TcpServerHost}:{VirtualBrokerMessage.TcpServerPort}";
                     Utils.Logger.Error(errorMsg);

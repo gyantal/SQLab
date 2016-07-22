@@ -12,6 +12,8 @@ namespace HealthMonitor
 {
     public partial class HealthMonitor
     {
+        const int c_maxAllowedFail = 1;     // when Linux restarts every day, one query can be a failed one. That is OK. Don't send warning email.
+        int m_nFail = 0;
         bool m_isThisServiceOutageWarningEmailWasSent = false;  // to avoid sending the same warning email every 10 minutes; send only once
         ConcurrentQueue<Tuple<DateTime, bool>> m_rtpsLastDownloads = new ConcurrentQueue<Tuple<DateTime, bool>>();
 
@@ -61,14 +63,15 @@ namespace HealthMonitor
             if (!isRtpsReplyOk)
             {
                 Utils.Logger.Info("RtpsTimer_Elapsed(). !isRtpsReplyOk");
-                if (!m_isThisServiceOutageWarningEmailWasSent)
+                m_nFail++;
+                if ((m_nFail > c_maxAllowedFail) && !m_isThisServiceOutageWarningEmailWasSent)
                 {
                     Utils.Logger.Info("RtpsTimer_Elapsed(). Sending Warning email.");
                     new Email
                     {
                         ToAddresses = Utils.Configuration["EmailGyantal"],
                         Subject = "SQ HealthMonitor: WARNING! RealTime Price Service stopped working.",
-                        Body = $"SQ HealthMonitor: WARNING! RealTime Price Service stopped working.\n{url}\n returned this: '" + rtpsReply + "'",
+                        Body = $"SQ HealthMonitor: WARNING! RealTime Price Service stopped working.\nRtpsTimer_Elapsed() failed {m_nFail} times.\n{url}\n returned this: '" + rtpsReply + "'",
                         IsBodyHtml = false
                     }.Send();
                     m_isThisServiceOutageWarningEmailWasSent = true;
@@ -76,6 +79,7 @@ namespace HealthMonitor
             }
             else
             {
+                m_nFail = 0;
                 Utils.Logger.Info("RtpsTimer_Elapsed(). isRtpsReplyOk");
                 if (m_isThisServiceOutageWarningEmailWasSent)
                 {  // it was bad, but now it is corrected somehow
