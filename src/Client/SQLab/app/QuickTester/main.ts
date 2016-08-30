@@ -1,4 +1,3 @@
-﻿import {bootstrap}    from '@angular/platform-browser-dynamic';
-import {HTTP_PROVIDERS} from '@angular/http';
-import {AppComponent} from './app.component';
-bootstrap(AppComponent, [HTTP_PROVIDERS]);      // needed for Http injection
+﻿import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { AppModule } from './app.module';
+platformBrowserDynamic().bootstrapModule(AppModule);
