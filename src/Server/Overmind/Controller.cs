@@ -213,7 +213,7 @@ namespace Overmind
 
                 if (!String.IsNullOrEmpty(gyantalEmailInnerlStr))
                 {
-                    new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "SnifferQuant Price Warning", Body = gyantalEmailInnerlStr, IsBodyHtml = false }.Send();
+                    new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "Overmind: SnifferQuant Price Warning", Body = gyantalEmailInnerlStr, IsBodyHtml = false }.Send();
                     var call = new PhoneCall
                     {
                         FromNumber = Caller.Gyantal,

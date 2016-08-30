@@ -88,8 +88,14 @@ namespace SQLab
                 var message = string.Empty;
                 if (formatter != null)
                 {
-                    message = formatter(state, exception);
-
+                    try
+                    {
+                        message = formatter(state, exception);  // this is Microsoft.AspNetCore.Hosting.Internal.HostingLoggerExtensions.HostingRequestStarting.ToString(). it can give exception: "System.ArgumentException: Decoded string is not a valid IDN name."
+                    }
+                    catch (Exception e) // "System.ArgumentException: Decoded string is not a valid IDN name." at Microsoft.AspNetCore.Http.HostString.ToUriComponent()
+                    {
+                        message = "Log Message could'n be formatted to ASCII by the Formatter. Probably bad URL input query. Investigate log files about the URL query.";
+                    }
                     //if (exception != null)  // formatter function doesn't put the Exception into the message, so add it.
                     //{
                     //    message += Environment.NewLine + exception;
@@ -188,6 +194,10 @@ namespace SQLab
                 if (fullExceptionStr.IndexOf(@"UvException: Error -32 EPIPE broken pipe") != -1)
                     return false;
                 if (fullExceptionStr.IndexOf(@"Received an unexpected EOF or 0 bytes from the transport stream") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"Microsoft.AspNetCore.Server.Kestrel.BadHttpRequestException: Invalid method") != -1)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"Microsoft.AspNetCore.Server.Kestrel.BadHttpRequestException: Missing method") != -1)
                     return false;
                 return true;
             }
