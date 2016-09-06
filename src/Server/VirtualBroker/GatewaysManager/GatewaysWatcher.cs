@@ -53,6 +53,7 @@ namespace VirtualBroker
 
         async void ReconnectToGateways()
         {
+            Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() BEGIN");
             try
             {
                 Gateway gateway1, gateway2;
@@ -79,6 +80,7 @@ namespace VirtualBroker
                 //Task connectTask2 = Task.Factory.StartNew(ReconnectToGateway, gateway2, TaskCreationOptions.LongRunning);
                 var reconnectTasks = m_gateways.Select(r => Task.Factory.StartNew(ReconnectToGateway, r, TaskCreationOptions.LongRunning));
 
+                Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways()  reconnectTasks BEGIN");
                 // At the beginning: Linux had a problem to Connect sequentially on 2 separate threads. Maybe Linux DotNetCore 'Beta' implementation synchronization problem. Temporary connect sequentally. maybe doing Connection sequentially, not parallel would help
                 foreach (var task in reconnectTasks)
                 {
@@ -88,6 +90,7 @@ namespace VirtualBroker
                 }
                 //await Task.WhenAll(reconnectTasks); // async. This threadpool thread will return to the threadpool for temporary reuse, and when tasks are ready, it will be recallade
                 ////Task.WaitAll(connectTask1, connectTask2);     // blocking wait. This thread will wait forever if needed, but we don't want to starve the threadpool
+                Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways()  reconnectTasks END");
 
                 m_mainGateway = null;
                 bool isAllConnected = true;
@@ -133,8 +136,10 @@ namespace VirtualBroker
             }
             catch (Exception e)
             {
+                Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() in catching exception.");
                 HealthMonitorMessage.SendException("ReConnectToGateways Thread", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
             }
+            Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() END");
         }
 
         void ReconnectToGateway(object p_object)
@@ -187,8 +192,14 @@ namespace VirtualBroker
                     Utils.Logger.Info(e, $"Exception in ReconnectToGateway()-{gateway.GatewayUser}: {nConnectionRetry} : {e.Message}");
                     if (nConnectionRetry >= nMaxRetry)
                     {
+                        Utils.Logger.Info("GatewaysWatcher:ReconnectToGateway(). This gateway failed after many retries. We can send HealthMonitor message here, but better at a higher level if the second Gateway fails too.");
                         //HealthMonitorMessage.SendException($"ReConnectToGateway Thread: nMaxRetry: {nMaxRetry}", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);  // the higher level ReconnectToGateways() will send the Error to HealthMonitor
                         throw; // without IB connection, we can crash the App. No point to continue. we cannot recover.
+                    }
+                    else
+                    {
+                        // if we do retry, wait 10 seconds here. Maybe IB Gateway is will reconnect later
+                        Thread.Sleep(10000);
                     }
                 }
             } while (nConnectionRetry < nMaxRetry);

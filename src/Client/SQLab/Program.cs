@@ -30,7 +30,7 @@ namespace SQLab
             // After Configuring logging, set-up other things
             Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json", "/home/ubuntu/SQ/Client/SQLab/SQLab.Client.SQLab.NoGitHub.json");
             Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
-            HealthMonitorMessage.InitGlobals(HealthMonitorMessage.HealthMonitorServerPublicIpForClients, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
+            HealthMonitorMessage.InitGlobals(ServerIp.HealthMonitorPublicIp, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
             StrongAssert.g_strongAssertEvent += StrongAssertMessageSendingEventHandler;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException; // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
 

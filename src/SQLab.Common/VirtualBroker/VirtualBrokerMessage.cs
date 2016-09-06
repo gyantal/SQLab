@@ -105,11 +105,18 @@ namespace SqCommon
                     return null;
                 }
 
-                BinaryWriter bw = new BinaryWriter(client.GetStream());
+                // sometimes task ConnectAsync() returns instantly (no timeout), but there is an error in it. Which results an hour later: "TaskScheduler_UnobservedTaskException. Exception. A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. "
+                if (task.Exception != null)
+                {
+                    Utils.Logger.Error(task.Exception, "Error:VirtualBrokerMessage.SendMessage(). Exception in ConnectAsync() task.");
+                    return null;
+                }
+
+                BinaryWriter bw = new BinaryWriter(client.GetStream()); // sometimes "System.InvalidOperationException: The operation is not allowed on non-connected sockets." at TcpClient.GetStream()
                 SerializeTo(bw);
 
                 BinaryReader br = new BinaryReader(client.GetStream());
-                string reply = br.ReadString();
+                string reply = br.ReadString(); // sometimes "System.IO.EndOfStreamException: Unable to read beyond the end of the stream." at ReadString()
 
                 Utils.TcpClientDispose(client);
                 return reply;

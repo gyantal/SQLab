@@ -114,7 +114,7 @@ namespace HealthMonitor
         //    try
         //    {
         //        int port = HealthMonitorMessage.DefaultHealthMonitorServerPort;
-        //        string privateIP = HealthMonitorMessage.HealthMonitorServerPrivateIpForListener;
+        //        string privateIP = ServerIp.HealthMonitorServerPrivateIpForListener;
         //        m_tcpListener = new TcpListener(IPAddress.Parse(privateIP), port);  
         //        m_tcpListener.Start();
         //        Console.WriteLine($"*TcpListener is listening on port {privateIP}:{port}.");
@@ -172,7 +172,7 @@ namespace HealthMonitor
         //    // you can finish current TcpConnections properly if it is important
         //    // to Dispose the TcpListener, this hack has to be used to do a Last, Final Connection: http://stackoverflow.com/questions/19220957/tcplistener-how-to-stop-listening-while-awainting-accepttcpclientasync
         //    TcpClient dummyClient = new TcpClient();
-        //    dummyClient.ConnectAsync(HealthMonitorMessage.HealthMonitorServerPrivateIpForListener, HealthMonitorMessage.DefaultHealthMonitorServerPort).Wait();
+        //    dummyClient.ConnectAsync(ServerIp.HealthMonitorServerPrivateIpForListener, HealthMonitorMessage.DefaultHealthMonitorServerPort).Wait();
         //    Console.WriteLine($"StopTcpMessageListener(). Is DummyClient connected: {dummyClient.Connected}");
         //    Utils.TcpClientDispose(dummyClient);
 

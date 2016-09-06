@@ -113,7 +113,7 @@ namespace SQLab.Controllers
                     string messageFromWebJob = null;
                     using (var client = new TcpClient())
                     {
-                        Task task = client.ConnectAsync(HealthMonitorMessage.HealthMonitorServerPublicIpForClients, HealthMonitorMessage.DefaultHealthMonitorServerPort);
+                        Task task = client.ConnectAsync(ServerIp.HealthMonitorPublicIp, HealthMonitorMessage.DefaultHealthMonitorServerPort);
                         if (Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10))).Result != task)
                         {
                             m_logger.LogError("Error:HealthMonitor server: client.Connect() timeout.");

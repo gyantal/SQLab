@@ -202,7 +202,7 @@ namespace VirtualBroker
         {
             // see HealthMonitorMessage.SendMassage for simpler application that will not read the response
             TcpClient client = new TcpClient();
-            Task task = client.ConnectAsync(HealthMonitorMessage.HealthMonitorServerPublicIpForClients, HealthMonitorMessage.DefaultHealthMonitorServerPort);
+            Task task = client.ConnectAsync(ServerIp.HealthMonitorPublicIp, HealthMonitorMessage.DefaultHealthMonitorServerPort);
             if (await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10))) != task)
             {
                 Console.WriteLine("Error: client.Connect() timeout.");

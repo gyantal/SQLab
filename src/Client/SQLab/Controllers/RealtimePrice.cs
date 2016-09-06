@@ -37,7 +37,9 @@ namespace SQLab.Controllers
             // if the query is from the HealthMonitor.exe as a heartbeat, we allow it without Gmail Authorization
             string callerIP = ControllerCommon.GetRequestIP(this);
             Utils.Logger.Info($"RealtimePrice is called from IP {callerIP}");
-            if (!String.Equals(callerIP, "23.20.243.199", StringComparison.CurrentCultureIgnoreCase))       // If not from (public IP for the VBrokerDEV server (HealthMonitor heartbeat check), check GoogleAuth
+            // Authorized ServerIP whitelist: 
+            if (!String.Equals(callerIP, ServerIp.HealthMonitorPublicIp, StringComparison.CurrentCultureIgnoreCase) &&       //  HealthMonitor for checking that real-time price works
+                !String.Equals(callerIP, ServerIp.HQaVM1PublicIp, StringComparison.CurrentCultureIgnoreCase))     // HQaVM1. e.g. website for real time price of "VIX futures" http://www.snifferquant.com/dac/VixTimer
             {
                 var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
             }
