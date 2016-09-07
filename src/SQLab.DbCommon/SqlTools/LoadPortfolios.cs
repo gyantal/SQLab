@@ -220,7 +220,7 @@ FROM (SELECT * FROM Stock INNER JOIN
 
             // 2. Process transactions one by one
             int trInd = 0;
-            while (trInd < transactionsTbl.Count)
+            while (trInd < transactionsTbl.Count)   // ordered by PortfolioID, Date
             {
                 var transaction = transactionsTbl[trInd];
                 int portfInd = (int)transaction[0];
@@ -293,7 +293,13 @@ FROM (SELECT * FROM Stock INNER JOIN
                     }
 
                     trInd++;
-                    if (trInd < transactionsTbl.Count && (int)(transactionsTbl[trInd][0]) != portfInd)  // if the next transaction is a different portfolio exit inner loop
+                    bool isLastTransactionOfPortfolio = false;
+                    if (trInd >= transactionsTbl.Count)
+                        isLastTransactionOfPortfolio = true;
+                    else
+                        isLastTransactionOfPortfolio = ((int)(transactionsTbl[trInd][0]) != portfInd);  // if the next transaction is a different portfolio // remember: transactions are grouped by PortfolioID
+
+                    if (isLastTransactionOfPortfolio)  // exit inner loop
                     {
                         // 2.3. consume Splits from last transaction until today/p_accumulationEndDate
                         splitIndInclusive = ConsumeSplitsUntilTime(assetDescs, splitDivInfosByDate, portf, splitIndInclusive, DateTime.UtcNow);
