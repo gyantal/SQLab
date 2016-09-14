@@ -29,48 +29,44 @@ namespace HealthMonitor
                 return;
 
             //string healthMonitorMsg = $"<BriefReport>{briefReport}</BriefReport><DetailedReport>{detailedReportSb.ToString()}</DetailedReport>";
+            // or in a case of VBroker crash, it is simply a HealthMonitorMessageID.ReportErrorFromVirtualBroker ID, with no "<BriefReport>" structure.
+            string briefReport = null, detailedReport = null;
             int briefReportBegin = p_message.ParamStr.IndexOf("<BriefReport>");
-            if (briefReportBegin == -1)
+            if (briefReportBegin != -1)
             {
-                Utils.Logger.Error($"OkFromVirtualBroker(): message cannot be interpreted: {p_message.ParamStr}");
-                return;
-            }
-            int briefReportEnd = p_message.ParamStr.IndexOf("</BriefReport>", briefReportBegin + "<BriefReport>".Length);
-            if (briefReportEnd == -1)
-            {
-                Utils.Logger.Error($"OkFromVirtualBroker(): message cannot be interpreted: {p_message.ParamStr}");
-                return;
-            }
-            int detailedReportBegin = p_message.ParamStr.IndexOf("<DetailedReport>", briefReportEnd + "</BriefReport>".Length);
-            if (detailedReportBegin == -1)
-            {
-                Utils.Logger.Error($"OkFromVirtualBroker(): message cannot be interpreted: {p_message.ParamStr}");
-                return;
-            }
-            int detailedReportEnd = p_message.ParamStr.IndexOf("</DetailedReport>", briefReportBegin + "<DetailedReport>".Length);
-            if (detailedReportEnd == -1)
-            {
-                Utils.Logger.Error($"OkFromVirtualBroker(): message cannot be interpreted: {p_message.ParamStr}");
-                return;
+                int briefReportEnd = p_message.ParamStr.IndexOf("</BriefReport>", briefReportBegin + "<BriefReport>".Length);
+                if (briefReportEnd != -1)
+                {
+                    int detailedReportBegin = p_message.ParamStr.IndexOf("<DetailedReport>", briefReportEnd + "</BriefReport>".Length);
+                    if (detailedReportBegin != -1)
+                    {
+                        int detailedReportEnd = p_message.ParamStr.IndexOf("</DetailedReport>", briefReportBegin + "<DetailedReport>".Length);
+                        if (detailedReportEnd != -1)
+                        {
+                            briefReport = p_message.ParamStr.Substring(briefReportBegin + "<BriefReport>".Length, briefReportEnd - briefReportBegin - "<BriefReport>".Length);
+                            detailedReport = p_message.ParamStr.Substring(detailedReportBegin + "<DetailedReport>".Length, detailedReportEnd - detailedReportBegin - "<DetailedReport>".Length);
+                        }
+                    }
+                }
             }
 
-            string briefReport = p_message.ParamStr.Substring(briefReportBegin + "<BriefReport>".Length, briefReportEnd - briefReportBegin - "<BriefReport>".Length);
-            string detailedReport = p_message.ParamStr.Substring(detailedReportBegin + "<DetailedReport>".Length, detailedReportEnd - detailedReportBegin - "<DetailedReport>".Length);
-
-            // sometimes the message seems OK, but if the messageParam contains the word "Error" treat it as error. For example, if this email was sent to the user, with the Message that everything is OK, treat it as error
-            // "***Trade: ERROR"   + "*** StrongAssert failed (severity==Exception): BrokerAPI.GetStockMidPoint(VXX,...) failed"
-            // "ibNet_ErrorMsg(). TickerID: 742, ErrorCode: 404, ErrorMessage: 'Order held while securities are located.'
-            // "Error. A transaction was not executed. p_brokerAPI.GetExecutionData = null for Sell VXX Volume: 266. Check that it was not executed and if not, perform it manually then enter into the DB.
-            bool isError = (p_message.ID == HealthMonitorMessageID.ReportErrorFromVirtualBroker) ||
-                        (briefReport.IndexOf("Error", StringComparison.CurrentCultureIgnoreCase) != -1);  // in DotNetCore, there is no StringComparison.InvariantCultureIgnoreCase
+            bool isError = (p_message.ID == HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+            if (!isError && (briefReport != null))
+            {
+                // sometimes the message seems OK, but if the messageParam contains the word "Error" treat it as error. For example, if this email was sent to the user, with the Message that everything is OK, treat it as error
+                // "***Trade: ERROR"   + "*** StrongAssert failed (severity==Exception): BrokerAPI.GetStockMidPoint(VXX,...) failed"
+                // "ibNet_ErrorMsg(). TickerID: 742, ErrorCode: 404, ErrorMessage: 'Order held while securities are located.'
+                // "Error. A transaction was not executed. p_brokerAPI.GetExecutionData = null for Sell VXX Volume: 266. Check that it was not executed and if not, perform it manually then enter into the DB.
+                isError = (briefReport.IndexOf("Error", StringComparison.CurrentCultureIgnoreCase) != -1);  // in DotNetCore, there is no StringComparison.InvariantCultureIgnoreCase
+            }
 
             lock (m_VbReport)
-                    m_VbReport.Add(new Tuple<DateTime, bool, string, string>(DateTime.UtcNow, !isError, briefReport, detailedReport));
+                    m_VbReport.Add(new Tuple<DateTime, bool, string, string>(DateTime.UtcNow, !isError, ((briefReport != null) ? briefReport : p_message.ParamStr), detailedReport));
 
             if (isError)
             {
                 Utils.Logger.Info("ErrorFromVirtualBroker().");
-                InformSupervisors("SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { briefReport}", 
+                InformSupervisors("SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { ((briefReport != null) ? briefReport : p_message.ParamStr) }", 
                     "There is an Error in Virtual Broker. ... I repeat: Error in Virtual Broker.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
             }
         }

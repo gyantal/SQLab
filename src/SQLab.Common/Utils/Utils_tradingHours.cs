@@ -59,8 +59,11 @@ namespace SqCommon
                 int iTHead = webPage.IndexOf(@"{""head"":");
                 int iTBody = webPage.IndexOf(@"""foot"":", iTHead);
                 string holidayTable = webPage.Substring(iTHead, iTBody - iTHead);
-                int iFootnoteStart = webPage.IndexOf(">*", iTBody);
-                int iFootnoteEnd = webPage.IndexOf("The NYSE", iFootnoteStart);
+
+                //int iFootnoteStart = webPage.IndexOf(">*", iTBody);   // 2016-01-01: Footnote section was After the "table" in the html source
+                //int iFootnoteEnd = webPage.IndexOf("The NYSE", iFootnoteStart);
+                int iFootnoteEnd = webPage.LastIndexOf(@"""table""", iTHead);// 2016-09-14: Footnote section went Before the "table" in the html source
+                int iFootnoteStart = webPage.LastIndexOf(">*Each", iFootnoteEnd, StringComparison.CurrentCultureIgnoreCase); 
                 string footnote = webPage.Substring(iFootnoteStart, iFootnoteEnd - iFootnoteStart);
 
                 int year1 = -1, year2 = -1;
@@ -75,19 +78,21 @@ namespace SqCommon
                     {
                         year1 = Int32.Parse(tds[3]);
                         year2 = Int32.Parse(tds[5]);
+                        //year3 = Int32.Parse(tds[7]);  // there is year3 too, but we don't need it in VBroker or healthmonitor. So, just ignore them
                         continue;
                     }
 
                     //string holidayName = tds[1];
                     ProcessHolidayCellInET(tds[3], year1, footnote, holidays1);
                     ProcessHolidayCellInET(tds[5], year2, footnote, holidays2);
+                    //ProcessHolidayCellInET(tds[5], year2, footnote, holidays2);   // there is year3 too, but we don't need it in VBroker or healthmonitor. So, just ignore them
                 }
 
             }
             catch (Exception ex)
             {
-                Utils.Logger.Error(ex, "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year. Debug it in VS, recode and redeploy. Message:" + ex.Message);
-                return null;
+                Utils.Logger.Error(ex, "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage. Debug it in VS, recode and redeploy. Message:" + ex.Message);
+                throw ex;   // don't swallow this error in SqCommon.Utils, because VBroker.exe main app should know about it. This is a serious error. The caller should handle it.
             }
 
             g_holidays = holidays1;
@@ -195,7 +200,7 @@ namespace SqCommon
             if (holidaysAndHalfHolidays == null || holidaysAndHalfHolidays.Count == 0)
             {
                 Logger.Error("holidaysAndHalfHolidays are not recognized");
-                return false;
+                return false; // temporarily off
             }
 
             DateTime openInET = new DateTime(timeET.Year, timeET.Month, timeET.Day, 9, 30, 0);

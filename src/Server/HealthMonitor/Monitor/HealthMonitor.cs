@@ -43,6 +43,10 @@ namespace HealthMonitor
         const int cRtpsTimerFrequencyMinutes = 10;
         const int cHeartbeatTimerFrequencyMinutes = 5;
 
+        Object m_lastHealthMonInformSupervisorLock = new Object();   // null value cannot be locked, so we have to create an object
+        DateTime m_lastHealthMonErrorEmailTime = DateTime.MinValue;    // don't email if it was made in the last 10 minutes
+        DateTime m_lastHealthMonErrorPhoneCallTime = DateTime.MinValue;    // don't call if it was made in the last 30 minutes
+
         public SavedState PersistedState
         {
             get
@@ -120,6 +124,7 @@ namespace HealthMonitor
             catch (Exception e)
             {
                 Utils.Logger.Info(e, "ScheduleDailyTimers() Exception.");
+                InformSupervisors($"SQ HealthMonitor: ScheduleDailyTimers() Exception.", $"SQ HealthMonitor: ScheduleDailyTimers() Exception. Check log file.", $"HealthMonitor Schedule Daily Timers Exception. ... I repeat: HealthMonitor Schedule Daily Timers Exception.", ref m_lastHealthMonInformSupervisorLock, ref m_lastHealthMonErrorEmailTime, ref m_lastHealthMonErrorPhoneCallTime);
             }
             Utils.Logger.Info("ScheduleDailyTimers() END");
         }
