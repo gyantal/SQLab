@@ -189,7 +189,7 @@ namespace VirtualBroker
                 catch (Exception e)
                 {
                     //If IBGateways doesn't connect: Retry the connection about 3 times, before Exception. So, so this problem is an Expected problem if another try to reconnect solves it.
-                    Utils.Logger.Info(e, $"Exception in ReconnectToGateway()-{gateway.GatewayUser}: {nConnectionRetry} : {e.Message}");
+                    Utils.Logger.Info(e, $"Exception in ReconnectToGateway()-user:{gateway.GatewayUser}: nRetry:{nConnectionRetry} : Msg:{e.Message}");
                     if (nConnectionRetry >= nMaxRetry)
                     {
                         Utils.Logger.Info("GatewaysWatcher:ReconnectToGateway(). This gateway failed after many retries. We can send HealthMonitor message here, but better at a higher level if the second Gateway fails too.");

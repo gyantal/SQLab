@@ -6,8 +6,8 @@
 import os
 import time
 from subprocess import call
-print('Sleeping for 30 sec, so IBGateways can start...')
-time.sleep(30)  # sleep for 30 sec, so IBGateways can start
+print('Sleeping for 40 sec, so IBGateways can start...')
+time.sleep(40)  # sleep for 40 sec, so IBGateways can start.2016-09-19: 30sec waiting time was not enough
 print('Python3: Change Directory')
 os.chdir("/home/ubuntu/SQ/Server/VirtualBroker/src")
 print('dotnet restore')

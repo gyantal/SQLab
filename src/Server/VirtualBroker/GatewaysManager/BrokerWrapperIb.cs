@@ -147,6 +147,18 @@ namespace VirtualBroker
                 }
             }
 
+            // if there is a Connection Error at the begginning, GatewaysWatcher will try to Reconnect 3 times. 
+            // There is no point sending HealthManager.ErrorMessages and Phonecalls when the first Connection error occurs. GatewaysWatcher() will send it after the 3rd connection fails.
+            if (e is System.AggregateException)
+            {
+                Utils.Logger.Info("BrokerWrapperIb.error(). AggregateException. Inner: " + e.InnerException.Message);
+                if (e.InnerException.Message.IndexOf("Connection refused") != -1)
+                {
+                    Utils.Logger.Info("BrokerWrapperIb.error().  AggregateException. Inner exception is expected. Don't raise HealthMonitor alert phonecalls (yet)");
+                    return;
+                }
+            }
+
             // Otherwise, maybe a trading Error, exception.
             // Maybe IBGateways were shut down. In which case, we cannot continue this VBroker App, because we should restart IBGateways, and reconnect to them by restarting VBroker.
             // Try to send HealthMonitor message and shut down the VBroker.
