@@ -167,9 +167,14 @@ namespace VirtualBroker
             throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
         }
 
-        public virtual void error(string str)
+        public virtual void error(string p_str)
         {
-            Console.WriteLine("Error: " + str);
+            string errMsg = "BrokerWrapper.error(). " + p_str;
+            Console.WriteLine(errMsg);
+            Utils.Logger.Error(errMsg);
+            HealthMonitorMessage.Send($"BrokerWrapperIb.error()", errMsg, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+            //If there is a single trading error, we may want to continue, so don't terminate the thread or the App, just inform HealthMonitor.
+            //throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
         }
 
         public virtual void error(int id, int errorCode, string errorMsg)
@@ -195,8 +200,10 @@ namespace VirtualBroker
             if (errorCode == 300)
                 return;
 
-            Console.WriteLine("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg);
-            Utils.Logger.Error("BrokerWrapper.error(). Id: " + id + ", Code: " + errorCode + ", Msg: " + errorMsg);
+            // after asking realtime price as "s=^VIX,^^^VIX201610,^^^VIX201611,^VXV,^^^VIX201701,VXX,^^^VIX201704&f=l"
+            // Code: 200, Msg: The contract description specified for VIX is ambiguous; you must specify the multiplier or trading class.
+            string errMsg = "ErrId: " + id + ", ErrCode: " + errorCode + ", Msg: " + errorMsg;
+            error(errMsg);
         }
 
         public virtual void connectionClosed()
@@ -281,10 +288,10 @@ namespace VirtualBroker
         public virtual bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
         {
             // Contract contract = new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" };
-            var mktDataSubscr = MktDataSubscriptions.Values.FirstOrDefault(r => r.Contract.Symbol == p_contract.Symbol && r.Contract.SecType == p_contract.SecType && r.Contract.Currency == p_contract.Currency);
+            var mktDataSubscr = MktDataSubscriptions.Values.FirstOrDefault(r => VBrokerUtils.IsContractEqual(r.Contract, p_contract));
             if (mktDataSubscr == null)
             {
-                //Utils.Logger.Error($"Market data for Contract {p_contract.Symbol} was not requested as Stream. Do make that request eariler.");
+                Utils.Logger.Debug($"Market data for Contract {p_contract.Symbol} was not requested as Stream. Do make that request earlier.");
                 return false;
             }
 

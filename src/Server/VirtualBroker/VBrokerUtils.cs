@@ -105,16 +105,49 @@ namespace VirtualBroker
                 string symbol = p_sqTicker.Substring(1, p_sqTicker.Length - 6 - 1);
                 if (symbol[0] == '^')
                     symbol = symbol.Substring(1, symbol.Length - 1);
-                string exchange = "CFE";    // wokrs for VIX futures
-                string expiry = p_sqTicker.Substring(p_sqTicker.Length - 6);
 
-                contract = new Contract() { Symbol = symbol, SecType = "FUT", Currency = "USD", Exchange = exchange, LastTradeDateOrContractMonth = expiry };  // this works for Futures, but we don't want to Fix it as they will expire 
+                string expiry = p_sqTicker.Substring(p_sqTicker.Length - 6);        // expiry = "201610", however in real life expire = "20161019" as last day can be also specified for LastTradeDateOrContractMonth
+                string exchange = "CFE";    // works for VIX futures
+                // from 2016: they introduced weekly VIX futures, not only monthly. Those have same Multiplier = 1000, but different TradingClass.
+                // Ib error: "The contract description specified for VIX is ambiguous; you must specify the multiplier or trading class."
+                // Trading Class: for monthly VIX futures: "VX", for weekly, differs, eg. "VX40V6", and different for each weekly.
+                // Conlusion: we should add the multiplier. Easier than handle the messy TradingClass. But that didn't solve the problem.
+                // After adding only multiplier, Ib error: "The contract description specified for VIX is ambiguous."
+                // After adding only tradingClass, Ib error: ErrCode: 354, Msg: "Requested market data is not subscribed.Error&CFE/FUT/Top&CFE/FUT/Top.". But this was, because I didn't have realtime data, only delayed. Paid $2.5 per month, and it works.
+                string multiplier = null, tradingClass = null;   // the default value is null
+                if (symbol.Equals("VIX", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    multiplier = "1000";    // works for VIX futures and in general for futures
+                    tradingClass = "VX";
+                    //expiry = "20161019";  // not needed. "201610" is fine as ContractMonth in LastTradeDateOrContractMonth 
+                }
+
+                contract = new Contract() { Symbol = symbol, SecType = "FUT", Currency = "USD", Exchange = exchange, LastTradeDateOrContractMonth = expiry, Multiplier = multiplier, TradingClass = tradingClass };  // this works for Futures, but we don't want to Fix it as they will expire 
                 //contract = new Contract("VIX", "CFE", SecurityType.Future, "USD", "201404"); // this works for VIX Futures
             }
             else
                 contract = new Contract() { Symbol = p_sqTicker, SecType = "STK", Currency = "USD", Exchange = "SMART" };
 
             return contract;
+        }
+
+        public static bool IsContractEqual(Contract p_contract1, Contract p_contract2)  // a deep
+        {
+            if (p_contract1.Symbol != p_contract2.Symbol)
+                return false;
+            if (p_contract1.SecType != p_contract2.SecType)
+                return false;
+            if (p_contract1.Currency != p_contract2.Currency)
+                return false;
+
+            if (p_contract1.LastTradeDateOrContractMonth != p_contract2.LastTradeDateOrContractMonth)
+                return false;
+            if (p_contract1.Multiplier != p_contract2.Multiplier)
+                return false;
+            if (p_contract1.TradingClass != p_contract2.TradingClass)
+                return false;
+
+            return true;
         }
     }
 }
