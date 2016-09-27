@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SqCommon
@@ -98,17 +99,80 @@ namespace SqCommon
         {
             try {
                 TcpClient client = new TcpClient();
-                Task task = client.ConnectAsync(TcpServerHost, TcpServerPort);
-                if (await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(30))) != task)
+
+                // http://stackoverflow.com/questions/4036198/does-task-waitint-stop-the-task-if-the-timeout-elapses-without-the-task-finish
+                bool wasTimeOut = false;
+                Task connectTask = client.ConnectAsync(TcpServerHost, TcpServerPort);      // usually, we create a task with a CancellationToken. However, this task is not cancellable. I cannot cancel it. I have to wait for its finish.
+                Task continuationTask = connectTask.ContinueWith((antecedentTask) =>
+                {      // this is one way to handle it.
+                    if (!wasTimeOut)    // if it was no timeout, don't do anything
+                        return;
+
+                    // we cannot let task to sleep, because 2 days later, at GC, it can reaise ''System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.'
+                    Utils.Logger.Debug("VirtualBroker server: client.Connect() timeout happened earlier. ConnectAsync() finished right now.");
+                    if (antecedentTask.Exception != null)
+                    {
+                        Utils.Logger.Debug("VirtualBroker server: client.Connect() timeout happened earlier. ConnectAsync() finished right now. Exception: " + antecedentTask.Exception);
+                    }
+
+                });
+                if (!continuationTask.Wait(TimeSpan.FromSeconds(30))) // wait for 30 seconds, after timeout, the task is not cancelled, and its async thread is still runnning. Bad. Suggestion: use the Cancellation token.
                 {
+                    wasTimeOut = true;
                     Utils.Logger.Error("Error:VirtualBroker server: client.Connect() timeout.");
-                    return null;
+
+                    return null; // in case of timeout, return instantly to the caller.
                 }
 
+
+                // Remove from Source code later, if this exception doesn't come any more: "System.AggregateException: A Task's exception(s) were not observed either by Waiting"
+                //if (!task.Wait(TimeSpan.FromSeconds(30))) // wait for 30 seconds, after timeout, the task is not cancelled, and its async thread is still runnning. Bad. Suggestion: use the Cancellation token.
+                //{
+                //    Utils.Logger.Error("Error:VirtualBroker server: client.Connect() timeout.");
+                //    // we cannot let task to sleep, because 2 days later, at GC, it can reaise ''System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.'
+                //    // if we return with an Timeout Error, we have to kill the task before.
+                //    Task.Factory.StartNew(() =>     // The action delegate to execute asynchronously.  "This call is not awaited." Good.
+                //    {
+                //        try
+                //        {
+                //            task.Wait();    // the ConnectAsync() task is not Cancellable. It will finish soon. We have to wait ConnectAsync() forever on a separate thread.
+
+                //            if (task.Exception != null)
+                //            {
+                //                Utils.Logger.Error(task.Exception, "Error:VirtualBroker server: client.Connect() timeout. and later Exception raised.");
+                //            }
+                //        }
+                //        catch (Exception ex)
+                //        {
+                //            //WasAborted = true;
+                //            //return false;
+                //        }
+                //    });
+
+                //return null;    // in case of timeout, return instantly to the caller.
+                //}
+
+
+
+                //if (await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(30))) != task)
+                //{
+                //    Utils.Logger.Error("Error:VirtualBroker server: client.Connect() timeout.");
+                //    // we cannot let task to sleep, because 2 days later, at GC, it can reaise ''System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread.'
+                //    // if we return with an Timeout Error, we have to kill the task before.
+                //    //task.
+                //    return null;
+                //}
+
+
+
+
+
+
+
                 // sometimes task ConnectAsync() returns instantly (no timeout), but there is an error in it. Which results an hour later: "TaskScheduler_UnobservedTaskException. Exception. A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. "
-                if (task.Exception != null)
+                if (connectTask.Exception != null)
                 {
-                    Utils.Logger.Error(task.Exception, "Error:VirtualBrokerMessage.SendMessage(). Exception in ConnectAsync() task.");
+                    Utils.Logger.Error(connectTask.Exception, "Error:VirtualBrokerMessage.SendMessage(). Exception in ConnectAsync() task.");
                     return null;
                 }
 

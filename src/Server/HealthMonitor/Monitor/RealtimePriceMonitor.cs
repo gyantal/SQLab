@@ -18,81 +18,90 @@ namespace HealthMonitor
         ConcurrentQueue<Tuple<DateTime, bool>> m_rtpsLastDownloads = new ConcurrentQueue<Tuple<DateTime, bool>>();
 
         // imagine how and when a human user would check that the service is still OK. He wouldn't check it on the weekends e.g.
-        private void RtpsTimer_Elapsed(object p_stateObj)   // Real Time Price Service
+        private void RtpsTimer_Elapsed(object p_stateObj)   // Real Time Price Service, // Timer is coming on o ThreadPool thread
         {
-            Utils.Logger.Info(String.Format("RtpsTimer_Elapsed_{0} ({1} minutes)", m_nRtpsTimerCalled, cRtpsTimerFrequencyMinutes));
-            m_nRtpsTimerCalled++;
-            if (!PersistedState.IsRealtimePriceServiceTimerEnabled)
-                return;
-
-            DateTime utcNow = DateTime.UtcNow;
-            TimeSpan utcNowTime = utcNow.TimeOfDay;
-            // when developing, we don't want to restrict the time it can run, only on Linux production environment
-            if (!IsRunningAsLocalDevelopment())
+            try
             {
-                // Now, in 2015, there is no point at checking it overnight, as no Developer will be able to fix it.
-                // in Utc time USA stock market is open around 15:30-21:00 or 14:30-20:00, but developer's sleeping in the main factor
-                // in the future, we may trade non-stop, 7/24, 7 days, 24 hours, but not now, so we can save resources by not checking overnight
-                if (utcNowTime > new TimeSpan(23, 15, 0) || utcNowTime < new TimeSpan(7, 30, 0))
+                Utils.Logger.Info(String.Format("RtpsTimer_Elapsed_{0} ({1} minutes) BEGIN", m_nRtpsTimerCalled, cRtpsTimerFrequencyMinutes));
+                m_nRtpsTimerCalled++;
+                if (!PersistedState.IsRealtimePriceServiceTimerEnabled)
                     return;
-                //similarly, even though we can trade on the weekend, we don't do that now, so save resources, don't check
-                if (utcNow.DayOfWeek == DayOfWeek.Saturday || utcNow.DayOfWeek == DayOfWeek.Sunday)
-                    return;
-            }
 
-
-            //string url = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
-            string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
-            string rtpsReply = String.Empty;
-            if (Utils.DownloadStringWithRetry(out rtpsReply, url, 5, TimeSpan.FromSeconds(5), false))
-                Utils.Logger.Info(url + " returned: " + (rtpsReply.Substring(0, (rtpsReply.Length > 45) ? 45 : rtpsReply.Length)).Replace("\r\n", "").Replace("\n", ""));   // it is better to see it as one line in the log file
-            else
-            {
-                Utils.Logger.Error("Failed download multiple (5x) times :" + url);
-            }
-
-            bool isRtpsReplyOk = IsRtpsReplyOk(rtpsReply);
-
-            m_rtpsLastDownloads.Enqueue(new Tuple<DateTime, bool>(DateTime.UtcNow, isRtpsReplyOk));
-            while (m_rtpsLastDownloads.Count > 2 * 24 * 6)     // to avoid increasing memory forever, trim the records after 2 days
-            {
-                Tuple<DateTime, bool> rtpsDownload = null;
-                m_rtpsLastDownloads.TryDequeue(out rtpsDownload);
-            }
-
-            if (!isRtpsReplyOk)
-            {
-                Utils.Logger.Info("RtpsTimer_Elapsed(). !isRtpsReplyOk");
-                m_nFail++;
-                if ((m_nFail > c_maxAllowedFail) && !m_isThisServiceOutageWarningEmailWasSent)
+                DateTime utcNow = DateTime.UtcNow;
+                TimeSpan utcNowTime = utcNow.TimeOfDay;
+                // when developing, we don't want to restrict the time it can run, only on Linux production environment
+                if (!IsRunningAsLocalDevelopment())
                 {
-                    Utils.Logger.Info("RtpsTimer_Elapsed(). Sending Warning email.");
-                    new Email
+                    // Now, in 2015, there is no point at checking it overnight, as no Developer will be able to fix it.
+                    // in Utc time USA stock market is open around 15:30-21:00 or 14:30-20:00, but developer's sleeping in the main factor
+                    // in the future, we may trade non-stop, 7/24, 7 days, 24 hours, but not now, so we can save resources by not checking overnight
+                    if (utcNowTime > new TimeSpan(23, 15, 0) || utcNowTime < new TimeSpan(7, 30, 0))
+                        return;
+                    //similarly, even though we can trade on the weekend, we don't do that now, so save resources, don't check
+                    if (utcNow.DayOfWeek == DayOfWeek.Saturday || utcNow.DayOfWeek == DayOfWeek.Sunday)
+                        return;
+                }
+
+
+                //string url = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
+                string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
+                string rtpsReply = String.Empty;
+                if (Utils.DownloadStringWithRetry(out rtpsReply, url, 5, TimeSpan.FromSeconds(5), false))
+                    Utils.Logger.Info(url + " returned: " + (rtpsReply.Substring(0, (rtpsReply.Length > 45) ? 45 : rtpsReply.Length)).Replace("\r\n", "").Replace("\n", ""));   // it is better to see it as one line in the log file
+                else
+                {
+                    Utils.Logger.Error("Failed download multiple (5x) times :" + url);
+                }
+
+                bool isRtpsReplyOk = IsRtpsReplyOk(rtpsReply);
+
+                m_rtpsLastDownloads.Enqueue(new Tuple<DateTime, bool>(DateTime.UtcNow, isRtpsReplyOk));
+                while (m_rtpsLastDownloads.Count > 2 * 24 * 6)     // to avoid increasing memory forever, trim the records after 2 days
+                {
+                    Tuple<DateTime, bool> rtpsDownload = null;
+                    m_rtpsLastDownloads.TryDequeue(out rtpsDownload);
+                }
+
+                if (!isRtpsReplyOk)
+                {
+                    Utils.Logger.Info("RtpsTimer_Elapsed(). !isRtpsReplyOk");
+                    m_nFail++;
+                    if ((m_nFail > c_maxAllowedFail) && !m_isThisServiceOutageWarningEmailWasSent)
                     {
-                        ToAddresses = Utils.Configuration["EmailGyantal"],
-                        Subject = "SQ HealthMonitor: WARNING! RealTime Price Service stopped working.",
-                        Body = $"SQ HealthMonitor: WARNING! RealTime Price Service stopped working.\nRtpsTimer_Elapsed() failed {m_nFail} times.\n{url}\n returned this: '" + rtpsReply + "'",
-                        IsBodyHtml = false
-                    }.Send();
-                    m_isThisServiceOutageWarningEmailWasSent = true;
+                        Utils.Logger.Info("RtpsTimer_Elapsed(). Sending Warning email.");
+                        new Email
+                        {
+                            ToAddresses = Utils.Configuration["EmailGyantal"],
+                            Subject = "SQ HealthMonitor: WARNING! RealTime Price Service stopped working.",
+                            Body = $"SQ HealthMonitor: WARNING! RealTime Price Service stopped working.\nRtpsTimer_Elapsed() failed {m_nFail} times.\n{url}\n returned this: '" + rtpsReply + "'",
+                            IsBodyHtml = false
+                        }.Send();
+                        m_isThisServiceOutageWarningEmailWasSent = true;
+                    }
+                }
+                else
+                {
+                    m_nFail = 0;
+                    Utils.Logger.Info("RtpsTimer_Elapsed(). isRtpsReplyOk");
+                    if (m_isThisServiceOutageWarningEmailWasSent)
+                    {  // it was bad, but now it is corrected somehow
+                        new Email
+                        {
+                            ToAddresses = Utils.Configuration["EmailGyantal"],
+                            Subject = "SQ HealthMonitor: OK! RealTime Price Service has recovered.",
+                            Body = "SQ HealthMonitor: OK! RealTime Price Service has recovered.",
+                            IsBodyHtml = false
+                        }.Send();
+                        m_isThisServiceOutageWarningEmailWasSent = false;
+                    }
                 }
             }
-            else
+            catch (Exception e)
             {
-                m_nFail = 0;
-                Utils.Logger.Info("RtpsTimer_Elapsed(). isRtpsReplyOk");
-                if (m_isThisServiceOutageWarningEmailWasSent)
-                {  // it was bad, but now it is corrected somehow
-                    new Email
-                    {
-                        ToAddresses = Utils.Configuration["EmailGyantal"],
-                        Subject = "SQ HealthMonitor: OK! RealTime Price Service has recovered.",
-                        Body = "SQ HealthMonitor: OK! RealTime Price Service has recovered.",
-                        IsBodyHtml = false
-                    }.Send();
-                    m_isThisServiceOutageWarningEmailWasSent = false;
-                }
+                Utils.Logger.Error(e, "RtpsTimer_Elapsed() exception.");
             }
+
+            Utils.Logger.Info(String.Format("RtpsTimer_Elapsed_{0} ({1} minutes) END", m_nRtpsTimerCalled, cRtpsTimerFrequencyMinutes));
         }
 
         //on weekends and on days when stock market is not open(holidays) this is what it returns, which is fine:

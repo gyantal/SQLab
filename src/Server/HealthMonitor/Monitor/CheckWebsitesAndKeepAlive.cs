@@ -29,11 +29,12 @@ namespace HealthMonitor
 
         bool m_isCheckWebsitesServiceOutageEmailWasSent = false;  // to avoid sending the same warning email every 9 minutes; send only once
 
-        public void CheckWebsitesAndKeepAliveTimer_Elapsed(object p_sender)
+        public void CheckWebsitesAndKeepAliveTimer_Elapsed(object p_sender) // Timer is coming on o ThreadPool thread
         {
-            Utils.Logger.Info("CheckWebsitesAndKeepAliveTimer_Elapsed() BEGIN");
             try
             {
+                Utils.Logger.Info("CheckWebsitesAndKeepAliveTimer_Elapsed() BEGIN");
+
                 List<string> failedWebsites = new List<string>();
                 for (int i = 0; i < cWebsitesToCheckAndnFail.Length; i++)
                 {
@@ -95,6 +96,8 @@ namespace HealthMonitor
             {
                 Utils.Logger.Error("Exception caught in CheckWebsites Timer. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
             }
+
+            Utils.Logger.Info("CheckWebsitesAndKeepAliveTimer_Elapsed() END");
         }
 
     }

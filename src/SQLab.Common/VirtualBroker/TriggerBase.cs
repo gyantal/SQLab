@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SQCommon
+namespace SqCommon
 {
     public enum TriggerType : byte
     {   // similar to Windows TaskScheduler
@@ -43,6 +43,15 @@ namespace SQCommon
 
         public virtual void Timer_Elapsed(object state)    // Timer is coming on o ThreadPool thread
         {
+            try
+            {
+
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "TriggerBase.Timer_Elapsed() exception.");
+                throw;
+            }
         }
     }
 }

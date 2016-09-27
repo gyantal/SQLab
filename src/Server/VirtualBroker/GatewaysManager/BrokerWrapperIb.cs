@@ -179,6 +179,9 @@ namespace VirtualBroker
 
         public virtual void error(int id, int errorCode, string errorMsg)
         {
+            string errMsg = "ErrId: " + id + ", ErrCode: " + errorCode + ", Msg: " + errorMsg;
+            Utils.Logger.Debug("BrokerWrapper.error(). " + errMsg); // even if we return and continue, Log it, so it is conserved in the log file.
+
             if (id == -1)
             {
                 if (errorCode == 2104 || errorCode == 2106 || errorCode == 2107 || errorCode == 2108 || errorCode == 2119)
@@ -191,6 +194,36 @@ namespace VirtualBroker
                     //IB Error. Id: -1, Code: 2119, Msg: Market data farm is connecting:usfarm
                     return;
                 }
+                if (errorCode == 2103 || errorCode == 1100 || errorCode == 1102)
+                {
+                    // This is Usually not an error if it is received pre-market or after market. IBGateway will try reconnecting, so this is usually temporary. However, log it.
+                    //IB Error. ErrId: -1, ErrCode: 2103, Msg: Market data farm connection is broken:usfarm
+                    //IB Error. ErrId: -1, ErrCode: 1100, Msg: Connectivity between IB and Trader Workstation has been lost.
+                    //IB Error. ErrId: -1, ErrCode: 1102, Msg: Connectivity between IB and Trader Workstation has been restored - data maintained.
+                    DateTime utcNow = DateTime.UtcNow;
+                    if (utcNow.DayOfWeek == DayOfWeek.Saturday || utcNow.DayOfWeek == DayOfWeek.Sunday)   // if it is the weekend => no Error
+                        return;
+
+                    DateTime etNow = Utils.ConvertTimeFromUtcToEt(utcNow);
+                    // The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET.
+                    if (etNow.Hour <= 8 || etNow.Hour >= 5)   // if it is not Approximately around market hours => no Error
+                        return;
+
+                    // you can skip holiday days too later
+
+                    // otherwise, during market hours, consider this as an error, => so HealthMonitor will be notified
+                }
+            }
+
+            if (id == 42)
+            {
+                if (errorCode == 506)
+                {
+                    // sometimes it happens at connection. skip this error. IF Connection doesn't happen after trying it 3 times. VBGateway will notify HealthMonitor anyway.
+                    // Once per month, this error happens, so the first connection fails, but the next connection goes perfectly through.
+                    // ErrId: 42, ErrCode: 506, Msg: Unsupported version
+                    return;
+                }
             }
 
             // after subscribing to Market Snapshot data for a ticker, and we call ClientSocket.cancelMktData(p_marketDataId); that is executed properly
@@ -200,9 +233,10 @@ namespace VirtualBroker
             if (errorCode == 300)
                 return;
 
+
+            // SERIOUS ERRORS AFTER THIS LINE. Notify HealthMonitor.
             // after asking realtime price as "s=^VIX,^^^VIX201610,^^^VIX201611,^VXV,^^^VIX201701,VXX,^^^VIX201704&f=l"
             // Code: 200, Msg: The contract description specified for VIX is ambiguous; you must specify the multiplier or trading class.
-            string errMsg = "ErrId: " + id + ", ErrCode: " + errorCode + ", Msg: " + errorMsg;
             error(errMsg);
         }
 
@@ -274,15 +308,23 @@ namespace VirtualBroker
         // However, when USA market opened, at 14:30, RUT lastPrice data poured in at every 5 seconds.
         public void MktDataIsAliveTimer_Elapsed(object p_state)    // Timer is coming on o ThreadPool thread
         {
-            MktDataSubscription mktDataSubscr = (MktDataSubscription)p_state;
-            if (mktDataSubscr.IsAnyPriceArrived)  // we had at least 1 price, so everything seems ok.
-                return;
+            try
+            {
+                MktDataSubscription mktDataSubscr = (MktDataSubscription)p_state;
+                if (mktDataSubscr.IsAnyPriceArrived)  // we had at least 1 price, so everything seems ok.
+                    return;
 
-            Console.WriteLine($"DataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
-            Utils.Logger.Info($"DataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
-            ClientSocket.cancelMktData(mktDataSubscr.MarketDataId);
-            ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
-            ClientSocket.reqMktData(mktDataSubscr.MarketDataId, mktDataSubscr.Contract, null, false, null);     // use the same MarketDataId, so we don't have to update the MktDataSubscriptions dictionary.
+                Console.WriteLine($"DataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
+                Utils.Logger.Info($"DataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
+                ClientSocket.cancelMktData(mktDataSubscr.MarketDataId);
+                ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
+                ClientSocket.reqMktData(mktDataSubscr.MarketDataId, mktDataSubscr.Contract, null, false, null);     // use the same MarketDataId, so we don't have to update the MktDataSubscriptions dictionary.
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "MktDataIsAliveTimer_Elapsed() exception.");
+                throw;
+            }
         }
 
         public virtual bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)

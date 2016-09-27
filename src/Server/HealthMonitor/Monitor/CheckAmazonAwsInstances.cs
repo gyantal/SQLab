@@ -140,7 +140,7 @@ namespace HealthMonitor
             return hmWebsiteStr;
         }
 
-        internal void CheckAmazonAwsInstances_Elapsed(object p_sender)
+        internal void CheckAmazonAwsInstances_Elapsed(object p_sender) // Timer is coming on o ThreadPool thread
         {
             Utils.Logger.Info("CheckAmazonAwsInstances() BEGIN");
 

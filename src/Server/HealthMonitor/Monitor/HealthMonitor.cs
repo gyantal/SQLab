@@ -178,28 +178,46 @@ namespace HealthMonitor
             }
         }
 
-        private void DailyMarketOpenTimer_Elapsed(object p_stateObj)   // this is called at 14:30 UTC every day; during that day DayLightSaving setting will not change
+        private void DailyMarketOpenTimer_Elapsed(object p_stateObj)   // this is called at 14:30 UTC every day; during that day DayLightSaving setting will not change, // Timer is coming on o ThreadPool thread
         {
-            Utils.Logger.Info("DailyMarketOpenTimer_Elapsed()");
+            try
+            {
+                Utils.Logger.Info("DailyMarketOpenTimer_Elapsed() BEGIN");
 
-            SetupNotRepeatingDailyReportTimer();
-            SetupNotRepeatingDailyMarketOpenTimer();
+                SetupNotRepeatingDailyReportTimer();
+                SetupNotRepeatingDailyMarketOpenTimer();
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "DailyMarketOpenTimer_Elapsed() exception.");
+                //throw;
+            }
+
+            Utils.Logger.Info("DailyMarketOpenTimer_Elapsed() END");
         }
 
         // called at the market close, because this is set by the MarketOpen Timer, it always use the current day proper DayLightSaving settings. Will be correct.
-        public void DailyReportTimer_Elapsed(object p_stateObj)
+        public void DailyReportTimer_Elapsed(object p_stateObj) // Timer is coming on o ThreadPool thread
         {
-            Utils.Logger.Info("DailyReportTimer_Elapsed()");
-            StringBuilder sb = DailySummaryReport(true);
-
-            new Email
+            try
             {
-                ToAddresses = Utils.Configuration["EmailGyantal"],
-                Subject = "HealthMonitor Daily Report",
-                Body = sb.ToString(),
-                IsBodyHtml = true
-            }.Send();
+                Utils.Logger.Info("DailyReportTimer_Elapsed() BEGIN");
+                StringBuilder sb = DailySummaryReport(true);
 
+                new Email
+                {
+                    ToAddresses = Utils.Configuration["EmailGyantal"],
+                    Subject = "HealthMonitor Daily Report",
+                    Body = sb.ToString(),
+                    IsBodyHtml = true
+                }.Send();
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "DailyReportTimer_Elapsed() exception.");
+                //throw;
+            }
+            Utils.Logger.Info("DailyReportTimer_Elapsed() END");
         }
 
         string m_dailyReportEmailStr1 =
@@ -254,7 +272,7 @@ namespace HealthMonitor
                 sb.Append((p_isHtml) ? @"<span class=""sqImportantOK""> OK</span>" : $" OK{Environment.NewLine}");
             else
                 sb.Append((p_isHtml) ? @"<span class=""sqImportantError""> ERROR</span>" : $" ERROR{Environment.NewLine}");
-
+            Utils.Logger.Trace("DailySummaryReport(). rtps_1");
 
             sb.Append((p_isHtml) ? @"<br/><strong>VBroker</strong>:" : "VBroker:"); // try to be concise in the email, so user has to spend only 1 second to evaluate: OK or ERROR. (don't put extra info, because it takes too long to evaluate)
             DateTime utcStartOfToday = DateTime.UtcNow.Date;
@@ -299,6 +317,7 @@ namespace HealthMonitor
                 var v2 = m_VbReport.Where(r => r.Item1 > day30DaysEarlier).OrderBy(r => r.Item1).ToList();
                 m_VbReport = v2;
             }
+            Utils.Logger.Trace("DailySummaryReport(). vb_1");
 
             if (nReportsToday == 0)
                 sb.Append((p_isHtml) ? @"<span class=""sqImportantError""> ERROR</span>: No report today from VBroker. Maybe it has crashed or VM is down." : "No report today from VBroker. Maybe it has crashed or VM is down.");
@@ -313,6 +332,7 @@ namespace HealthMonitor
                 sb.Append(sb2);
             }
 
+            Utils.Logger.Trace("DailySummaryReport(). vb_2");
             if (lastDetailedVBrokerReports.Count > 0)
             {
                 sb.AppendLine((p_isHtml) ? @"<br/><hr><br/><span class=""sqDetail""><strong>VBroker Detailed</strong>:<br/>" : "VBroker Detailed:");
@@ -327,6 +347,7 @@ namespace HealthMonitor
             if (p_isHtml)
                 sb.Append(m_dailyReportEmailStr2);
 
+            Utils.Logger.Trace("DailySummaryReport() END.");
             return sb;
         }
 
