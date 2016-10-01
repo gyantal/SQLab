@@ -182,7 +182,7 @@ namespace VirtualBroker
             string errMsg = "ErrId: " + id + ", ErrCode: " + errorCode + ", Msg: " + errorMsg;
             Utils.Logger.Debug("BrokerWrapper.error(). " + errMsg); // even if we return and continue, Log it, so it is conserved in the log file.
 
-            if (id == -1)
+            if (id == -1)       // -1 probably means there is no ID of the error. It is a special notation.
             {
                 if (errorCode == 2104 || errorCode == 2106 || errorCode == 2107 || errorCode == 2108 || errorCode == 2119)
                 {
@@ -192,7 +192,7 @@ namespace VirtualBroker
                     //IB Error. Id: -1, Code: 2107, Msg: HMDS data farm connection is inactive but should be available upon demand.ushmds
                     //IB Error. Id: -1, Code: 2108, Msg: HMDS data farm connection is inactive but should be available upon demand.ushmds
                     //IB Error. Id: -1, Code: 2119, Msg: Market data farm is connecting:usfarm
-                    return;
+                    return; // skip processing the error further. Don't send it to HealthMonitor.
                 }
                 if (errorCode == 2103 || errorCode == 1100 || errorCode == 1102)
                 {
@@ -200,30 +200,25 @@ namespace VirtualBroker
                     //IB Error. ErrId: -1, ErrCode: 2103, Msg: Market data farm connection is broken:usfarm
                     //IB Error. ErrId: -1, ErrCode: 1100, Msg: Connectivity between IB and Trader Workstation has been lost.
                     //IB Error. ErrId: -1, ErrCode: 1102, Msg: Connectivity between IB and Trader Workstation has been restored - data maintained.
-                    DateTime utcNow = DateTime.UtcNow;
-                    if (utcNow.DayOfWeek == DayOfWeek.Saturday || utcNow.DayOfWeek == DayOfWeek.Sunday)   // if it is the weekend => no Error
-                        return;
+                    if (!IsApproximatelyMarketTradingTime())
+                        return; // skip processing the error further. Don't send it to HealthMonitor.
 
-                    DateTime etNow = Utils.ConvertTimeFromUtcToEt(utcNow);
-                    // The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET.
-                    if (etNow.Hour <= 8 || etNow.Hour >= 5)   // if it is not Approximately around market hours => no Error
-                        return;
-
-                    // you can skip holiday days too later
 
                     // otherwise, during market hours, consider this as an error, => so HealthMonitor will be notified
                 }
             }
 
-            if (id == 42)
+            
+
+
+            if (errorCode == 200)
             {
-                if (errorCode == 506)
-                {
-                    // sometimes it happens at connection. skip this error. IF Connection doesn't happen after trying it 3 times. VBGateway will notify HealthMonitor anyway.
-                    // Once per month, this error happens, so the first connection fails, but the next connection goes perfectly through.
-                    // ErrId: 42, ErrCode: 506, Msg: Unsupported version
-                    return;
-                }
+                // sometimes it happens. When IB server is down. 99% of the time it is at the weekend
+                // ErrId: 2165, ErrCode: 200, Msg: No security definition has been found for the request
+                // ErrId: 2116, ErrCode: 200, Msg: No security definition has been found for the request
+                // ErrId: 2144, ErrCode: 200, Msg: No security definition has been found for the request
+                if (!IsApproximatelyMarketTradingTime())
+                    return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
             // after subscribing to Market Snapshot data for a ticker, and we call ClientSocket.cancelMktData(p_marketDataId); that is executed properly
@@ -231,13 +226,49 @@ namespace VirtualBroker
             // It occurs after alwayl all CannceMktData(). We should ignore it.
             // BrokerWrapper.error(). Id: 1010, Code: 300, Msg: Can't find EId with tickerId:1010
             if (errorCode == 300)
-                return;
+                return; // skip processing the error further. Don't send it to HealthMonitor.
+
+            if (errorCode == 354)
+            {
+                // real-time price is queried. And Market data was subscribed, but at the weekend, it returns an error. Swallow it at the weekends.
+                // ErrId: 1049, ErrCode: 354, Msg: Requested market data is not subscribed.
+                if (!IsApproximatelyMarketTradingTime())
+                    return; // skip processing the error further. Don't send it to HealthMonitor.
+            }
+
+
+            if (errorCode == 506)
+            {
+                if (id == 42)
+                {
+                    // sometimes it happens at connection. skip this error. IF Connection doesn't happen after trying it 3 times. VBGateway will notify HealthMonitor anyway.
+                    // Once per month, this error happens, so the first connection fails, but the next connection goes perfectly through.
+                    // ErrId: 42, ErrCode: 506, Msg: Unsupported version
+                    return; // skip processing the error further. Don't send it to HealthMonitor.
+                }
+            }
 
 
             // SERIOUS ERRORS AFTER THIS LINE. Notify HealthMonitor.
             // after asking realtime price as "s=^VIX,^^^VIX201610,^^^VIX201611,^VXV,^^^VIX201701,VXX,^^^VIX201704&f=l"
             // Code: 200, Msg: The contract description specified for VIX is ambiguous; you must specify the multiplier or trading class.
             error(errMsg);
+        }
+
+        public bool IsApproximatelyMarketTradingTime()
+        {
+            DateTime utcNow = DateTime.UtcNow;
+            DateTime etNow = Utils.ConvertTimeFromUtcToEt(utcNow);
+            if (etNow.DayOfWeek == DayOfWeek.Saturday || etNow.DayOfWeek == DayOfWeek.Sunday)   // if it is the weekend => no Error
+                return false;
+
+            // The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET.
+            if (etNow.Hour <= 8 || etNow.Hour >= 5)   // if it is not Approximately around market hours => no Error
+                return false;
+
+            // you can skip holiday days too later
+
+            return true;
         }
 
         public virtual void connectionClosed()
