@@ -52,18 +52,21 @@ namespace HealthMonitor
                         Utils.Logger.Info("Hello. I am not crashed yet! :)");
                         break;
                     case "2":
-                        HealthMonitor.g_healthMonitor.CheckAmazonAwsInstances_Elapsed(null);
+                        TestPhoneCall();
                         break;
                     case "3":
-                        Console.WriteLine(HealthMonitor.g_healthMonitor.DailySummaryReport(false).ToString());
+                        HealthMonitor.g_healthMonitor.CheckAmazonAwsInstances_Elapsed("ConsoleMenu");
                         break;
                     case "4":
+                        Console.WriteLine(HealthMonitor.g_healthMonitor.DailySummaryReport(false).ToString());
+                        break;
+                    case "5":
                         HealthMonitor.g_healthMonitor.DailyReportTimer_Elapsed(null);
                         Console.WriteLine("DailyReport email was sent.");
                         break;
                 }
 
-            } while (userInput != "5" && userInput != "ConsoleIsForcedToShutDown");
+            } while (userInput != "6" && userInput != "ConsoleIsForcedToShutDown");
 
             Utils.Logger.Info("****** Main() END");
             Utils.MainThreadIsExiting.Set();
@@ -103,10 +106,11 @@ namespace HealthMonitor
 
             Utils.ConsoleWriteLine(ConsoleColor.Magenta, "----HealthMonitor Server    (type and press Enter)----");      
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes.");
-            Console.WriteLine("2. Test AmazonAWS API:DescribeInstances()");
-            Console.WriteLine("3. VirtualBroker Report: show on Console.");
-            Console.WriteLine("4. VirtualBroker Report: send Html email.");
-            Console.WriteLine("5. Exit gracefully (Avoid Ctrl-^C).");
+            Console.WriteLine("2. Test Twilio phone call service.");
+            Console.WriteLine("3. Test AmazonAWS API:DescribeInstances()");
+            Console.WriteLine("4. VirtualBroker Report: show on Console.");
+            Console.WriteLine("5. VirtualBroker Report: send Html email.");
+            Console.WriteLine("6. Exit gracefully (Avoid Ctrl-^C).");
             string result = null;
             try
             {
@@ -119,6 +123,34 @@ namespace HealthMonitor
             }
             return result;
             //return Convert.ToInt32(result);
+        }
+
+        static public void TestPhoneCall()
+        {
+            Console.WriteLine("Calling phone number via Twilio. It should ring out.");
+            Utils.Logger.Info("Calling phone number via Twilio. It should ring out.");
+
+            try
+            {
+                var call = new PhoneCall
+                {
+                    FromNumber = Caller.Gyantal,
+                    ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
+                    Message = "This is a test phone call from Health Monitor.",
+                    NRepeatAll = 2
+                };
+                // skipped temporarily
+                bool didTwilioAcceptedTheCommand = call.MakeTheCall();
+                if (didTwilioAcceptedTheCommand)
+                {
+                    Utils.Logger.Debug("PhoneCall instruction was sent to Twilio.");
+                }
+                else
+                    Utils.Logger.Error("PhoneCall instruction was NOT accepted by Twilio.");
+            } catch (Exception e)
+            {
+                Utils.Logger.Error(e, "Exception in TestPhoneCall().");
+            }
         }
     }
 }

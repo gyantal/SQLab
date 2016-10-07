@@ -53,16 +53,27 @@ namespace HealthMonitor
                     Utils.Logger.Error("Failed download multiple (5x) times :" + url);
                 }
 
-                bool isRtpsReplyOk = IsRtpsReplyOk(rtpsReply);
+                bool? isRtpsReplyOk = null;
+                if (IsRunningAsLocalDevelopment())
+                {
+                    if (rtpsReply.StartsWith("<html><body>Choose an authentication scheme:", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        Utils.Logger.Info("RtpsTimer_Elapsed(). RunningAsLocalDevelopment() (WindowsPC). Download was OK, but webserver asked for GoogleAuth. If you want to debug further functionality, put the Developer PC IP (dynamic) to the webserver whitelist.");
+                        isRtpsReplyOk = true;       // imitate that it is OK. Because when it is run locally, we don't want to receive a warning email
+                    }
+                }
 
-                m_rtpsLastDownloads.Enqueue(new Tuple<DateTime, bool>(DateTime.UtcNow, isRtpsReplyOk));
+                if (isRtpsReplyOk == null)
+                    isRtpsReplyOk = IsRtpsReplyOk(rtpsReply);
+
+                m_rtpsLastDownloads.Enqueue(new Tuple<DateTime, bool>(DateTime.UtcNow, ((bool)isRtpsReplyOk)));
                 while (m_rtpsLastDownloads.Count > 2 * 24 * 6)     // to avoid increasing memory forever, trim the records after 2 days
                 {
                     Tuple<DateTime, bool> rtpsDownload = null;
                     m_rtpsLastDownloads.TryDequeue(out rtpsDownload);
                 }
 
-                if (!isRtpsReplyOk)
+                if (!((bool)isRtpsReplyOk))
                 {
                     Utils.Logger.Info("RtpsTimer_Elapsed(). !isRtpsReplyOk");
                     m_nFail++;

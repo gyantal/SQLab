@@ -429,9 +429,9 @@ namespace SqCommon
                 return contract;
                 //}
             }
-            catch (System.Exception ex)
+            catch
             {
-                Utils.Logger.Info(ex, "Cannot deserialize json " + p_str);
+                Utils.Logger.Info("LoadFromJSON(): Cannot deserialize json " + p_str);      // Not even a warning. It is quite expected that sometimes, Json serialization fails. The caller will handle rethrown exception.
                 throw;
             }
         }

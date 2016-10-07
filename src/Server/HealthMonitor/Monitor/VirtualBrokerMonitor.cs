@@ -73,6 +73,7 @@ namespace HealthMonitor
 
         public void CheckOKMessageArrived(DateTime p_utcStart, string p_triggeredTaskSchemaName) // p_triggeredTaskSchemaName = "UberVXX"
         {
+            Utils.Logger.Debug("HmVb.CheckOKMessageArrived() BEGIN");
             Tuple<DateTime, bool, string, string> expectedMessage = null;
             lock (m_VbReport)
             {
@@ -103,9 +104,11 @@ namespace HealthMonitor
 
             if (expectedMessage == null)    // Send email, make phonecall
             {
+                Utils.Logger.Debug("HmVb.CheckOKMessageArrived(): OK.");
                 InformSupervisors($"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} didn't arrive.", $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} did't arrive.", $"Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive. ... I repeat: Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
             } else
             {
+                Utils.Logger.Debug("HmVb.CheckOKMessageArrived(): Message missing.");
                 // do nothing. If it was an Error message, the Phonecall was already made when the Error message arrived
             }
         }

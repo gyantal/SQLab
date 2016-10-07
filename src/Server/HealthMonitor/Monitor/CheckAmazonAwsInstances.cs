@@ -144,6 +144,8 @@ namespace HealthMonitor
         {
             Utils.Logger.Info("CheckAmazonAwsInstances() BEGIN");
 
+            string senderStr = Convert.ToString(p_sender);      // This has the added benefit of returning an empty string (string.empty) if the object is null, to avoid any null reference exceptions (unless of course you want an exception thrown in such cases).
+
             try
             {
                 StringBuilder sbWarning = new StringBuilder();
@@ -216,7 +218,7 @@ namespace HealthMonitor
                     sbWarning.AppendLine("Exception: " + e.Message);
                 }
 
-
+                
                 bool isOK = (sbWarning.Length == 0);
                 if (!isOK)
                 {
@@ -250,6 +252,12 @@ namespace HealthMonitor
                         m_isCheckAmazonAwsInstancesEmailWasSent = false;
                     }
                 }
+
+                if (senderStr.Equals("ConsoleMenu"))
+                {
+                    Console.WriteLine($"SQ HealthMonitor: CheckAmazonAwsInstances was { (isOK ? "": "NOT ") }successfull.");
+                }
+
 
             }
             catch (Exception e) // if the Exception is while Sending email, then we cannot send email about it. User has to view the Log files.
