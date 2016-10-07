@@ -337,7 +337,7 @@ namespace VirtualBroker
         // Good news: Solution1 worked perfectly. After cancelMktData() and reqMktData() again, RUT index data started to come instantly, 
         // but at 8.a.m CET, only last,lastClose,High/Low prices were given (there was no USA market). So, it was really connected the second time.
         // However, when USA market opened, at 14:30, RUT lastPrice data poured in at every 5 seconds.
-        public void MktDataIsAliveTimer_Elapsed(object p_state)    // Timer is coming on o ThreadPool thread
+        public void MktDataIsAliveTimer_Elapsed(object p_state)    // Timer is coming on a ThreadPool thread
         {
             try
             {

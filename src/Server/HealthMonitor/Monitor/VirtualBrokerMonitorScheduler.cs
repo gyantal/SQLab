@@ -14,9 +14,9 @@ namespace HealthMonitor
         {
         }
 
-        public override void Timer_Elapsed(object state)    // Timer is coming on o ThreadPool thread
+        public override void Timer_Elapsed(object state)    // Timer is coming on a ThreadPool thread
         {
-            Utils.Logger.Info("Trigger.Timer_Elapsed() ");
+            Utils.Logger.Info("HmVbTrigger.Timer_Elapsed() 1");
             NextScheduleTimeUtc = null;
 
             bool isMarketTradingDay;
@@ -33,7 +33,7 @@ namespace HealthMonitor
 
             // Do something short in this Threadpool thread
             // Check that VBroker OK message arrived properly from the Expected Strategy. Different Tasks may take more time to execute
-            Utils.Logger.Info("HmVbTrigger.Timer_Elapsed()");
+            Utils.Logger.Info("HmVbTrigger.Timer_Elapsed() 2");
             if (TriggeredTaskSchema.Name == "UberVXX")
             {
                 Thread.Sleep(TimeSpan.FromMinutes(5));
@@ -48,7 +48,7 @@ namespace HealthMonitor
     //Periodically check that VirtualBroker is alive and ready(every 60 minutes, if no answer for second time, make phonecall). Skip this one. Reasons:
     //- not easy to implement.VBroker should be happy to get incoming Tcp messages
     //- that is unusual, and it means I have to play with security, allowing another IP to access the VBroker server. But when IPs change, that is a lot of hassle
-    //- currently, there are 2 extra simulation intraday. If VbServer is down, the simulation that is 30min before marketClose would be spotted by HealthMon.
+    //- currently, there are 2 extra simulations intraday. If VbServer is down, the simulation that is 30min before marketClose would be spotted by HealthMon.
     //- this feature can be mimicked: buy doing UberVXX task Simulation every hour.In that case VBrokerMonitorScheduler will notice that OK message didn't come in the last hour. 
     //- Sum: this feauture is not necessary, and takes time to implement.Don't do it now.
     public partial class HealthMonitor
@@ -56,7 +56,7 @@ namespace HealthMonitor
 
         internal void InitVbScheduler()
         {
-            Utils.Logger.Info("****Scheduler:Init()");
+            Utils.Logger.Info("VbScheduler:Init()");
             Task schedulerTask = Task.Factory.StartNew(VbSchedulerThreadRun, TaskCreationOptions.LongRunning);  // a separate thread. Not on ThreadPool
         }
 
@@ -72,21 +72,21 @@ namespace HealthMonitor
                 {
                     Name = "UberVXX"
                 };
-                uberVxxTaskSchema.Triggers.Add(new TriggerBase()
+                uberVxxTaskSchema.Triggers.Add(new HmVbTrigger()
                 {
                     TriggeredTaskSchema = uberVxxTaskSchema,
                     TriggerType = TriggerType.DailyOnUsaMarketDay,
                     StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
                     StartTimeOffset = TimeSpan.FromMinutes(20),
                 });
-                uberVxxTaskSchema.Triggers.Add(new TriggerBase()
+                uberVxxTaskSchema.Triggers.Add(new HmVbTrigger()
                 {
                     TriggeredTaskSchema = uberVxxTaskSchema,
                     TriggerType = TriggerType.DailyOnUsaMarketDay,
                     StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
                     StartTimeOffset = TimeSpan.FromMinutes(-31),
                 });
-                uberVxxTaskSchema.Triggers.Add(new TriggerBase()
+                uberVxxTaskSchema.Triggers.Add(new HmVbTrigger()
                 {
                     TriggeredTaskSchema = uberVxxTaskSchema,
                     TriggerType = TriggerType.DailyOnUsaMarketDay,
@@ -100,6 +100,7 @@ namespace HealthMonitor
                 // however, it may be a good idea that the Scheduler periodically wakes up and check Tasks
                 while (true)
                 {
+                    Utils.Logger.Info("VbSchedulerThreadRun() periodic");
                     bool isMarketTradingDay;
                     DateTime marketOpenTimeUtc, marketCloseTimeUtc;
                     bool isTradingHoursOK = Utils.DetermineUsaMarketTradingHours(DateTime.UtcNow, out isMarketTradingDay, out marketOpenTimeUtc, out marketCloseTimeUtc, TimeSpan.FromDays(3));

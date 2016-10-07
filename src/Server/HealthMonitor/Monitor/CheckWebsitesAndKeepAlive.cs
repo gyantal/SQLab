@@ -29,7 +29,7 @@ namespace HealthMonitor
 
         bool m_isCheckWebsitesServiceOutageEmailWasSent = false;  // to avoid sending the same warning email every 9 minutes; send only once
 
-        public void CheckWebsitesAndKeepAliveTimer_Elapsed(object p_sender) // Timer is coming on o ThreadPool thread
+        public void CheckWebsitesAndKeepAliveTimer_Elapsed(object p_sender) // Timer is coming on a ThreadPool thread
         {
             try
             {

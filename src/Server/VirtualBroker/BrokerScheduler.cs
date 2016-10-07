@@ -31,6 +31,7 @@ namespace VirtualBroker
                 {
                     bool isMarketTradingDay;
                     DateTime marketOpenTimeUtc, marketCloseTimeUtc;
+                    //  Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.
                     bool isTradingHoursOK = Utils.DetermineUsaMarketTradingHours(DateTime.UtcNow, out isMarketTradingDay, out marketOpenTimeUtc, out marketCloseTimeUtc, TimeSpan.FromDays(3));
                     if (!isTradingHoursOK)
                     {
@@ -52,6 +53,7 @@ namespace VirtualBroker
             }
             catch (Exception e)
             {
+                //  Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.
                 HealthMonitorMessage.SendException("BrokerScheduler.RecreateTasksAndLoop Thread", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
             }
         }

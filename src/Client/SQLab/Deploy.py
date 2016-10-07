@@ -1,4 +1,14 @@
-﻿import os        # listdir, isfile
+﻿# !!!!!!!!!!!!!     DO a FULL       BUILD ALL  before deploying to Linux
+# before deploying to Linux CHECK that app.module.js and other *.js files are created on Windows into wwwroot/app/* folders 
+# We usually delete these *.js files at GitHub commit, but Linux machine will not compile them, so precompile
+# the other option is to convince GitHub Commit to not offer these *.js files in the wwwroot folder
+# !!!!!!!!!!!!!     DO a FULL       BUILD ALL  before deploying to Linux
+# !!!!!!!!!!!!!     DO a FULL       BUILD ALL  before deploying to Linux
+# !!!!!!!!!!!!!     DO a FULL       BUILD ALL  before deploying to Linux
+# !!!!!!!!!!!!!     DO a FULL       BUILD ALL  before deploying to Linux
+
+
+import os        # listdir, isfile
 import paramiko  # for sftp
 import colorama  # for colourful print
 from stat import S_ISDIR

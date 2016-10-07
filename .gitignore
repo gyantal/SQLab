@@ -214,12 +214,18 @@ ModelManifest.xml
 #SQLab specific
 *.map
 /logs
-/src/Server/VirtualBroker/Properties/launchSettings.json
 /src/Client/SQLab/typings/globals
-/src/Client/SQLab/wwwroot/app/HealthMonitor/main.js
+/src/Client/SQLab/wwwroot/app/HealthMonitor/app.module.js
 /src/Client/SQLab/wwwroot/app/HealthMonitor/app.component.js
+/src/Client/SQLab/wwwroot/app/HealthMonitor/main.js
 /src/Client/SQLab/wwwroot/app/HealthMonitor/HMData.js
 /src/Client/SQLab/wwwroot/app/HealthMonitor/HMData.service.js
-/src/Client/SQLab/wwwroot/app/QuickTester/main.js
+/src/Client/SQLab/wwwroot/app/QuickTester/app.module.js
 /src/Client/SQLab/wwwroot/app/QuickTester/app.component.js
+/src/Client/SQLab/wwwroot/app/QuickTester/main.js
+/src/Client/SQLab/wwwroot/app/QuickTester/AdaptiveUberVxx.js
+/src/Client/SQLab/wwwroot/app/QuickTester/L-ETF-Discrepancy.js
+/src/Client/SQLab/wwwroot/app/QuickTester/TotM.js
+/src/Client/SQLab/wwwroot/app/QuickTester/Utils.js
+/src/Client/SQLab/wwwroot/app/QuickTester/VXX_SPY_Controversial.js
 

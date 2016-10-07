@@ -18,7 +18,7 @@ namespace HealthMonitor
         ConcurrentQueue<Tuple<DateTime, bool>> m_rtpsLastDownloads = new ConcurrentQueue<Tuple<DateTime, bool>>();
 
         // imagine how and when a human user would check that the service is still OK. He wouldn't check it on the weekends e.g.
-        private void RtpsTimer_Elapsed(object p_stateObj)   // Real Time Price Service, // Timer is coming on o ThreadPool thread
+        private void RtpsTimer_Elapsed(object p_stateObj)   // Real Time Price Service, // Timer is coming on a ThreadPool thread
         {
             try
             {

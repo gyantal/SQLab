@@ -41,11 +41,11 @@ namespace SqCommon
             Timer = new System.Threading.Timer(new TimerCallback(Timer_Elapsed), null, TimeSpan.FromMilliseconds(-1.0), TimeSpan.FromMilliseconds(-1.0));
         }
 
-        public virtual void Timer_Elapsed(object state)    // Timer is coming on o ThreadPool thread
+        public virtual void Timer_Elapsed(object state)    // Timer is coming on a ThreadPool thread
         {
             try
             {
-
+                Utils.Logger.Warn("TriggerBase.Timer_Elapsed(). You shouldn't be here. Timer_Elapsed() virtual method should be called in the derived class.");
             }
             catch (Exception e)
             {

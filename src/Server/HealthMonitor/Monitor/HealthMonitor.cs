@@ -178,7 +178,7 @@ namespace HealthMonitor
             }
         }
 
-        private void DailyMarketOpenTimer_Elapsed(object p_stateObj)   // this is called at 14:30 UTC every day; during that day DayLightSaving setting will not change, // Timer is coming on o ThreadPool thread
+        private void DailyMarketOpenTimer_Elapsed(object p_stateObj)   // this is called at 14:30 UTC every day; during that day DayLightSaving setting will not change, // Timer is coming on a ThreadPool thread
         {
             try
             {

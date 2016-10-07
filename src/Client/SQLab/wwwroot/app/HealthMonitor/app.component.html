@@ -5,6 +5,7 @@
 
 
     <h4>1. Main HealthMonitor App</h4>
+
     <span class="sqImportantError"> &nbsp; <span *ngIf="m_data" [class.sqImportantOK]="m_data.AppOk === 'OK'">{{m_data.AppOk}}</span></span><br />
     Response to FrontEnd:&nbsp; <span *ngIf="m_data">{{m_data.ResponseToFrontEnd}}</span> <br />
     Started on <span *ngIf="m_data">{{m_data.StartDate}} &nbsp;&nbsp; {{m_data.StartDateTimeSpanStr}} </span>
@@ -13,7 +14,6 @@
             Daily Email Report active: <span *ngIf="m_data"><input #chkDailyEmail type="checkbox" [checked]="m_data.DailyEmailReportEnabled" (change)="setControlValue('chkDailyEmail', chkDailyEmail.checked)" /></span>
         </label>
     </div>
-
 
     <h4>2. Realtime Price Service</h4>
     <span class="sqImportantError"> &nbsp; <span *ngIf="m_data" [class.sqImportantOK]="m_data.RtpsOk === 'OK'">{{m_data.RtpsOk}}</span></span>
@@ -25,13 +25,11 @@
     Timer frequency: every <span *ngIf="m_data">{{m_data.RtpsTimerFrequencyMinutes}} </span>minutes. Last checks:<br />
     <div class="lastChecksReportsDiv" *ngIf="m_data">
         <ul class="lastChecksReportsUl">
-            <li *ngFor="#rtps of m_data.RtpsDownloads">
+            <li *ngFor="let rtps of m_data.RtpsDownloads">
                 <span>{{rtps}}</span>
             </li>
         </ul>
     </div>
-
-
     <h4>3. VBroker 1.0</h4>
     <span class="sqImportantError"> &nbsp; <span *ngIf="m_data" [class.sqImportantOK]="m_data.VBrokerOk === 'OK'">{{m_data.VBrokerOk}}</span></span>
     <div>
@@ -42,7 +40,7 @@
     No timer for active polling. Last received messages:<br />
     <div class="lastChecksReportsDiv" *ngIf="m_data">
         <ul class="lastChecksReportsUl">
-            <li *ngFor="#report of m_data.VBrokerReports">
+            <li *ngFor="let report of m_data.VBrokerReports">
                 <span>{{report}}</span>
             </li>
         </ul>
@@ -57,7 +55,7 @@
         <strong>VBroker Detailed</strong><br />
         <div class="lastChecksDetailedReportsDiv" *ngIf="m_data">
             <ul class="lastChecksDetailedReportsUl">
-                <li *ngFor="#report of m_data.VBrokerDetailedReports">
+                <li *ngFor="let report of m_data.VBrokerDetailedReports">
                     <div [innerHTML]="report"></div>
                 </li>
             </ul>

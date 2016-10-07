@@ -91,7 +91,8 @@ namespace SqCommon
             }
             catch (Exception ex)
             {
-                Utils.Logger.Error(ex, "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage. Debug it in VS, recode and redeploy. Message:" + ex.Message);
+                //  Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.
+                Utils.Logger.Error(ex, "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage. Debug it in VS, recode and redeploy. Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.  Message:" + ex.Message);
                 throw ex;   // don't swallow this error in SqCommon.Utils, because VBroker.exe main app should know about it. This is a serious error. The caller should handle it.
             }
 

@@ -93,7 +93,7 @@ namespace Overmind
      
 
 
-        public void DailyMorningTimer_Elapsed(object p_sender) // Timer is coming on o ThreadPool thread
+        public void DailyMorningTimer_Elapsed(object p_sender) // Timer is coming on a ThreadPool thread
         {
             try
             {
@@ -151,7 +151,7 @@ namespace Overmind
             Utils.Logger.Info("DailyMorningTimer_Elapsed() END");
         }
 
-        public void DailyMiddayTimer_Elapsed(object p_sender) // Timer is coming on o ThreadPool thread
+        public void DailyMiddayTimer_Elapsed(object p_sender) // Timer is coming on a ThreadPool thread
         {
             Utils.Logger.Info("DailyMiddayTimer_Elapsed() BEGIN");
             Console.WriteLine(DateTime.UtcNow.ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture) + " : DailyMiddayTimer_Elapsed() BEGIN");

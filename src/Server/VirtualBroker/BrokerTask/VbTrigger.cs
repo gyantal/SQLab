@@ -15,7 +15,7 @@ namespace VirtualBroker
         {
         }
 
-        public override void Timer_Elapsed(object state)    // Timer is coming on o ThreadPool thread
+        public override void Timer_Elapsed(object state)    // Timer is coming on a ThreadPool thread
         {
             Utils.Logger.Info("Trigger.Timer_Elapsed() ");
             NextScheduleTimeUtc = null;
