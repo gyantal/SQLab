@@ -1,5 +1,5 @@
 ﻿import {Component, OnInit, AfterViewInit} from '@angular/core';
-import {Http,HTTP_PROVIDERS} from '@angular/http';
+import {Http} from '@angular/http';
 import {Observable} from 'rxjs/Observable';
 import {VXX_SPY_Controversial} from './VXX_SPY_Controversial'
 import {LEtfDistcrepancy, AngularInit_LEtfDistcrepancy} from './L-ETF-Discrepancy'
