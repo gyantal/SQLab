@@ -179,6 +179,8 @@ namespace SQLab
                     return false;
                 if (fullExceptionStr.IndexOf(@"Unrecognized HTTP version") != -1)
                     return false;
+                if (fullExceptionStr.IndexOf(@"Malformed request: invalid headers") != -1)
+                    return false;
                 if (fullExceptionStr.IndexOf(@"Malformed request: MethodIncomplete") != -1)
                     return false;
                 if (fullExceptionStr.IndexOf(@"Malformed request: TargetIncomplete") != -1)
