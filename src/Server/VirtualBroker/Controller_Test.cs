@@ -244,7 +244,9 @@ namespace VirtualBroker
 
             BrokerWrapperIb testImpl = new BrokerWrapperIb();
             EClientSocket client = testImpl.ClientSocket;
-            client.eConnect("127.0.0.1", 7496, 0, false);
+            
+            int portID = (int)GatewayUserPort.GyantalMain;      // the IBGateways ports on Release Linux and Developer Windows local should be the same.
+            client.eConnect("127.0.0.1", portID, 0, false);     // it uses connectionID=0, which may be not good. Real VBroker uses 41 and 42 userIDs.
 
             //Create a reader to consume messages from the TWS. The EReader will consume the incoming messages and put them in a queue
             var reader = new EReader(client, testImpl.Signal);
@@ -265,7 +267,7 @@ namespace VirtualBroker
             /*************************************************************************************************************************************************/
             while (testImpl.NextOrderId <= 0) { }
 
-
+            Console.WriteLine("Connection seems to be OK. Requesting Account Summary...");
 
             /*** Requesting managed accounts***/
             client.reqManagedAccts();

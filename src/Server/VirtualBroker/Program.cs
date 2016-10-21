@@ -122,7 +122,7 @@ namespace VirtualBroker
             
             Utils.ConsoleWriteLine(ConsoleColor.Magenta, "------- VirtualBroker (type and press Enter) ------- ");
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes");
-            Console.WriteLine("2. Test IbGateway Connection");
+            Console.WriteLine($"2. Test IbGateway Connection on port={(int)GatewayUserPort.GyantalMain} (Gyantal user) with clientID=0");
             Console.WriteLine("3. Test HealthMonitor by sending ErrorFromVirtualBroker");
             Console.WriteLine("4. Test Realtime price service");
             Console.WriteLine("5. Test Encog");

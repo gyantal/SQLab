@@ -59,8 +59,8 @@ namespace VirtualBroker
                 Gateway gateway1, gateway2;
                 if (!Controller.IsRunningAsLocalDevelopment())
                 {
-                    gateway1 = new Gateway(GatewayUser.GyantalMain) { VbAccountsList = "U407941", SocketPort = 7301, BrokerConnectionClientID = 41};
-                    gateway2 = new Gateway(GatewayUser.CharmatSecondary) { VbAccountsList = "U988767", SocketPort = 7303, BrokerConnectionClientID = 42};
+                    gateway1 = new Gateway(GatewayUser.GyantalMain) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41};
+                    gateway2 = new Gateway(GatewayUser.CharmatSecondary) { VbAccountsList = "U988767", SocketPort = (int)GatewayUserPort.CharmatSecondary, BrokerConnectionClientID = 42};
                     //Gateway gateway2 = new Gateway() { GatewayUser = GatewayUser.CharmatWifeMain, VbAccountsList = "U1034066", SocketPort = 7302 };
                     m_mainGatewayUser = GatewayUser.CharmatSecondary;
                 }
