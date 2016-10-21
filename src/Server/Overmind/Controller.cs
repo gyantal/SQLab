@@ -127,19 +127,19 @@ namespace Overmind
                     new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: send holidays, bank report to accountant", Body = "Send holidays, bank report to accountant. In 3 days, it is the 1st day of the month. ", IsBodyHtml = false }.Send();
                 }
 
-                double? price = GetAmazonProductPrice("https://www.amazon.co.uk/Electronics-Sennheiser-Professional-blocking-gaming-headset-Black/dp/B00JQDOANK/");
-                if (price == null || price <= 150.0)
-                {
-                    new Email
-                    {
-                        ToAddresses = Utils.Configuration["EmailGyantal"],
-                        Subject = "OvermindServer: Amazon price warning.",
-                        Body = (price == null) ?
-                            $"GetAmazonProductPrice() couldn't obtain current price. Check log file.":
-                            $"Time to buy Sennheiser GAME ZERO now. Amazon price dropped from 199.99 to {price}. Go to https://www.amazon.co.uk/Electronics-Sennheiser-Professional-blocking-gaming-headset-Black/dp/B00JQDOANK/ and buy headset now. See '2016-05, Sennheiser buying.txt'.",
-                        IsBodyHtml = false
-                    }.Send();
-                }
+                //double? price = GetAmazonProductPrice("https://www.amazon.co.uk/Electronics-Sennheiser-Professional-blocking-gaming-headset-Black/dp/B00JQDOANK/");
+                //if (price == null || price <= 150.0)
+                //{
+                //    new Email
+                //    {
+                //        ToAddresses = Utils.Configuration["EmailGyantal"],
+                //        Subject = "OvermindServer: Amazon price warning.",
+                //        Body = (price == null) ?
+                //            $"GetAmazonProductPrice() couldn't obtain current price. Check log file.":
+                //            $"Time to buy Sennheiser GAME ZERO now. Amazon price dropped from 199.99 to {price}. Go to https://www.amazon.co.uk/Electronics-Sennheiser-Professional-blocking-gaming-headset-Black/dp/B00JQDOANK/ and buy headset now. See '2016-05, Sennheiser buying.txt'.",
+                //        IsBodyHtml = false
+                //    }.Send();
+                //}
 
             }
             catch (Exception e)

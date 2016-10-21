@@ -236,16 +236,13 @@ namespace VirtualBroker
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
-
             if (errorCode == 506)
             {
-                if (id == 42)
-                {
-                    // sometimes it happens at connection. skip this error. IF Connection doesn't happen after trying it 3 times. VBGateway will notify HealthMonitor anyway.
-                    // Once per month, this error happens, so the first connection fails, but the next connection goes perfectly through.
-                    // ErrId: 42, ErrCode: 506, Msg: Unsupported version
-                    return; // skip processing the error further. Don't send it to HealthMonitor.
-                }
+                // sometimes it happens at connection. skip this error. IF Connection doesn't happen after trying it 3 times. VBGateway will notify HealthMonitor anyway.
+                // Once per month, this error happens, so the first connection fails, but the next connection goes perfectly through.
+                // ErrId: 42=the ClientID, ErrCode: 506, Msg: Unsupported version
+                // id == 41, or 42, which is the BrokerConnectionClientID
+                return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
 
