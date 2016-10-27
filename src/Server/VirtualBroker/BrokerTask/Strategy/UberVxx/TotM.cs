@@ -87,7 +87,15 @@ namespace VirtualBroker
 
             double? forecast = null;
             SampleStats statsToUse;
-            // bacause TotM (18%) + TotMM (32%): 50%, give ToMM priority.  (see 'Table 16: Performance indicators of Sub-strategies using VXX'  https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit)
+            // TotMidM should have the preference over TotM, because
+            // Reason1:  TotM (18%) + TotMM (32%): 50%, give ToMM priority.  (see 'Table 16: Performance indicators of Sub-strategies using VXX'  https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit)
+            // Reason2: 2016-10-24: TotMM+6 and TotM-6 happened at the same time.
+            //VBroker did choose: TotMidM+6, which was neutral, while TotM-6 would have been market bearish.
+            //So, TotMidM had the preference over TotM. Is it good? Nobody knows. Quite random.
+            //In this instance, TotMidM was better, because next day was very bullish. However,
+            //thin only sample is no reason for keeping that. TotM sounds more logical that TotMidM,
+            //but it is also true that more quants follow TotM, so the TotMidM is less crowded trade.
+            //So, keep these TotMidM preference for a while.
             if (nextDayMinOffsetInd == nextDayTotMidMForwardInd)
             {
                 statsToUse = regimeToUse.TotMidMForward[nextDayTotMidMForwardInd - 1];  // convert ind to zero based
