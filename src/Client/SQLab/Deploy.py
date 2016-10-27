@@ -15,12 +15,12 @@ from stat import S_ISDIR
 from colorama import Fore, Back, Style
 
 # Parameters to change:
-rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
+rootLocalDir = "d:\GitHub/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
 rootRemoteDir = "/home/ubuntu/SQ/Client/SQLab/src"
 acceptedSubTreeRoots = ["Client\\SQLab", "SQLab.Common", "SQLab.DbCommon"]        # everything under these relPaths is traversed: files or folders too
 
 serverHost = "ec2-23-20-243-199.compute-1.amazonaws.com"         # Dev server
-serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"  # Dev server
+serverRsaKeyFile = "d:\SVN\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"  # Dev server
 #serverHost = "ec2-54-209-86-129.compute-1.amazonaws.com"         # live VBroker server
 #serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerAgentKeyPairName.pem"  # live VBroker server
 serverPort = 22

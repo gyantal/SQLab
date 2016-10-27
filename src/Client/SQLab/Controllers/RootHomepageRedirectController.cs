@@ -25,6 +25,7 @@ namespace SQLab.Controllers
     [Route("~/VXXAdaptiveConnorLiveBacktest", Name = "VXXAdaptiveConnorLiveBacktest")]
     [Route("~/HealthMonitor", Name = "HealthMonitor")]
     [Route("~/QuickTester", Name = "QuickTester")]
+    [Route("~/WithdrawalSimulator", Name = "WithdrawalSimulator")]
 #if !DEBUG
     [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
 #endif
@@ -54,7 +55,7 @@ namespace SQLab.Controllers
 #endif
             string wwwRootPath = (Utils.RunningPlatform() == Platform.Linux) ?
                         $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/" :
-                        @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\";
+                        @"d:\GitHub\SQLab\src\Client\SQLab\noPublishTo_wwwroot\";
             string fileName = String.Empty;
             switch (urlPath)
             {
@@ -76,13 +77,16 @@ namespace SQLab.Controllers
                 case "/quicktester":
                     fileName = "QuickTester.html";
                     break;
+                case "/withdrawalsimulator":
+                    fileName = "WithdrawalSimulator.html";
+                    break;
                 default:
 #if DEBUG   // for the Index page, give Dashboard according to DEBUG or RELEASE
                     if (urlPath.EndsWith(".ts"))    // urlPath	"/app/quicktester/app.component.ts"
                     {
                         wwwRootPath = (Utils.RunningPlatform() == Platform.Linux) ?
                             $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/" :
-                            @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\";
+                            @"d:\GitHub\SQLab\src\Client\SQLab\";
                         fileName = urlPath.Substring(1); // remove first char '/'
                     } else
                     {

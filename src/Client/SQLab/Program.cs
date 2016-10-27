@@ -28,7 +28,7 @@ namespace SQLab
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
             
             // After Configuring logging, set-up other things
-            Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json", "/home/ubuntu/SQ/Client/SQLab/SQLab.Client.SQLab.NoGitHub.json");
+            Utils.Configuration = Utils.InitConfigurationAndInitUtils("h:/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json", "/home/ubuntu/SQ/Client/SQLab/SQLab.Client.SQLab.NoGitHub.json");
             Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
             HealthMonitorMessage.InitGlobals(ServerIp.HealthMonitorPublicIp, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
             StrongAssert.g_strongAssertEvent += StrongAssertMessageSendingEventHandler;
@@ -113,7 +113,7 @@ namespace SQLab
 
             string fullPath = (Utils.RunningPlatform() == Platform.Linux) ?
                     "/home/ubuntu/SQ/Client/SQLab/snifferquant.net.pfx" :
-                    @"g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx";
+                    @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx";
 
             using (var certificateStream = System.IO.File.OpenRead(fullPath))
             {

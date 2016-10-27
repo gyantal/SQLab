@@ -1,0 +1,385 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Systemic Withdrawal Simulator v0.2</title>
+
+    <link rel="stylesheet" type="text/css" href="/css/WithdrawalSimulator.css">
+    <script src="/js/lbMathTools.js"></script>
+
+
+    <script>
+        //window.alert("Hello" + 5);
+
+        console.log("Header");
+    </script>
+</head>
+<body>
+    <h1>Systemic Withdrawal Simulator v0.2</h1>
+
+    <h2>INPUTS</h2>
+    <table>
+        <tr>
+            <td>Length of simulation in years:</td>
+            <td><input id="idSimLength" type="text" size="3" maxlength="2" value="10"></td>
+        </tr>
+        <tr>
+            <td>CAGR of the investment:</td>
+            <td><input id="idCAGR" type="text" size="3" maxlength="3" value="30"> %</td>
+        <tr>
+            <td>StdDev annualized:<br></td>
+            <td><input id="idStdDev" type="text" size="3" maxlength="2" value="20"> %</td>
+        <tr>
+            <td>Number of simulations:<br></td>
+            <td><input id="idnSimulations" type="text" size="3" maxlength="5" value="2"></td>
+        </tr>
+    </table>
+    <br>
+    <table>
+        <tr>
+            <td>Initial deposit $:</td>
+            <td><input id="idIniDep" type="text" size="3" maxlength="6" value="100000"> $</td>
+        </tr>
+        <tr>
+            <td>Additional deposit frequency in months:</td>
+            <td><input id="idAddDepFreq" type="text" size="3" maxlength="2" value="12"></td>
+        </tr>
+        <tr>
+            <td>Additional deposit $:</td>
+            <td><input id="idAddDepVal" type="text" size="3" maxlength="6" value=""></td>
+        </tr>
+        <tr>
+            <td>Additional deposit end month:</td>
+            <td><input id="idAddDepEnd" type="text" size="3" maxlength="3" value=""></td>
+        </tr>
+    </table>
+
+    <br>
+
+    <table>
+        <tr>
+            <td>Withdrawal start month:</td>
+            <td><input id="idWithDrawStart" type="text" size="3" maxlength="2" value="12"></td>
+        </tr>
+        <tr>
+            <td> Withdrawal frequency in months:</td>
+            <td><input id="idWithDrawFreq" type="text" size="3" maxlength="2" value="12"></td>
+        </tr>
+        <tr>
+            <td>Withdrawal %:</td>
+            <td><input id="idWithDrawPerc" type="text" size="3" maxlength="2" value="10"> %</td>
+        </tr>
+    </table>
+
+    <button onclick="simulationDriverFunction()">Simulate</button>
+
+    <span id="idUserError"></span>
+
+    <br>
+    <h2>OUTPUTS</h2>
+    <table>
+        <tr>
+            <td><b>Total deposit: </b></td>
+            <td><span id="idTotalDeposit"></span>  </td>
+        </tr>
+        <tr><td><br></td></tr>
+        <tr>
+            <td width="40%"><b>Strategy without withdrawal</b></td>
+            <td width="20%" align="center"><i>Average</i></tdwidth="40%">
+            <td width="20%" align="center"><i>Median</i></td>
+            <td width="20%" align="center"><i>Random Example</i></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Total $:</td>
+            <td><span id="idTotalDollAvgWoWith"></span></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Total %:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;CAGR:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Sharpe:</td>
+            <td></td>
+        </tr>
+        <tr><td><br></td></tr>
+        <tr>
+            <td width="40%"><b>Strategy with withdrawal</b></td>
+            <td width="20%" align="center"><i>Average</i></td>
+            <td width="20%" align="center"><i>Median</i></td>
+            <td width="20%" align="center"><i>Random Example</i></td>
+        </tr>
+        <tr><td></td></tr>
+        <tr>
+            <td>&emsp;&emsp;<u>Withdrawed</u></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Total $:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Total %:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;CAGR:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Sharpe:</td>
+            <td></td>
+        </tr>
+        <tr><td></td></tr>
+        <tr>
+            <td>&emsp;&emsp;<u>Still invested</u></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Total $:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Total %:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;CAGR:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Sharpe:</td>
+            <td></td>
+        </tr>
+        <tr><td></td></tr>
+        <tr>
+            <td>&emsp;&emsp;<u>Total</u></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Total $:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Total %:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;CAGR:</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>&emsp;&emsp;&emsp;&emsp;Sharpe:</td>
+            <td></td>
+        </tr>
+    </table>
+
+
+    <!-- TODO: MaxDD -->
+    <hr>
+    <span id="idDeveloperInfo"></span>
+
+    <script>
+        function simulationDriverFunction() {
+            console.log("simulationDriverFunction() BEGIN");
+
+            var simLengthHtmlElement = document.getElementById("idSimLength");
+            var simLength = Number(simLengthHtmlElement.value);
+            if (simLength > 50) {
+                simLength = 50;
+                idSimLength.value = 50;
+            }
+
+            var cagr = Number(document.getElementById("idCAGR").value);
+            var stdDev = Number(document.getElementById("idStdDev").value);
+            var nSimulations = Number(document.getElementById("idnSimulations").value);
+            var iniDep = Number(document.getElementById("idIniDep").value);
+            var addDepFreq = Number(document.getElementById("idAddDepFreq").value);
+            var addDepVal = Number(document.getElementById("idAddDepVal").value);
+            var addDepEnd = document.getElementById("idAddDepEnd").value ? Number(document.getElementById("idAddDepEnd").value) : simLength * 12;
+            var withDrawStart = Number(document.getElementById("idWithDrawStart").value);
+            var withDrawFreq = Number(document.getElementById("idWithDrawFreq").value);
+            var withDrawPerc = Number(document.getElementById("idWithDrawPerc").value);
+
+
+            var userErrorHtmlElement = document.getElementById("idUserError");
+            var isError = (withDrawPerc < 0 || withDrawFreq % 1 !== 0 || withDrawFreq < 0 || withDrawStart > simLength * 12 || withDrawStart % 1 !== 0 || withDrawStart < 0 || addDepEnd > simLength * 12 || addDepEnd % 1 !== 0 || addDepEnd < 0 || addDepVal < 0 || addDepFreq % 1 !== 0 || addDepFreq < 0 || iniDep < 0 || stdDev <= 0 || nSimulations < 1 || nSimulations % 1 !== 0 || simLength % 1 !== 0 || isNaN(simLength) || isNaN(cagr) || isNaN(stdDev) || isNaN(nSimulations) || isNaN(iniDep) || isNaN(addDepFreq) || isNaN(addDepVal) || isNaN(addDepEnd) || isNaN(withDrawStart) || isNaN(withDrawFreq) || isNaN(withDrawPerc)) ? true : false;
+            if (isError != false) {
+                userErrorHtmlElement.innerText = "ERROR in inputs";
+                userErrorHtmlElement.style.color = "red";
+                //return;
+                //window.alert("Hello" + 5);
+            } else {
+                userErrorHtmlElement.innerText = "";
+                userErrorHtmlElement.style.color = "black";
+
+                console.log("simulationDriverFunction() inputs OK.");
+
+                simulateFunction(simLength, cagr, stdDev, nSimulations, iniDep, addDepFreq, addDepVal, addDepEnd, withDrawStart, withDrawFreq, withDrawPerc);
+            }
+
+
+            console.log("simulateFunction() END");
+        }
+
+        
+
+
+        function simulateFunction(simLength, cagr, stdDev, nSimulations, iniDep, addDepFreq, addDepVal, addDepEnd, withDrawStart, withDrawFreq, withDrawPerc) {
+            console.log("simulateFunction() BEGIN");
+
+            //  TODO: calculate
+            var totalDeposit = iniDep + Math.floor(addDepEnd / addDepFreq) * addDepVal;
+
+            var developerInfo = "bla: ";
+
+            // TODO: write into developer Info
+
+            
+
+
+            // make a standard gaussian variable.
+            var standard = gaussian(cagr / 100 / 252, stdDev / 100 / Math.sqrt(252));
+
+
+            var nDays = simLength * 252;
+
+            var dailyRets = new Array(nSimulations);
+            for (var i = 0; i < dailyRets.length; i++) {
+
+                var dailyRet = new Array(nDays);
+                for (var j = 0; j < dailyRet.length; j++) {
+                    dailyRet[j] = standard();
+                }
+
+                dailyRets[i] = dailyRet;
+            }
+            console.log(dailyRets);
+
+            var dailyPrices = new Array(nSimulations);
+            for (var i = 0; i < dailyPrices.length; i++) {
+
+                var dailyPrice = new Array(nDays);
+                dailyPrice[0] = 1 + dailyRets[i][0];
+                for (var j = 1; j < dailyPrice.length; j++) {
+                    dailyPrice[j] = dailyPrice[j - 1] * (1 + dailyRets[i][j]);
+                }
+
+                dailyPrices[i] = dailyPrice;
+            }
+            console.log(dailyPrices);
+
+            var dailyAddDep = new Array(nDays);
+            for (var i = 0; i < dailyAddDep.length; i++) {
+                if (i < addDepEnd * 21 && i % (21 * addDepFreq) == (21 * addDepFreq - 1)) {
+                    dailyAddDep[i] = addDepVal;
+                }
+                else {
+                    dailyAddDep[i] = 0;
+                }
+            }
+
+            console.log(dailyAddDep);
+
+           
+            var dailyWithDraw = new Array(nDays);
+            for (var i = 0; i < dailyWithDraw.length; i++) {
+                if (i >= (withDrawStart*21-1) && i % (21 * withDrawFreq) == (21 * withDrawFreq - 1)) {
+                    dailyWithDraw[i] = withDrawPerc/100;
+                }
+                else {
+                    dailyWithDraw[i] = 0;
+                }
+            }
+
+            console.log(dailyWithDraw);
+
+            var dailyNoShs = new Array(nSimulations);
+            var dailyWithPVs = new Array(nSimulations);
+            for (var i = 0; i < dailyNoShs.length; i++) {
+
+                var dailyNoSh = new Array(nDays);
+                var dailyWithPV = new Array(nDays);
+                dailyNoSh[0] = iniDep;
+                dailyWithPV[0] = 0;
+                for (var j = 1; j < dailyNoSh.length; j++) {
+                    dailyNoSh[j] = dailyNoSh[j - 1] + dailyAddDep[j] / dailyPrices[i][j] - dailyNoSh[j - 1] * dailyWithDraw[j];
+                    dailyWithPV[j] = dailyWithPV[j - 1] + dailyNoSh[j - 1] * dailyWithDraw[j] * dailyPrices[i][j];
+                }
+
+                dailyNoShs[i] = dailyNoSh;
+                dailyWithPVs[i] = dailyWithPV;
+            }
+            console.log(dailyNoShs);
+            console.log(dailyWithPVs);
+
+            var dailyNoShsBH = new Array(nSimulations);
+            for (var i = 0; i < dailyNoShsBH.length; i++) {
+
+                var dailyNoShBH = new Array(nDays);
+                dailyNoShBH[0] = iniDep;
+                for (var j = 1; j < dailyNoShBH.length; j++) {
+                    dailyNoShBH[j] = dailyNoShBH[j - 1] + dailyAddDep[j] / dailyPrices[i][j];
+                }
+
+                dailyNoShsBH[i] = dailyNoShBH;
+            }
+            console.log(dailyNoShsBH);
+
+            var dailyPVs = new Array(nSimulations);
+            for (var i = 0; i < dailyPVs.length; i++) {
+
+                var dailyPV = new Array(nDays);
+                for (var j = 0; j < dailyPV.length; j++) {
+                    dailyPV[j] = dailyNoShs[i][j]*dailyPrices[i][j];
+                }
+
+                dailyPVs[i] = dailyPV;
+            }
+            console.log(dailyPVs);
+
+            var dailyPVsBH = new Array(nSimulations);
+            for (var i = 0; i < dailyPVsBH.length; i++) {
+
+                var dailyPVBH = new Array(nDays);
+                for (var j = 0; j < dailyPVBH.length; j++) {
+                    dailyPVBH[j] = dailyNoShsBH[i][j] * dailyPrices[i][j];
+                }
+
+                dailyPVsBH[i] = dailyPVBH;
+            }
+            console.log(dailyPVsBH);
+
+            var proba = [2, 3, 4];
+            var averagePVWoWith = average(proba);
+
+            // Write the output
+            //for (var i = 0; i < dailyRet.length; i++) {
+            //    developerInfo += dailyRet[i] + ",";
+            //}
+
+            writeOutput(totalDeposit, developerInfo, averagePVWoWith);
+            console.log("simulateFunction() END");
+        }
+
+        function writeOutput(totalDeposit, developerInfo,averagePVWoWith) {
+            var totalDepositHtmlElement = document.getElementById("idTotalDeposit");
+            totalDepositHtmlElement.innerText = totalDeposit + " $";
+            var totalDollAvgWoWith = document.getElementById("idTotalDollAvgWoWith");
+            idTotalDollAvgWoWith.innerText = averagePVWoWith;
+            var developerInfoHtmlElement = document.getElementById("idDeveloperInfo");
+            developerInfoHtmlElement.innerText = developerInfo;
+        }
+
+        console.log("Body is running...");
+
+        //document.write("Document");
+    </script>
+</body>
+</html>
