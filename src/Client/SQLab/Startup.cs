@@ -91,7 +91,7 @@ namespace SQLab
             fileServerOptions.FileProvider = new PhysicalFileProvider(
                 (Utils.RunningPlatform() == SqCommon.Platform.Linux) ?
                             "/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/node_modules" :
-                            @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\node_modules"
+                            @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\node_modules"       // not good here
                 //Path.Combine(appEnv.ApplicationBasePath, "node_modules")
             );
 
