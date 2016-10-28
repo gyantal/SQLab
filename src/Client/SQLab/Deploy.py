@@ -13,11 +13,10 @@ import paramiko  # for sftp
 import colorama  # for colourful print
 from stat import S_ISDIR
 from colorama import Fore, Back, Style
-
-deploymentUser = 'AGy';     # 'Agy' or "LB"
+import platform
 
 # Parameters to change:
-if deploymentUser == 'AGy':
+if runningEnvironmentComputerName == 'gyantal-PC':
     rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
     serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"  # Dev server
 else:
