@@ -53,9 +53,7 @@ namespace SQLab.Controllers
             if (String.IsNullOrWhiteSpace(urlPath) || urlPath == "/")
                 urlPath = "/userdashboard";
 #endif
-            string wwwRootPath = (Utils.RunningPlatform() == Platform.Linux) ?
-                        $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/" :
-                        @"d:\GitHub\SQLab\src\Client\SQLab\noPublishTo_wwwroot\";
+            string wwwRootPath = Program.RunningEnvStr(RunningEnvStrType.DontPublishToPublicWwwroot);                
             string fileName = String.Empty;
             switch (urlPath)
             {
@@ -84,9 +82,7 @@ namespace SQLab.Controllers
 #if DEBUG   // for the Index page, give Dashboard according to DEBUG or RELEASE
                     if (urlPath.EndsWith(".ts"))    // urlPath	"/app/quicktester/app.component.ts"
                     {
-                        wwwRootPath = (Utils.RunningPlatform() == Platform.Linux) ?
-                            $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/" :
-                            @"d:\GitHub\SQLab\src\Client\SQLab\";
+                        wwwRootPath = Program.RunningEnvStr(RunningEnvStrType.SQLabFolder);
                         fileName = urlPath.Substring(1); // remove first char '/'
                     } else
                     {

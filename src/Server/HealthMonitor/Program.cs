@@ -34,7 +34,7 @@ namespace HealthMonitor
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
 
-            Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.HealthMonitor.NoGitHub.json", "/home/ubuntu/SQ/Server/HealthMonitor/SQLab.HealthMonitor.NoGitHub.json");
+            Utils.Configuration = Utils.InitConfigurationAndInitUtils((Utils.RunningPlatform() == Platform.Windows) ? "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.HealthMonitor.NoGitHub.json" : "/home/ubuntu/SQ/Server/HealthMonitor/SQLab.HealthMonitor.NoGitHub.json");
             Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
             StrongAssert.g_strongAssertEvent += StrongAssertEmailSendingEventHandler;
 
