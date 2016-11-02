@@ -309,7 +309,9 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
 
-        // check for data integrity: SRS (bearish one) doesn't have data for 2014-12-01, but URE has. What to do on that day: stop doing anything after that day and write a message to user that bad data. EndDate was modified.
+        //check for data integrity: 
+        // - SRS (bearish one) doesn't have data for 2014-12-01, but URE has. What to do on that day: stop doing anything after that day and write a message to user that bad data. EndDate was modified.
+        // FAS-FAZ: "Missing Days. Days of Data don't match in the quotes. Next date would be '2009-02-06 12:00:00 AM', but next date of ticker 'FAS' is '2009-02-10 12:00:00 AM'. Backtest goes only until this day."
         public static List<DailyData> DetermineBacktestPeriodCheckDataCorrectness(List<DailyData> p_quotes, ref string p_noteToUserCheckData)
         {
             List<DailyData> pv = new List<DailyData>(p_quotes.Count());    // suggest maxSize, but it still contains 0 items
@@ -329,25 +331,17 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     pv.Add(new DailyData() { Date = p_quotes[quotesInd].Date, ClosePrice = p_quotes[quotesInd].ClosePrice });
                     quotesInd++;
                 }
-                //else
-                //{
-                //    p_noteToUserCheckData = "Bad data or Missing Days, Days of Data don't match in the quotes around " + p_quotes[quotesInd].Date.ToString() + " Backtest goes only until that day.";
-                //    // check for data integrity: SRS (bearish one) doesn't have data for 2014-12-01, but URE has
-                //    break;
-                //}
-
             }
 
             return pv;
         }
 
 
-        // check for data integrity: SRS (bearish one) doesn't have data for 2014-12-01, but URE has. What to do on that day: stop doing anything after that day and write a message to user that bad data. EndDate was modified.
-        public static List<DailyData> DetermineBacktestPeriodCheckDataCorrectness(List<DailyData> p_quotes1, List<DailyData> p_quotes2, ref string p_noteToUserCheckData)
+        public static List<DailyData> DetermineBacktestPeriodCheckDataCorrectness(List<DailyData> p_quotes1, List<DailyData> p_quotes2, string p_ticker1, string p_ticker2, ref string p_noteToUserCheckData)
         {
             List<DailyData> pv = new List<DailyData>(p_quotes1.Count());    // suggest maxSize, but it still contains 0 items
 
-            DateTime pvStartDate = p_quotes1[0].Date;   // find the minimum of the startDates
+            DateTime pvStartDate = p_quotes1[0].Date;   // find the maximum of the startDates; that is a shared startDate
             if (p_quotes2[0].Date > pvStartDate)
             {
                 pvStartDate = p_quotes2[0].Date;
@@ -357,21 +351,29 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             DateTime pvEndDate = pvStartDate;
             // Start to march and if there is a missing day in any of the ETFs, stop marching further
-            int bullishQuotesInd = p_quotes1.FindIndex(r => r.Date >= pvStartDate);
-            int bearishQuotesInd = p_quotes2.FindIndex(r => r.Date >= pvStartDate);
+            int quotes1Ind = p_quotes1.FindIndex(r => r.Date >= pvStartDate);
+            int quotes2Ind = p_quotes2.FindIndex(r => r.Date >= pvStartDate);
 
-            while (bullishQuotesInd < p_quotes1.Count() && bearishQuotesInd < p_quotes2.Count())
+            while (quotes1Ind < p_quotes1.Count() && quotes2Ind < p_quotes2.Count())
             {
-                if (p_quotes1[bullishQuotesInd].Date == p_quotes2[bearishQuotesInd].Date)
+                if (p_quotes1[quotes1Ind].Date == p_quotes2[quotes2Ind].Date)
                 {
-                    pv.Add(new DailyData() { Date = p_quotes1[bullishQuotesInd].Date, ClosePrice = p_quotes1[bullishQuotesInd].ClosePrice });
-                    bullishQuotesInd++;
-                    bearishQuotesInd++;
+                    pv.Add(new DailyData() { Date = p_quotes1[quotes1Ind].Date, ClosePrice = p_quotes1[quotes1Ind].ClosePrice });
+                    quotes1Ind++;
+                    quotes2Ind++;
                 }
                 else
                 {
-                    p_noteToUserCheckData = "Missing Days, Days of Data don't match in the quotes around " + p_quotes1[bullishQuotesInd].Date.ToString() + " and " + p_quotes2[bearishQuotesInd].Date.ToString() + " Backtest goes only until that day.";
-                    // check for data integrity: SRS (bearish one) doesn't have data for 2014-12-01, but URE has
+                    DateTime minDate = p_quotes1[quotes1Ind].Date;
+                    DateTime wrongDate = p_quotes2[quotes2Ind].Date;
+                    string badTicker = p_ticker2;
+                    if (p_quotes2[quotes2Ind].Date < minDate)
+                    {
+                        minDate = p_quotes2[quotes2Ind].Date;
+                        wrongDate = p_quotes1[quotes1Ind].Date;
+                        badTicker = p_ticker1;
+                    }
+                    p_noteToUserCheckData = $"Missing Days. Days of Data don't match in the quotes. Next date would be  '{minDate.ToString()}', but next date of ticker '{p_ticker1}' is '{wrongDate.ToString()}'. Backtest goes only until this day.";
                     break;
                 }
 

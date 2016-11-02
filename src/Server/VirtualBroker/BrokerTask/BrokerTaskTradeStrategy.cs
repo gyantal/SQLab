@@ -287,7 +287,7 @@ namespace VirtualBroker
                 var transaction = transactions[i];
                 Utils.Logger.Info($"Placing Order {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
                 Contract contract = new Contract() { Symbol = Strategy.StockIdToTicker(transaction.SubTableID), SecType = "STK", Currency = "USD", Exchange = "SMART" };
-                transaction.VirtualOrderId = Controller.g_gatewaysWatcher.PlaceOrder(p_portfolio.IbGatewayUserToTrade, contract, transaction.TransactionType, transaction.Volume, orderExecution, orderTif, null, null, isSimulatedTrades, p_detailedReportSb);
+                transaction.VirtualOrderId = Controller.g_gatewaysWatcher.PlaceOrder(p_portfolio.IbGatewayUserToTrade, p_portfolio.MaxTradeValueInCurrency, p_portfolio.MinTradeValueInCurrency, contract, transaction.TransactionType, transaction.Volume, orderExecution, orderTif, null, null, isSimulatedTrades, p_detailedReportSb);
             } // don't do anything here. Return, so other portfolio PlaceOrder()-s can be executed too.
         }
 
