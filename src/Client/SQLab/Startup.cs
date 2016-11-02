@@ -88,12 +88,7 @@ namespace SQLab
             // Configure the options to deploy
             var fileServerOptions = new FileServerOptions();
             // Add the physical path to the node_modules folder
-            fileServerOptions.FileProvider = new PhysicalFileProvider(
-                (Utils.RunningPlatform() == SqCommon.Platform.Linux) ?
-                            "/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/node_modules" :
-                            @"d:\GitHub\SQLab\src\Client\SQLab\node_modules"       // not good here
-                                                                                   //Path.Combine(appEnv.ApplicationBasePath, "node_modules")
-            );
+            fileServerOptions.FileProvider = new PhysicalFileProvider(Program.RunningEnvStr(RunningEnvStrType.SQLabFolder) + "node_modules");
 
             // Add the request path
             // (http://docs.asp.net/en/latest/...

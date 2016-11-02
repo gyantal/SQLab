@@ -18,6 +18,15 @@ namespace SqCommon
         Mac
     }
 
+    public enum RunningEnvironment
+    {
+        Unknown,
+        LinuxServer,
+        WindowsAGy,
+        WindowsBL_desktop,
+        WindowsBL_laptop,
+    }
+
     public interface IConfigurationSection : IConfiguration
     {
         string Key { get; }
@@ -124,6 +133,39 @@ namespace SqCommon
                 default:
                     throw new Exception("RunningPlatform() not recognized");
             }
+        }
+
+        private static RunningEnvironment RunningEnvironment = RunningEnvironment.Unknown;
+        public static RunningEnvironment RunningEnv()
+        {
+            if (RunningEnvironment != RunningEnvironment.Unknown)
+                return RunningEnvironment;
+
+            switch (Environment.NewLine)        // only do this 'observation' Once, so it doesn't take too much time.
+            {
+                case "\n":
+                    RunningEnvironment = RunningEnvironment.LinuxServer;
+                    break;
+                case "\r\n":    // this is Windows
+
+                    if (Environment.MachineName == "GYANTAL-PC")        // for 'gyantal-PC', the Environment.MachineName is all uppercase
+                        RunningEnvironment = RunningEnvironment.WindowsAGy;
+                    else if (Environment.MachineName == "Reka-PC".ToUpper())
+                        RunningEnvironment = RunningEnvironment.WindowsBL_laptop;
+                    else if (Environment.MachineName == "Balazswork-PC".ToUpper())
+                        RunningEnvironment = RunningEnvironment.WindowsBL_laptop;
+                    else
+                    {
+                        Console.WriteLine($"ERROR!. Environment.MachineName ('{Environment.MachineName}') is not expected. Assuming GYANTAL-PC.");
+                        RunningEnvironment = RunningEnvironment.WindowsAGy;
+                    }
+                    break;
+
+                default:
+                    throw new Exception("RunningPlatform() not recognized");
+            }
+
+            return RunningEnvironment;
         }
 
         // Note: this Linux specific functionality is not necessary. But it is decided that we leave it here, because this Linux specific
@@ -485,7 +527,7 @@ namespace SqCommon
             return isUserOK;
         }
 
-        public static IConfigurationRoot InitConfigurationAndInitUtils(string p_configJsonPathWin, string p_configJsonPathLinux)
+        public static IConfigurationRoot InitConfigurationAndInitUtils(string p_configJsonPath)
         {
             // "Microsoft.Extensions.Configuration": "1.0.0-rc2-16054", is based on ASP.NET. It is updated less frequently, it consumes more memory. 
             // there was a problem that "Microsoft.Extensions.Configuration" uses Newtonsoft.Json 8.0.2, that doesn't support "dotnet55" or "dotnet54", it only supports DNXCORE50
@@ -493,17 +535,13 @@ namespace SqCommon
             //I would suggest using System.Runtime.Serialization.Json that is part of .NET 4.5.
 
             Dictionary<string, string> configDict = null;
-            if (File.Exists(p_configJsonPathWin))
+            if (File.Exists(p_configJsonPath))
             {
-                configDict = LoadFromJSON<Dictionary<string, string>>(System.IO.File.ReadAllText(p_configJsonPathWin));
-            }
-            else if (File.Exists(p_configJsonPathLinux))
-            {
-                configDict = LoadFromJSON<Dictionary<string, string>>(System.IO.File.ReadAllText(p_configJsonPathLinux));
+                configDict = LoadFromJSON<Dictionary<string, string>>(System.IO.File.ReadAllText(p_configJsonPath));
             }
             else
             {
-                Utils.Logger.Info("Error! No config files found: " + p_configJsonPathWin + " --- " + p_configJsonPathLinux);
+                Utils.Logger.Info("Error! No config files found: " + p_configJsonPath + ".");
                 return null;
             }
 

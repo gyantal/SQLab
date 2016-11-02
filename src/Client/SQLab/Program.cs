@@ -11,6 +11,15 @@ using System.Threading;
 
 namespace SQLab
 {
+    public enum RunningEnvStrType
+    {
+        Unknown,
+        NonCommitedSensitiveDataFullPath,
+        HttpsCertificateFullPath,
+        DontPublishToPublicWwwroot,
+        SQLabFolder
+    }
+
     public class Program
     {
         public static void Main(string[] args)
@@ -26,9 +35,9 @@ namespace SQLab
             if (!Utils.InitDefaultLogger("Client." + typeof(Program).Namespace))    // will be "Client.SQLab.log"
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
-            
+
             // After Configuring logging, set-up other things
-            Utils.Configuration = Utils.InitConfigurationAndInitUtils("h:/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json", "/home/ubuntu/SQ/Client/SQLab/SQLab.Client.SQLab.NoGitHub.json");
+            Utils.Configuration = Utils.InitConfigurationAndInitUtils(RunningEnvStr(RunningEnvStrType.NonCommitedSensitiveDataFullPath));
             Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
             HealthMonitorMessage.InitGlobals(ServerIp.HealthMonitorPublicIp, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
             StrongAssert.g_strongAssertEvent += StrongAssertMessageSendingEventHandler;
@@ -104,6 +113,62 @@ namespace SQLab
             HealthMonitorMessage.SendStrongAssert("Website.C#.StrongAssert", p_msg, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
         }
 
+
+        static Dictionary<RunningEnvStrType, Dictionary<RunningEnvironment, string>> RunningEnvStrDict = new Dictionary<RunningEnvStrType, Dictionary<RunningEnvironment, string>>()
+        {
+             { RunningEnvStrType.NonCommitedSensitiveDataFullPath,
+                new Dictionary<RunningEnvironment, string>()
+                {
+                    { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/Client/SQLab/SQLab.Client.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsAGy, "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsBL_desktop, "h:/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsBL_laptop, "h:/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json" }
+                }
+            },
+            { RunningEnvStrType.HttpsCertificateFullPath,
+                new Dictionary<RunningEnvironment, string>()
+                {
+                    { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/Client/SQLab/snifferquant.net.pfx" },
+                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
+                    { RunningEnvironment.WindowsBL_desktop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
+                    { RunningEnvironment.WindowsBL_laptop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" }
+                }
+            },
+            { RunningEnvStrType.DontPublishToPublicWwwroot,
+                new Dictionary<RunningEnvironment, string>()
+                {
+                    { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/" },
+                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" },
+                    { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" },
+                    { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" }
+                }
+            },
+            { RunningEnvStrType.SQLabFolder,
+                new Dictionary<RunningEnvironment, string>()
+                {
+                    { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/" },
+                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\" },
+                    { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\Client\SQLab\" },
+                    { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\Client\SQLab\" }
+                }
+            }
+
+        };
+        public static string RunningEnvStr(RunningEnvStrType p_runningEnvStrType)
+        {
+            Dictionary<RunningEnvironment, string> dictRe = null;
+            if (RunningEnvStrDict.TryGetValue(p_runningEnvStrType, out dictRe))
+            {
+                string str = null;
+                if (dictRe.TryGetValue(Utils.RunningEnv(), out str))
+                {
+                    return str;
+                }
+            }
+            Utils.Logger.Error("Error in RunningEnvStr(). Couldn't find: " + p_runningEnvStrType + ". Returning null.");
+            return null;
+        }
+
         private static X509Certificate2 LoadHttpsCertificate()
         {
             //var socialSampleAssembly = typeof(Startup).GetTypeInfo().Assembly;
@@ -111,10 +176,7 @@ namespace SQLab
             //var certificateFileInfo = embeddedFileProvider.GetFileInfo("compiler/resources/cert.pfx");
             //using (var certificateStream = certificateFileInfo.CreateReadStream())
 
-            string fullPath = (Utils.RunningPlatform() == Platform.Linux) ?
-                    "/home/ubuntu/SQ/Client/SQLab/snifferquant.net.pfx" :
-                    @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx";
-
+            string fullPath = RunningEnvStr(RunningEnvStrType.HttpsCertificateFullPath);
             using (var certificateStream = System.IO.File.OpenRead(fullPath))
             {
                 byte[] certificatePayload;

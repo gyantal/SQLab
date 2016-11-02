@@ -39,7 +39,7 @@ namespace Overmind
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
 
-            Utils.Configuration = Utils.InitConfigurationAndInitUtils("g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Overmind.NoGitHub.json", "/home/ubuntu/SQ/Server/Overmind/SQLab.Overmind.NoGitHub.json");
+            Utils.Configuration = Utils.InitConfigurationAndInitUtils((Utils.RunningPlatform() == Platform.Windows) ? "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Overmind.NoGitHub.json" : "/home/ubuntu/SQ/Server/Overmind/SQLab.Overmind.NoGitHub.json");
             //StrongAssert.g_strongAssertEvent += StrongAssertEmailSendingEventHandler;     // HealthMonitor StrongAssert should send an email, but all other programs should inform HealthMonitor instead. HealthMonitor is the gatekeeper that assures that users don't receive too many emails.
 
             //    // on Windows the NLog.Config near the project.json is found by Nlog, but on Linux, there is problem
