@@ -1,8 +1,9 @@
 ﻿<!DOCTYPE html>
-<html>
+<html style="background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%); background-repeat: repeat-y; overflow: visible; /* avoid scrollbars */height: 100%;">
+
 <head>
     <meta charset="utf-8" />
-    <title>Systemic Withdrawal Simulator v0.2</title>
+    <title>Systemic Withdrawal Simulator v0.4</title>
 
     <link rel="stylesheet" type="text/css" href="/css/WithdrawalSimulator.css">
     <script src="/js/lbMathTools.js"></script>
@@ -14,8 +15,10 @@
         console.log("Header");
     </script>
 </head>
-<body>
-    <h1>Systemic Withdrawal Simulator v0.2</h1>
+<body> 
+    <!--background="/images/xceed.tableview.glass.theme.png " >-->
+    
+    <h1>Systemic Withdrawal Simulator v0.3 </h1>
 
     <h2>INPUTS</h2>
     <table>
@@ -31,7 +34,7 @@
             <td><input id="idStdDev" type="text" size="3" maxlength="2" value="20"> %</td>
         <tr>
             <td>Number of simulations:<br></td>
-            <td><input id="idnSimulations" type="text" size="3" maxlength="5" value="2"></td>
+            <td><input id="idnSimulations" type="text" size="3" maxlength="5" value="7"></td>
         </tr>
     </table>
     <br>
@@ -53,6 +56,7 @@
             <td><input id="idAddDepEnd" type="text" size="3" maxlength="3" value=""></td>
         </tr>
     </table>
+
 
     <br>
 
@@ -90,24 +94,29 @@
             <td width="20%" align="center"><i>Random Example</i></td>
         </tr>
         <tr>
-            <td>&emsp;&emsp;&emsp;&emsp;Total $:</td>
-            <td><span id="idTotalDollAvgWoWith"></span></td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>&emsp;&emsp;&emsp;&emsp;Profit $:</td>
+            <td align="center"><span id="idProfitDollAvgWoWith"></span></td>
+            <td align="center"><span id="idProfitDollMedWoWith"></span></td>
+            <td align="center"><span id="idProfitDollRndWoWith"></span></td>
         </tr>
         <tr>
-            <td>&emsp;&emsp;&emsp;&emsp;Total %:</td>
-            <td></td>
+            <td>&emsp;&emsp;&emsp;&emsp;Profit %:</td>
+            <td align="center"><span id="idProfitPercAvgWoWith"></span></td>
+            <td align="center"><span id="idProfitPercMedWoWith"></span></td>
+            <td align="center"><span id="idProfitPercRndWoWith"></span></td>
         </tr>
         <tr>
             <td>&emsp;&emsp;&emsp;&emsp;CAGR:</td>
-            <td></td>
+            <td align="center"><span id="idCAGRAvgWoWith"></span></td>
+            <td align="center"><span id="idCAGRMedWoWith"></span></td>
+            <td align="center"><span id="idCAGRRndWoWith"></span></td>
         </tr>
-        <tr>
+        <!--<tr>
             <td>&emsp;&emsp;&emsp;&emsp;Sharpe:</td>
-            <td></td>
-        </tr>
+            <td align="center"><span id="idSharpeAvgWoWith"></span></td>
+            <td align="center"><span id="idSharpeMedWoWith"></span></td>
+            <td align="center"><span id="idSharpeRndWoWith"></span></td>
+        </tr>-->
         <tr><td><br></td></tr>
         <tr>
             <td width="40%"><b>Strategy with withdrawal</b></td>
@@ -121,63 +130,87 @@
             <td></td>
         </tr>
         <tr>
-            <td>&emsp;&emsp;&emsp;&emsp;Total $:</td>
-            <td></td>
+            <td>&emsp;&emsp;&emsp;&emsp;Profit $:</td>
+            <td align="center"><span id="idProfitDollAvgWithDrawed"></span></td>
+            <td align="center"><span id="idProfitDollMedWithDrawed"></span></td>
+            <td align="center"><span id="idProfitDollRndWithDrawed"></span></td>
         </tr>
         <tr>
-            <td>&emsp;&emsp;&emsp;&emsp;Total %:</td>
-            <td></td>
+            <td>&emsp;&emsp;&emsp;&emsp;Profit %:</td>
+            <td align="center"><span id="idProfitPercAvgWithDrawed"></span></td>
+            <td align="center"><span id="idProfitPercMedWithDrawed"></span></td>
+            <td align="center"><span id="idProfitPercRndWithDrawed"></span></td>
         </tr>
         <tr>
             <td>&emsp;&emsp;&emsp;&emsp;CAGR:</td>
-            <td></td>
+            <td align="center"><span id="idCAGRAvgWithDrawed"></span></td>
+            <td align="center"><span id="idCAGRMedWithDrawed"></span></td>
+            <td align="center"><span id="idCAGRRndWithDrawed"></span></td>
         </tr>
-        <tr>
+        <!--<tr>
             <td>&emsp;&emsp;&emsp;&emsp;Sharpe:</td>
-            <td></td>
-        </tr>
+            <td align="center"><span id="idSharpeAvgWithDrawed"></span></td>
+            <td align="center"><span id="idSharpeMedWithDrawed"></span></td>
+            <td align="center"><span id="idSharpeRndWithDrawed"></span></td>
+        </tr>-->
         <tr><td></td></tr>
         <tr>
             <td>&emsp;&emsp;<u>Still invested</u></td>
             <td></td>
         </tr>
         <tr>
-            <td>&emsp;&emsp;&emsp;&emsp;Total $:</td>
-            <td></td>
+            <td>&emsp;&emsp;&emsp;&emsp;Profit $:</td>
+            <td align="center"><span id="idProfitDollAvgStillInv"></span></td>
+            <td align="center"><span id="idProfitDollMedStillInv"></span></td>
+            <td align="center"><span id="idProfitDollRndStillInv"></span></td>
         </tr>
         <tr>
-            <td>&emsp;&emsp;&emsp;&emsp;Total %:</td>
-            <td></td>
+            <td>&emsp;&emsp;&emsp;&emsp;Profit %:</td>
+            <td align="center"><span id="idProfitPercAvgStillInv"></span></td>
+            <td align="center"><span id="idProfitPercMedStillInv"></span></td>
+            <td align="center"><span id="idProfitPercRndStillInv"></span></td>
         </tr>
         <tr>
             <td>&emsp;&emsp;&emsp;&emsp;CAGR:</td>
-            <td></td>
+            <td align="center"><span id="idCAGRAvgStillInv"></span></td>
+            <td align="center"><span id="idCAGRMedStillInv"></span></td>
+            <td align="center"><span id="idCAGRRndStillInv"></span></td>
         </tr>
-        <tr>
+        <!--<tr>
             <td>&emsp;&emsp;&emsp;&emsp;Sharpe:</td>
-            <td></td>
-        </tr>
+            <td align="center"><span id="idSharpeAvgStillInv"></span></td>
+            <td align="center"><span id="idSharpeMedStillInv"></span></td>
+            <td align="center"><span id="idSharpeRndStillInv"></span></td>
+        </tr>-->
         <tr><td></td></tr>
         <tr>
             <td>&emsp;&emsp;<u>Total</u></td>
             <td></td>
         </tr>
         <tr>
-            <td>&emsp;&emsp;&emsp;&emsp;Total $:</td>
-            <td></td>
+            <td>&emsp;&emsp;&emsp;&emsp;Profit $:</td>
+            <td align="center"><span id="idProfitDollAvgTotal"></span></td>
+            <td align="center"><span id="idProfitDollMedTotal"></span></td>
+            <td align="center"><span id="idProfitDollRndTotal"></span></td>
         </tr>
         <tr>
-            <td>&emsp;&emsp;&emsp;&emsp;Total %:</td>
-            <td></td>
+            <td>&emsp;&emsp;&emsp;&emsp;Profit %:</td>
+            <td align="center"><span id="idProfitPercAvgTotal"></span></td>
+            <td align="center"><span id="idProfitPercMedTotal"></span></td>
+            <td align="center"><span id="idProfitPercRndTotal"></span></td>
         </tr>
         <tr>
             <td>&emsp;&emsp;&emsp;&emsp;CAGR:</td>
-            <td></td>
+            <td align="center"><span id="idCAGRAvgTotal"></span></td>
+            <td align="center"><span id="idCAGRMedTotal"></span></td>
+            <td align="center"><span id="idCAGRRndTotal"></span></td>
         </tr>
-        <tr>
+        <!--<tr>
             <td>&emsp;&emsp;&emsp;&emsp;Sharpe:</td>
-            <td></td>
-        </tr>
+            <td align="center"><span id="idSharpeAvgTotal"></span></td>
+            <td align="center"><span id="idSharpeMedTotal"></span></td>
+            <td align="center"><span id="idSharpeRndTotal"></span></td>
+        </tr>-->
     </table>
 
 
@@ -228,7 +261,7 @@
             console.log("simulateFunction() END");
         }
 
-        
+
 
 
         function simulateFunction(simLength, cagr, stdDev, nSimulations, iniDep, addDepFreq, addDepVal, addDepEnd, withDrawStart, withDrawFreq, withDrawPerc) {
@@ -241,11 +274,11 @@
 
             // TODO: write into developer Info
 
-            
+
 
 
             // make a standard gaussian variable.
-            var standard = gaussian(cagr / 100 / 252, stdDev / 100 / Math.sqrt(252));
+            var standard = lbgaussian(cagr / 100 / 252, stdDev / 100 / Math.sqrt(252));
 
 
             var nDays = simLength * 252;
@@ -287,11 +320,11 @@
 
             console.log(dailyAddDep);
 
-           
+
             var dailyWithDraw = new Array(nDays);
             for (var i = 0; i < dailyWithDraw.length; i++) {
-                if (i >= (withDrawStart*21-1) && i % (21 * withDrawFreq) == (21 * withDrawFreq - 1)) {
-                    dailyWithDraw[i] = withDrawPerc/100;
+                if (i >= (withDrawStart * 21 - 1) && i % (21 * withDrawFreq) == (21 * withDrawFreq - 1)) {
+                    dailyWithDraw[i] = withDrawPerc / 100;
                 }
                 else {
                     dailyWithDraw[i] = 0;
@@ -337,7 +370,7 @@
 
                 var dailyPV = new Array(nDays);
                 for (var j = 0; j < dailyPV.length; j++) {
-                    dailyPV[j] = dailyNoShs[i][j]*dailyPrices[i][j];
+                    dailyPV[j] = dailyNoShs[i][j] * dailyPrices[i][j];
                 }
 
                 dailyPVs[i] = dailyPV;
@@ -356,23 +389,297 @@
             }
             console.log(dailyPVsBH);
 
-            var proba = [2, 3, 4];
-            var averagePVWoWith = average(proba);
+            resultFunction(simLength, nDays, nSimulations, dailyPVs, dailyPVsBH, dailyWithPVs, totalDeposit, developerInfo);
+        }
 
-            // Write the output
-            //for (var i = 0; i < dailyRet.length; i++) {
-            //    developerInfo += dailyRet[i] + ",";
-            //}
+        function resultFunction(simLength, nDays, nSimulations, dailyPVs, dailyPVsBH, dailyWithPVs, totalDeposit, developerInfo) {
 
-            writeOutput(totalDeposit, developerInfo, averagePVWoWith);
+            var pvAvgWoWith = new Array(nDays);
+            var pvMedWoWith = new Array(nDays);
+            for (var i = 0; i < pvAvgWoWith.length; i++) {
+                var subPVAvgWoWith = new Array(nSimulations);
+                for (var j = 0; j < subPVAvgWoWith.length; j++) {
+                    subPVAvgWoWith[j] = dailyPVsBH[j][i];
+                }
+
+                pvAvgWoWith[i] = lbaverage(subPVAvgWoWith);
+                pvMedWoWith[i] = lbmedian(subPVAvgWoWith);
+            }
+            console.log("AHA");
+            console.log(pvAvgWoWith);
+            console.log("AHA");
+            console.log(pvMedWoWith);
+            console.log("AHA");
+
+            var pvRndWoWith = dailyPVsBH[0];
+            console.log(pvRndWoWith);
+            console.log("AHA");
+
+
+            var pvAvgWith = new Array(nDays);
+            var pvMedWith = new Array(nDays);
+            for (var i = 0; i < pvAvgWith.length; i++) {
+                var subPVAvgWith = new Array(nSimulations);
+                for (var j = 0; j < subPVAvgWith.length; j++) {
+                    subPVAvgWith[j] = dailyPVs[j][i];
+                }
+
+                pvAvgWith[i] = lbaverage(subPVAvgWith);
+                pvMedWith[i] = lbmedian(subPVAvgWith);
+            }
+            console.log("AHA");
+            console.log(pvAvgWith);
+            console.log("AHA");
+            console.log(pvMedWith);
+            console.log("AHA");
+
+            var pvRndWith = dailyPVs[0];
+            console.log(pvRndWith);
+            console.log("AHA");
+
+
+            var pvAvgWithDrawed = new Array(nDays);
+            var pvMedWithDrawed = new Array(nDays);
+            for (var i = 0; i < pvAvgWithDrawed.length; i++) {
+                var subPVAvgWithDrawed = new Array(nSimulations);
+                for (var j = 0; j < subPVAvgWithDrawed.length; j++) {
+                    subPVAvgWithDrawed[j] = dailyWithPVs[j][i];
+                }
+
+                pvAvgWithDrawed[i] = lbaverage(subPVAvgWithDrawed);
+                pvMedWithDrawed[i] = lbmedian(subPVAvgWithDrawed);
+            }
+            console.log("AHA");
+            console.log(pvAvgWithDrawed);
+            console.log("AHA");
+            console.log(pvMedWithDrawed);
+            console.log("AHA");
+
+            var pvRndWithDrawed = dailyWithPVs[0];
+            console.log(pvRndWithDrawed);
+            console.log("AHA");
+
+            var pvAvgTotal = new Array(nDays);
+            var pvMedTotal = new Array(nDays);
+            var pvRndTotal = new Array(nDays);
+            for (var i = 0; i < pvAvgTotal.length; i++) {
+                pvAvgTotal[i] = pvAvgWith[i] + pvAvgWithDrawed[i];
+                pvMedTotal[i] = pvMedWith[i] + pvMedWithDrawed[i];
+                pvRndTotal[i] = pvRndWith[i] + pvRndWithDrawed[i];
+            }
+
+
+            var profitDollAvgWoWith = pvAvgWoWith[nDays - 1] - totalDeposit;
+            var profitPercAvgWoWith = pvAvgWoWith[nDays - 1] / totalDeposit - 1;
+            var cagrAvgWoWith = Math.pow((pvAvgWoWith[nDays - 1] / totalDeposit),1/simLength) - 1;
+
+            var profitDollMedWoWith = pvMedWoWith[nDays - 1] - totalDeposit;
+            var profitPercMedWoWith = pvMedWoWith[nDays - 1] / totalDeposit - 1;
+            var cagrMedWoWith = Math.pow((pvMedWoWith[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+            var profitDollRndWoWith = pvRndWoWith[nDays - 1] - totalDeposit;
+            var profitPercRndWoWith = pvRndWoWith[nDays - 1] / totalDeposit - 1;
+            var cagrRndWoWith = Math.pow((pvRndWoWith[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+
+            var profitDollAvgWith = pvAvgWith[nDays - 1] - totalDeposit;
+            var profitPercAvgWith = pvAvgWith[nDays - 1] / totalDeposit - 1;
+            var cagrAvgWith = Math.pow((pvAvgWith[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+            var profitDollMedWith = pvMedWith[nDays - 1] - totalDeposit;
+            var profitPercMedWith = pvMedWith[nDays - 1] / totalDeposit - 1;
+            var cagrMedWith = Math.pow((pvMedWith[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+            var profitDollRndWith = pvRndWith[nDays - 1] - totalDeposit;
+            var profitPercRndWith = pvRndWith[nDays - 1] / totalDeposit - 1;
+            var cagrRndWith = Math.pow((pvRndWith[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+
+            var profitDollAvgWithDrawed = pvAvgWithDrawed[nDays - 1];
+            var profitPercAvgWithDrawed = pvAvgWithDrawed[nDays - 1] / totalDeposit - 1;
+            var cagrAvgWithDrawed = Math.pow((pvAvgWithDrawed[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+            var profitDollMedWithDrawed = pvMedWithDrawed[nDays - 1];
+            var profitPercMedWithDrawed = pvMedWithDrawed[nDays - 1] / totalDeposit - 1;
+            var cagrMedWithDrawed = Math.pow((pvMedWithDrawed[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+            var profitDollRndWithDrawed = pvRndWithDrawed[nDays - 1];
+            var profitPercRndWithDrawed = pvRndWithDrawed[nDays - 1] / totalDeposit - 1;
+            var cagrRndWithDrawed = Math.pow((pvRndWithDrawed[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+
+            var profitDollAvgTotal = pvAvgTotal[nDays - 1] - totalDeposit;
+            var profitPercAvgTotal = pvAvgTotal[nDays - 1] / totalDeposit - 1;
+            var cagrAvgTotal = Math.pow((pvAvgTotal[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+            var profitDollMedTotal = pvMedTotal[nDays - 1] - totalDeposit;
+            var profitPercMedTotal = pvMedTotal[nDays - 1] / totalDeposit - 1;
+            var cagrMedTotal = Math.pow((pvMedTotal[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+            var profitDollRndTotal = pvRndTotal[nDays - 1] - totalDeposit;
+            var profitPercRndTotal = pvRndTotal[nDays - 1] / totalDeposit - 1;
+            var cagrRndTotal = Math.pow((pvRndTotal[nDays - 1] / totalDeposit), 1 / simLength) - 1;
+
+
+            var proba = [1, 1, 1, 1, 1, 1];
+            var averagePVWoWith = lbstdDev(proba);
+
+          
+
+            writeOutput(totalDeposit, developerInfo, averagePVWoWith, profitDollAvgWoWith, profitPercAvgWoWith, profitDollMedWoWith, profitPercMedWoWith, profitDollRndWoWith, profitPercRndWoWith, cagrAvgWoWith, cagrMedWoWith, cagrRndWoWith, profitDollAvgWith, profitPercAvgWith, profitDollMedWith, profitPercMedWith, profitDollRndWith, profitPercRndWith, cagrAvgWith, cagrMedWith, cagrRndWith, profitDollAvgWithDrawed, profitPercAvgWithDrawed, profitDollMedWithDrawed, profitPercMedWithDrawed, profitDollRndWithDrawed, profitPercRndWithDrawed, cagrAvgWithDrawed, cagrMedWithDrawed, cagrRndWithDrawed, profitDollAvgTotal, profitPercAvgTotal, profitDollMedTotal, profitPercMedTotal, profitDollRndTotal, profitPercRndTotal, cagrAvgTotal, cagrMedTotal, cagrRndTotal);
             console.log("simulateFunction() END");
         }
 
-        function writeOutput(totalDeposit, developerInfo,averagePVWoWith) {
+        function writeOutput(totalDeposit, developerInfo, averagePVWoWith, profitDollAvgWoWith, profitPercAvgWoWith, profitDollMedWoWith, profitPercMedWoWith, profitDollRndWoWith, profitPercRndWoWith, cagrAvgWoWith, cagrMedWoWith, cagrRndWoWith, profitDollAvgWith, profitPercAvgWith, profitDollMedWith, profitPercMedWith, profitDollRndWith, profitPercRndWith, cagrAvgWith, cagrMedWith, cagrRndWith, profitDollAvgWithDrawed, profitPercAvgWithDrawed, profitDollMedWithDrawed, profitPercMedWithDrawed, profitDollRndWithDrawed, profitPercRndWithDrawed, cagrAvgWithDrawed, cagrMedWithDrawed, cagrRndWithDrawed, profitDollAvgTotal, profitPercAvgTotal, profitDollMedTotal, profitPercMedTotal, profitDollRndTotal, profitPercRndTotal, cagrAvgTotal, cagrMedTotal, cagrRndTotal) {
             var totalDepositHtmlElement = document.getElementById("idTotalDeposit");
             totalDepositHtmlElement.innerText = totalDeposit + " $";
-            var totalDollAvgWoWith = document.getElementById("idTotalDollAvgWoWith");
-            idTotalDollAvgWoWith.innerText = averagePVWoWith;
+
+            var profitDollAvgWoWithHtmlElement = document.getElementById("idProfitDollAvgWoWith");
+            profitDollAvgWoWithHtmlElement.innerText = Math.floor(profitDollAvgWoWith) + " $";
+
+            var profitDollMedWoWithHtmlElement = document.getElementById("idProfitDollMedWoWith");
+            profitDollMedWoWithHtmlElement.innerText = Math.floor(profitDollMedWoWith) + " $";
+
+            var profitDollRndWoWithHtmlElement = document.getElementById("idProfitDollRndWoWith");
+            profitDollRndWoWithHtmlElement.innerText = Math.floor(profitDollRndWoWith) + " $";
+
+            var profitPercAvgWoWithHtmlElement = document.getElementById("idProfitPercAvgWoWith");
+            profitPercAvgWoWithHtmlElement.innerText = Math.floor(profitPercAvgWoWith * 1000) / 10 + " %";
+
+            var profitPercMedWoWithHtmlElement = document.getElementById("idProfitPercMedWoWith");
+            profitPercMedWoWithHtmlElement.innerText = Math.floor(profitPercMedWoWith * 1000) / 10 + " %";
+
+            var profitPercRndWoWithHtmlElement = document.getElementById("idProfitPercRndWoWith");
+            profitPercRndWoWithHtmlElement.innerText = Math.floor(profitPercRndWoWith * 1000) / 10 + " %";
+
+            var profitCAGRAvgWoWithHtmlElement = document.getElementById("idCAGRAvgWoWith");
+            profitCAGRAvgWoWithHtmlElement.innerText = Math.floor(cagrAvgWoWith*1000)/10 + " %";
+
+            var profitCAGRMedWoWithHtmlElement = document.getElementById("idCAGRMedWoWith");
+            profitCAGRMedWoWithHtmlElement.innerText = Math.floor(cagrMedWoWith * 1000) / 10 + " %";
+
+            var profitCAGRRndWoWithHtmlElement = document.getElementById("idCAGRRndWoWith");
+            profitCAGRRndWoWithHtmlElement.innerText = Math.floor(cagrRndWoWith * 1000) / 10 + " %";
+
+            //var profitSharpeAvgWoWithHtmlElement = document.getElementById("idSharpeAvgWoWith");
+            //profitSharpeAvgWoWithHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            //var profitSharpeMedWoWithHtmlElement = document.getElementById("idSharpeMedWoWith");
+            //profitSharpeMedWoWithHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            //var profitSharpeRndWoWithHtmlElement = document.getElementById("idSharpeRndWoWith");
+            //profitSharpeRndWoWithHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            
+            var profitDollAvgWithDrawedHtmlElement = document.getElementById("idProfitDollAvgWithDrawed");
+            profitDollAvgWithDrawedHtmlElement.innerText = Math.floor(profitDollAvgWithDrawed) + " $";
+
+            var profitDollMedWithDrawedHtmlElement = document.getElementById("idProfitDollMedWithDrawed");
+            profitDollMedWithDrawedHtmlElement.innerText = Math.floor(profitDollMedWithDrawed) + " $";
+
+            var profitDollRndWithDrawedHtmlElement = document.getElementById("idProfitDollRndWithDrawed");
+            profitDollRndWithDrawedHtmlElement.innerText = Math.floor(profitDollRndWithDrawed) + " $";
+
+            var profitPercAvgWithDrawedHtmlElement = document.getElementById("idProfitPercAvgWithDrawed");
+            profitPercAvgWithDrawedHtmlElement.innerText = Math.floor(profitPercAvgWithDrawed * 1000) / 10 + " %";
+
+            var profitPercMedWithDrawedHtmlElement = document.getElementById("idProfitPercMedWithDrawed");
+            profitPercMedWithDrawedHtmlElement.innerText = Math.floor(profitPercMedWithDrawed * 1000) / 10 + " %";
+
+            var profitPercRndWithDrawedHtmlElement = document.getElementById("idProfitPercRndWithDrawed");
+            profitPercRndWithDrawedHtmlElement.innerText = Math.floor(profitPercRndWithDrawed * 1000) / 10 + " %";
+
+            var profitCAGRAvgWithDrawedHtmlElement = document.getElementById("idCAGRAvgWithDrawed");
+            profitCAGRAvgWithDrawedHtmlElement.innerText = Math.floor(cagrAvgWithDrawed * 1000) / 10 + " %";
+
+            var profitCAGRMedWithDrawedHtmlElement = document.getElementById("idCAGRMedWithDrawed");
+            profitCAGRMedWithDrawedHtmlElement.innerText = Math.floor(cagrMedWithDrawed * 1000) / 10 + " %";
+
+            var profitCAGRRndWithDrawedHtmlElement = document.getElementById("idCAGRRndWithDrawed");
+            profitCAGRRndWithDrawedHtmlElement.innerText = Math.floor(cagrRndWithDrawed * 1000) / 10 + " %";
+
+            //var profitSharpeAvgWithDrawedHtmlElement = document.getElementById("idSharpeAvgWithDrawed");
+            //profitSharpeAvgWithDrawedHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            //var profitSharpeMedWithDrawedHtmlElement = document.getElementById("idSharpeMedWithDrawed");
+            //profitSharpeMedWithDrawedHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            //var profitSharpeRndWithDrawedHtmlElement = document.getElementById("idSharpeRndWithDrawed");
+            //profitSharpeRndWithDrawedHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            var profitDollAvgStillInvHtmlElement = document.getElementById("idProfitDollAvgStillInv");
+            profitDollAvgStillInvHtmlElement.innerText = Math.floor(profitDollAvgWith) + " $";
+
+            var profitDollMedStillInvHtmlElement = document.getElementById("idProfitDollMedStillInv");
+            profitDollMedStillInvHtmlElement.innerText = Math.floor(profitDollMedWith) + " $";
+
+            var profitDollRndStillInvHtmlElement = document.getElementById("idProfitDollRndStillInv");
+            profitDollRndStillInvHtmlElement.innerText = Math.floor(profitDollRndWith) + " $";
+
+            var profitPercAvgStillInvHtmlElement = document.getElementById("idProfitPercAvgStillInv");
+            profitPercAvgStillInvHtmlElement.innerText = Math.floor(profitPercAvgWith * 1000) / 10 + " %";
+
+            var profitPercMedStillInvHtmlElement = document.getElementById("idProfitPercMedStillInv");
+            profitPercMedStillInvHtmlElement.innerText = Math.floor(profitPercMedWith * 1000) / 10 + " %";
+
+            var profitPercRndStillInvHtmlElement = document.getElementById("idProfitPercRndStillInv");
+            profitPercRndStillInvHtmlElement.innerText = Math.floor(profitPercRndWith * 1000) / 10 + " %";
+
+            var profitCAGRAvgStillInvHtmlElement = document.getElementById("idCAGRAvgStillInv");
+            profitCAGRAvgStillInvHtmlElement.innerText = Math.floor(cagrAvgWith * 1000) / 10 + " %";
+
+            var profitCAGRMedStillInvHtmlElement = document.getElementById("idCAGRMedStillInv");
+            profitCAGRMedStillInvHtmlElement.innerText = Math.floor(cagrMedWith * 1000) / 10 + " %";
+
+            var profitCAGRRndStillInvHtmlElement = document.getElementById("idCAGRRndStillInv");
+            profitCAGRRndStillInvHtmlElement.innerText = Math.floor(cagrRndWith * 1000) / 10 + " %";
+
+            //var profitSharpeAvgStillInvHtmlElement = document.getElementById("idSharpeAvgStillInv");
+            //profitSharpeAvgStillInvHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            //var profitSharpeMedStillInvHtmlElement = document.getElementById("idSharpeMedStillInv");
+            //profitSharpeMedStillInvHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            //var profitSharpeRndStillInvHtmlElement = document.getElementById("idSharpeRndStillInv");
+            //profitSharpeRndStillInvHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            var profitDollAvgTotalHtmlElement = document.getElementById("idProfitDollAvgTotal");
+            profitDollAvgTotalHtmlElement.innerText = Math.floor(profitDollAvgTotal) + " $";
+
+            var profitDollMedTotalHtmlElement = document.getElementById("idProfitDollMedTotal");
+            profitDollMedTotalHtmlElement.innerText = Math.floor(profitDollMedTotal) + " $";
+
+            var profitDollRndTotalHtmlElement = document.getElementById("idProfitDollRndTotal");
+            profitDollRndTotalHtmlElement.innerText = Math.floor(profitDollRndTotal) + " $";
+
+            var profitPercAvgTotalHtmlElement = document.getElementById("idProfitPercAvgTotal");
+            profitPercAvgTotalHtmlElement.innerText = Math.floor(profitPercAvgTotal * 1000) / 10 + " %";
+
+            var profitPercMedTotalHtmlElement = document.getElementById("idProfitPercMedTotal");
+            profitPercMedTotalHtmlElement.innerText = Math.floor(profitPercMedTotal * 1000) / 10 + " %";
+
+            var profitPercRndTotalHtmlElement = document.getElementById("idProfitPercRndTotal");
+            profitPercRndTotalHtmlElement.innerText = Math.floor(profitPercRndTotal * 1000) / 10 + " %";
+
+            var profitCAGRAvgTotalHtmlElement = document.getElementById("idCAGRAvgTotal");
+            profitCAGRAvgTotalHtmlElement.innerText = Math.floor(cagrAvgTotal * 1000) / 10 + " %";
+
+            var profitCAGRMedTotalHtmlElement = document.getElementById("idCAGRMedTotal");
+            profitCAGRMedTotalHtmlElement.innerText = Math.floor(cagrMedTotal * 1000) / 10 + " %";
+
+            var profitCAGRRndTotalHtmlElement = document.getElementById("idCAGRRndTotal");
+            profitCAGRRndTotalHtmlElement.innerText = Math.floor(cagrRndTotal * 1000) / 10 + " %";
+
+            //var profitSharpeAvgTotalHtmlElement = document.getElementById("idSharpeAvgTotal");
+            //profitSharpeAvgTotalHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            //var profitSharpeMedTotalHtmlElement = document.getElementById("idSharpeMedTotal");
+            //profitSharpeMedTotalHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+            //var profitSharpeRndTotalHtmlElement = document.getElementById("idSharpeRndTotal");
+            //profitSharpeRndTotalHtmlElement.innerText = Math.floor(averagePVWoWith * 100) / 100;
+
+
             var developerInfoHtmlElement = document.getElementById("idDeveloperInfo");
             developerInfoHtmlElement.innerText = developerInfo;
         }
