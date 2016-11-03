@@ -24,17 +24,17 @@ export class LEtfDistcrepancy {
 
     public SubStrategySelected_LEtfDistcrepancy() {
         if (this.app.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy1") {
-            this.app.selectedStrategyName = "L-ETF Discrepancy 1";
+            this.app.selectedStrategyName = "L-ETF Discr.Test";
             this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1IpqNT6THDP5B1C-Vugt1fA96Lf1Ms9Tb-pq0LzT3GnY";
             this.app.selectedStrategyWebApiName = "LETFDiscrepancy1";
         }
         if (this.app.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy2") {
-            this.app.selectedStrategyName = "L-ETF Discrepancy 2";
+            this.app.selectedStrategyName = "L-ETF Discr.ToNeutral";
             this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1JI7sttAtI2Yzix1WbVUCTNP8SujiVInvNyaQyrC30Us";
             this.app.selectedStrategyWebApiName = "LETFDiscrepancy2";
         }
         if (this.app.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy3") {
-            this.app.selectedStrategyName = "L-ETF Discrepancy 3";
+            this.app.selectedStrategyName = "L-ETF Discr.AddWinner";
             this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1Ey9Su6JcGGt2XtcCV0PgUTZ6F5waJ6tm5_c_phYmQZU";
             this.app.selectedStrategyWebApiName = "LETFDiscrepancy3";
         }

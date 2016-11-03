@@ -90,17 +90,13 @@ namespace SQLab.Controllers.QuickTester.Strategies
             var spyQoutes = getAllQuotesData.Item1[1];
 
             string noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
-            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(vxxQoutes, spyQoutes, ref noteToUserCheckData);
+            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(vxxQoutes, spyQoutes, "VXX", "SPY", ref noteToUserCheckData);
 
 
             if (String.Equals(p_strategyName, "AdaptiveUberVxx", StringComparison.CurrentCultureIgnoreCase))
             {
-                DoBacktestInTheTimeInterval_VXX_SPY_Controversial(vxxQoutes, spyQoutes, spyMinPctMove, vxxMinPctMove, longOrShortTrade, pv, ref noteToUserBacktest);
+                DoBacktestInTheTimeInterval_AdaptiveUberVxx(vxxQoutes, spyQoutes, spyMinPctMove, vxxMinPctMove, longOrShortTrade, pv, ref noteToUserBacktest);
             }
-            //else if (String.Equals(p_strategyName, "LETFDiscrepancy3", StringComparison.CurrentCultureIgnoreCase))
-            //{
-            //    //DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(bullishQoutes, bearishQoutes, p_rebalancingFrequency, pv, ref noteToUserBacktest);
-            //}
             else
             {
 
@@ -115,18 +111,10 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
 
-        // in general play Buy&Hold XIV, which is short VXX daily. But
-        //Stay out and go to cash on the next single trading day if and only if SPX and VIX move in the same direction, but at least with 0.1% and 0.25% (in absolute value, 12.22% of trading days from 2004 to 2014). 
-        //In other words, we do not use this exit signal when daily percentage change of the SPX is 0.03% and the VIX is 0.1% (randomness, they are zero in fact). But we use, when SPX decreases with 0.23% and VIX with 0.36%.
-        //This exit signal is valid only on non-FOMC, non-Holiday, non-OPEX and non-ToM days, i.e. only on those days when we use the pure Mix signal. In other words, this exit signal affects only on Mix-signalled days.
-        // However, Balazs strategy doesn't say: go long VXX; simply say: don't short, but go to Cash. Hmm. Still... I couldn't reproduce it. Probably because my strategy is only Short VXX, and Balazs do long VXX too.
-        // however, I think StdDev. and Sharpe improves, if we leave out these Controversial days
-
-        // Balazs's parameter was 0.1% and 0.125%, but that decreased the profit
-        // with spyMinPctMove == 0.01, vxxMinPctMove = 0.01, go To Cash: I got better CAGR than the Going Short (Going Long is bad, because of volatility drag)
-        // increasing vxxMinPctMove is not good, because when vxxPctMove is very, very high, next day can be strong MR, so VXX can go down a lot. We don't want to miss those profits, so we don't increase the vxxMinPctMove too much
-        private static void DoBacktestInTheTimeInterval_VXX_SPY_Controversial(List<DailyData> vxxQoutes, List<DailyData> spyQoutes, double spyMinPctMove, double vxxMinPctMove, string longOrShortTrade, List<DailyData> pv, ref string noteToUserBacktest)
+        private static void DoBacktestInTheTimeInterval_AdaptiveUberVxx(List<DailyData> vxxQoutes, List<DailyData> spyQoutes, double spyMinPctMove, double vxxMinPctMove, string longOrShortTrade, List<DailyData> pv, ref string noteToUserBacktest)
         {
+            // temporary copy from private static void DoBacktestInTheTimeInterval_VXX_SPY_Controversial()
+
             bool? isTradeLongVXX = null;        // it means Cash
             if (String.Equals(longOrShortTrade, "Long"))
                 isTradeLongVXX = true;

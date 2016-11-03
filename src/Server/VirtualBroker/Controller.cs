@@ -66,8 +66,12 @@ namespace VirtualBroker
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
                         new BrokerTaskPortfolio() { Name = "! AdaptiveConnor,VXX autocorrelation (VXX-XIV, stocks, noHedge) Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
+                            MaxTradeValueInCurrency = 20000, // portfolio is 5K original, 4K is 2016-11, but it plays double leverage: 8K-10K. 10K is possible. So, double the range to 20K too.
+                            MinTradeValueInCurrency = 100,
                             Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 2.0 } },
                         new BrokerTaskPortfolio() { Name = "! AdaptiveConnor,VXX autocorrelation (VXX-XIV, stocks, noHedge) Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
+                            MaxTradeValueInCurrency = 20000, // >For Mr.C. VXX (10K original, 5K now, I would set MaxValue=20K (assuming portfolio double in a year)
+                            MinTradeValueInCurrency = 100,
                             Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 1.0 } }
                         }
                     }

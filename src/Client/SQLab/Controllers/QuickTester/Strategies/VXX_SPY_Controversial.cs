@@ -89,7 +89,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             var spyQoutes = getAllQuotesData.Item1[1];
 
             string noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
-            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(vxxQoutes, spyQoutes, ref noteToUserCheckData);
+            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(vxxQoutes, spyQoutes, "VXX", "SPY", ref noteToUserCheckData);
 
 
             if (String.Equals(p_strategyName, "VXX_SPY_Controversial", StringComparison.CurrentCultureIgnoreCase))

@@ -88,11 +88,19 @@ namespace VirtualBroker
 
     public class BrokerTaskPortfolio : DbPortfolio
     {
-        public IPortfolioParam Param { get; set; }    // General fields. Not specific for Strategies
+        // General parameters. Not specific for Strategies
         public GatewayUser IbGatewayUserToTrade { get; set; }
+        public double MaxTradeValueInCurrency { get; set; } = 5000;
+        public double MinTradeValueInCurrency { get; set; } = 0.0;
+
+        // Specific parameters for Strategies
+        public IPortfolioParam Param { get; set; }      // e.g. new PortfolioParamUberVXX()
+
+
+        // Non-parameters. Holding realtime (calculated) values
         public bool IsErrorOccured { get; set; }    // if IBGatewayUser is not connected, or there is an error in processing, then stop further processing, and raise Error message, and Supervisor handles manually
 
-        public double PortfolioUsdSize { get; set; }    // General fields. Not specific for Strategies
+        public double PortfolioUsdSize { get; set; }
         public List<PortfolioPosition> ProposedPositions { get; set; }
         public List<Transaction> ProposedTransactions { get; set; }
     }

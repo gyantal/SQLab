@@ -58,18 +58,18 @@ namespace VirtualBroker
             set { m_allowedMinUsdTransactionValue = value; }
         }
 
-        double m_allowedMaxUsdTransactionValue = 10000.0;   // $10K (because sometimes we play double leverage
-        public double AllowedMaxUsdTransactionValue
+        double m_IbAccountMaxTradeValueInCurrency = 20000.0;   // $20K (because sometimes we play double leverage), so expect 10K trades max. But there will be an email warning at 20K/1.5=13.3K. So if trade size is 13.3K => email is sent to warn to increase it.
+        public double IbAccountMaxTradeValueInCurrency
         {
-            get { return m_allowedMaxUsdTransactionValue; }
-            set { m_allowedMaxUsdTransactionValue = value; }
+            get { return m_IbAccountMaxTradeValueInCurrency; }
+            set { m_IbAccountMaxTradeValueInCurrency = value; }
         }
 
-        double m_maxEstimatedUsdSumRecentlyAllowed = 50000.0;
-        public double MaxEstimatedUsdSumRecentlyAllowed
+        double m_IbAccountMaxEstimatedValueSumRecentlyAllowed = 50000.0;
+        public double IbAccountMaxEstimatedValueSumRecentlyAllowed
         {
-            get { return m_maxEstimatedUsdSumRecentlyAllowed; }
-            set { m_maxEstimatedUsdSumRecentlyAllowed = value; }
+            get { return m_IbAccountMaxEstimatedValueSumRecentlyAllowed; }
+            set { m_IbAccountMaxEstimatedValueSumRecentlyAllowed = value; }
         }
 
         int m_maxNOrdersRecentlyAllowed = 20;
@@ -85,8 +85,8 @@ namespace VirtualBroker
             GatewayUser = p_gatewayUser;
             if (GatewayUser == GatewayUser.CharmatMain || GatewayUser == GatewayUser.CharmatSecondary || GatewayUser == GatewayUser.CharmatPaper)
             {
-                m_allowedMaxUsdTransactionValue = 50000.0;          // $50K
-                m_maxEstimatedUsdSumRecentlyAllowed = 1000000.0;    // $1M
+                m_IbAccountMaxTradeValueInCurrency = 50000.0;          // $50K
+                m_IbAccountMaxEstimatedValueSumRecentlyAllowed = 1000000.0;    // $1M
             }
         }
 
@@ -147,7 +147,7 @@ namespace VirtualBroker
         //+ check the number of Trades in the last 10 minutes < 20; After that, stop everything.
         //+ check the $volume of those trades based on last day price (SQ DB SQL usage).; it should be < 1$ Mil in the last 10 minutes
 
-        internal int PlaceOrder(Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, double p_estimatedPrice, bool p_isSimulatedTrades, StringBuilder p_detailedReportSb)
+        internal int PlaceOrder(double p_portfolioMaxTradeValueInCurrency, double p_portfolioMinTradeValueInCurrency, Contract p_contract, TransactionType p_transactionType, double p_volume, OrderExecution p_orderExecution, OrderTimeInForce p_orderTif, double? p_limitPrice, double? p_stopPrice, double p_estimatedPrice, bool p_isSimulatedTrades, StringBuilder p_detailedReportSb)
         {
             // 1. Glitch protections
             int virtualOrderID = GetUniqueVirtualOrderID;
@@ -157,11 +157,26 @@ namespace VirtualBroker
                 return virtualOrderID;      // try to continue with other PlaceOrders()
             }
             double estimatedTransactionValue = p_volume * p_estimatedPrice;
-            if (estimatedTransactionValue > AllowedMaxUsdTransactionValue)  // if maxFilter is breached, safer to not trade at all. Even if it is an MOC order and can be grouped with other orders. Safer this way.
+            double maxAllowedTradeValue = IbAccountMaxTradeValueInCurrency;
+            if (p_portfolioMaxTradeValueInCurrency < maxAllowedTradeValue)
+                maxAllowedTradeValue = p_portfolioMaxTradeValueInCurrency;
+            if (estimatedTransactionValue > maxAllowedTradeValue)  // if maxFilter is breached, safer to not trade at all. Even if it is an MOC order and can be grouped with other orders. Safer this way.
             {
-                Utils.ConsoleWriteLine(ConsoleColor.Red, true, $"Warning. MaxFilter is breached. Transaction is MaxFilter (${AllowedMaxUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
-                Utils.Logger.Warn($"Warning. MaxFilter is breached. Transaction is MaxFilter (${AllowedMaxUsdTransactionValue:F0}) skipped: {p_contract.Symbol} {p_volume:F0}");
+                string errStr = $"Warning. MaxFilter is breached. Transaction is MaxFilter (IbAccount: ${IbAccountMaxTradeValueInCurrency:F0}, Portfolio: ${p_portfolioMaxTradeValueInCurrency:F0}) skipped: {p_contract.Symbol} {p_volume:F0}: $ {estimatedTransactionValue}";
+                Utils.ConsoleWriteLine(ConsoleColor.Red, true, errStr);
+                Utils.Logger.Warn(errStr);
                 return virtualOrderID;
+            }
+            if (estimatedTransactionValue > (maxAllowedTradeValue/1.5))
+            {
+                //>When simulated order is 50% range of MaxTradeable, send a warning email to administrator to modify it in VBroker and redeploy. It is not likely that a  strategy will move 50% per day.
+                string warnStr = $"Warning. Trade will commence, but MaxFilter is 50% away to be breached. Modify MaxTradeValue params (IbAccount or Portfolio) in VBroker and redeploy. Transaction is MaxFilter (IbAccount: ${IbAccountMaxTradeValueInCurrency:F0}, Portfolio: ${p_portfolioMaxTradeValueInCurrency:F0}). Trade: {p_contract.Symbol} {p_volume:F0}: $ {estimatedTransactionValue}";
+                StrongAssert.Fail(Severity.NoException, warnStr);
+            }
+
+            if (estimatedTransactionValue < p_portfolioMinTradeValueInCurrency)
+            {
+                Utils.Logger.Info("p_portfolioMinTradeValueInCurrency usage is not implemented yet.");
             }
 
             DateTime utcNow = DateTime.UtcNow;
@@ -180,7 +195,7 @@ namespace VirtualBroker
                 Utils.Logger.Error($"nLatestOrders >= m_maxNOrdersRecentlyAllowed. This is for your protection. Transaction {p_contract.Symbol} is skipped. Set Settings to allow more.");
                 return virtualOrderID;      // try to continue with other PlaceOrders()
             }
-            if (estimatedUsdSizeSumRecently >= m_maxEstimatedUsdSumRecentlyAllowed)
+            if (estimatedUsdSizeSumRecently >= m_IbAccountMaxEstimatedValueSumRecentlyAllowed)
             {
                 Utils.Logger.Error($"estimatedUsdSizeSum >= m_maxEstimatedUsdSumRecentlyAllowed. This is for your protection. Transaction {p_contract.Symbol} is skipped. Set Settings to allow more.");
                 return virtualOrderID;      // try to continue with other PlaceOrders()

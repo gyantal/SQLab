@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace SQLab.Controllers.QuickTester.Strategies
@@ -122,7 +123,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             var bullishQoutes = p_allQuotes[0];    // URE, XIV, FAS, ZIV
             var bearishQoutes = p_allQuotes[1];    // SRS, VXX, FAZ, VXZ
 
-            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(bullishQoutes, bearishQoutes, ref p_noteToUserCheckData);
+            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(bullishQoutes, bearishQoutes, p_bullishTicker, p_bearishTicker, ref p_noteToUserCheckData);
 
 
             if (String.Equals(p_strategyName, "LETFDiscrepancy2", StringComparison.CurrentCultureIgnoreCase))
@@ -141,16 +142,16 @@ namespace SQLab.Controllers.QuickTester.Strategies
             return pv;
         }
 
-        // every 20 days, rebalance it to market neutral;
+        // every 5-20 days, rebalance it to market neutral;
         private static void DoBacktestInTheTimeInterval_RebalanceToNeutral(List<DailyData> bullishQuotes, List<DailyData> bearishQuotes, string rebalancingFrequencyStr, List<DailyData> pv, ref string p_htmlNoteFromStrategy)
         {
             p_htmlNoteFromStrategy = "Rebalances to be market neutral with the specified frequencies.";
             DateTime pvStartDate = pv[0].Date;
             DateTime pvEndDate = pv[pv.Count() - 1].Date;
 
-            // TODO!!!!!:  bullishQuotes[i], bearishQuotes[i] refers to different date. Correct it!
-            //int iSpy = spyQoutes.FindIndex(row => row.Date == pvStartDate);
-            //int iVXX = vxxQoutes.FindIndex(row => row.Date == pvStartDate);
+            // note: bullishQuotes[0].Date, bearishQuotes[0].Date refers to different date. We have to find the StartDate in both.
+            int iBullish = bullishQuotes.FindIndex(row => row.Date == pvStartDate);
+            int iBearish = bearishQuotes.FindIndex(row => row.Date == pvStartDate);
 
             double pvDaily = 100.0;
             double bullishEtfPosition = pvDaily * -0.5;  // on day0, we short 50% URE, 50% SRS
@@ -166,10 +167,10 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             for (int i = 1; i < pv.Count(); i++)
             {
-                double buEtfChg = bullishQuotes[i].ClosePrice / bullishQuotes[i - 1].ClosePrice;
+                double buEtfChg = bullishQuotes[iBullish + i].ClosePrice / bullishQuotes[iBullish + i - 1].ClosePrice;
                 bullishEtfPosition = bullishEtfPosition * buEtfChg;
 
-                double beEtfChg = bearishQuotes[i].ClosePrice / bearishQuotes[i - 1].ClosePrice;
+                double beEtfChg = bearishQuotes[iBearish + i].ClosePrice / bearishQuotes[iBearish + i - 1].ClosePrice;
                 bearishEtfPosition = bearishEtfPosition * beEtfChg;
 
                 pvDaily = cash + bullishEtfPosition + bearishEtfPosition;
@@ -185,7 +186,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
 
-        //- the previous strategy: rebalance every 20 days: from 20010: PV 300 to 348= 16% = 3.7%CAGR. not much. And I have to pay the borrowing interest.
+        //- the previous strategy: rebalance every 20 days: 13.18%CAGR. rebalancing 10day: CAGR: 14.79% .not much. And I have to pay the borrowing fee.
         //So I didn't gain money this way:
         //+ I didn't rebalance to market Neutral, but I did a market bet.... shorting more money into the one that went down, and keeping
         //the overleverage of the other side.
@@ -194,14 +195,13 @@ namespace SQLab.Controllers.QuickTester.Strategies
         private static void DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(List<DailyData> bullishQuotes, List<DailyData> bearishQuotes, string rebalancingFrequencyStr, List<DailyData> pv, ref string p_htmlNoteFromStrategy)
         {
             p_htmlNoteFromStrategy = "Rebalances with the specified frequencies. But AddToTheWinningSideWithLeverage.";
+            StringBuilder sbDebugToUser = new StringBuilder("Date, PVDaily, BullishLeverage, BearishLeverage, Leverage, RatioBullishPerBearish<br>");
             DateTime pvStartDate = pv[0].Date;
             DateTime pvEndDate = pv[pv.Count() - 1].Date;
 
-            // TODO!!!!!:  bullishQuotes[i], bearishQuotes[i] refers to different date. Correct it!
-            //int iSpy = spyQoutes.FindIndex(row => row.Date == pvStartDate);
-            //int iVXX = vxxQoutes.FindIndex(row => row.Date == pvStartDate);
-
-
+            // note: bullishQuotes[0].Date, bearishQuotes[0].Date refers to different date. We have to find the StartDate in both.
+            int iBullish = bullishQuotes.FindIndex(row => row.Date == pvStartDate);
+            int iBearish = bearishQuotes.FindIndex(row => row.Date == pvStartDate);
 
             double pvDaily = 100.0;
             double bullishEtfPosition = pvDaily * -0.5;  // on day0, we short 50% URE, 50% SRS
@@ -214,53 +214,95 @@ namespace SQLab.Controllers.QuickTester.Strategies
             if (!Int32.TryParse(rebalancingFrequencyStr.TrimEnd(new char[] { 'd', 'D' }), out rebalancingTradingDays))
                 rebalancingTradingDays = Int32.MaxValue;        //So we don't rebalance
 
-            int nShortMore = 0;
-            int nOverLeveraged = 0;
-            double criticalLeverageThreshold = 0.97;
+            // usually it is 50%=0.5, when it goes under 47%, short more of this side.
+            double tooLowStockLeverage = 0.47;     
+            double tooHighPortfolioLeverage = 2.0;      // we can play double leverage, because it is quite balanced LongShort, so not risky
+            double ratioTooLow = 0.77;  // 1/1.3=0.77
+            double ratioTooHigh = 1.3;
+
+            int nRatioUnbalanceShortMoreWinning = 0;
+            int nUnderLeveragedShortMoreWinning = 0;
+            int nOkLeveragedDoNothing = 0;
+            int nOverLeveragedRebalanceToNavAndNeutral = 0;
             for (int i = 1; i < pv.Count(); i++)
             {
-                double buEtfChg = bullishQuotes[i].ClosePrice / bullishQuotes[i - 1].ClosePrice;
+                double buEtfChg = bullishQuotes[iBullish + i].ClosePrice / bullishQuotes[iBullish + i - 1].ClosePrice;
                 bullishEtfPosition = bullishEtfPosition * buEtfChg;
 
-                double beEtfChg = bearishQuotes[i].ClosePrice / bearishQuotes[i - 1].ClosePrice;
+                double beEtfChg = bearishQuotes[iBearish + i].ClosePrice / bearishQuotes[iBearish + i - 1].ClosePrice;
                 bearishEtfPosition = bearishEtfPosition * beEtfChg;
 
                 pvDaily = cash + bullishEtfPosition + bearishEtfPosition;
+
                 if (i % rebalancingTradingDays == 0)    // every periodic days
                 {
                     double leverage = Math.Abs(bullishEtfPosition + bearishEtfPosition) / pvDaily;
-                    if (leverage <= criticalLeverageThreshold)    // if we are under-leveraged -> short more of the winning side (Trend Following)
+                    if (leverage >= tooHighPortfolioLeverage)    // if we are over-leveraged -> bad. Margin call risk. Rebalance to NAV and market neutral.
                     {
-                        nShortMore++;
-                        if (bullishEtfPosition > bearishEtfPosition)    // negative numbers, so it means Abs(bullishPosition) is the less, so that bullish is the winning side. So, increase its position
-                        {
-                            double positionIncrement = (pvDaily + bearishEtfPosition) + bullishEtfPosition; //bearishEtfPosition is negative. positionIncrement is positive
-                            bullishEtfPosition -= positionIncrement;
-                            cash += positionIncrement;
-                        }
-                        else
-                        {
-                            double positionIncrement = (pvDaily + bullishEtfPosition) + bearishEtfPosition; //bearishEtfPosition is negative. positionIncrement is positive
-                            bearishEtfPosition -= positionIncrement;
-                            cash += positionIncrement;
-                        }
-
-                        //                        cash = pvDaily * 2.0;
-                    }
-                    else// if we are over-leveraged  -> short less... with equal distributon... (it is Mean Reversion trade), but I can decrease Leverage with TF if we want.
-                    {
-                        nOverLeveraged++;
+                        nOverLeveragedRebalanceToNavAndNeutral++;
                         bullishEtfPosition = pvDaily * -0.5;
                         bearishEtfPosition = pvDaily * -0.5;
 
                         cash = pvDaily * 2.0;
                     }
+                    else
+                    {
+                        // bullishEtfLeverage = 44%, while bearishLeverage = 96%. Altogether = 140% leverage.
+                        // it was allowed and BullishLeverage was not increased, because it was over 47%. Bad.
+                        // We should watch the Ratio of Bullish / Bearish.So, this thing wouldn't happen. In real life, I have already rebalanced it much earlier.
+                        // However, the current solution works that it adds only to the Winning side. It adds only to the smaller position.
+                        // This is kind of OK. But it means everytime we do this RatioBuPerBe rebalancing, we increase by 10-20% (never decrease) the total leverage,.
+                        // So, in about 5 RatioRebalancing, we reach Leverage of 2.0 from 1.0, which means we will do the tooHighPortfolioLeverage rebalancing.
+                        // Therefore, it would be nice to not do this ratioRebalancing too frequently => instead of 20% discrepancy, try 30% ratio difference.
+                        double ratioBullishPerBearish = Math.Abs(bullishEtfPosition / bearishEtfPosition);
+                        if (ratioBullishPerBearish < ratioTooLow)       // bullishEtfPosition is too small, increase it
+                        {
+                            nRatioUnbalanceShortMoreWinning++;
+                            // try to increase buEtfLeverage
+                            double positionIncrement = -1 * (Math.Min(bearishEtfPosition, -0.5 * pvDaily) - bullishEtfPosition); // bearishEtfPosition, bullishEtfPosition are negative
+                            bullishEtfPosition -= positionIncrement;
+                            cash += positionIncrement;
+                        } else if (ratioBullishPerBearish > ratioTooHigh)  // bearishEtfPosition is too small, increase it
+                        {
+                            nRatioUnbalanceShortMoreWinning++;
+                            // try to increase buEtfLeverage
+                            double positionIncrement = -1 * (Math.Min(bullishEtfPosition, -0.5 * pvDaily) - bearishEtfPosition); // bearishEtfPosition, bullishEtfPosition are negative
+                            bearishEtfPosition -= positionIncrement;
+                            cash += positionIncrement;
+                        }
+
+
+                        double buEtfLeverage = Math.Abs(bullishEtfPosition) / pvDaily;
+                        if (buEtfLeverage <= tooLowStockLeverage)    // if we are under-leveraged -> short more of the winning side (Trend Following)
+                        {
+                            nUnderLeveragedShortMoreWinning++;
+                            // try to increase buEtfLeverage
+                            double positionIncrement = -1 * (Math.Min(bearishEtfPosition, -0.5* pvDaily) - bullishEtfPosition); // bearishEtfPosition, bullishEtfPosition are negative
+                            bullishEtfPosition -= positionIncrement;
+                            cash += positionIncrement;
+                        }
+                        else
+                        {
+                            double beEtfLeverage = Math.Abs(bearishEtfPosition) / pvDaily;
+                            if (beEtfLeverage <= tooLowStockLeverage)    // if we are under-leveraged -> short more of the winning side (Trend Following)
+                            {
+                                nUnderLeveragedShortMoreWinning++;
+                                // try to increase buEtfLeverage
+                                double positionIncrement = -1 * (Math.Min(bullishEtfPosition, -0.5* pvDaily) - bearishEtfPosition); // bearishEtfPosition, bullishEtfPosition are negative
+                                bearishEtfPosition -= positionIncrement;
+                                cash += positionIncrement;
+                            }
+                            else
+                                nOkLeveragedDoNothing++;
+                        }
+                    }
                 }
                 pv[i].ClosePrice = pvDaily;
+                sbDebugToUser.AppendLine($"{pv[i].Date}, {pvDaily}, {Math.Abs(bullishEtfPosition) / pvDaily}, {Math.Abs(bearishEtfPosition) / pvDaily}, {Math.Abs(bullishEtfPosition + bearishEtfPosition) / pvDaily}, {Math.Abs(bullishEtfPosition / bearishEtfPosition)}<br>");
             }   // for
 
-            p_htmlNoteFromStrategy = p_htmlNoteFromStrategy + ". nShortMore: " + nShortMore + ",nOverLeveraged: " + nOverLeveraged;
-
+            p_htmlNoteFromStrategy = p_htmlNoteFromStrategy + ". nRatioUnbalanceShortMoreWinning: " + nRatioUnbalanceShortMoreWinning + ", nUnderLeveragedShortMoreWinning: " + nUnderLeveragedShortMoreWinning + ",nOkLeveragedDoNothing: " + nOkLeveragedDoNothing + ",nOverLeveragedRebalanceToNavAndNeutral: " + nOverLeveragedRebalanceToNavAndNeutral;
+            p_htmlNoteFromStrategy = p_htmlNoteFromStrategy + "<br>" + sbDebugToUser.ToString();
         }
 
 
