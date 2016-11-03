@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Systemic Withdrawal Simulator v0.5</title>
+    <title>Systemic Withdrawal Simulator v0.6</title>
 
     <link rel="stylesheet" type="text/css" href="/css/WithdrawalSimulator.css">
     <script src="/js/lbMathTools.js"></script>
@@ -17,26 +17,36 @@
 <body>
     <!--background="/images/xceed.tableview.glass.theme.png " >-->
 
-    <h1>Systemic Withdrawal Simulator v0.5 &emsp;&emsp;&emsp;&emsp; <button class="buttonHelp" onclick="window.open('https://www.youtube.com/watch?v=yWP6Qki8mWc')" target=""></button></h1>
-    
+    <h1>Systemic Withdrawal Simulator v0.6 &emsp;&emsp;&emsp;&emsp; <button class="buttonHelp" onclick="window.open('/WithdrawalSimulatorHelp')" target=""></button></h1>
+
 
     <h2>INPUTS</h2>
     <table>
         <tr>
             <td>Length of simulation in years: </td>
             <td>
-                <input id="idSimLength" type="text" size="3" maxlength="2" value="10"> <!--<div class="tooltip">
-                    <img src="http://www.mutualofomaha.com/images/icons/round-question-gray.gif" width="10">
+                <input id="idSimLength" type="text" size="3" maxlength="2" value="10"> &nbsp; <div class="tooltip">
+                    <img src="/images/tooltip.jpg" width="12">
                     <span class="tooltiptext">Maximum 50 years</span>
-                </div>-->
+                </div>
             </td>
         </tr>
         <tr>
             <td>CAGR of the investment:</td>
-            <td><input id="idCAGR" type="text" size="3" maxlength="3" value="30"> %</td>
+            <td>
+                <input id="idCAGR" type="text" size="3" maxlength="3" value="50"> %&nbsp; <div class="tooltip">
+                    <img src="/images/tooltip.jpg" width="12">
+                    <span class="tooltiptext">UberVXX expected CAGR: 50% <br> SPX historical CAGR: 7.5% </span>
+                </div>
+            </td>
         <tr>
             <td>StdDev annualized:<br></td>
-            <td><input id="idStdDev" type="text" size="3" maxlength="2" value="20"> %</td>
+            <td>
+                <input id="idStdDev" type="text" size="3" maxlength="2" value="40"> %&nbsp; <div class="tooltip">
+                    <img src="/images/tooltip.jpg" width="12">
+                    <span class="tooltiptext">UberVXX historical StdDev: 41.5% <br> SPX historical StdDev: 15.5% </span>
+                </div>
+            </td>
         <tr>
             <td>Number of simulations:<br></td>
             <td><input id="idnSimulations" type="text" size="3" maxlength="5" value="100"></td>
@@ -81,7 +91,7 @@
     </table>
     <br>
     <button class="buttonSim" onclick="simulationDriverFunction()">SIMULATE</button>
-    
+
 
     <span id="idUserError"></span>
 

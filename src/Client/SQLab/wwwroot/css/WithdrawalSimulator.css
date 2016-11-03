@@ -13,11 +13,11 @@ h2   {
     font-size: 125%;
 }
 .buttonSim {
-    background-color: #4CAF50; /* Green */
+    background-color: dodgerblue; /* Green */
     /*border: none;*/
     color: white;
     font-family: "Comic Sans MS", cursive, sans-serif;
-    padding: 15px 32px;
+    padding: 8px 15px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
@@ -46,9 +46,10 @@ h2   {
 /* Tooltip text */
 .tooltip .tooltiptext {
     visibility: hidden;
-    min-width: 150px;
-    max-width: 400px;
-    background-color: darkgreen;
+    min-width: 200px;
+    max-width: 2000px;
+    font-size: 12px;
+    background-color: dodgerblue;
     color: gainsboro;
     text-align: center;
     padding: 5px 0;
