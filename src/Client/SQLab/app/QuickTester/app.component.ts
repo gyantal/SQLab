@@ -34,8 +34,8 @@ declare var gTradingViewChartOnreadyCalled: boolean;
 export class AppComponent implements OnInit, AfterViewInit {
     public m_userEmail: string = 'Unknown user';
 
-    public m_versionShortInfo: string = "v0.2.31";    // strongly typed variables in TS
-    public versionLongInfo: string = "SQ QuickTester  \nVersion 0.2.31  \nDeployed: 2016-07-01T21:00Z";  // Z means Zero UTC offset, so, it is the UTC time, http://en.wikipedia.org/wiki/ISO_8601
+    public m_versionShortInfo: string = "v0.2.32";    // strongly typed variables in TS
+    public versionLongInfo: string = "SQ QuickTester  \nVersion 0.2.32  \nDeployed: 2016-11-04T21:00Z";  // Z means Zero UTC offset, so, it is the UTC time, http://en.wikipedia.org/wiki/ISO_8601
     public tipToUser: string = "Select Strategy and press 'Start Backtest'...";
     public tradingViewChartWidget = null;
 
