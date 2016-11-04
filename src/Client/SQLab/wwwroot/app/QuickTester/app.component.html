@@ -50,6 +50,7 @@
                         <li><span id="idMenuItemLETFDiscrepancy1" (click)="MenuItemStrategyClick($event)">Test: PV=first in ETF pair</span></li>
                         <li><span id="idMenuItemLETFDiscrepancy2" (click)="MenuItemStrategyClick($event)">L-ETF Discr. Reb.ToNeutral</span></li>
                         <li><span id="idMenuItemLETFDiscrepancy3" (click)="MenuItemStrategyClick($event)">L-ETF Discr. AddToWinning</span></li>
+                        <li><span id="idMenuItemLETFDiscrepancy4" (click)="MenuItemStrategyClick($event)">Harry Long</span></li>
                     </ul>
                 </li>
             </ul>
@@ -270,6 +271,52 @@
         </tr>
     </tbody>
 </table>
+
+<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy4'" align="left">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>ETF 1</th>
+            <th>Weight 1 (%)</th>
+            <th>ETF 2</th>
+            <th>Weight 2 (%)</th>
+            <th>Rebalancing Frequency<br />"5d"-5days,"2w"-2weeks,"6m"-6months</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><input type="text" [(ngModel)]="strategy_LEtfDistcrepancy.etf1" style="width: 70px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_LEtfDistcrepancy.weight1" style="width: 30px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" />%</td>
+            <td><input type="text" [(ngModel)]="strategy_LEtfDistcrepancy.etf2" style="width: 70px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+            <td><input type="text" [(ngModel)]="strategy_LEtfDistcrepancy.weight2" style="width: 30px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" />%</td>
+            <td><input type="text" [(ngModel)]="strategy_LEtfDistcrepancy.rebalancingFrequency" style="width: 70px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+        </tr>
+    </tbody>
+</table>
+<span class="navigation" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy4'">
+    <ul class="sqMenuNav">
+        <li class="sqMenuItemLevel0" id="idLetfHL_MButtonLi">
+            <span id="idLetfHL_MButtonA">ParamSets</span>
+            <ul class="sqMenuBarLevel1">
+                <li><span id="idParamSetHL_-35TVIX_-65TMV" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">35%TVIX - 65%TMV *</span></li>
+                <li><span id="idParamSetHL_-25TVIX_-75TMV" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">HarryLong</span></li>
+                <li><span id="idParamSetHL_-50VXX_-50XIV" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">VXX - XIV</span></li>
+                <li><span id="idParamSetHL_50VXX_50XIV" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">VXX - XIV</span></li>
+                <li><span id="idParamSetHL_-50URE_-50SRS" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">URE - SRS</span></li>
+                <li><span id="idParamSetHL_-50VXX.SQ_225TLT" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">50%VXX.SQ - 225%TLT</span></li>
+                <li><span id="idParamSetHL_-50VXX_225TLT" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">50%VXX - 225%TLT</span></li>
+                <li><span id="idParamSetHL_50XIV_225TLT" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">50%XIV - 225%TLT</span></li>
+                <li><span id="idParamSetHL_25XIV_112TLT" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">25%XIV - 112%TLT</span></li>
+                <li><span id="idParamSetHL_-25TVIX_75CASH" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">25%TVIX - 75%Cash</span></li>
+                <li><span id="idParamSetHL_25CASH_-75TMV" (click)="strategy_LEtfDistcrepancy.MenuItemParamSetsClicked($event)">25%Cash - 75%TMV</span></li>
+            </ul>
+        </li>
+    </ul>
+</span>
+
 <!--// How to Eliminate Whitespace around Server Side Includes when Pages are UTF-8 Encoded? http://stackoverflow.com/questions/7196993/how-to-eliminate-whitespace-around-server-side-includes-when-pages-are-utf-8-enc-->
 <!--<div style="width: 50%; height: 1px; background: #ffffff; overflow: hidden;"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->
 <div style="width: 100%; height: 2px; background: #ffffff; overflow: hidden;"></div>

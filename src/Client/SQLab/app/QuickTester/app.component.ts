@@ -114,7 +114,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.strategy_TotM = new TotM(this);
         this.strategy_AdaptiveUberVxx = new AdaptiveUberVxx(this);
 
-        this.SelectStrategy("idMenuItemAdaptiveUberVxx"); // there is no #if DEBUG in TS yet. We use TotM rarely in production anyway, so UberVXX can be the default, even while developing it.
+        //this.SelectStrategy("idMenuItemAdaptiveUberVxx"); // there is no #if DEBUG in TS yet. We use TotM rarely in production anyway, so UberVXX can be the default, even while developing it.
+        this.SelectStrategy("idMenuItemLETFDiscrepancy4");   // temporary default until it is being developed
         this.TradingViewChartOnready();
     }
 

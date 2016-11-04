@@ -96,10 +96,6 @@ namespace SQLab.Controllers.QuickTester.Strategies
             {
                 DoBacktestInTheTimeInterval_VXX_SPY_Controversial(vxxQoutes, spyQoutes, spyMinPctMove, vxxMinPctMove, longOrShortTrade, pv, ref noteToUserBacktest);
             }
-            //else if (String.Equals(p_strategyName, "LETFDiscrepancy3", StringComparison.CurrentCultureIgnoreCase))
-            //{
-            //    //DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(bullishQoutes, bearishQoutes, p_rebalancingFrequency, pv, ref noteToUserBacktest);
-            //}
             else
             {
 

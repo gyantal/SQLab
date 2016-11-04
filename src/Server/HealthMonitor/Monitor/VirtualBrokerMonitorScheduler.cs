@@ -70,7 +70,8 @@ namespace HealthMonitor
                 List<TriggeredTaskSchema> taskSchemas = new List<TriggeredTaskSchema>();
                 var uberVxxTaskSchema = new TriggeredTaskSchema()
                 {
-                    Name = "UberVXX"
+                    Name = "UberVXX",
+                    NameForTextToSpeech = "Uber V X X "
                 };
                 uberVxxTaskSchema.Triggers.Add(new HmVbTrigger()
                 {
