@@ -1,7 +1,8 @@
-﻿import {AppComponent} from './app.component';
+﻿import {AppComponent} from '../app.component';
 import {Http} from '@angular/http';
 import {Observable} from 'rxjs/Rx';
 import 'rxjs/add/operator/map';
+import { Strategy } from './Strategy';
 
 export class SubStrategy {
     public Name = "Unknown";
@@ -31,7 +32,7 @@ export class SubStrategy {
     }
 }
 
-export class AdaptiveUberVxx {
+export class AdaptiveUberVxx extends Strategy {
 
     public bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Long IYR", "Short VXX", "Short VXX.SQ", "Short VXZ", "Short VXZ.SQ"];
     public selectedBullishTradingInstrument = this.bullishTradingInstrument[0];
@@ -42,53 +43,47 @@ export class AdaptiveUberVxx {
     public totm = new SubStrategy("TotM", "2", "Avg", "2y","TrainingTicker=SPY"); 
     public connor = new SubStrategy("Connor", "1", "Avg", "100td", "LookbackWindowDays=100;ProbDailyFTThreshold=47"); // LookbackDays is not all the previous history, only little window
 
-  
-  
-    app: AppComponent;
     constructor(p_app: AppComponent) {
-        this.app = p_app;
-        console.log("AdaptiveUberVxx ctor()");
+        super("AdaptiveUberVxx", p_app);
     }
+
+    IsMenuItemIdHandled(p_subStrategyId: string): boolean {
+        return p_subStrategyId == "idMenuItemAdaptiveUberVxx";
+    }
+
+    GetHtmlUiName(p_subStrategyId: string): string {     // go to HTML UI
+        return "Learning version of UberVxx";
+    }
+
+    GetTradingViewChartName(p_subStrategyId: string): string {     // go to HTML UI
+        return "Adaptive UberVxx";
+    }
+
+    GetWebApiName(p_subStrategyId: string): string {
+        return "AdaptiveUberVxx";
+    }
+
+    GetHelpUri(p_subStrategyId: string): string {     // go to HTML UI as gDoc URL
+        return "https://docs.google.com/document/d/1SBi8XZVB_JHsI2IIbhVpx7uDEVEXv1AVBAqPw2EkLuM";
+    }
+
+    GetStrategyParams(p_subStrategyId: string): string {
+        return "&BullishTradingInstrument=" + this.selectedBullishTradingInstrument + "&param=" + this.param
+            + "&" + this.fomc.toUrlQueryString()
+            + "&" + this.holiday.toUrlQueryString()
+            + "&" + this.totm.toUrlQueryString()
+            + "&" + this.connor.toUrlQueryString();
+    }
+
+
+
 
     public bullishTradingInstrumentChanged(newValue) {
         console.log("bullishTradingInstrumentChanged(): " + newValue);
         this.selectedBullishTradingInstrument = newValue;
         this.app.tipToUser = this.selectedBullishTradingInstrument;
     }
-    
-    public SubStrategySelected() {
-        if (this.app.selectedStrategyMenuItemId == "idMenuItemAdaptiveUberVxx") {
-            this.app.selectedStrategyName = "Learning version of UberVxx";
-            this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1SBi8XZVB_JHsI2IIbhVpx7uDEVEXv1AVBAqPw2EkLuM";
-            this.app.selectedStrategyWebApiName = "AdaptiveUberVxx";
-        }
-    }
 
-    public StartBacktest(http: Http) {
-        console.log("StartBacktest_AdaptiveUberVxx() 1");
-        if (this.app.selectedStrategyMenuItemId != "idMenuItemAdaptiveUberVxx")
-            return;
-        console.log("StartBacktest_AdaptiveUberVxx() 2");
-
-        //var url = "http://localhost/qt?StartDate=&EndDate=&strategy=AdaptiveUberVxx&BullishTradingInstrument=Long%20SPY&param=UseKellyLeverage=false;MaxLeverage=1.0&Name=Fomc&Priority=3&Combination=Avg&StartDate=&EndDate=&TradingStartAt=2y&Param=&Name=Holiday&Priority=&Combination=&StartDate=&EndDate=&TradingStartAt=&Param=&Name=TotM&Priority=2&Combination=Avg&StartDate=&EndDate=&TradingStartAt=2y&Param=TrainingTicker=SPY&Name=Connor&Priority=1&Combination=Avg&StartDate=&EndDate=&TradingStartAt=100td&Param=LookbackWindowDays=100;ProbDailyFTThreshold=47
-        var url = "/qt?" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName +
-            "&BullishTradingInstrument=" + this.selectedBullishTradingInstrument + "&param=" + this.param
-            + "&" + this.fomc.toUrlQueryString()
-            + "&" + this.holiday.toUrlQueryString()
-            + "&" + this.totm.toUrlQueryString()
-            + "&" + this.connor.toUrlQueryString();
-
-        http.get(url)
-            .map(res => res.json()) // Call map on the response observable to get the parsed people object
-            .subscribe(data => { // Subscribe to the observable to get the parsed people object and attach it to the component
-                console.log("StartBacktest_AdaptiveUberVxx(): data received 1: " + data);
-                this.app.tradingViewChartName = "Adaptive UberVxx";
-                this.app.ProcessStrategyResult(data);
-            }, error => {
-                console.log("ERROR. StartBacktest(): data received error: " + error);
-                this.app.errorMessage = error;
-            });
-    }
 
 }
 

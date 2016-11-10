@@ -96,14 +96,14 @@
 
 
 <span>SelectedStrategy:</span>
-<span class="spanStrategyDescription"> {{selectedStrategyName}} </span>
-<a id="googleHelpHref" target="_blank" href="{{strategyGoogleDocHelpUri}}"> Help</a>
+<span class="spanStrategyDescription"> {{selectedSubStrategyName}} </span>
+<a id="googleHelpHref" target="_blank" href="{{selectedSubStrategyHelpUri}}"> Help</a>
 
 <span class="spanTitleSuperscript">(GoogleDoc)</span>
 <div style="height: 1px; background: #808080; overflow: hidden;"></div>
 <!--<div style="width: 50%; height: 1px; background: #ffffff; overflow: hidden;"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->    <!--// fast SSI, Server Side Include works in Azure website from 2014: http://azure.microsoft.com/blog/2014/03/26/server-side-includes-ssi-in-windows-azure-web-sites-waws/-->
 <!--#include virtual="/SQQuickTester/Strategies/AdaptiveUberVXX/AdaptiveUberVXX.htm"-->
-<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'" align="left">
+<table id="inputTable" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'" align="left">
     <colgroup>
         <col class="column1" />
         <col class="column2" />
@@ -124,8 +124,8 @@
         </tr>
     </tbody>
 </table>
-<div [hidden]="selectedStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'" align="left"><br /><br /><br /></div>
-<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'" align="left">
+<div [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'" align="left"><br /><br /><br /></div>
+<table id="inputTable" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'" align="left">
     <colgroup>
         <col class="column1" />
         <col class="column2" />
@@ -183,7 +183,7 @@
 
 
 <!--#include virtual="/SQQuickTester/Strategies/TotM/TotM.htm"-->
-<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemTotM'" align="left">
+<table id="inputTable" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemTotM'" align="left">
     <colgroup>
         <col class="column1" />
         <col class="column2" />
@@ -212,7 +212,7 @@
         </tr>
     </tbody>
 </table>
-<span class="navigation" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemTotM'">
+<span class="navigation" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemTotM'">
     <ul class="sqMenuNav">
         <li class="sqMenuItemLevel0" id="idTotMButtonLi">
             <span id="idTotMButtonA">Masks</span>
@@ -228,7 +228,7 @@
 
 
 <!--#include virtual="/SQQuickTester/Strategies/VIX/VXX_SPY_Controversial.htm"-->
-<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemVXX_SPY_Controversial'">
+<table id="inputTable" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemVXX_SPY_Controversial'">
     <colgroup>
         <col class="column1" />
         <col class="column2" />
@@ -254,7 +254,7 @@
     </tbody>
 </table>
 <!--#include virtual="/SQQuickTester/Strategies/L-ETF-Discrepancy/L-ETF-DiscrepancyInput.htm"-->
-<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy1' && selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy2' && selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy3'">
+<table id="inputTable" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy1' && selectedSubStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy2' && selectedSubStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy3'">
     <colgroup>
         <col class="column1" />
         <col class="column2" />
@@ -278,7 +278,7 @@
     </tbody>
 </table>
 
-<table id="inputTable" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy4'" align="left">
+<table id="inputTable" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy4'" align="left">
     <colgroup>
         <col class="column1" />
         <col class="column2" />
@@ -302,7 +302,7 @@
         </tr>
     </tbody>
 </table>
-<span class="navigation" [hidden]="selectedStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy4'">
+<span class="navigation" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemLETFDiscrepancy4'">
     <ul class="sqMenuNav">
         <li class="sqMenuItemLevel0" id="idLetfHL_MButtonLi">
             <span id="idLetfHL_MButtonA">ParamSets</span>

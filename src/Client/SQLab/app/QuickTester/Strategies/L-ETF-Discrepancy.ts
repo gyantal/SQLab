@@ -1,9 +1,10 @@
-﻿import {AppComponent} from './app.component';
+﻿import {AppComponent} from '../app.component';
 import {Http} from '@angular/http';
 import {Observable} from 'rxjs/Rx';
 import 'rxjs/add/operator/map';
+import { Strategy } from './Strategy';
 
-export class LEtfDistcrepancy {
+export class LEtfDistcrepancy extends Strategy {
     public etfPairs = ["URE-SRS", "DRN-DRV", "FAS-FAZ", "XIV-VXX", "ZIV-VXZ",];
     public selectedEtfPairs: string = "URE-SRS";
     //app.selectedEtfPairsIdx = 1;   // zero based, so it is December
@@ -14,40 +15,77 @@ export class LEtfDistcrepancy {
     public etf2: string = "TMV";
     public weight2: string = "-65";
 
-    app: AppComponent;
-
     constructor(p_app: AppComponent) {
-        this.app = p_app;
-        console.log("LEtfDistcrepancy ctor()");
+        super("LEtfDistcrepancy", p_app);
     }
+
+    IsMenuItemIdHandled(p_subStrategyId: string): boolean {
+        return (p_subStrategyId == "idMenuItemLETFDiscrepancy1") || (p_subStrategyId == "idMenuItemLETFDiscrepancy2") || (p_subStrategyId == "idMenuItemLETFDiscrepancy3") || (p_subStrategyId == "idMenuItemLETFDiscrepancy4");
+    }
+
+    GetHtmlUiName(p_subStrategyId: string): string {     // go to HTML UI
+        switch (p_subStrategyId) {
+            case "idMenuItemLETFDiscrepancy1":
+                return "L-ETF Discr.Test";
+            case "idMenuItemLETFDiscrepancy2":
+                return "L-ETF Discr.ToNeutral";
+            case "idMenuItemLETFDiscrepancy3":
+                return "L-ETF Discr.AddWinner";
+            case "idMenuItemLETFDiscrepancy4":
+                return "Harry Long";
+            default:
+                return "Wrong subStrategyId!";
+        }
+    }
+
+    GetTradingViewChartName(p_subStrategyId: string): string {     // go to HTML UI
+        return "L- ETF Discrepancy";
+    }
+
+    GetWebApiName(p_subStrategyId: string): string {
+        switch (p_subStrategyId) {
+            case "idMenuItemLETFDiscrepancy1":
+                return "LETFDiscrepancy1";
+            case "idMenuItemLETFDiscrepancy2":
+                return "LETFDiscrepancy2";
+            case "idMenuItemLETFDiscrepancy3":
+                return "LETFDiscrepancy3";
+            case "idMenuItemLETFDiscrepancy4":
+                return "LETFDiscrepancy4";
+            default:
+                return "Wrong subStrategyId!";
+        }
+    }
+
+    GetHelpUri(p_subStrategyId: string): string {     // go to HTML UI as gDoc URL
+        switch (p_subStrategyId) {
+            case "idMenuItemLETFDiscrepancy1":
+            case "idMenuItemLETFDiscrepancy2":
+            case "idMenuItemLETFDiscrepancy3":
+                return "https://docs.google.com/document/d/1IpqNT6THDP5B1C-Vugt1fA96Lf1Ms9Tb-pq0LzT3GnY";
+            case "idMenuItemLETFDiscrepancy4":
+                return "https://docs.google.com/document/d/1nrWOxJNFYnLQvIxuF83ZypD_YUObiAv5nXa7Cq1x41s";
+            default:
+                return "Wrong subStrategyId!";
+        }
+    }
+
+    GetStrategyParams(p_subStrategyId: string): string {
+        return "&ETFPairs=" + this.selectedEtfPairs + "&RebalancingFrequency=" + this.rebalancingFrequency
+            + "&ETF1=" + this.etf1 + "&Weight1=" + this.weight1 + "&ETF2=" + this.etf2 + "&Weight2=" + this.weight2;
+    }
+
+
+
+
+
+
+
 
     public etfPairsChanged(newValue) {
         console.log("etfPairsChanged(): " + newValue);
         this.selectedEtfPairs = newValue;
         this.app.tipToUser = this.selectedEtfPairs + "+" + this.selectedEtfPairs;
-    }
-
-    public SubStrategySelected() {
-        if (this.app.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy1") {
-            this.app.selectedStrategyName = "L-ETF Discr.Test";
-            this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1IpqNT6THDP5B1C-Vugt1fA96Lf1Ms9Tb-pq0LzT3GnY";
-            this.app.selectedStrategyWebApiName = "LETFDiscrepancy1";
-        }
-        if (this.app.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy2") {
-            this.app.selectedStrategyName = "L-ETF Discr.ToNeutral";
-            this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1IpqNT6THDP5B1C-Vugt1fA96Lf1Ms9Tb-pq0LzT3GnY";
-            this.app.selectedStrategyWebApiName = "LETFDiscrepancy2";
-        }
-        if (this.app.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy3") {
-            this.app.selectedStrategyName = "L-ETF Discr.AddWinner";
-            this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1IpqNT6THDP5B1C-Vugt1fA96Lf1Ms9Tb-pq0LzT3GnY";
-            this.app.selectedStrategyWebApiName = "LETFDiscrepancy3";
-        }
-        if (this.app.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy4") {
-            this.app.selectedStrategyName = "Harry Long";
-            this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1nrWOxJNFYnLQvIxuF83ZypD_YUObiAv5nXa7Cq1x41s";
-            this.app.selectedStrategyWebApiName = "LETFDiscrepancy4";
-        }
     }
 
     public MenuItemParamSetsClicked(event) {
@@ -128,30 +166,6 @@ export class LEtfDistcrepancy {
 
     }
 
-    public StartBacktest(http: Http) {
-        console.log("StartBacktest_LEtfDistcrepancy()");
-        if (this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy1" && this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy2" && this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy3" && this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy4")
-            return;
-
-        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
-        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "///qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "/qt?jsonp=JSON_CALLBACK" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName + "&ETFPairs=" + this.selectedEtfPairs + "&rebalancingFrequency=" + this.rebalancingFrequency;
-        var url = "/qt?" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName
-            + "&ETFPairs=" + this.selectedEtfPairs + "&RebalancingFrequency=" + this.rebalancingFrequency
-            + "&ETF1=" + this.etf1 + "&Weight1=" + this.weight1 + "&ETF2=" + this.etf2 + "&Weight2=" + this.weight2;
-
-        http.get(url)
-            .map(res => res.json()) // Call map on the response observable to get the parsed people object
-            .subscribe(data => { // Subscribe to the observable to get the parsed people object and attach it to the component
-                this.app.tradingViewChartName = "L-ETF Discrepancy 1";
-                this.app.ProcessStrategyResult(data);
-            }, error => {
-                console.log("ERROR. StartBacktest(): data received error: " + error);
-                this.app.errorMessage = error;
-            });
-    }
 }
 
 export function AngularInit_LEtfDistcrepancy(app: AppComponent) {

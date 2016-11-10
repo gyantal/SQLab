@@ -1,9 +1,10 @@
-﻿import {AppComponent} from './app.component';
+﻿import {AppComponent} from '../app.component';
 import {Http} from '@angular/http';
 import {Observable} from 'rxjs/Rx';
 import 'rxjs/add/operator/map';
+import { Strategy } from './Strategy';
 
-export class TotM {
+export class TotM extends Strategy {
 
     public bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Long IYR", "Short VXX", "Short VXX.SQ", "Short VXZ", "Short VXZ.SQ"];
     public selectedBullishTradingInstrument = this.bullishTradingInstrument[0];
@@ -31,11 +32,40 @@ export class TotM {
     public dailyMarketDirectionMaskSummerTotM = "DD00U00.U";
     public dailyMarketDirectionMaskSummerTotMM = "D0UU.0U";
 
-    app: AppComponent;
     constructor(p_app: AppComponent) {
-        this.app = p_app;
-        console.log("TotM ctor()");
+        super("TotM", p_app);
     }
+
+    IsMenuItemIdHandled(p_subStrategyId: string): boolean {
+        return p_subStrategyId == "idMenuItemTotM";
+    }
+
+    GetHtmlUiName(p_subStrategyId: string): string {     // go to HTML UI
+        return "Turn of the Month (mask based). Typical: Bearish:T-1, Bullish: T+1,T+2,T+3";
+    }
+
+    GetTradingViewChartName(p_subStrategyId: string): string {     // go to HTML UI
+        return "Turn of the Month";
+    }
+
+    GetWebApiName(p_subStrategyId: string): string {
+        return "TotM";
+    }
+
+    GetHelpUri(p_subStrategyId: string): string {     // go to HTML UI as gDoc URL
+        return "https://docs.google.com/document/d/1DJtSt1FIPFbscAZsn8UAfiBBIhbeWvZcJWtQffGPTfU";
+    }
+
+    GetStrategyParams(p_subStrategyId: string): string {
+        return "&BullishTradingInstrument=" + this.selectedBullishTradingInstrument
+            + "&DailyMarketDirectionMaskSummerTotM=" + this.dailyMarketDirectionMaskSummerTotM + "&DailyMarketDirectionMaskSummerTotMM=" + this.dailyMarketDirectionMaskSummerTotMM
+            + "&DailyMarketDirectionMaskWinterTotM=" + this.dailyMarketDirectionMaskWinterTotM + "&DailyMarketDirectionMaskWinterTotMM=" + this.dailyMarketDirectionMaskWinterTotMM;
+    }
+
+
+
+
+
 
     public bullishTradingInstrumentChanged(newValue) {
         console.log("bullishTradingInstrumentChanged(): " + newValue);
@@ -87,49 +117,8 @@ export class TotM {
 
     }
     
-    public SubStrategySelected() {
-        if (this.app.selectedStrategyMenuItemId == "idMenuItemTotM") {
-            this.app.selectedStrategyName = "Turn of the Month (mask based). Typical: Bearish:T-1, Bullish: T+1,T+2,T+3";
-            this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1DJtSt1FIPFbscAZsn8UAfiBBIhbeWvZcJWtQffGPTfU";
-            this.app.selectedStrategyWebApiName = "TotM";
-        }
-    }
-
-    public StartBacktest(http: Http) {
-        console.log("StartBacktest_TotM() 1");
-        if (this.app.selectedStrategyMenuItemId != "idMenuItemTotM")
-            return;
-
-        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
-        //var url = "http://localhost:52174/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "///qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        //var url = "/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + this.app.selectedEtfPairs + "&rebalancingFrequency=" + this.app.rebalancingFrequency;
-        var url = "/qt?" + this.app.generalInputParameters + "&strategy=" + this.app.selectedStrategyWebApiName + "&BullishTradingInstrument=" + this.selectedBullishTradingInstrument
-            + "&DailyMarketDirectionMaskSummerTotM=" + this.dailyMarketDirectionMaskSummerTotM + "&DailyMarketDirectionMaskSummerTotMM=" + this.dailyMarketDirectionMaskSummerTotMM
-            + "&DailyMarketDirectionMaskWinterTotM=" + this.dailyMarketDirectionMaskWinterTotM + "&DailyMarketDirectionMaskWinterTotMM=" + this.dailyMarketDirectionMaskWinterTotMM;
-
-        console.log("StartBacktest_TotM() 2");
-        //http.get(url)   // this is for debugging. To see the returned proper text.
-        //    .map(res => res.text())
-        //    .subscribe(data => { // Subscribe to the observable to get the parsed people object and attach it to the component
-        //        console.log("StartBacktest_TotM(): data received 1: " + data);
-        //    }, error => {
-        //        console.log("ERROR. StartBacktest(): data received error: " + error);
-        //        this.app.errorMessage = error;
-        //    });
-
-        http.get(url)
-            .map(res => res.json()) // Call map on the response observable to get the parsed people object
-            .subscribe(data => { // Subscribe to the observable to get the parsed people object and attach it to the component
-                console.log("StartBacktest_TotM(): data received 1: " + data);
-                this.app.tradingViewChartName = "Turn of the Month";
-                this.app.ProcessStrategyResult(data);
-            }, error => {
-                console.log("ERROR. StartBacktest(): data received error: " + error);
-                this.app.errorMessage = error;
-            });
-    }
-
+    
+  
     //public InvertVisibilityOfTableRow(event) {
     //    console.log("InvertVisibilityOfTableRow() START)");
     //    var target = event.target || event.srcElement || event.currentTarget;
