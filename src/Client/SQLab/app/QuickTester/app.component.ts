@@ -5,6 +5,7 @@ import {VXX_SPY_Controversial} from './VXX_SPY_Controversial'
 import {LEtfDistcrepancy, AngularInit_LEtfDistcrepancy} from './L-ETF-Discrepancy'
 import {TotM} from './TotM'
 import {AdaptiveUberVxx} from './AdaptiveUberVxx'
+import {AssetAllocation} from './AssetAllocation'
 import {StopWatch} from './Utils'
 
 declare var TradingView: any;
@@ -101,6 +102,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     public strategy_VXX_SPY_Controversial: VXX_SPY_Controversial;
     public strategy_TotM: TotM;
     public strategy_AdaptiveUberVxx: AdaptiveUberVxx;
+    public strategy_AssetAllocation: AssetAllocation;
 
     constructor(private http: Http) { }
 
@@ -113,9 +115,10 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.strategy_VXX_SPY_Controversial = new VXX_SPY_Controversial(this);
         this.strategy_TotM = new TotM(this);
         this.strategy_AdaptiveUberVxx = new AdaptiveUberVxx(this);
+        this.strategy_AssetAllocation = new AssetAllocation(this);
 
         //this.SelectStrategy("idMenuItemAdaptiveUberVxx"); // there is no #if DEBUG in TS yet. We use TotM rarely in production anyway, so UberVXX can be the default, even while developing it.
-        this.SelectStrategy("idMenuItemLETFDiscrepancy4");   // temporary default until it is being developed
+        this.SelectStrategy("idMenuItemTAA");   // temporary default until it is being developed
         this.TradingViewChartOnready();
     }
 
@@ -149,10 +152,11 @@ export class AppComponent implements OnInit, AfterViewInit {
     SelectStrategy(menuItemId: string) {
         this.selectedStrategyMenuItemId = menuItemId;
 
-        this.strategy_AdaptiveUberVxx.SubStrategySelected_AdaptiveUberVxx();
-        this.strategy_TotM.SubStrategySelected_TotM();
-        this.strategy_VXX_SPY_Controversial.SubStrategySelected_VXX();
-        this.strategy_LEtfDistcrepancy.SubStrategySelected_LEtfDistcrepancy();
+        this.strategy_AdaptiveUberVxx.SubStrategySelected();
+        this.strategy_TotM.SubStrategySelected();
+        this.strategy_VXX_SPY_Controversial.SubStrategySelected();
+        this.strategy_LEtfDistcrepancy.SubStrategySelected();
+        this.strategy_AssetAllocation.SubStrategySelected();
     }
 
 
@@ -246,10 +250,11 @@ export class AppComponent implements OnInit, AfterViewInit {
         console.log("MenuItemStartBacktestClicked() START");
 
         this.generalInputParameters = "StartDate=" + this.inputStartDateStr + "&EndDate=" + this.inputEndDateStr;
-        this.strategy_AdaptiveUberVxx.StartBacktest_AdaptiveUberVxx(this.http);
-        this.strategy_TotM.StartBacktest_TotM(this.http);
-        this.strategy_VXX_SPY_Controversial.StartBacktest_VXX(this.http);
-        this.strategy_LEtfDistcrepancy.StartBacktest_LEtfDistcrepancy(this.http);
+        this.strategy_AdaptiveUberVxx.StartBacktest(this.http);
+        this.strategy_TotM.StartBacktest(this.http);
+        this.strategy_VXX_SPY_Controversial.StartBacktest(this.http);
+        this.strategy_LEtfDistcrepancy.StartBacktest(this.http);
+        this.strategy_AssetAllocation.StartBacktest(this.http);
         //this.profilingBacktestStopWatch = new StopWatch();
         //this.profilingBacktestStopWatch.Start();
     }

@@ -138,7 +138,9 @@ namespace SQLab.Controllers
                     jsonString = await VXX_SPY_Controversial.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams);
                 if (jsonString == null)
                     jsonString = (await LEtfDistcrepancy.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
-                
+                if (jsonString == null)
+                    jsonString = (await TAA.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
+
                 if (jsonString == null)
                     throw new Exception("Strategy was not found in the WebApi: " + strategyName);
 

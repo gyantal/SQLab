@@ -18,8 +18,8 @@ namespace VirtualBroker
 # elif DEBUG
             runtimeConfig = "DEBUG";
 #endif
-            Console.WriteLine($"Hello VirtualBroker, v1.0.13 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
-            Console.Title = "VirtualBroker v1.0.12";
+            Console.WriteLine($"Hello VirtualBroker, v1.0.14 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+            Console.Title = "VirtualBroker v1.0.14";
             if (!RxUtils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
@@ -79,9 +79,12 @@ namespace VirtualBroker
                         case "7":
                             Controller.g_controller.TestElapseFirstTriggerWithSimulation(1);
                             break;
+                        case "8":
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(2);
+                            break;
                     }
 
-                } while (userInput != "8" && userInput != "ConsoleIsForcedToShutDown");
+                } while (userInput != "9" && userInput != "ConsoleIsForcedToShutDown");
 
                 Utils.Logger.Info("****** Main() END");
                 Utils.MainThreadIsExiting.Set();
@@ -126,9 +129,10 @@ namespace VirtualBroker
             Console.WriteLine("3. Test HealthMonitor by sending ErrorFromVirtualBroker");
             Console.WriteLine("4. Test Realtime price service");
             Console.WriteLine("5. Test Encog");
-            Console.WriteLine("6. Elapse first TaskShema (UberVxx) First Simulation Trigger");
-            Console.WriteLine("7. Elapse second TaskShema (NeuralSniffer1) First Simulation Trigger");
-            Console.WriteLine("8. Exit gracefully (Avoid Ctrl-^C).");
+            Console.WriteLine("6. Elapse TaskShema (NeuralSniffer1) First Simulation Trigger");
+            Console.WriteLine("7. Elapse TaskShema (UberVxx) First Simulation Trigger");
+            Console.WriteLine("8. Elapse TaskShema (HarryLong) First Simulation Trigger");
+            Console.WriteLine("9. Exit gracefully (Avoid Ctrl-^C).");
             string result = null;
             try
             {

@@ -10,9 +10,10 @@ namespace VirtualBroker
     {
         public double? GetConnorForecast()
         {
+            StrongAssert.True((m_vxx != null) && (m_vxx.Length >= 101), Severity.ThrowException, "GetConnorForecast() cannot continue because VXX historical data is not given. Throw exception. Notify administrators to investigate Log.");
+
             double m_probDailyFT = 0.0;
             double m_probDailyFTGoodFtRegimeThreshold = 0.470001;       // 2016-06-14: I have changed it from 0.48 to 0.47, because in the VXXAdaptiveConnorLiveBacktest I noticed that 0.48 is too close to the 0.49, which gave 0% CAGR. So, it is better to go down with this parameter to mitigate parameter optimization
-
             double[] vxxDailyFT = new double[100];
             for (int i = 0; i < 100; i++)
             {

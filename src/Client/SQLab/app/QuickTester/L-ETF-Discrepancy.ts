@@ -27,7 +27,7 @@ export class LEtfDistcrepancy {
         this.app.tipToUser = this.selectedEtfPairs + "+" + this.selectedEtfPairs;
     }
 
-    public SubStrategySelected_LEtfDistcrepancy() {
+    public SubStrategySelected() {
         if (this.app.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy1") {
             this.app.selectedStrategyName = "L-ETF Discr.Test";
             this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1IpqNT6THDP5B1C-Vugt1fA96Lf1Ms9Tb-pq0LzT3GnY";
@@ -128,7 +128,7 @@ export class LEtfDistcrepancy {
 
     }
 
-    public StartBacktest_LEtfDistcrepancy(http: Http) {
+    public StartBacktest(http: Http) {
         console.log("StartBacktest_LEtfDistcrepancy()");
         if (this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy1" && this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy2" && this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy3" && this.app.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy4")
             return;

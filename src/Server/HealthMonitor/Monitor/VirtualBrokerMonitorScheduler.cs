@@ -14,7 +14,7 @@ namespace HealthMonitor
         {
         }
 
-        public override void Timer_Elapsed(object state)    // Timer is coming on a ThreadPool thread
+        public override void Timer_Elapsed(object state)    // Timer is coming on a ThreadPool thread, Check that the UberVXX or HarryLong Task sent us the OK with CheckOKMessageArrived() 
         {
             Utils.Logger.Info("HmVbTrigger.Timer_Elapsed() 1");
             NextScheduleTimeUtc = null;
@@ -34,7 +34,7 @@ namespace HealthMonitor
             // Do something short in this Threadpool thread
             // Check that VBroker OK message arrived properly from the Expected Strategy. Different Tasks may take more time to execute
             Utils.Logger.Info("HmVbTrigger.Timer_Elapsed() 2");
-            if (TriggeredTaskSchema.Name == "UberVXX")
+            if (TriggeredTaskSchema.Name == "UberVXX" || TriggeredTaskSchema.Name == "HarryLong")
             {
                 Thread.Sleep(TimeSpan.FromMinutes(5));
 
@@ -85,7 +85,7 @@ namespace HealthMonitor
                     TriggeredTaskSchema = uberVxxTaskSchema,
                     TriggerType = TriggerType.DailyOnUsaMarketDay,
                     StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
-                    StartTimeOffset = TimeSpan.FromMinutes(-31),
+                    StartTimeOffset = TimeSpan.FromMinutes(-35),
                 });
                 uberVxxTaskSchema.Triggers.Add(new HmVbTrigger()
                 {
@@ -95,6 +95,34 @@ namespace HealthMonitor
                     StartTimeOffset = TimeSpan.FromSeconds(-15),    // from -20sec to -15sec. From start, the trade executes in 2seconds
                 });
                 taskSchemas.Add(uberVxxTaskSchema);
+
+                var harryLongTaskSchema = new TriggeredTaskSchema()
+                {
+                    Name = "HarryLong",
+                    NameForTextToSpeech = "Harry Long "
+                };
+                harryLongTaskSchema.Triggers.Add(new HmVbTrigger()
+                {
+                    TriggeredTaskSchema = harryLongTaskSchema,
+                    TriggerType = TriggerType.DailyOnUsaMarketDay,
+                    StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
+                    StartTimeOffset = TimeSpan.FromMinutes(25) 
+                });
+                harryLongTaskSchema.Triggers.Add(new HmVbTrigger()
+                {
+                    TriggeredTaskSchema = harryLongTaskSchema,
+                    TriggerType = TriggerType.DailyOnUsaMarketDay,
+                    StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
+                    StartTimeOffset = TimeSpan.FromMinutes(-31)
+                });
+                harryLongTaskSchema.Triggers.Add(new HmVbTrigger()
+                {
+                    TriggeredTaskSchema = harryLongTaskSchema,
+                    TriggerType = TriggerType.DailyOnUsaMarketDay,
+                    StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
+                    StartTimeOffset = TimeSpan.FromSeconds(-11)    // Give UberVXX priority (executing at -15sec). That is more important because that can change from full 100% long to -200% short. This Harry Long strategy just slowly modifies weights, so if one trade is missed, it is not a problem.
+                });
+                taskSchemas.Add(harryLongTaskSchema);
 
                 // maybe loop is not required.
                 // in the past we try to get UsaMarketOpenOrCloseTime() every 30 minutes. It was determined from YFinance intrady. "sleep 30 min for DetermineUsaMarketOpenOrCloseTime()"

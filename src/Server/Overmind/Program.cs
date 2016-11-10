@@ -101,9 +101,12 @@ namespace Overmind
                     case "3":
                         Controller.g_controller.TestCheckingAmazonPrice();
                         break;
+                    case "4":
+                        Controller.g_controller.DailyMiddayTimer_Elapsed(null);
+                        break;
                 }
 
-            } while (userInput != "4" && userInput != "ConsoleIsForcedToShutDown");
+            } while (userInput != "5" && userInput != "ConsoleIsForcedToShutDown");
 
             Utils.Logger.Info("****** Main() END");
             Controller.g_controller.Exit();
@@ -132,7 +135,8 @@ namespace Overmind
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes.");
             Console.WriteLine("2. Test Server (Sending Email & Calling Phone)");
             Console.WriteLine("3. Test Amazon Price Check (Sending Email)");
-            Console.WriteLine("4. Exit gracefully (Avoid Ctrl-^C).");
+            Console.WriteLine("4. Elapse DailyMiddayTimer()");
+            Console.WriteLine("5. Exit gracefully (Avoid Ctrl-^C).");
             string result = null;
             try
             {

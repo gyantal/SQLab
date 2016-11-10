@@ -187,9 +187,24 @@ FROM (SELECT * FROM Stock INNER JOIN
         private static void TransactionAccumulator(List<DbPortfolio> p_portfolios, IList<List<object[]>> sqlResult, DateTime p_accumulationEndDate)
         {
             var fileSystemTbl = sqlResult[0];
-            var transactionsTbl = sqlResult[1]; // SQL query asked it to be ordered by PortfolioID, Date
-            var splitDividendTbl = sqlResult[2]; // SQL query asked it to be ordered by StockID, Date (Date, StockID would be more useful, but we don't want sorting computation in the SQL server, do it locally)
-            var stockAssetTbl = sqlResult[3];
+
+            List<object[]> transactionsTbl = null;  // some portfolios don't have transactions, and SQL DB returns nothing, and sqlResult[1] indexing would crash
+            if (sqlResult.Count >= 2)
+                transactionsTbl = sqlResult[1]; // SQL query asked it to be ordered by PortfolioID, Date
+            else
+                transactionsTbl = new List<object[]>();
+
+            List<object[]> splitDividendTbl = null; // some portfolios don't have splits or dividends, and SQL DB returns nothing, and sqlResult[2] indexing would crash
+            if (sqlResult.Count >= 3)
+                splitDividendTbl = sqlResult[2]; // SQL query asked it to be ordered by StockID, Date (Date, StockID would be more useful, but we don't want sorting computation in the SQL server, do it locally)
+            else
+                splitDividendTbl = new List<object[]>();
+
+            List<object[]> stockAssetTbl = null;
+            if (sqlResult.Count >= 4)
+                stockAssetTbl = sqlResult[3];   // sqlResult[3] indexing would crash if it is not there
+            else
+                stockAssetTbl = new List<object[]>();
 
             // 1. Prepare data of assets, splits, portfolios
             p_portfolios.ForEach(p =>

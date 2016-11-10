@@ -56,7 +56,7 @@ export class AdaptiveUberVxx {
         this.app.tipToUser = this.selectedBullishTradingInstrument;
     }
     
-    public SubStrategySelected_AdaptiveUberVxx() {
+    public SubStrategySelected() {
         if (this.app.selectedStrategyMenuItemId == "idMenuItemAdaptiveUberVxx") {
             this.app.selectedStrategyName = "Learning version of UberVxx";
             this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1SBi8XZVB_JHsI2IIbhVpx7uDEVEXv1AVBAqPw2EkLuM";
@@ -64,7 +64,7 @@ export class AdaptiveUberVxx {
         }
     }
 
-    public StartBacktest_AdaptiveUberVxx(http: Http) {
+    public StartBacktest(http: Http) {
         console.log("StartBacktest_AdaptiveUberVxx() 1");
         if (this.app.selectedStrategyMenuItemId != "idMenuItemAdaptiveUberVxx")
             return;

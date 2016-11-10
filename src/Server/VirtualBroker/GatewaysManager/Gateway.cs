@@ -58,14 +58,14 @@ namespace VirtualBroker
             set { m_allowedMinUsdTransactionValue = value; }
         }
 
-        double m_IbAccountMaxTradeValueInCurrency = 20000.0;   // $20K (because sometimes we play double leverage), so expect 10K trades max. But there will be an email warning at 20K/1.5=13.3K. So if trade size is 13.3K => email is sent to warn to increase it.
+        double m_IbAccountMaxTradeValueInCurrency = 20000.0;   // default $20K for Agy (because sometimes we play double leverage), so expect 10K trades max. But there will be an email warning at 20K/1.5=13.3K. So if trade size is 13.3K => email is sent to warn to increase it.
         public double IbAccountMaxTradeValueInCurrency
         {
             get { return m_IbAccountMaxTradeValueInCurrency; }
             set { m_IbAccountMaxTradeValueInCurrency = value; }
         }
 
-        double m_IbAccountMaxEstimatedValueSumRecentlyAllowed = 50000.0;
+        double m_IbAccountMaxEstimatedValueSumRecentlyAllowed = 50000.0;  // default $50K for Agy
         public double IbAccountMaxEstimatedValueSumRecentlyAllowed
         {
             get { return m_IbAccountMaxEstimatedValueSumRecentlyAllowed; }
@@ -79,15 +79,14 @@ namespace VirtualBroker
             set { m_maxNOrdersRecentlyAllowed = value; }
         }
 
-        public Gateway(GatewayUser p_gatewayUser)   // gateWayUser will be fixed. We don't allow to change it later.
+        public Gateway(GatewayUser p_gatewayUser, double p_accountMaxTradeValueInCurrency = Double.NaN, double p_accountMaxEstimatedValueSumRecentlyAllowed = Double.NaN)   // gateWayUser will be fixed. We don't allow to change it later.
         {
             IsConnected = false;
             GatewayUser = p_gatewayUser;
-            if (GatewayUser == GatewayUser.CharmatMain || GatewayUser == GatewayUser.CharmatSecondary || GatewayUser == GatewayUser.CharmatPaper)
-            {
-                m_IbAccountMaxTradeValueInCurrency = 50000.0;          // $50K
-                m_IbAccountMaxEstimatedValueSumRecentlyAllowed = 1000000.0;    // $1M
-            }
+            if (!Double.IsNaN(p_accountMaxTradeValueInCurrency))
+                m_IbAccountMaxTradeValueInCurrency = p_accountMaxTradeValueInCurrency;
+            if (!Double.IsNaN(p_accountMaxEstimatedValueSumRecentlyAllowed))
+                m_IbAccountMaxEstimatedValueSumRecentlyAllowed = p_accountMaxEstimatedValueSumRecentlyAllowed;
         }
 
         // PlayTransactionsViaBroker(). Consider these use-cases:

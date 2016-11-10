@@ -157,7 +157,7 @@ namespace VirtualBroker
                 object isSimulationObj;
                 if (trigger.TriggerSettings.TryGetValue(BrokerTaskSetting.IsSimulatedTrades, out isSimulationObj))
                 {
-                    if ((bool)isSimulationObj)
+                    if ((bool)isSimulationObj)  // execute only if isSimulation  of the Trigger == True
                     {
                         ((VbTrigger)trigger).Timer_Elapsed(null);
                         break;  // just elapse the first one

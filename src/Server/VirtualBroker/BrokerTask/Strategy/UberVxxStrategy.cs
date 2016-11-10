@@ -25,7 +25,8 @@ namespace VirtualBroker
 
     }
 
-    public class PortfolioParamUberVXX : IPortfolioParam     // Strategy specific parameters are here
+    // Portfolio specific parameters are here. User1's portfolio1 may use double leverage than User2's portfolio2. The Common Strategy params should go to StrategyConfig.cs
+    public class PortfolioParamUberVXX : IPortfolioParam
     {
         public double PlayingInstrumentVixLongLeverage { get; set; }
         public double PlayingInstrumentVixShortLeverage { get; set; }
@@ -153,6 +154,7 @@ namespace VirtualBroker
             if (!Controller.g_gatewaysWatcher.ReqHistoricalData(DateTime.UtcNow, vxxLookbackWindowSize, "TRADES", contract, out m_vxxQuotesFromIB))   // real trades, not the MidPoint = AskBidSpread
             {
                 isOkGettingHistoricalData = false;
+                Utils.Logger.Error("VXX historical data was not given from IB within the 14seconds timeout. We continue, but it will be a problem later. If this problem continues, try to get historical VXX data from both IB and SQL DB, and use the one which returns within 5 seconds. We cannot delay this data, because we only have 15 seconds to do the trade before Market Closes.");
             }
             else
             {

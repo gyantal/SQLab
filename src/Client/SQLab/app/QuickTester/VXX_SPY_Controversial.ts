@@ -26,15 +26,15 @@ export class VXX_SPY_Controversial {
         this.app.tipToUser = this.selectedVXXLongOrShortTrade + "+" + this.selectedVXXLongOrShortTrade;
     }
 
-    public SubStrategySelected_VXX() {
+    public SubStrategySelected() {
         if (this.app.selectedStrategyMenuItemId == "idMenuItemVXX_SPY_Controversial") {
-            this.app.selectedStrategyName = "VXX-SPY ControversialDay: Buy&Hold XIV;Cash if VXX & SPY move in the same direction";
+            this.app.selectedStrategyName = "Buy&Hold XIV with VXX-SPY ControversialDay: Cash if VXX & SPY move in the same direction";
             this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1G1gjvt9GdqB4yrAvLV4ELnVDYNd587tovcWrVzTwqak";
             this.app.selectedStrategyWebApiName = "VXX_SPY_Controversial";
         }
     }
 
-    public StartBacktest_VXX(http: Http) {
+    public StartBacktest(http: Http) {
         console.log("StartBacktest_VXX()");
         if (this.app.selectedStrategyMenuItemId != "idMenuItemVXX_SPY_Controversial")
             return;

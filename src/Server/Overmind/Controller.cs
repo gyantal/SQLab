@@ -242,9 +242,8 @@ namespace Overmind
             }
             catch (Exception e)
             {
-                Utils.Logger.Info("DailyMiddayTimer_Elapsed() in Exception");
-                Console.WriteLine("DailyMiddayTimer_Elapsed() in Exception");
-                Utils.Logger.Error(e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
+                Console.WriteLine("Exception in DailyMiddayTimer_Elapsed(). See log file.");
+                Utils.Logger.Error(e, "Exception in DailyMiddayTimer_Elapsed()");
                 new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
             }
             Utils.Logger.Info("DailyMiddayTimer_Elapsed() END");
@@ -252,8 +251,9 @@ namespace Overmind
 
         private static double GetTodayPctChange(string p_ticker)
         {
+            Utils.Logger.Trace("GetTodayPctChange(): " + p_ticker);
             var biduDelayedPriceCSV = new HttpClient().GetStringAsync("http://download.finance.yahoo.com/d/quotes.csv?s=" + p_ticker + "&f=sl1d1t1c1ohgv&e=.csv").Result;
-            Utils.Logger.Info("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV);
+            Utils.Logger.Trace("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV);
             string[] biduDelayedPriceSplit = biduDelayedPriceCSV.Split(new char[] { ',', ' ' });
             double realTimePrice = Double.Parse(biduDelayedPriceSplit[1]);
             double dailyChange = Double.Parse(biduDelayedPriceSplit[4]);

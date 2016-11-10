@@ -927,8 +927,12 @@ namespace VirtualBroker
 
             ClientSocket.reqHistoricalData(histDataId, p_contract, p_endDateTime.ToString("yyyyMMdd HH:mm:ss"), durationString, "1 day", p_whatToShow, 1, 1, null);    // with daily data formatDate is always "yyyyMMdd", no seconds, and param=2 doesn't give seconds
 
-            // wait here
-            bool signalReceived = histDataSubsc.AutoResetEvent.WaitOne(TimeSpan.FromSeconds(10)); // timeout of 10 seconds
+            // wait here with timeout of 14seconds. In general it is only 1 second, but it took 13sec when  HMDS data farm was disconnected
+            // 1109T14:50:02.192#91#5#Info: ReqHistoricalData() for VXX, reqId: 1001
+            // 1109T14:50:06.972#23#5#Debug: BrokerWrapper.error(). ErrId: -1, ErrCode: 2106, Msg: HMDS data farm connection is OK:ushmds
+            // 1109T14:50:14.875#23#5#Trace: HistoricalData. 1001 - Date: 20160511, Open: 59.48, High: 61.88, Low: 58.56, Close: 61.4, Volume: 161447, Count: 167906, WAP: 60.284, HasGaps: False
+            // 1109T14:50:14.875#23#5#Error: HistDataSubscriptions reqId 1001 is not expected
+            bool signalReceived = histDataSubsc.AutoResetEvent.WaitOne(TimeSpan.FromSeconds(14)); // timeout of 14 seconds
 
             // clean up resources after data arrived
             ClientSocket.cancelHistoricalData(histDataId);
@@ -940,7 +944,7 @@ namespace VirtualBroker
             if (!signalReceived)
             {
                 Utils.Logger.Error($"ReqHistoricalData() timeout for {p_contract.Symbol}");
-                return false;   // if it was a timeout
+                return false;   // if it was a timeout. The Caller may get historical data from SQL DB later.
             }
 
             if (histDataSubsc.QuoteData.Count > p_lookbackWindowSize)   // if we got too much data, remove the old ones. Very likely it only do shallow copy of values, but no extra memory allocation is required

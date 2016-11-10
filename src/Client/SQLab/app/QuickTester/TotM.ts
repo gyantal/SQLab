@@ -87,7 +87,7 @@ export class TotM {
 
     }
     
-    public SubStrategySelected_TotM() {
+    public SubStrategySelected() {
         if (this.app.selectedStrategyMenuItemId == "idMenuItemTotM") {
             this.app.selectedStrategyName = "Turn of the Month (mask based). Typical: Bearish:T-1, Bullish: T+1,T+2,T+3";
             this.app.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1DJtSt1FIPFbscAZsn8UAfiBBIhbeWvZcJWtQffGPTfU";
@@ -95,7 +95,7 @@ export class TotM {
         }
     }
 
-    public StartBacktest_TotM(http: Http) {
+    public StartBacktest(http: Http) {
         console.log("StartBacktest_TotM() 1");
         if (this.app.selectedStrategyMenuItemId != "idMenuItemTotM")
             return;

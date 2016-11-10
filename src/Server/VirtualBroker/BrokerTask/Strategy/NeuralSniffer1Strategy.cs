@@ -12,7 +12,8 @@ using Utils = SqCommon.Utils;
 namespace VirtualBroker
 {
 
-    public class PortfolioParamNeuralSniffer1 : IPortfolioParam     // Strategy specific parameters are here
+    // Portfolio specific parameters are here. User1's portfolio1 may use double leverage than User2's portfolio2. The Common Strategy params should go to StrategyConfig.cs
+    public class PortfolioParamNeuralSniffer1 : IPortfolioParam
     {
         public double PlayingInstrumentUpsideLeverage { get; set; } // negative number means: play the inverse; instead of long, short the inverse
         public double PlayingInstrumentDownsideLeverage { get; set; }

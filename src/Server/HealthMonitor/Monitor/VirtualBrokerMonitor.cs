@@ -17,6 +17,12 @@ namespace HealthMonitor
         List<Tuple<DateTime, bool, string, string>> m_VbReport = new List<Tuple<DateTime, bool, string, string>>(); // List<> is not thread safe: <Date, IsOk, BriefReport, DetailedReport>
 
         // this is called every time the VirtualBroker send OK or Error: after every simulated trading
+        // 1. General Error message looks like this. No HTML. Not Strategy (UberVXX, HarryLong) specific. VBroker can crash anywhere, without any strategy affiliation.
+        // Message ID:"ReportErrorFromVirtualBroker", ParamStr: "Exception in BrokerTaskExecutionThreadRun Exception: . Exception: 'System.Exception: StrongAssert failed (severity==ThrowException): There is no point continuing if portfolioUSdSize cannot be calculated. After that we cannot calculate new stock Volumes from weights.
+        //at SqCommon.StrongAssert.Fail_core(Severity p_severity, String p_message, Object[] p_args) in /home/ubuntu/SQ/Server/VirtualBroker/src/SQLab.Common/Utils/StrongAssert.cs:line 127
+        // at VirtualBroke...'", ResponseFormat: "None"
+        // 2. Strategy messages OK. Strategy specific. HTML format.
+        // Message ID:"ReportOkFromVirtualBroker", ParamStr: "<BriefReport>BrokerTask HarryLong was OK.</BriefReport><DetailedReport>11-09T20:59:49: 'HarryLong'<br/><font color="#10ff10">Target: UVXY:-35%, TMV:-65%</font><br/>Real SellAsset  6 UVXY ($82)<br/>Real BuyAsset  29 TMV ($626)<br/>Real BuyAsset  46 UVXY ($626)<br/>Real BuyAsset  581 TMV ($12541)<br/></DetailedReport>", ResponseFormat: "None"
         private void MessageFromVirtualBroker(TcpClient p_tcpClient, HealthMonitorMessage p_message)
         {
             if (p_message.ResponseFormat == HealthMonitorMessageResponseFormat.String)
@@ -61,7 +67,7 @@ namespace HealthMonitor
             }
 
             lock (m_VbReport)
-                    m_VbReport.Add(new Tuple<DateTime, bool, string, string>(DateTime.UtcNow, !isError, ((briefReport != null) ? briefReport : p_message.ParamStr), detailedReport));
+                m_VbReport.Add(new Tuple<DateTime, bool, string, string>(DateTime.UtcNow, !isError, ((briefReport != null) ? briefReport : "ReportFromVirtualBroker without BriefReport"), ((detailedReport != null) ? detailedReport : p_message.ParamStr)));
 
             if (isError)
             {
@@ -71,7 +77,7 @@ namespace HealthMonitor
             }
         }
 
-        public void CheckOKMessageArrived(DateTime p_utcStart, string p_triggeredTaskSchemaName) // p_triggeredTaskSchemaName = "UberVXX"
+        public void CheckOKMessageArrived(DateTime p_utcStart, string p_triggeredTaskSchemaName) // p_triggeredTaskSchemaName = "UberVXX" or "HarryLong"
         {
             Utils.Logger.Debug("HmVb.CheckOKMessageArrived() BEGIN");
             Tuple<DateTime, bool, string, string> expectedMessage = null;
@@ -83,7 +89,7 @@ namespace HealthMonitor
                     {
                         bool isOK = m_VbReport[i].Item2;
                         string strategyName = String.Empty;
-                        int strategyNameInd1 = m_VbReport[i].Item3.IndexOf("BrokerTask ");  // "BrokerTask UberVXX was OK" or "had ERROR"
+                        int strategyNameInd1 = m_VbReport[i].Item3.IndexOf("BrokerTask ");  // "BrokerTask UberVXX/HarryLong was OK" or "had ERROR"
                         if (strategyNameInd1 != -1)
                         {
                             int strategyNameInd2 = strategyNameInd1 + "BrokerTask ".Length;
@@ -106,7 +112,8 @@ namespace HealthMonitor
             {
                 Utils.Logger.Debug("HmVb.CheckOKMessageArrived(): OK.");
                 InformSupervisors($"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} didn't arrive.", $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} did't arrive.", $"Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive. ... I repeat: Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
-            } else
+            }
+            else
             {
                 Utils.Logger.Debug("HmVb.CheckOKMessageArrived(): Message missing.");
                 // do nothing. If it was an Error message, the Phonecall was already made when the Error message arrived

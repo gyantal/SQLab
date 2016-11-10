@@ -300,6 +300,10 @@ namespace HealthMonitor
                             }
                         }
 
+                        if (String.IsNullOrEmpty(strategyName))
+                            strategyName = "Unknown strategy";
+
+                        Utils.Logger.Trace($"DailySummaryReport(). Adding strategyName '{strategyName}' / '{ m_VbReport[i].Item4}' to lastDetailedVBrokerReports dictionary.");
                         lastDetailedVBrokerReports[strategyName] = m_VbReport[i].Item4;
 
                         nReportsToday++;
@@ -332,12 +336,14 @@ namespace HealthMonitor
                 sb.Append(sb2);
             }
 
-            Utils.Logger.Trace("DailySummaryReport(). vb_2");
+            Utils.Logger.Trace($"DailySummaryReport(). lastDetailedVBrokerReports.Count: '{lastDetailedVBrokerReports.Count}'");
             if (lastDetailedVBrokerReports.Count > 0)
             {
                 sb.AppendLine((p_isHtml) ? @"<br/><hr><br/><span class=""sqDetail""><strong>VBroker Detailed</strong>:<br/>" : "VBroker Detailed:");
                 foreach (var lastDetailedReport in lastDetailedVBrokerReports)
                 {
+                    Utils.Logger.Trace($"DailySummaryReport(). ItemKey: {lastDetailedReport.Key}");
+                    Utils.Logger.Trace($"DailySummaryReport(). ItemValue: {lastDetailedReport.Value}");
                     string detailedRep = lastDetailedReport.Value.Replace("#10ff10", "green");      // on the website: #10ff10 is better, lighter, because of background. In email, background is white. "green" is darker. Better.
                     sb.Append((p_isHtml) ? $"{detailedRep}<br/>" : detailedRep + Environment.NewLine + Environment.NewLine);        // fine tune later
                 }

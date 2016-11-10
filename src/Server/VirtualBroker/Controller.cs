@@ -55,13 +55,54 @@ namespace VirtualBroker
 
         public void BuildTasks()
         {
-            Func<IBrokerStrategy> uberVxxStrategyCreateFunc = UberVxxStrategy.StrategyFactoryCreate;
+            var neuralSniffer1TaskSchema = new BrokerTaskSchema()
+            {
+                Name = "NeuralSniffer1",
+                BrokerTaskFactory = BrokerTaskTradeStrategy.BrokerTaskFactoryCreate,
+                Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
+                    { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(NeuralSniffer1Strategy.StrategyFactoryCreate) },
+                    { BrokerTaskSetting.OrderExecution, OrderExecution.MarketOnClose },
+                    { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
+                        {
+                        new BrokerTaskPortfolio() { Name = "! NeuralSniffer Aggressive Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
+                            Param = new PortfolioParamNeuralSniffer1() { PlayingInstrumentUpsideLeverage = -2.0, PlayingInstrumentDownsideLeverage = -2.0 } }
+                        }
+                    }
+                }
+            };
+            neuralSniffer1TaskSchema.Triggers.Add(new VbTrigger()
+            {
+                TriggeredTaskSchema = neuralSniffer1TaskSchema,
+                TriggerType = TriggerType.DailyOnUsaMarketDay,
+                StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
+                StartTimeOffset = TimeSpan.FromMinutes(15),
+                TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
+            });
+            neuralSniffer1TaskSchema.Triggers.Add(new VbTrigger()
+            {
+                TriggeredTaskSchema = neuralSniffer1TaskSchema,
+                TriggerType = TriggerType.DailyOnUsaMarketDay,
+                StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
+                StartTimeOffset = TimeSpan.FromMinutes(-39),
+                TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
+            });
+            neuralSniffer1TaskSchema.Triggers.Add(new VbTrigger()
+            {
+                TriggeredTaskSchema = neuralSniffer1TaskSchema,
+                TriggerType = TriggerType.DailyOnUsaMarketDay,
+                StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
+                StartTimeOffset = TimeSpan.FromMinutes(-16),
+                TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, false } }
+            });
+            g_taskSchemas.Add(neuralSniffer1TaskSchema);
+
+
             var uberVxxTaskSchema = new BrokerTaskSchema()
             {
                 Name = "UberVXX",
                 BrokerTaskFactory = BrokerTaskTradeStrategy.BrokerTaskFactoryCreate,
                 Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
-                    { BrokerTaskSetting.StrategyFactory, uberVxxStrategyCreateFunc },
+                    { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(UberVxxStrategy.StrategyFactoryCreate)  },
                     { BrokerTaskSetting.OrderExecution, OrderExecution.Market },
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
@@ -90,7 +131,7 @@ namespace VirtualBroker
                 TriggeredTaskSchema = uberVxxTaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
-                StartTimeOffset = TimeSpan.FromMinutes(-31),
+                StartTimeOffset = TimeSpan.FromMinutes(-35),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
             uberVxxTaskSchema.Triggers.Add(new VbTrigger()
@@ -104,48 +145,55 @@ namespace VirtualBroker
             g_taskSchemas.Add(uberVxxTaskSchema);
 
 
-            Func<IBrokerStrategy> neuralSniffer1StrategyCreateFunc = NeuralSniffer1Strategy.StrategyFactoryCreate;
-            var neuralSniffer1TaskSchema = new BrokerTaskSchema()
+            
+
+
+            var harryLongTaskSchema = new BrokerTaskSchema()
             {
-                Name = "NeuralSniffer1",
+                Name = "HarryLong",
                 BrokerTaskFactory = BrokerTaskTradeStrategy.BrokerTaskFactoryCreate,
                 Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
-                    { BrokerTaskSetting.StrategyFactory, neuralSniffer1StrategyCreateFunc },
-                    { BrokerTaskSetting.OrderExecution, OrderExecution.MarketOnClose },
+                    { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(HarryLongStrategy.StrategyFactoryCreate) },
+                    { BrokerTaskSetting.OrderExecution, OrderExecution.Market },
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
-                        new BrokerTaskPortfolio() { Name = "! NeuralSniffer Aggressive Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
-                            Param = new PortfolioParamNeuralSniffer1() { PlayingInstrumentUpsideLeverage = -2.0, PlayingInstrumentDownsideLeverage = -2.0 } }
+                        new BrokerTaskPortfolio() { Name = "! Harry Long (Contango-Bond) harvester Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
+                            MaxTradeValueInCurrency = 10000, // For Agy: portfolio is 5K original. Set MaxValue=10K  (assuming portfolio double in a year)
+                            MinTradeValueInCurrency = 100,
+                            Param = new PortfolioParamHarryLong() { } },
+                        new BrokerTaskPortfolio() { Name = "! Harry Long (Contango-Bond) harvester Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
+                            MaxTradeValueInCurrency = 200000, // For Mr.C.: portfolio is 100K original. Set MaxValue=200K  (assuming portfolio double in a year)
+                            MinTradeValueInCurrency = 200,
+                            Param = new PortfolioParamHarryLong() {  } }
                         }
                     }
                 }
             };
-            neuralSniffer1TaskSchema.Triggers.Add(new VbTrigger()
+            harryLongTaskSchema.Triggers.Add(new VbTrigger()
             {
-                TriggeredTaskSchema = neuralSniffer1TaskSchema,
+                TriggeredTaskSchema = harryLongTaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
-                StartTimeOffset = TimeSpan.FromMinutes(15),
+                StartTimeOffset = TimeSpan.FromMinutes(25),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
-            neuralSniffer1TaskSchema.Triggers.Add(new VbTrigger()
+            harryLongTaskSchema.Triggers.Add(new VbTrigger()
             {
-                TriggeredTaskSchema = neuralSniffer1TaskSchema,
+                TriggeredTaskSchema = harryLongTaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
-                StartTimeOffset = TimeSpan.FromMinutes(-35),
+                StartTimeOffset = TimeSpan.FromMinutes(-31),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
-            neuralSniffer1TaskSchema.Triggers.Add(new VbTrigger()
+            harryLongTaskSchema.Triggers.Add(new VbTrigger()
             {
-                TriggeredTaskSchema = neuralSniffer1TaskSchema,
+                TriggeredTaskSchema = harryLongTaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
-                StartTimeOffset = TimeSpan.FromMinutes(-16), 
+                StartTimeOffset = TimeSpan.FromSeconds(-11),    // Give UberVXX priority (executing at -15sec). That is more important because that can change from full 100% long to -200% short. This Harry Long strategy just slowly modifies weights, so if one trade is missed, it is not a problem.
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, false } }
             });
-            g_taskSchemas.Add(neuralSniffer1TaskSchema);
-
+            g_taskSchemas.Add(harryLongTaskSchema);
 
         }
 
