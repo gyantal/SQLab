@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,6 +16,12 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             if (p_strategyName != "TAA")
                 return null;
+
+            // QueryString paramsQs = new QueryString("?" + p_params);
+            var paramsDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(p_params);
+
+
+            
 
             //string strategyParams = p_params;
             string strategyParams = "SpyMinPctMove=0.01&VxxMinPctMove=0.01&LongOrShortTrade=Cash";
