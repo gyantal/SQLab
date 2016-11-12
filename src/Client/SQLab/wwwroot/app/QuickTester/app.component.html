@@ -344,7 +344,7 @@
     <tbody>
         <tr>
             <td><input type="text" [(ngModel)]="strategy_AssetAllocation.assets"                    style="width: 250px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
-            <td><input type="text" [(ngModel)]="strategy_AssetAllocation.assetsConstantLeverage"    style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" />%</td>
+            <td><input type="text" [(ngModel)]="strategy_AssetAllocation.assetsConstantLeverage"    style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
             <td><input type="text" [(ngModel)]="strategy_AssetAllocation.rebalancingFrequency"      style="width: 150px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
             <td><input type="text" [(ngModel)]="strategy_AssetAllocation.pctChannelLookbackDays"    style="width: 90px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
             <td><input type="text" [(ngModel)]="strategy_AssetAllocation.pctChannelPctLimits"       style="width: 50px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" />%</td>
@@ -361,6 +361,7 @@
             <span id="idLetfTAA_MButtonA">ParamSets</span>
             <ul class="sqMenuBarLevel1">
                 <li><span id="idParamSetTAA_GlobVnqIbb_WF" (click)="strategy_AssetAllocation.MenuItemParamSetsClicked($event)">Global+VNQ+BIB *</span></li>
+                <li><span id="idParamSetTAA_VaradiOriginal" (click)="strategy_AssetAllocation.MenuItemParamSetsClicked($event)">Varadi's original</span></li>
             </ul>
         </li>
     </ul>

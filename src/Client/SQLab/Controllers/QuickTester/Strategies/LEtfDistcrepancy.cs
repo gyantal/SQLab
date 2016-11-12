@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,23 +11,24 @@ namespace SQLab.Controllers.QuickTester.Strategies
 {
     public partial class LEtfDistcrepancy
     {
-        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, string p_params)
+        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
         {
-            Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
-
             if (p_strategyName != "LETFDiscrepancy1" && p_strategyName != "LETFDiscrepancy2" && p_strategyName != "LETFDiscrepancy3" && p_strategyName != "LETFDiscrepancy4")
                 return null;
+            Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
 
-            string strategyParams = p_params;
-            string etfPairs = ExtractParam("ETFPairs", ref strategyParams);
-            string rebalancingFrequency = ExtractParam("RebalancingFrequency", ref strategyParams);
-            string etf1 = ExtractParam("ETF1", ref strategyParams);
-            string weightStr1 = ExtractParam("Weight1", ref strategyParams);
+            // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
+            string etfPairs = p_allParamsDict["ETFPairs"][0];
+            string rebalancingFrequency = p_allParamsDict["RebalancingFrequency"][0];
+            string etf1 = p_allParamsDict["ETF1"][0];
+            string weightStr1 = p_allParamsDict["Weight1"][0];
+            string etf2 = p_allParamsDict["ETF2"][0];
+            string weightStr2 = p_allParamsDict["Weight2"][0];
+
             double weight1 = Double.NaN;
             if (!Double.TryParse(weightStr1, out weight1))
                 return @"{ ""errorMessage"":  ""Error: Weight1 cannot be converted to Number : " + weightStr1 + @""" }";
-            string etf2 = ExtractParam("ETF2", ref strategyParams);
-            string weightStr2 = ExtractParam("Weight2", ref strategyParams);
+            
             double weight2 = Double.NaN;
             if (!Double.TryParse(weightStr2, out weight2))
                 return @"{ ""errorMessage"":  ""Error: Weight2 cannot be converted to Number : " + weightStr2 + @""" }";
@@ -98,7 +100,27 @@ namespace SQLab.Controllers.QuickTester.Strategies
             }
             else
             {
-                pv = DoBacktest(p_strategyName, quotes1, quotes2, ticker1, ticker2, weight1 / 100.0, weight2 / 100.0, rebalancingTradingDays, ref noteToUserCheckData, ref htmlNoteFromStrategy);
+
+                pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness((new List<DailyData>[] { quotes1, quotes2 }).ToList(), new string[] { ticker1, ticker2 } , ref noteToUserCheckData);
+
+
+                if (String.Equals(p_strategyName, "LETFDiscrepancy2", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    DoBacktestInTheTimeInterval_RebalanceToNeutral(quotes1, quotes2, rebalancingTradingDays, pv, ref noteToUserCheckData);
+                }
+                else if (String.Equals(p_strategyName, "LETFDiscrepancy3", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(quotes1, quotes2, rebalancingTradingDays, pv, ref noteToUserCheckData);
+                }
+                else if (String.Equals(p_strategyName, "LETFDiscrepancy4", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    DoBacktestInTheTimeInterval_HarryLong(quotes1, quotes2, weight1 / 100.0, weight2 / 100.0, rebalancingTradingDays, pv, ref noteToUserCheckData);
+                }
+                else
+                {
+
+                }
+
             }
 
 
@@ -127,53 +149,6 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //returnStr = returnStr.Replace("\n", ",");
 
             //return @"[{""Symbol"":""VXX""},{""Symbol"":""^VIX"",""LastUtc"":""2015-01-08T19:25:48"",""Last"":17.45,""UtcTimeType"":""LastChangedTime""}]";
-        }
-
-        private static string ExtractParam(string p_paramName, ref string p_strategyParams)
-        {
-            int ind = -1;
-            string paramStr = null;
-            if (p_strategyParams.StartsWith(p_paramName + "=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                p_strategyParams = p_strategyParams.Substring((p_paramName +"=").Length);
-                ind = p_strategyParams.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = p_strategyParams.Length;
-                }
-                paramStr = p_strategyParams.Substring(0, ind);
-                if (ind < p_strategyParams.Length)
-                    p_strategyParams = p_strategyParams.Substring(ind + 1);
-                else
-                    p_strategyParams = "";
-            }
-
-            return paramStr;
-        }
-
-        static List<DailyData> DoBacktest(string p_strategyName, List<DailyData> p_quotes1, List<DailyData> p_quotes2, string p_ticker1, string p_ticker2, double p_weight1, double p_weight2, int p_rebalancingTradingDays, ref string p_noteToUserCheckData, ref string p_htmlNoteFromStrategy)
-        {
-            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(p_quotes1, p_quotes2, p_ticker1, p_ticker2, ref p_noteToUserCheckData);
-
-
-            if (String.Equals(p_strategyName, "LETFDiscrepancy2", StringComparison.CurrentCultureIgnoreCase))
-            {
-                DoBacktestInTheTimeInterval_RebalanceToNeutral(p_quotes1, p_quotes2, p_rebalancingTradingDays, pv, ref p_htmlNoteFromStrategy);
-            }
-            else if (String.Equals(p_strategyName, "LETFDiscrepancy3", StringComparison.CurrentCultureIgnoreCase))
-            {
-                DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(p_quotes1, p_quotes2, p_rebalancingTradingDays, pv, ref p_htmlNoteFromStrategy);
-            }
-            else if (String.Equals(p_strategyName, "LETFDiscrepancy4", StringComparison.CurrentCultureIgnoreCase))
-            {
-                DoBacktestInTheTimeInterval_HarryLong(p_quotes1, p_quotes2, p_weight1, p_weight2, p_rebalancingTradingDays, pv, ref p_htmlNoteFromStrategy);
-            }
-            else
-            {
-
-            }
-
-            return pv;
         }
 
         // every 5-20 days, rebalance it to market neutral;

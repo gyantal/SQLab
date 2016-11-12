@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,98 +10,26 @@ namespace SQLab.Controllers.QuickTester.Strategies
 {
     public class AdaptiveUberVxx
     {
-        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, string p_params)
+        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
         {
-            Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
-
             if (p_strategyName != "AdaptiveUberVxx")
                 return null;
+            Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
 
-            //string strategyParams = p_params;
-            string strategyParams = "SpyMinPctMove=0.01&VxxMinPctMove=0.01&LongOrShortTrade=Cash";
-            int ind = -1;
-
-            string spyMinPctMoveStr = null;
-            if (strategyParams.StartsWith("SpyMinPctMove=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                strategyParams = strategyParams.Substring("SpyMinPctMove=".Length);
-                ind = strategyParams.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = strategyParams.Length;
-                }
-                spyMinPctMoveStr = strategyParams.Substring(0, ind);
-                if (ind < strategyParams.Length)
-                    strategyParams = strategyParams.Substring(ind + 1);
-                else
-                    strategyParams = "";
-            }
-            string vxxMinPctMoveStr = null;
-            if (strategyParams.StartsWith("VxxMinPctMove=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                strategyParams = strategyParams.Substring("VxxMinPctMove=".Length);
-                ind = strategyParams.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = strategyParams.Length;
-                }
-                vxxMinPctMoveStr = strategyParams.Substring(0, ind);
-                if (ind < strategyParams.Length)
-                    strategyParams = strategyParams.Substring(ind + 1);
-                else
-                    strategyParams = "";
-            }
-            string longOrShortTrade = null;
-            if (strategyParams.StartsWith("LongOrShortTrade=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                strategyParams = strategyParams.Substring("LongOrShortTrade=".Length);
-                ind = strategyParams.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = strategyParams.Length;
-                }
-                longOrShortTrade = strategyParams.Substring(0, ind);
-                if (ind < strategyParams.Length)
-                    strategyParams = strategyParams.Substring(ind + 1);
-                else
-                    strategyParams = "";
-            }
-
-            double spyMinPctMove;
-            bool isParseSuccess = Double.TryParse(spyMinPctMoveStr, out spyMinPctMove);
-            if (!isParseSuccess)
-            {
-                throw new Exception("Error: spyMinPctMoveStr as " + spyMinPctMoveStr + " cannot be converted to number.");
-            }
-
-            double vxxMinPctMove;
-            isParseSuccess = Double.TryParse(vxxMinPctMoveStr, out vxxMinPctMove);
-            if (!isParseSuccess)
-            {
-                throw new Exception("Error: vxxMinPctMoveStr as " + vxxMinPctMoveStr + " cannot be converted to number.");
-            }
-
+            // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
+            //string assetsStr = p_allParamsDict["Assets"][0];                                         // "MDY,ILF,FEZ,EEM,EPP,VNQ,TLT"
 
             Stopwatch stopWatch = Stopwatch.StartNew();
             var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, (new string[] { "VXX", "SPY" }).ToList());
             var getAllQuotesData = await getAllQuotesTask;
             stopWatch.Stop();
 
+            string noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(getAllQuotesData.Item1, new string[] { "VXX", "SPY"}, ref noteToUserCheckData);
+
             var vxxQoutes = getAllQuotesData.Item1[0];
             var spyQoutes = getAllQuotesData.Item1[1];
-
-            string noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
-            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(vxxQoutes, spyQoutes, "VXX", "SPY", ref noteToUserCheckData);
-
-
-            if (String.Equals(p_strategyName, "AdaptiveUberVxx", StringComparison.CurrentCultureIgnoreCase))
-            {
-                DoBacktestInTheTimeInterval_AdaptiveUberVxx(vxxQoutes, spyQoutes, spyMinPctMove, vxxMinPctMove, longOrShortTrade, pv, ref noteToUserBacktest);
-            }
-            else
-            {
-
-            }
+            DoBacktestInTheTimeInterval_AdaptiveUberVxx(vxxQoutes, spyQoutes, 0.001, 0.001, "Long", pv, ref noteToUserBacktest);
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,

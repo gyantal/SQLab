@@ -8,6 +8,7 @@ using SqCommon;
 using System.Text;
 using SQLab.Controllers.QuickTester.Strategies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Primitives;
 
 // http://localhost:5000/qt?jsonp=JSON_CALLBACK&StartDate=&EndDate=&strategy=TotM&BullishTradingInstrument=Long%20SPY&DailyMarketDirectionMaskSummerTotM=DD00U00.U&DailyMarketDirectionMaskSummerTotMM=D0UU.0U&DailyMarketDirectionMaskWinterTotM=UUUD.UUU&DailyMarketDirectionMaskWinterTotMM=DDUU.UU00UU
 // http://localhost:5000/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d
@@ -39,9 +40,10 @@ namespace SQLab.Controllers
         private async Task<Tuple<string, string>> GenerateRtpResponse()
         {
             string jsonpCallback = null;
+            string uriQuery = "";
             try
             {
-                string uriQuery = this.HttpContext.Request.QueryString.ToString();    // "?s=VXX,XIV,^vix&f=ab&o=csv" from the URL http://localhost:58213/api/rtp?s=VXX,XIV,^vix&f=ab&o=csv
+                uriQuery = this.HttpContext.Request.QueryString.ToString();    // "?s=VXX,XIV,^vix&f=ab&o=csv" from the URL http://localhost:58213/api/rtp?s=VXX,XIV,^vix&f=ab&o=csv
 
                 if (uriQuery.Length > 8192)
                 {//When you try to pass a string longer than 8192 charachters, a faultException will be thrown. There is a solution, but I don't want
@@ -51,70 +53,15 @@ namespace SQLab.Controllers
                 uriQuery = uriQuery.Substring(1);   // remove '?'
                 uriQuery = uriQuery.Replace("%20", " ").Replace("%5E", "^");    // de-coding from URL to normal things
 
-                int ind = -1;
-                if (uriQuery.StartsWith("jsonp=", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    uriQuery = uriQuery.Substring("jsonp=".Length);
-                    ind = uriQuery.IndexOf('&');
-                    if (ind == -1)
-                    {
-                        throw new Exception("Error: uriQuery.IndexOf('&') 2. Uri: " + uriQuery);
-                    }
-                    jsonpCallback = uriQuery.Substring(0, ind);
-                    uriQuery = uriQuery.Substring(ind + 1);
-                }
+                // QueryString paramsQs = new QueryString("?" + p_params);
+                Dictionary<string, StringValues> allParamsDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uriQuery);   // unlike ParseQueryString in System.Web, this returns a dictionary of type IDictionary<string, string[]>, so the value is an array of strings. This is how the dictionary handles multiple query string parameters with the same name.
+                StringValues jsonpStrVal;
+                if (allParamsDict.TryGetValue("jsonp", out jsonpStrVal))    // Strategy.ts.StartBacktest() doesn't fill this up, so 'jsonp' is not expected in query
+                    jsonpCallback = jsonpStrVal[0];
 
-                if (!uriQuery.StartsWith("StartDate=", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    throw new Exception("Error: StartDate= was not found. Uri: " + uriQuery);
-                }
-                uriQuery = uriQuery.Substring("StartDate=".Length);
-                ind = uriQuery.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = uriQuery.Length;
-                }
-                string startDateStr = uriQuery.Substring(0, ind);
-                if (ind < uriQuery.Length)  // if we are not at the end of the string
-                    uriQuery = uriQuery.Substring(ind + 1);
-                else
-                    uriQuery = "";
-
-                if (!uriQuery.StartsWith("EndDate=", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    throw new Exception("Error: EndDate= was not found. Uri: " + uriQuery);
-                }
-                uriQuery = uriQuery.Substring("EndDate=".Length);
-                ind = uriQuery.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = uriQuery.Length;
-                }
-                string endDateStr = uriQuery.Substring(0, ind);
-                if (ind < uriQuery.Length)  // if we are not at the end of the string
-                    uriQuery = uriQuery.Substring(ind + 1);
-                else
-                    uriQuery = "";
-
-
-                if (!uriQuery.StartsWith("strategy=", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    throw new Exception("Error: strategy= was not found. Uri: " + uriQuery);
-                }
-                uriQuery = uriQuery.Substring("strategy=".Length);
-                ind = uriQuery.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = uriQuery.Length;
-                }
-                string strategyName = uriQuery.Substring(0, ind);
-                if (ind < uriQuery.Length)  // if we are not at the end of the string
-                    uriQuery = uriQuery.Substring(ind + 1);
-                else
-                    uriQuery = "";
-
-
-                string strategyParams = uriQuery;
+                string startDateStr = allParamsDict["StartDate"][0];     // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
+                string endDateStr = allParamsDict["EndDate"][0];
+                string strategyName = allParamsDict["strategy"][0];
 
                 DateTime startDate = DateTime.MinValue;
                 if (startDateStr.Length != 0)
@@ -131,15 +78,15 @@ namespace SQLab.Controllers
 
                 GeneralStrategyParameters generalParams = new GeneralStrategyParameters() { startDateUtc = startDate, endDateUtc = endDate };
 
-                string jsonString = (await AdaptiveUberVxx.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
+                string jsonString = (await AdaptiveUberVxx.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
                 if (jsonString == null)
-                    jsonString = (await TotM.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
+                    jsonString = (await TotM.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
                 if (jsonString == null)
-                    jsonString = await VXX_SPY_Controversial.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams);
+                    jsonString = await VXX_SPY_Controversial.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict);
                 if (jsonString == null)
-                    jsonString = (await LEtfDistcrepancy.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
+                    jsonString = (await LEtfDistcrepancy.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
                 if (jsonString == null)
-                    jsonString = (await TAA.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
+                    jsonString = (await TAA.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
 
                 if (jsonString == null)
                     throw new Exception("Strategy was not found in the WebApi: " + strategyName);
@@ -157,7 +104,9 @@ namespace SQLab.Controllers
             }
             catch (Exception e)
             {
-                string reply = ResponseBuilder(jsonpCallback, @"{ ""errorMessage"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }");
+                string errMsg = $"Error. Exception in QuickTester.GenerateRtpResponse() UriQuery: '{uriQuery}'";
+                Utils.Logger.Error(e, errMsg);
+                string reply = ResponseBuilder(jsonpCallback, @"{ ""errorMessage"":  """ + errMsg + @", Exception.Message: " + e.Message + @""" }");
                 return new Tuple<string, string>(reply, "application/json");
             }
         }

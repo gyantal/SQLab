@@ -17,6 +17,7 @@ export class LEtfDistcrepancy extends Strategy {
 
     constructor(p_app: AppComponent) {
         super("LEtfDistcrepancy", p_app);
+        this.SetParams("idParamSetHL_- 35TVIX_- 65TMV");
     }
 
     IsMenuItemIdHandled(p_subStrategyId: string): boolean {
@@ -93,7 +94,10 @@ export class LEtfDistcrepancy extends Strategy {
         var target = event.target || event.srcElement || event.currentTarget;
         var idAttr = target.attributes.id;
         var idValue = idAttr.nodeValue;
+        this.SetParams(idValue);
+    }
 
+    public SetParams(idValue) {
         switch (idValue) {
             case "idParamSetHL_-25TVIX_-75TMV":     // original Harry Long
                 this.etf1 = "TVIX";
@@ -163,7 +167,6 @@ export class LEtfDistcrepancy extends Strategy {
                 this.weight2 = "-65";      // %, negative is Short
                 break;
         }
-
     }
 
 }

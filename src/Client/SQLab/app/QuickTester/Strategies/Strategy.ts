@@ -51,7 +51,7 @@ export class Strategy {
         console.log("StartBacktest() 2");
 
         //var url = "http://localhost/qt?StartDate=&EndDate=&strategy=AdaptiveUberVxx&BullishTradingInstrument=Long%20SPY&param=UseKellyLeverage=false;MaxLeverage=1.0&Name=Fomc&Priority=3&Combination=Avg&StartDate=&EndDate=&TradingStartAt=2y&Param=&Name=Holiday&Priority=&Combination=&StartDate=&EndDate=&TradingStartAt=&Param=&Name=TotM&Priority=2&Combination=Avg&StartDate=&EndDate=&TradingStartAt=2y&Param=TrainingTicker=SPY&Name=Connor&Priority=1&Combination=Avg&StartDate=&EndDate=&TradingStartAt=100td&Param=LookbackWindowDays=100;ProbDailyFTThreshold=47
-        var url = "/qt?" + this.app.generalInputParameters + "&strategy=" + this.GetWebApiName(p_subStrategyId) +
+        var url = "/qt?" + p_generalInputParameters + "&strategy=" + this.GetWebApiName(p_subStrategyId) +
             this.GetStrategyParams(p_subStrategyId);
 
         p_http.get(url)

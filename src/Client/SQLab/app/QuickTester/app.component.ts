@@ -101,7 +101,6 @@ export class AppComponent implements OnInit, AfterViewInit {
     public startDateUtc: Date = null;
     public endDateUtc: Date = null;
 
-    public generalInputParameters: string = "";
     public debugMessage: string = "";
     public errorMessage: string = "";
 
@@ -258,8 +257,8 @@ export class AppComponent implements OnInit, AfterViewInit {
     MenuItemStartBacktestClicked() {
         console.log("MenuItemStartBacktestClicked() START");
 
-        this.generalInputParameters = "StartDate=" + this.inputStartDateStr + "&EndDate=" + this.inputEndDateStr;
-        this.selectedStrategy.StartBacktest(this.http, this.generalInputParameters, this.selectedSubStrategyMenuItemId);
+        let generalInputParameters: string = "StartDate=" + this.inputStartDateStr + "&EndDate=" + this.inputEndDateStr;
+        this.selectedStrategy.StartBacktest(this.http, generalInputParameters, this.selectedSubStrategyMenuItemId);
         //this.profilingBacktestStopWatch = new StopWatch();
         //this.profilingBacktestStopWatch.Start();
     }

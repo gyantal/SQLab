@@ -337,47 +337,65 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
 
-        public static List<DailyData> DetermineBacktestPeriodCheckDataCorrectness(List<DailyData> p_quotes1, List<DailyData> p_quotes2, string p_ticker1, string p_ticker2, ref string p_noteToUserCheckData)
+        public static List<DailyData> DetermineBacktestPeriodCheckDataCorrectness(IList<List<DailyData>> p_quotes, string[] p_tickers, ref string p_noteToUserCheckData)
         {
-            List<DailyData> pv = new List<DailyData>(p_quotes1.Count());    // suggest maxSize, but it still contains 0 items
+            List<DailyData> pv = new List<DailyData>(p_quotes[0].Count());    // suggest maxSize, but it still contains 0 items
 
-            DateTime pvStartDate = p_quotes1[0].Date;   // find the maximum of the startDates; that is a shared startDate
-            if (p_quotes2[0].Date > pvStartDate)
+            DateTime pvStartDate = DateTime.MinValue;   // find the maximum of the startDates; that is a shared startDate
+            foreach (var quotes in p_quotes)
             {
-                pvStartDate = p_quotes2[0].Date;
+                if (quotes[0].Date > pvStartDate)
+                {
+                    pvStartDate = quotes[0].Date;
+                }
             }
 
             //pv.Add(new DailyData() { Date = pvStartDate.AddDays(-1), ClosePrice = 1.0 });   // put first pv item on previous day. NO. not needed. At the end of the first day, pv will be 1.0, because we trade at Market Close
 
             DateTime pvEndDate = pvStartDate;
             // Start to march and if there is a missing day in any of the ETFs, stop marching further
-            int quotes1Ind = p_quotes1.FindIndex(r => r.Date >= pvStartDate);
-            int quotes2Ind = p_quotes2.FindIndex(r => r.Date >= pvStartDate);
-
-            while (quotes1Ind < p_quotes1.Count() && quotes2Ind < p_quotes2.Count())
+            int[] quotesInd = new int[p_quotes.Count];
+            for (int i = 0; i < p_quotes.Count; i++)
             {
-                if (p_quotes1[quotes1Ind].Date == p_quotes2[quotes2Ind].Date)
+                quotesInd[i] = p_quotes[i].FindIndex(r => r.Date >= pvStartDate);
+            }
+
+            do
+            {
+                bool isExitLoop = false;
+                for (int i = 0; i < p_quotes.Count; i++)
                 {
-                    pv.Add(new DailyData() { Date = p_quotes1[quotes1Ind].Date, ClosePrice = p_quotes1[quotes1Ind].ClosePrice });
-                    quotes1Ind++;
-                    quotes2Ind++;
-                }
-                else
-                {
-                    DateTime minDate = p_quotes1[quotes1Ind].Date;
-                    DateTime wrongDate = p_quotes2[quotes2Ind].Date;
-                    string badTicker = p_ticker2;
-                    if (p_quotes2[quotes2Ind].Date < minDate)
+                    if (quotesInd[i] >= p_quotes[i].Count)
                     {
-                        minDate = p_quotes2[quotes2Ind].Date;
-                        wrongDate = p_quotes1[quotes1Ind].Date;
-                        badTicker = p_ticker1;
+                        isExitLoop = true;
+                        break;
                     }
-                    p_noteToUserCheckData = $"Missing Days. Days of Data don't match in the quotes. Next date would be  '{minDate.ToString()}', but next date of ticker '{p_ticker1}' is '{wrongDate.ToString()}'. Backtest goes only until this day.";
+                }
+                if (isExitLoop)
                     break;
+
+                bool isAlldatesSame = true;
+                DateTime firstQuoteDate = p_quotes[0][quotesInd[0]].Date;
+                for (int i = 1; i < p_quotes.Count; i++)
+                {
+                    if (firstQuoteDate != p_quotes[i][quotesInd[i]].Date)
+                    {
+                        isAlldatesSame = false;
+                        p_noteToUserCheckData = $"Missing Days. Days of Data don't match in the quotes. FirstQuote({p_tickers[0]}) date: '{firstQuoteDate}' doesn't match with ticker({p_tickers[i]}) date: '{p_quotes[i][quotesInd[i]].Date}'. Backtest goes only until this day.";
+                        break;
+                    }
+                }
+                if (isAlldatesSame)
+                {
+                    pv.Add(new DailyData() { Date = p_quotes[0][quotesInd[0]].Date, ClosePrice = p_quotes[0][quotesInd[0]].ClosePrice });
+                    for (int i = 0; i < p_quotes.Count; i++)
+                    {
+                        quotesInd[i] = quotesInd[i] + 1;
+                    }
                 }
 
-            }
+
+            } while (true);
 
             return pv;
         }

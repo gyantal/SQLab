@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json;
 using SqCommon;
 using System;
 using System.Collections.Generic;
@@ -37,94 +38,21 @@ namespace SQLab.Controllers.QuickTester.Strategies
     public static class TotM
     {
         
-        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, string p_params)
+        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
         {
-            Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
-
             if (p_strategyName != "TotM")
                 return null;
+            Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
 
-            string strategyParams = p_params;
-            int ind = -1;
-
-            string bullishTradingInstrument = null;
-            if (strategyParams.StartsWith("BullishTradingInstrument=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                strategyParams = strategyParams.Substring("BullishTradingInstrument=".Length);
-                ind = strategyParams.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = strategyParams.Length;
-                }
-                bullishTradingInstrument = strategyParams.Substring(0, ind);
-                if (ind < strategyParams.Length)
-                    strategyParams = strategyParams.Substring(ind + 1);
-                else
-                    strategyParams = "";
-            }
-            string dailyMarketDirectionMaskSummerTotM = null;
-            if (strategyParams.StartsWith("DailyMarketDirectionMaskSummerTotM=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                strategyParams = strategyParams.Substring("DailyMarketDirectionMaskSummerTotM=".Length);
-                ind = strategyParams.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = strategyParams.Length;
-                }
-                dailyMarketDirectionMaskSummerTotM = strategyParams.Substring(0, ind);
-                if (ind < strategyParams.Length)
-                    strategyParams = strategyParams.Substring(ind + 1);
-                else
-                    strategyParams = "";
-            }
-            string dailyMarketDirectionMaskSummerTotMM = null;
-            if (strategyParams.StartsWith("DailyMarketDirectionMaskSummerTotMM=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                strategyParams = strategyParams.Substring("DailyMarketDirectionMaskSummerTotMM=".Length);
-                ind = strategyParams.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = strategyParams.Length;
-                }
-                dailyMarketDirectionMaskSummerTotMM = strategyParams.Substring(0, ind);
-                if (ind < strategyParams.Length)
-                    strategyParams = strategyParams.Substring(ind + 1);
-                else
-                    strategyParams = "";
-            }
-            string dailyMarketDirectionMaskWinterTotM = null;
-            if (strategyParams.StartsWith("DailyMarketDirectionMaskWinterTotM=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                strategyParams = strategyParams.Substring("DailyMarketDirectionMaskWinterTotM=".Length);
-                ind = strategyParams.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = strategyParams.Length;
-                }
-                dailyMarketDirectionMaskWinterTotM = strategyParams.Substring(0, ind);
-                if (ind < strategyParams.Length)
-                    strategyParams = strategyParams.Substring(ind + 1);
-                else
-                    strategyParams = "";
-            }
-            string dailyMarketDirectionMaskWinterTotMM = null;
-            if (strategyParams.StartsWith("DailyMarketDirectionMaskWinterTotMM=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                strategyParams = strategyParams.Substring("DailyMarketDirectionMaskWinterTotMM=".Length);
-                ind = strategyParams.IndexOf('&');
-                if (ind == -1)
-                {
-                    ind = strategyParams.Length;
-                }
-                dailyMarketDirectionMaskWinterTotMM = strategyParams.Substring(0, ind);
-                if (ind < strategyParams.Length)
-                    strategyParams = strategyParams.Substring(ind + 1);
-                else
-                    strategyParams = "";
-            }
+            // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
+            string bullishTradingInstrument = p_allParamsDict["BullishTradingInstrument"][0];
+            string dailyMarketDirectionMaskSummerTotM = p_allParamsDict["DailyMarketDirectionMaskSummerTotM"][0];
+            string dailyMarketDirectionMaskSummerTotMM = p_allParamsDict["DailyMarketDirectionMaskSummerTotMM"][0];
+            string dailyMarketDirectionMaskWinterTotM = p_allParamsDict["DailyMarketDirectionMaskWinterTotM"][0];
+            string dailyMarketDirectionMaskWinterTotMM = p_allParamsDict["DailyMarketDirectionMaskWinterTotMM"][0];
 
             //bullishTradingInstrument = bullishTradingInstrument.Replace("%20", " ");
-            ind = bullishTradingInstrument.IndexOf(' ');        // "long SPY", "long QQQ", "short VXX"
+            int ind = bullishTradingInstrument.IndexOf(' ');        // "long SPY", "long QQQ", "short VXX"
             StrongAssert.True(ind != -1 && ind != (bullishTradingInstrument.Length - 1), "bullishTradingInstrument parameter cannot be interpreted: " + bullishTradingInstrument);
             string stock = bullishTradingInstrument.Substring(ind + 1);
             string longOrShortOnBullish = bullishTradingInstrument.Substring(0, ind);
@@ -140,15 +68,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             string noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
             List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(stockQoutes, ref noteToUserCheckData);
 
-
-            if (String.Equals(p_strategyName, "TotM", StringComparison.CurrentCultureIgnoreCase))
-            {
-                DoBacktestInTheTimeInterval_TotM(stockQoutes, longOrShortOnBullish, dailyMarketDirectionMaskSummerTotM, dailyMarketDirectionMaskSummerTotMM, dailyMarketDirectionMaskWinterTotM, dailyMarketDirectionMaskWinterTotMM, pv, ref noteToUserBacktest);
-            }
-            else
-            {
-
-            }
+            DoBacktestInTheTimeInterval_TotM(stockQoutes, longOrShortOnBullish, dailyMarketDirectionMaskSummerTotM, dailyMarketDirectionMaskSummerTotMM, dailyMarketDirectionMaskWinterTotM, dailyMarketDirectionMaskWinterTotMM, pv, ref noteToUserBacktest);
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
