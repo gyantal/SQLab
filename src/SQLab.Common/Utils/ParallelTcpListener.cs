@@ -93,7 +93,7 @@ namespace SqCommon
                         }
                         catch (Exception e)
                         {
-                            Utils.Logger.Error("Exception caught in MessageProcessorWorkerLoop.QueueUserWorkItem. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
+                            Utils.Logger.Error(e, "Exception caught in ParallelTcpListener.MessageProcessorWorkerLoop.QueueUserWorkItem().");
                             throw;
                         }
 
@@ -103,7 +103,7 @@ namespace SqCommon
             }
             catch (Exception e)
             {
-                Utils.Logger.Error("Exception caught in MessageProcessorWorkerLoop. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
+                Utils.Logger.Error(e, "Exception caught in ParallelTcpListener.MessageProcessorWorkerLoop().");
                 //throw; Don't allow even Bacgkround threads to crash the App.
             }
         }

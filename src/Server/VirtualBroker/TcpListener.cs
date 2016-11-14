@@ -23,7 +23,7 @@ namespace VirtualBroker
                 BinaryReader br = new BinaryReader(p_tcpClient.GetStream());
                 message = (new VirtualBrokerMessage()).DeserializeFrom(br);
                 Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg.ID:{message.ID}, Param:{message.ParamStr}");  // user can quickly check from Console the messages
-                Utils.Logger.Info($"ProcessTcpClient: Message ID:\"{ message.ID}\", ParamStr: \"{ message.ParamStr}\", ResponseFormat: \"{message.ResponseFormat}\"");
+                Utils.Logger.Info($"Controller.ProcessTcpClient(): Message ID:\"{ message.ID}\", ParamStr: \"{ message.ParamStr}\", ResponseFormat: \"{message.ResponseFormat}\"");
                 if (message.ResponseFormat == VirtualBrokerMessageResponseFormat.None)
                 {
                     Utils.TcpClientDispose(p_tcpClient);
@@ -52,6 +52,12 @@ namespace VirtualBroker
         private void GetRealtimePrice(TcpClient p_tcpClient, VirtualBrokerMessage p_message)
         {
             string reply = Controller.g_gatewaysWatcher.GetRealtimePriceService(p_message.ParamStr);
+            if (reply == null)
+                reply = String.Empty;
+            if (String.IsNullOrEmpty(reply))
+            {
+                Utils.Logger.Warn("Warning. Controller.g_gatewaysWatcher.GetRealtimePriceService() returned IsNullOrEmpty. We return empty string to the caller. Better to send this error instantly than letting the caller timeout."); 
+            }
             BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
             bw.Write(reply);
 

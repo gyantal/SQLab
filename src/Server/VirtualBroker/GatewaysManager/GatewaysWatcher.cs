@@ -54,6 +54,7 @@ namespace VirtualBroker
         async void ReconnectToGateways()
         {
             Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() BEGIN");
+            m_mainGateway = null;
             try
             {
                 Gateway gateway1, gateway2;
@@ -92,7 +93,6 @@ namespace VirtualBroker
                 ////Task.WaitAll(connectTask1, connectTask2);     // blocking wait. This thread will wait forever if needed, but we don't want to starve the threadpool
                 Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways()  reconnectTasks END");
 
-                m_mainGateway = null;
                 bool isAllConnected = true;
                 foreach (var gateway in m_gateways)
                 {
@@ -288,7 +288,7 @@ namespace VirtualBroker
 
         public string GetRealtimePriceService(string p_query)
         {
-            if (!m_isReady)
+            if (!m_isReady || m_mainGateway == null)
                 return null;
             return m_mainGateway.GetRealtimePriceService(p_query);
         }

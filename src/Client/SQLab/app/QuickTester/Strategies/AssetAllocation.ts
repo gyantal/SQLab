@@ -90,8 +90,7 @@ export class AssetAllocation extends Strategy {
                 //this.weight2 = "-65";      // %, negative is Short
                 break;
         }
-    }
+    }   // SetParams()
 
-}
 }
 

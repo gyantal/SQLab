@@ -54,6 +54,16 @@ namespace SQLab.Controllers.QuickTester.Strategies
         {
             // shift ShartDate when we have all the data for "Use 60,120,180, 252-day percentile channels"
 
+            // TODO 1:
+            // rewrite this, because sometimes we don't need the whole pv List, only the first startDate,  public static List<DailyData> DetermineBacktestPeriodCheckDataCorrectness(IList<List<DailyData>> p_quotes, string[] p_tickers, ref string p_noteToUserCheckData)
+            // add another paramerets isPvEstimateNeeded = false by default, CommonMinimumStartDate as an out parameter
+            // because we may start pv 252 days later than the CommonStartDate
+            
+            // TODO2:
+            //DateTime firstAllDataAvailableDate = 
+            // TODO3:
+            // from here, we have to go to the first Rebalance day. Maybe only Fridays,  or maybe TotM-1. That will be the real pvStartDate
+
             DateTime pvStartDate = pv[0].Date;
             DateTime pvEndDate = pv[pv.Count() - 1].Date;
 
@@ -62,6 +72,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
             {
                 iQ[i] = p_quotes[i].FindIndex(r => r.Date >= pvStartDate);
             }
+
+            
 
             double pvDaily = 100.0;
             double cash = pvDaily;
