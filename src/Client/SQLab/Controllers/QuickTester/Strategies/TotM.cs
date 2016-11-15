@@ -65,8 +65,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             var stockQoutes = getAllQuotesData.Item1[0];
 
-            string noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
-            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(stockQoutes, ref noteToUserCheckData);
+            string warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(stockQoutes, ref warningToUser);
 
             DoBacktestInTheTimeInterval_TotM(stockQoutes, longOrShortOnBullish, dailyMarketDirectionMaskSummerTotM, dailyMarketDirectionMaskSummerTotMM, dailyMarketDirectionMaskWinterTotM, dailyMarketDirectionMaskWinterTotMM, pv, ref noteToUserBacktest);
 
@@ -74,8 +74,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
                 //"Number of positions: <span> XXXX </span><br><br>test",
                 //"Number of positions: <span> {{nPositions}} </span><br><br>test",
-                "<b>Bullish</b> (Bearish) on days when mask is Up (Down).<br>" + noteToUserCheckData
-                + ((!String.IsNullOrEmpty(noteToUserCheckData) && !String.IsNullOrEmpty(noteToUserBacktest)) ? "<br>" : "")
+                "<b>Bullish</b> (Bearish) on days when mask is Up (Down).<br>" + warningToUser
+                + ((!String.IsNullOrEmpty(warningToUser) && !String.IsNullOrEmpty(noteToUserBacktest)) ? "<br>" : "")
                 + noteToUserBacktest,
                 errorMessage, debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);

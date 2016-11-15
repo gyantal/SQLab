@@ -91,30 +91,30 @@ namespace SQLab.Controllers.QuickTester.Strategies
             if (quotes2 == null)    // it is Cash, set it according to the other, but use cash
                 quotes2 = quotes1.Select(item => new DailyData() { Date = item.Date, ClosePrice = 100.0 }).ToList();
 
-            string htmlNoteFromStrategy = "", noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            string htmlNoteFromStrategy = "", warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
 
             List<DailyData> pv = null;
             if (String.Equals(p_strategyName, "LETFDiscrepancy1", StringComparison.CurrentCultureIgnoreCase))
             {
-                pv = getAllQuotesData.Item1[0]; // only testing: PV = First of the ETF pair
+                pv = quotes1; // only testing: PV = First of the ETF pair
             }
             else
             {
-
-                pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness((new List<DailyData>[] { quotes1, quotes2 }).ToList(), new string[] { ticker1, ticker2 } , ref noteToUserCheckData);
-
+                DateTime startDate, endDate;
+                StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness((new List<DailyData>[] { quotes1, quotes2 }).ToList(), new string[] { ticker1, ticker2 }, ref warningToUser, out startDate, out endDate);
+                pv = StrategiesCommon.DeepCopyQuoteRange(quotes1, startDate, endDate);
 
                 if (String.Equals(p_strategyName, "LETFDiscrepancy2", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    DoBacktestInTheTimeInterval_RebalanceToNeutral(quotes1, quotes2, rebalancingTradingDays, pv, ref noteToUserCheckData);
+                    DoBacktestInTheTimeInterval_RebalanceToNeutral(quotes1, quotes2, rebalancingTradingDays, pv, ref warningToUser);
                 }
                 else if (String.Equals(p_strategyName, "LETFDiscrepancy3", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(quotes1, quotes2, rebalancingTradingDays, pv, ref noteToUserCheckData);
+                    DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(quotes1, quotes2, rebalancingTradingDays, pv, ref warningToUser);
                 }
                 else if (String.Equals(p_strategyName, "LETFDiscrepancy4", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    DoBacktestInTheTimeInterval_HarryLong(quotes1, quotes2, weight1 / 100.0, weight2 / 100.0, rebalancingTradingDays, pv, ref noteToUserCheckData);
+                    DoBacktestInTheTimeInterval_HarryLong(quotes1, quotes2, weight1 / 100.0, weight2 / 100.0, rebalancingTradingDays, pv, ref warningToUser);
                 }
                 else
                 {
@@ -126,7 +126,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-                htmlNoteFromStrategy + ". " + noteToUserCheckData + "***" + noteToUserBacktest, errorMessage,
+                htmlNoteFromStrategy + ". " + warningToUser + "***" + noteToUserBacktest, errorMessage,
                 debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;

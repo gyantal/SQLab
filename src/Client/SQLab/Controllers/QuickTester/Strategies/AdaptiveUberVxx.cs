@@ -24,8 +24,10 @@ namespace SQLab.Controllers.QuickTester.Strategies
             var getAllQuotesData = await getAllQuotesTask;
             stopWatch.Stop();
 
-            string noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
-            List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(getAllQuotesData.Item1, new string[] { "VXX", "SPY"}, ref noteToUserCheckData);
+            string warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            DateTime startDate, endDate;
+            StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(getAllQuotesData.Item1, new string[] { "VXX", "SPY" }, ref warningToUser, out startDate, out endDate);
+            List<DailyData> pv = StrategiesCommon.DeepCopyQuoteRange(getAllQuotesData.Item1[0], startDate, endDate);
 
             var vxxQoutes = getAllQuotesData.Item1[0];
             var spyQoutes = getAllQuotesData.Item1[1];
@@ -33,7 +35,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-               noteToUserCheckData + "***" + noteToUserBacktest, errorMessage,
+               warningToUser + "***" + noteToUserBacktest, errorMessage,
                debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;

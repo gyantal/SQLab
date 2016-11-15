@@ -309,10 +309,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
 
-        //check for data integrity: 
-        // - SRS (bearish one) doesn't have data for 2014-12-01, but URE has. What to do on that day: stop doing anything after that day and write a message to user that bad data. EndDate was modified.
-        // FAS-FAZ: "Missing Days. Days of Data don't match in the quotes. Next date would be '2009-02-06 12:00:00 AM', but next date of ticker 'FAS' is '2009-02-10 12:00:00 AM'. Backtest goes only until this day."
-        public static List<DailyData> DetermineBacktestPeriodCheckDataCorrectness(List<DailyData> p_quotes, ref string p_noteToUserCheckData)
+        public static List<DailyData> DetermineBacktestPeriodCheckDataCorrectness(List<DailyData> p_quotes, ref string p_warningToUser)
         {
             List<DailyData> pv = new List<DailyData>(p_quotes.Count());    // suggest maxSize, but it still contains 0 items
 
@@ -337,9 +334,13 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
 
-        public static List<DailyData> DetermineBacktestPeriodCheckDataCorrectness(IList<List<DailyData>> p_quotes, string[] p_tickers, ref string p_noteToUserCheckData)
+        //check for data integrity: 
+        // - SRS (bearish one) doesn't have data for 2014-12-01, but URE has. What to do on that day: stop doing anything after that day and write a message to user that bad data. EndDate was modified.
+        // FAS-FAZ: "Missing Days. Days of Data don't match in the quotes. Next date would be '2009-02-06 12:00:00 AM', but next date of ticker 'FAS' is '2009-02-10 12:00:00 AM'. Backtest goes only until this day."
+        public static bool DetermineBacktestPeriodCheckDataCorrectness(IList<List<DailyData>> p_quotes, string[] p_tickers, ref string p_noteToUserCheckData, out DateTime p_startDate, out DateTime p_endDate)
         {
-            List<DailyData> pv = new List<DailyData>(p_quotes[0].Count());    // suggest maxSize, but it still contains 0 items
+            p_startDate = DateTime.MaxValue;
+            p_endDate = DateTime.MinValue;
 
             DateTime pvStartDate = DateTime.MinValue;   // find the maximum of the startDates; that is a shared startDate
             foreach (var quotes in p_quotes)
@@ -350,14 +351,15 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 }
             }
 
-            //pv.Add(new DailyData() { Date = pvStartDate.AddDays(-1), ClosePrice = 1.0 });   // put first pv item on previous day. NO. not needed. At the end of the first day, pv will be 1.0, because we trade at Market Close
-
             DateTime pvEndDate = pvStartDate;
             // Start to march and if there is a missing day in any of the ETFs, stop marching further
             int[] quotesInd = new int[p_quotes.Count];
             for (int i = 0; i < p_quotes.Count; i++)
             {
-                quotesInd[i] = p_quotes[i].FindIndex(r => r.Date >= pvStartDate);
+                int startDateInd = p_quotes[i].FindIndex(r => r.Date >= pvStartDate);
+                if (startDateInd == -1) // the maximum of the StartDates is not found in another QuoteHistory. So, we cannot start from StartDay.
+                    return false;
+                quotesInd[i] = startDateInd;
             }
 
             do
@@ -387,7 +389,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 }
                 if (isAlldatesSame)
                 {
-                    pv.Add(new DailyData() { Date = p_quotes[0][quotesInd[0]].Date, ClosePrice = p_quotes[0][quotesInd[0]].ClosePrice });
+                    pvEndDate = p_quotes[0][quotesInd[0]].Date;
+                    //pv.Add(new DailyData() { Date = p_quotes[0][quotesInd[0]].Date, ClosePrice = p_quotes[0][quotesInd[0]].ClosePrice });
                     for (int i = 0; i < p_quotes.Count; i++)
                     {
                         quotesInd[i] = quotesInd[i] + 1;
@@ -397,6 +400,22 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             } while (true);
 
+            p_startDate = pvStartDate;
+            p_endDate = pvEndDate;
+            return true;    // return OK, because even if there was a Missing day, we could generate a meaningful StartDate/EndDate pair
+        }
+
+        public static List<DailyData> DeepCopyQuoteRange(List<DailyData> p_quotes, DateTime p_startDate, DateTime p_endDate)   // Shallow Copy is not OK, as *.ClosePrices will be overwritten
+        {
+            int startDateInd = p_quotes.FindIndex(r => r.Date >= p_startDate);
+            int endDateInd = p_quotes.FindIndex(startDateInd, r => r.Date >= p_endDate);
+            List<DailyData> pv = new List<DailyData>(endDateInd - startDateInd);
+            for (int i = startDateInd; i <= endDateInd; i++)
+            {
+                pv.Add(new DailyData() { Date = p_quotes[i].Date, ClosePrice = p_quotes[i].ClosePrice });
+            }
+            //return p_quotes.GetRange(startDateInd, endDateInd - startDateInd).Select(r => new DailyData() { Date = r.Date, ClosePrice = r.ClosePrice }).ToList(); // works, but probably slow
+            //return p_quotes.GetRange(startDateInd, endDateInd - startDateInd);  // an efficient way of getting a subset of the List, but it is a shallow copy is not OK, as *.ClosePrice will be overwritten in PV
             return pv;
         }
 
@@ -409,6 +428,11 @@ namespace SQLab.Controllers.QuickTester.Strategies
         // George: a little problem to me, but left it like this: underPerfFromTarget is distance from Zero, while in StDev, it was distance from Avg.
         public static StrategyResult CreateStrategyResultFromPV(List<DailyData> p_pv, string p_htmlNoteFromStrategy, string p_errorMessage, string p_debugMessage)
         {
+            if (p_pv == null)
+            {
+                return new StrategyResult() { htmlNoteFromStrategy=p_htmlNoteFromStrategy, errorMessage = p_errorMessage, debugMessage= p_debugMessage };
+            }
+
             //IEnumerable<string> chartDataToSend = pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "-" + String.Format("{0:0.00}", row.ClosePrice));
             IEnumerable<string> chartDataToSend = p_pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "," + String.Format("{0:0.00}", row.ClosePrice >= 0 ? row.ClosePrice : 0.0));    // postprocess: TradingViewChart cannot accept negative numbers
 

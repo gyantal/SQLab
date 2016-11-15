@@ -12,8 +12,8 @@ export class AssetAllocation extends Strategy {
     public pctChannelLookbackDays: string = "30-60-120-252";
     public pctChannelPctLimits: string = "30-70";
     public pctChannelIsConditional: string = "";            // "Yes"
-    public histVolLookbackDays: string = "20d";
-    public dynamicLeverageClmtParams: string = "";          // "SPX 50/200-day MA; XLU/VTI";
+    public histVolLookbackDays: string = "20";
+    public dynamicLeverageClmtParams: string = "";          // "SMA(SPX,50d,200d); PR(XLU,VTI,20d)";   // SPX 50/200 crossover; PR=PriceRatio of XLU/VTI for 20 days
     public uberVxxEventsParams: string = "";                // "FOMC;Holidays"  */
 
     constructor(p_app: AppComponent) {
@@ -68,7 +68,7 @@ export class AssetAllocation extends Strategy {
                 this.pctChannelLookbackDays = "30-60-120-252";
                 this.pctChannelPctLimits = "30-70";
                 this.pctChannelIsConditional = "";
-                this.histVolLookbackDays = "20d";
+                this.histVolLookbackDays = "20";
                 this.dynamicLeverageClmtParams = "";
                 this.uberVxxEventsParams = "";
                 break;
@@ -79,7 +79,7 @@ export class AssetAllocation extends Strategy {
                 this.pctChannelLookbackDays = "60-120-180-252";
                 this.pctChannelPctLimits = "25-75";
                 this.pctChannelIsConditional = "";
-                this.histVolLookbackDays = "20d";
+                this.histVolLookbackDays = "20";
                 this.dynamicLeverageClmtParams = "";
                 this.uberVxxEventsParams = "";
                 break;
