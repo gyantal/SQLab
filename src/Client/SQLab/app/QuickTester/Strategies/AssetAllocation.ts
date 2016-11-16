@@ -72,8 +72,19 @@ export class AssetAllocation extends Strategy {
                 this.dynamicLeverageClmtParams = "";
                 this.uberVxxEventsParams = "";
                 break;
+            case "idParamSetTAA_GlobVnq_WF":
+                this.assets = "MDY,ILF,FEZ,EEM,EPP,VNQ"
+                this.assetsConstantLeverage = "";
+                this.rebalancingFrequency = "Weekly,Fridays"
+                this.pctChannelLookbackDays = "30-60-120-252";
+                this.pctChannelPctLimits = "25-75";
+                this.pctChannelIsConditional = "";
+                this.histVolLookbackDays = "20";
+                this.dynamicLeverageClmtParams = "";
+                this.uberVxxEventsParams = "";
+                break;
             case "idParamSetTAA_VaradiOriginal":
-                this.assets = "VTI,IYR,LQD,DBC,SHY"
+                this.assets = "VTI,ICF,LQD,DBC"     // Varadi uses SHY (1-3 Year Treasury Bond) for Cash, but Cash is fine. SHY = 0.47% CAGR only, not even half percent
                 this.assetsConstantLeverage = "";
                 this.rebalancingFrequency = "Monthly,T-1"
                 this.pctChannelLookbackDays = "60-120-180-252";
