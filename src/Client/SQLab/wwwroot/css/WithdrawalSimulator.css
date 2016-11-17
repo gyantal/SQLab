@@ -12,6 +12,14 @@ h2   {
     color: gainsboro;
     font-size: 125%;
 }
+ h3 {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    color: mediumblue;
+    font-size: 110%;
+        }
+ .wshelp li {
+            margin: 10px 0;
+        }
 .buttonSim {
     background-color: dodgerblue; /* Green */
     /*border: none;*/
