@@ -47,7 +47,7 @@
             <li><i>Random Example:</i> The portfolio value of a randomly selected simulation.</li>
             </ul></li>
         <li><u>Strategy without withdrawal:</u> In this case, no withdrawal is made. It is a simple buy and hold strategy.</li>
-        <li><u>Strategy with withdrawal:</u> In this case, systematic withdrawal is made. There is two sub-portfolios: 'Withdrawed' and 'Still invested'.<ul>
+        <li><u>Strategy with withdrawal:</u> In this case, systematic withdrawal is made. There are two sub-portfolios: 'Withdrawed' and 'Still invested'.<ul>
                 <li><i>Withdrawed:</i> This sub-portfolio contains the already withdrawed money. This is a passive sub-portfolio without additional returns.</li>
                 <li><i>Still invested:</i> This sub-portfolio contains our still invested money at the end of simulation. </li>
                 <li><i>Total:</i> The aggregation of 'Withdrawed' and 'Still invested' sub-portfolios.</li>
@@ -243,8 +243,29 @@
     </table>
     <h3>Interpretation of results   </h3>
     During the simulation, $2,000 was deposited in total. <br><br>
-    If withdrawals had not been applied, average profit would have been $170,187 or 8,509.3% during the 10 years, which is 56.1% CAGR. Median values would have been $71,914; 3,595.7% and 43.4%, respectively. Using a randomly selected yield curve from the 100 simulations, average profit would be $84,426 or 4,221.3%, which is 45.7% CAGR. <br><br>
-    Using withdrawals, in average case our total profit would decrease significantly to $80,822 (or to $35,944 in case of median or to $44,709 in case of the randomly selected yield curve). In terms of CAGR, it would decrease with 11% to 45.1% on average. However, over the years $20,282 profit has been realized, which is tenfold the total deposit.<br><br>
-    Based on these figures, using systematic withdrawals in real life should be recommended.
+    <strong>If withdrawals had not been applied, average profit would have been $170,187 or 8,509.3% during the 10 years, which is 56.1% CAGR. </strong>
+    Median values would have been $71,914; 3,595.7% and 43.4%, respectively. Using a randomly selected yield curve from the 100 simulations, average profit would be $84,426 or 4,221.3%, which is 45.7% CAGR. <br><br>
+    <strong>Using withdrawals, in average case our total profit would decrease significantly to $80,822</strong>
+    (or to $35,944 in case of median or to $44,709 in case of the randomly selected yield curve). <strong>
+    In terms of CAGR, it would decrease with 11% to 45.1% on average. However, over the years $20,282 profit has been realized, which is tenfold the total deposit.</strong>
+    <br><br><br>
+
+    Here we present <strong>
+    another interpretation which focuses on the Median</strong>
+    values and multiplies these amounts by 1000 to represent more faithfully the currently played UberVXX strategy.
+    After investing $1M (+$1M later) and assuming <strong>a risky future in which the strategy goes bankrupt the next day after 10 years</strong>
+    , because of some unforeseen reasons
+    (e.g. VXX shares are redeemed forcefully with 0 value by Barclays while the strategy is long VXX, or VIX spikes to 300 and the strategy is short VXX, etc.),
+    <strong>which course of action would in investor choose: </strong>
+    <ul>
+        <li><u>Option 1:</u><strong>Make no withdrawal</strong> over the years and <strong>having $71M portfolio value</strong> after 10 years. But risking that all can go to 0 overnight. </li>
+        <li>
+            <u>Option 2:</u><strong>Make 10% witdrawal</strong> every year, and <strong>having $25M portfolio value which is still invested, and risky and can go to 0. And already having $10.5M (x5 more than the deposit) taken away and put it into cash</strong>
+            or another safe asset.
+        </li>
+    </ul>
+    The decision is in the investor's hands.<br><br><br>
+
+    Based on these figures, using <strong>systematic withdrawals in real life should be recommended</strong>.
 </body>
 </html>

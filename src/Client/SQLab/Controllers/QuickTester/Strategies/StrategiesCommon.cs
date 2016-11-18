@@ -396,6 +396,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
                         quotesInd[i] = quotesInd[i] + 1;
                     }
                 }
+                else
+                    break;
 
 
             } while (true);
