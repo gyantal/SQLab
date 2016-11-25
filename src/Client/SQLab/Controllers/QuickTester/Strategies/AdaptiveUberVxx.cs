@@ -60,23 +60,23 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
             double pvDaily = 100.0;
-            pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
             // on first day: short VXX, we cannot check what was 'yesterday' %change
             //pv[1].ClosePrice = pvDaily;
-            double vxxChgOnFirstDay = vxxQoutes[iVXX + 1].ClosePrice / vxxQoutes[iVXX].ClosePrice - 1.0;
+            double vxxChgOnFirstDay = vxxQoutes[iVXX + 1].AdjClosePrice / vxxQoutes[iVXX].AdjClosePrice - 1.0;
             double newNAVOnFirstDay = 2 * pvDaily - (vxxChgOnFirstDay + 1.0) * pvDaily;     // 2 * pvDaily is the cash
             pvDaily = newNAVOnFirstDay;
-            pv[1].ClosePrice = pvDaily;
+            pv[1].AdjClosePrice = pvDaily;
 
             int nControversialDays = 0;
 
             for (int i = 2; i < pv.Count(); i++)
             {
-                double vxxChgYesterday = vxxQoutes[iVXX + i - 1].ClosePrice / vxxQoutes[iVXX + i - 2].ClosePrice - 1.0;
-                double spyChgYesterday = spyQoutes[iSpy + i - 1].ClosePrice / spyQoutes[iSpy + i - 2].ClosePrice - 1.0;
+                double vxxChgYesterday = vxxQoutes[iVXX + i - 1].AdjClosePrice / vxxQoutes[iVXX + i - 2].AdjClosePrice - 1.0;
+                double spyChgYesterday = spyQoutes[iSpy + i - 1].AdjClosePrice / spyQoutes[iSpy + i - 2].AdjClosePrice - 1.0;
 
-                double vxxChg = vxxQoutes[iVXX + i].ClosePrice / vxxQoutes[iVXX + i - 1].ClosePrice - 1.0;
+                double vxxChg = vxxQoutes[iVXX + i].AdjClosePrice / vxxQoutes[iVXX + i - 1].AdjClosePrice - 1.0;
                 if (Math.Sign(vxxChgYesterday) == Math.Sign(spyChgYesterday) && Math.Abs(spyChgYesterday) > (spyMinPctMove / 100.0) && Math.Abs(vxxChgYesterday) > (vxxMinPctMove / 100.0))       // Controversy, if they have the same sign, because usually they have the opposite sign
                 {
                     nControversialDays++;
@@ -95,7 +95,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     pvDaily = newNAV;
                 }
 
-                pv[i].ClosePrice = pvDaily;
+                pv[i].AdjClosePrice = pvDaily;
             }
 
             noteToUserBacktest = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());

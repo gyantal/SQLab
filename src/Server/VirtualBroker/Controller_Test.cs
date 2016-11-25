@@ -7,6 +7,7 @@ using SqCommon;
 using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;     // this is the only timer available under DotNetCore
 using System.Threading.Tasks;
 
@@ -142,6 +143,24 @@ namespace VirtualBroker
                 //agyTestTrainError[i] = train.Error;
             }
 
+        }
+
+        internal StringBuilder GetNextScheduleTimes(bool p_isHtml)
+        {
+            StringBuilder sb = new StringBuilder();
+            DateTime utcNow = DateTime.UtcNow;
+            foreach (var taskSchema in g_taskSchemas)
+            {
+                DateTime nextTimeUtc = DateTime.MaxValue;
+                foreach (var trigger in taskSchema.Triggers)
+                {
+                    if ((trigger.NextScheduleTimeUtc != null) && (trigger.NextScheduleTimeUtc > utcNow) && (trigger.NextScheduleTimeUtc < nextTimeUtc))
+                        nextTimeUtc = (DateTime)trigger.NextScheduleTimeUtc;
+                }
+
+                sb.AppendLine($"{taskSchema.Name}: {nextTimeUtc.ToString("MM-dd HH:mm:ss")}{((p_isHtml) ? "<br>"  :String.Empty)}");
+            }
+            return sb;
         }
 
         internal void TestElapseFirstTriggerWithSimulation(int p_taskSchemaInd)

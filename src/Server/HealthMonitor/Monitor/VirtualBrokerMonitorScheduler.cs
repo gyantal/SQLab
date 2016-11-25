@@ -78,7 +78,7 @@ namespace HealthMonitor
                     TriggeredTaskSchema = uberVxxTaskSchema,
                     TriggerType = TriggerType.DailyOnUsaMarketDay,
                     StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
-                    StartTimeOffset = TimeSpan.FromMinutes(20),
+                    StartTimeOffset = TimeSpan.FromMinutes(25),
                 });
                 uberVxxTaskSchema.Triggers.Add(new HmVbTrigger()
                 {
@@ -96,6 +96,7 @@ namespace HealthMonitor
                 });
                 taskSchemas.Add(uberVxxTaskSchema);
 
+
                 var harryLongTaskSchema = new TriggeredTaskSchema()
                 {
                     Name = "HarryLong",
@@ -106,7 +107,7 @@ namespace HealthMonitor
                     TriggeredTaskSchema = harryLongTaskSchema,
                     TriggerType = TriggerType.DailyOnUsaMarketDay,
                     StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
-                    StartTimeOffset = TimeSpan.FromMinutes(25) 
+                    StartTimeOffset = TimeSpan.FromMinutes(30) 
                 });
                 harryLongTaskSchema.Triggers.Add(new HmVbTrigger()
                 {

@@ -198,7 +198,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
             double pvDaily = 100.0;
-            p_pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            p_pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
 
 
@@ -209,7 +209,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             for (int i = 1; i < p_qoutes.Count(); i++)  // march over on p_quotes, not pv
             {
                 DateTime day = p_qoutes[i].Date;
-                double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
+                double pctChg = p_qoutes[i].AdjClosePrice / p_qoutes[i - 1].AdjClosePrice - 1.0;
                 pctChgTotal += pctChg;
 
                 allYearTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
@@ -303,7 +303,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
 
-                p_pv[i].ClosePrice = pvDaily;
+                p_pv[i].AdjClosePrice = pvDaily;
             }
 
             double pctChgTotalAMean = (p_qoutes.Count() <= 0) ? 0.0 : pctChgTotal / (double)(p_qoutes.Count() - 1);
@@ -1060,7 +1060,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
             double pvDaily = 100.0;
-            p_pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            p_pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
 
 
@@ -1121,7 +1121,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 {
                     bool isBullishDayToday = (nBullishVotesToday > 0);
 
-                    double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
+                    double pctChg = p_qoutes[i].AdjClosePrice / p_qoutes[i - 1].AdjClosePrice - 1.0;
 
                     bool isTradeLong = (isBullishDayToday && isTradeLongOnBullish) || (!isBullishDayToday && !isTradeLongOnBullish);
 
@@ -1137,7 +1137,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
 
-                p_pv[i].ClosePrice = pvDaily;
+                p_pv[i].AdjClosePrice = pvDaily;
             }
         }
 
@@ -1338,7 +1338,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
             double pvDaily = 100.0;
-            p_pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            p_pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
 
 
@@ -1375,7 +1375,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
                 if (isBullishDayToday != null)
                 {
-                    double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
+                    double pctChg = p_qoutes[i].AdjClosePrice / p_qoutes[i - 1].AdjClosePrice - 1.0;
 
                     bool isTradeLong = ((bool)isBullishDayToday && isTradeLongOnBullish) || (!(bool)isBullishDayToday && !isTradeLongOnBullish);
 
@@ -1391,7 +1391,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
 
-                p_pv[i].ClosePrice = pvDaily;
+                p_pv[i].AdjClosePrice = pvDaily;
             }
         }
 
@@ -1503,7 +1503,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
             double pvDaily = 100.0;
-            p_pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            p_pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
 
 
@@ -1530,7 +1530,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
                 if (isBullishDayToday != null)
                 {
-                    double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
+                    double pctChg = p_qoutes[i].AdjClosePrice / p_qoutes[i - 1].AdjClosePrice - 1.0;
 
                     bool isTradeLong = ((bool)isBullishDayToday && isTradeLongOnBullish) || (!(bool)isBullishDayToday && !isTradeLongOnBullish);
 
@@ -1546,7 +1546,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
 
-                p_pv[i].ClosePrice = pvDaily;
+                p_pv[i].AdjClosePrice = pvDaily;
             }
         }
 
@@ -1556,7 +1556,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             DateTime pvEndDate = p_qoutes[p_qoutes.Count() - 1].Date;
 
             double pvDaily = 100.0;
-            p_pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            p_pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
             bool isTradeLongOnBullish = String.Equals(p_longOrShortOnBullish, "Long");
 
@@ -1614,7 +1614,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
                 if (isBullishDayToday != null)
                 {
-                    double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
+                    double pctChg = p_qoutes[i].AdjClosePrice / p_qoutes[i - 1].AdjClosePrice - 1.0;
 
                     bool isTradeLong = ((bool)isBullishDayToday && isTradeLongOnBullish) || (!(bool)isBullishDayToday && !isTradeLongOnBullish);
 
@@ -1630,7 +1630,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
 
-                p_pv[i].ClosePrice = pvDaily;
+                p_pv[i].AdjClosePrice = pvDaily;
             }
         }
 

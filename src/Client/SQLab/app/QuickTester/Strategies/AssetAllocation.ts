@@ -6,11 +6,11 @@ import { Strategy } from './Strategy';
 
 export class AssetAllocation extends Strategy {
 
-    public assets: string = "MDY,ILF,FEZ,EEM,EPP,VNQ,TLT";
+    public assets: string = "MDY,ILF,FEZ,EEM,EPP,VNQ";
     public assetsConstantLeverage: string = "";             // "1,1,1,-1,1.5,2,2";
     public rebalancingFrequency: string = "Weekly,Fridays";   // "Daily,2d"(trading days),"Weekly,Fridays", "Monthly,T-1"/"Monthly,T+0" (last/first trading day of the month)
     public pctChannelLookbackDays: string = "60-120-180-252";
-    public pctChannelPctLimits: string = "30-70";
+    public pctChannelPctLimits: string = "25-75";
     public isPctChannelActiveEveryDay: string = "Yes";      // "Yes"
     public isPctChannelConditional: string = "";            // "Yes"
 
@@ -23,7 +23,7 @@ export class AssetAllocation extends Strategy {
 
     constructor(p_app: AppComponent) {
         super("AssetAllocation", p_app);
-        this.SetParams("idParamSetTAA_VaradiOriginal");     // temporary for Development
+        this.SetParams("idParamSetTAA_GlobVnqIbb");     // temporary for Development
     }
 
     IsMenuItemIdHandled(p_subStrategyId: string): boolean {
@@ -66,12 +66,12 @@ export class AssetAllocation extends Strategy {
 
     public SetParams(idValue) {
         switch (idValue) {
-            case "idParamSetTAA_GlobVnqIbb_WF":
+            case "idParamSetTAA_GlobVnqIbb":
                 this.assets = "MDY,ILF,FEZ,EEM,EPP,VNQ,IBB"
-                this.assetsConstantLeverage = "";
+                this.assetsConstantLeverage = "2,2,2,2,2,2,2";
                 this.rebalancingFrequency = "Daily,1d"    // Balazs: "•	Rebalance period: weekly rebalance is recommended (instead of monthly);"
-                this.pctChannelLookbackDays = "60-120-180-252";  // Balazs: "•	Modified Percentile Channel Look-back Periods: 30-, 60-, 120- and 252-day is recommended (instead of 60-, 120-, 180- and 252-day);", but later decided we need Longer Term signals, so we don't switch off/on from stock too often', Balazs is using the original Varadi in all his Matlab code.
-                this.pctChannelPctLimits = "30-70";             // Balazs: "•	Percentile Channel Threshold: original 25% is recommended;", but George overrides this
+                this.pctChannelLookbackDays = "50-80-120-150";  // Balazs: "•	Modified Percentile Channel Look-back Periods: 30-, 60-, 120- and 252-day is recommended (instead of 60-, 120-, 180- and 252-day);", but later decided we need Longer Term signals, so we don't switch off/on from stock too often', Balazs is using the original Varadi in all his Matlab code.
+                this.pctChannelPctLimits = "20-75";             // Balazs: "•	Percentile Channel Threshold: original 25% is recommended;", but George overrides this
                 this.isPctChannelActiveEveryDay = "Yes";
                 this.isPctChannelConditional = "";
                 this.histVolLookbackDays = "20";

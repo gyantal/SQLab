@@ -1,138 +1,170 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
-using Newtonsoft.Json;
+﻿using DbCommon;
+using IBApi;
+using SqCommon;
 using SQCommon.MathNet;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Utils = SqCommon.Utils;
 
-namespace SQLab.Controllers.QuickTester.Strategies
+namespace VirtualBroker
 {
-    enum RebalancingPeriodicity { Daily, Weekly, Monthly };
+    public enum RebalancingPeriodicity { Daily, Weekly, Monthly };
 
     enum DebugDetailToHtml { Date, PV, AssetFinalWeights, CashWeight, AssetData, PctChannels };
 
-
-    public class TAA
+    // Portfolio specific parameters are here. User1's portfolio1 may use double leverage than User2's portfolio2. The Common Strategy params should go to StrategyConfig.cs
+    public class PortfolioParamTAA : IPortfolioParam
     {
-        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
+        //public double PlayingInstrumentTicker1Leverage { get; set; }
+        //public double PlayingInstrumentTicker2Leverage { get; set; }
+    }
+
+    public partial class TAAStrategy : IBrokerStrategy
+    {
+        StringBuilder m_detailedReportSb;
+
+        Task<Dictionary<string, Tuple<IAssetID, string>>> m_loadAssetIdTask = null;
+        Dictionary<string, Tuple<IAssetID, string>> m_tickerToAssetId = null;   // ticker => AssetID : FullTicker mapping
+
+        public bool IsSameStrategyForAllUsers { get; set; } = true;
+
+        TAAConfig taaConfig = new TAAConfig();
+        List<List<DailyData>> m_quotes = null;
+        List<DailyData> m_cashEquivalentQuotes = null;
+        double[] m_lastWeights = null;
+
+        public static IBrokerStrategy StrategyFactoryCreate()
         {
-            if (p_strategyName != "TAA")
-                return null;
-            Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
-
-            // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
-            // 1. read parameter strings
-            string assetsStr = p_allParamsDict["Assets"][0];                                         // "MDY,ILF,FEZ,EEM,EPP,VNQ,TLT"
-            string assetsConstantLeverageStr = p_allParamsDict["AssetsConstantLeverage"][0];         // "1,1,1,-1,1.5,2,2"
-            string rebalancingFrequencyStr = p_allParamsDict["RebalancingFrequency"][0];             // "Weekly,Fridays";   // "Daily,2d"(trading days),"Weekly,Fridays", "Monthly,T-1"/"Monthly,T+0" (last/first trading day of the month)
-            string pctChannelLookbackDaysStr = p_allParamsDict["PctChannelLookbackDays"][0];         // "30-60-120-252"
-            string pctChannelPctLimitsStr = p_allParamsDict["PctChannelPctLimits"][0];               // "30-70"
-            string isPctChannelActiveEveryDayStr = p_allParamsDict["IsPctChannelActiveEveryDay"][0]; // "Yes"
-            string isPctChannelConditionalStr = p_allParamsDict["IsPctChannelConditional"][0];       // "Yes"
-            string histVolLookbackDaysStr = p_allParamsDict["HistVolLookbackDays"][0];               // "20"
-            string isCashAllocatedForNonActivesStr = p_allParamsDict["IsCashAllocatedForNonActives"][0];  // "Yes"
-            string cashEquivalentTickerStr = p_allParamsDict["CashEquivalentTicker"][0];             // "SHY"
-            string dynamicLeverageClmtParamsStr = p_allParamsDict["DynamicLeverageClmtParams"][0];   // "SMA(SPX,50d,200d); PR(XLU,VTI,20d)";   // SPX 50/200 crossover; PR=PriceRatio of XLU/VTI for 20 days
-            string uberVxxEventsParamsStr = p_allParamsDict["UberVxxEventsParams"][0];               // "FOMC;Holidays"
-            string debugDetailToHtmlStr = p_allParamsDict["DebugDetailToHtml"][0];                   // "Date,PV,AssetFinalWeights,CashWeight,AssetData,PctChannels"
-
-            // 2. Process parameter strings to numbers, enums; do parameter checking
-            string[] tickers = assetsStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            double[] assetsConstantLeveragesInput = assetsConstantLeverageStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(r => Double.Parse(r)).ToArray();
-            double[] assetsConstantLeverages = new double[tickers.Length];
-            for (int i = 0; i < assetsConstantLeverages.Length; i++)
-            {
-                if (i < assetsConstantLeveragesInput.Length)
-                    assetsConstantLeverages[i] = assetsConstantLeveragesInput[i];
-                else
-                    assetsConstantLeverages[i] = 1.0;       // fill up with default 1.0, if it is not given in the input
-            }
-
-            string[] rebalancingFrequencyStrSplits = rebalancingFrequencyStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            RebalancingPeriodicity rebalancingPeriodicity = RebalancingPeriodicity.Daily;
-            int dailyRebalancingDays = 1;   // 1d means every day, 2d means every 2nd days, 20d means, every 20th days
-            DayOfWeek weeklyRebalancingWeekDay = DayOfWeek.Friday;
-            int monthlyRebalancingOffset = -1;       // +1 means T+1, -1 means T-1
-            switch (rebalancingFrequencyStrSplits[0])
-            {
-                case "Monthly":
-                    rebalancingPeriodicity = RebalancingPeriodicity.Monthly;
-                    monthlyRebalancingOffset = Int32.Parse(rebalancingFrequencyStrSplits[1].Replace("T", ""));  //"Monthly,T-1" / "Monthly,T+0"
-                    break;
-                case "Weekly":
-                    rebalancingPeriodicity = RebalancingPeriodicity.Weekly;
-                    string dayOfWeekStr = rebalancingFrequencyStrSplits[1].Substring(0, rebalancingFrequencyStrSplits[1].Length - 1);   // remove last 's's as plural. Fridays -> Friday
-                    if (Enum.IsDefined(typeof(DayOfWeek), dayOfWeekStr))
-                        weeklyRebalancingWeekDay = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), dayOfWeekStr, true);
-                    break;
-                default:    // "Daily"
-                    dailyRebalancingDays = Int32.Parse(rebalancingFrequencyStrSplits[1].Replace("d",""));  // "Daily,2d"
-                    break;
-            }
-
-            int[] pctChannelLookbackDays = pctChannelLookbackDaysStr.Split(new char[] { '-' }, StringSplitOptions.RemoveEmptyEntries).Select(r => Int32.Parse(r)).ToArray();
-            string[] pctChannelPctLimitsStr2 = pctChannelPctLimitsStr.Split(new char[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
-            double pctChannelPctLimitLower = Double.Parse(pctChannelPctLimitsStr2[0]) / 100.0;
-            double pctChannelPctLimitUpper = Double.Parse(pctChannelPctLimitsStr2[1]) / 100.0;
-            bool isPctChannelActiveEveryDay = String.Equals(isPctChannelActiveEveryDayStr, "Yes", StringComparison.CurrentCultureIgnoreCase);
-            bool isPctChannelConditional = String.Equals(isPctChannelConditionalStr, "Yes", StringComparison.CurrentCultureIgnoreCase);
-            int histVolLookbackDays = Int32.Parse(histVolLookbackDaysStr);
-            bool isCashAllocatedForNonActives = String.Equals(isCashAllocatedForNonActivesStr, "Yes", StringComparison.CurrentCultureIgnoreCase);
-            string cashEquivalentTicker = cashEquivalentTickerStr.Trim();
-            // dynamicLeverageClmtParamsStr
-            // uberVxxEventsParamsStr
-            //Dictionary<HtmlUserNoteDetail, bool> debugDetailToHtml = new Dictionary<HtmlUserNoteDetail, bool>() { { HtmlUserNoteDetail.Date, true }, { HtmlUserNoteDetail.PV, true }, { HtmlUserNoteDetail.AssetFinalWeights, true }, { HtmlUserNoteDetail.AssetData, true }, { HtmlUserNoteDetail.PctChannels, true } };
-            Dictionary<DebugDetailToHtml, bool> debugDetailToHtml = debugDetailToHtmlStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(r => (DebugDetailToHtml)Enum.Parse(typeof(DebugDetailToHtml), r, true)).ToDictionary(r => r, r => true);
-
-            // 3. After Parameters are processed, load ticker price histories from DB and real time
-            List<string> tickersNeeded = tickers.ToList();
-            if (!String.IsNullOrEmpty(cashEquivalentTicker))
-                tickersNeeded.Add(cashEquivalentTicker);
-            Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, tickersNeeded);
-            Tuple<IList<List<DailyData>>, TimeSpan, TimeSpan> getAllQuotesData = await getAllQuotesTask;
-            stopWatch.Stop();
-            IList<List<DailyData>> quotes;
-            List<DailyData> cashEquivalentQuotes = null;
-            if (String.IsNullOrEmpty(cashEquivalentTicker))
-                quotes = getAllQuotesData.Item1;
-            else
-            {
-                quotes = getAllQuotesData.Item1.ToList().GetRange(0, tickers.Length);
-                cashEquivalentQuotes = getAllQuotesData.Item1[tickers.Length];
-            }
-
-
-            
-            string warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
-            DateTime commonAssetStartDate, commonAssetEndDate;
-            StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(quotes, tickers, ref warningToUser, out commonAssetStartDate, out commonAssetEndDate);
-
-            List<DailyData> pv = new List<DailyData>();
-            DoBacktestInTheTimeInterval_TAA(quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsConstantLeverages,
-                    rebalancingPeriodicity, dailyRebalancingDays, weeklyRebalancingWeekDay, monthlyRebalancingOffset,
-                    pctChannelLookbackDays, pctChannelPctLimitLower, pctChannelPctLimitUpper, isPctChannelActiveEveryDay, isPctChannelConditional,
-                    histVolLookbackDays,
-                    isCashAllocatedForNonActives, cashEquivalentQuotes,
-                    debugDetailToHtml, ref warningToUser, ref noteToUserBacktest, ref errorMessage, ref debugMessage, ref pv, null);
-
-            stopWatchTotalResponse.Stop();
-            StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-               warningToUser + "***" + noteToUserBacktest,
-               errorMessage,
-               debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
-            string jsonReturn = JsonConvert.SerializeObject(strategyResult);
-            return jsonReturn;
+            return new TAAStrategy();
         }
 
-        // Others try to implement Varadi's original strategy
-        // https://www.r-bloggers.com/an-attempt-at-replicating-david-varadis-percentile-channels-strategy/ 
-        // https://quantstrattrader.wordpress.com/2015/02/20/a-closer-update-to-david-varadis-percentile-channels-strategy/
-        // not Implemented parameters: isPctChannelConditional (not necessary to implement it, it is just a wider version of the normal pctChannel), dynamicLeverageClmtParams, uberVxxEventsParams
+        public void Init(StringBuilder p_detailedReportSb)
+        {
+            m_detailedReportSb = p_detailedReportSb;
+            List<string> allTickers = taaConfig.Tickers.ToList();
+            allTickers.Add(taaConfig.CashEquivalentTicker);
+            allTickers.AddRange(taaConfig.Traded2xTickers);
+            allTickers.AddRange(taaConfig.Traded3xTickers);
+            var distinctTickers = allTickers.GroupBy(r => r).Select(r => r.First()).ToList();  // select distinct, because they are tickers represented many times.
+            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(distinctTickers));   // task will start to run on another thread (in the threadpool)
+        }
+
+        public string StockIdToTicker(int p_stockID)
+        {
+            if (m_tickerToAssetId == null)
+                m_tickerToAssetId = m_loadAssetIdTask.Result;   // wait until the parrallel task arrives
+            return m_tickerToAssetId.First(r => r.Value.Item1.ID == p_stockID).Key;
+        }
+
+        public IAssetID TickerToAssetID(string p_ticker)
+        {
+            if (m_tickerToAssetId == null)
+                m_tickerToAssetId = m_loadAssetIdTask.Result;   // wait until the parrallel task arrives
+            return m_tickerToAssetId[p_ticker].Item1;
+        }
+
+        public double GetPortfolioLeverage(List<PortfolioPositionSpec> p_suggestedPortfItems, IPortfolioParam p_param)
+        {
+            return 1.0;
+        }
+
+        public List<PortfolioPositionSpec> GeneratePositionSpecs()
+        {
+            Utils.Logger.Info("TAAStrategy.GeneratePositionSpecs() Begin.");
+            // the asset.IsActive depends not only of the recent 150 days, but maybe all about its previous history.
+            // imagine an asset that was active at its start 10 years ago. Then in year 9, it dipped under Lower %Channel, so it become inactive. 
+            // Imagine that the price is constant since (last 8 years), or the price is wiggling in its channel, but never breaking the UpperChannel. 
+            // In that case, the asset is still Inactive. But if we don't consider that event 9 years ago, we will never know it is inactive.
+            // Conclusion: get to know that an asset is active or not without doubt, we have to simulate a lot of history. Actually, all of it.
+
+
+
+            if(!GetHistoricalAndRealTimeDataForAllParts())
+            {
+                throw new Exception("TAAStrategy.GeneratePositionSpecs() GetHistoricalAndRealTimeDataForAllParts() Error. We don't continue, because we don't want to liquidate the portofolio by returning an empty List<PortfolioPositionSpec>. We crash here.");
+            }
+
+            if (!CalculateAssetAndCashWeights())
+            {
+                throw new Exception("TAAStrategy.GeneratePositionSpecs() CalculateAssetAndCashWeights() Error. We don't continue, because we don't want to liquidate the portofolio by returning an empty List<PortfolioPositionSpec>. We crash here.");
+            }
+
+
+            StringBuilder consoleMsgSb = new StringBuilder("Target: ");
+            List<PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
+            for (int i = 0; i < taaConfig.Tickers.Length; i++)
+            {
+                string ticker = taaConfig.Tickers[i];
+                string tradedTicker = taaConfig.Traded2xTickers[i];
+                double weight = m_lastWeights[i];
+                double tradedWeight = weight * taaConfig.TradedLeverages[i];
+
+                if (Math.Abs(weight) > 0.0000001)
+                    consoleMsgSb.Append($"{ticker}({tradedTicker}):{ weight * 100:F2}%({ tradedWeight * 100:F2}%), ");
+
+                if (weight > 0.0000001)  // if Weight is 0,  the target position is 0.
+                    specs.Add(new PortfolioPositionSpec() { Ticker = tradedTicker, PositionType = PositionType.Long, Size = WeightedSize.Create(Math.Abs(weight)) });
+                else if (weight < -0.0000001)
+                    specs.Add(new PortfolioPositionSpec() { Ticker = tradedTicker, PositionType = PositionType.Short, Size = WeightedSize.Create(Math.Abs(weight)) });
+            }
+
+            double cashWeight = m_lastWeights.Last();
+            consoleMsgSb.Append($"Cash({taaConfig.CashEquivalentTicker}):{ cashWeight * 100:F2}%,");
+            if (cashWeight > 0.0000001)  // if Weight is 0,  the target position is 0.
+                specs.Add(new PortfolioPositionSpec() { Ticker = taaConfig.CashEquivalentTicker, PositionType = PositionType.Long, Size = WeightedSize.Create(Math.Abs(cashWeight)) });
+            else if (cashWeight < -0.0000001)
+                specs.Add(new PortfolioPositionSpec() { Ticker = taaConfig.CashEquivalentTicker, PositionType = PositionType.Short, Size = WeightedSize.Create(Math.Abs(cashWeight)) });
+
+            string consoleMsg = consoleMsgSb.ToString();
+            Utils.ConsoleWriteLine(ConsoleColor.Green, false, consoleMsg);
+            Utils.Logger.Info(consoleMsg);
+            m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">{consoleMsg}</font>");
+
+            return specs;
+        }
+
+        
+
+        private bool GetHistoricalAndRealTimeDataForAllParts()
+        {
+            // IB.ReqHistoricalData() only gives back data for the last year. We need more than that, so we have to use SQL DB
+            // CommonAssetStartDate = VNQ startdate: 2004-09-29, others started earlier. (TLT: 2002-07-30). Helpful so we don't download unnecessary data from SQLdb
+            List<string> allTickers = taaConfig.Tickers.ToList();
+            allTickers.Add(taaConfig.CashEquivalentTicker);
+
+            List<List<DailyData>> allQuotes = StrategiesCommon.GetHistoricalAndRealTimeDataForAllParts(allTickers, taaConfig.CommonAssetStartDate, Int32.MaxValue);
+            if (allQuotes == null)
+            {
+                m_quotes = null;
+                m_cashEquivalentQuotes = null;
+                return false;
+            }
+
+            m_quotes = allQuotes.GetRange(0, taaConfig.Tickers.Length);
+            m_cashEquivalentQuotes = allQuotes[taaConfig.Tickers.Length];
+            return true;
+        }
+
+        private bool CalculateAssetAndCashWeights()
+        {
+            m_lastWeights = new double[taaConfig.Tickers.Length + 1];
+            List<DailyData> pv = null;
+            string warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            DoBacktestInTheTimeInterval_TAA(m_quotes, taaConfig.Tickers, m_quotes[0][0].Date, m_quotes[0].Last().Date, taaConfig.AssetsConstantLeverages,
+                taaConfig.RebalancingPeriodicity, taaConfig.DailyRebalancingDays, taaConfig.WeeklyRebalancingWeekDay, taaConfig.MonthlyRebalancingOffset,
+                taaConfig.PctChannelLookbackDays, taaConfig.PctChannelPctLimitLower, taaConfig.PctChannelPctLimitUpper,
+                taaConfig.IsPctChannelActiveEveryDay, false, taaConfig.HistVolLookbackDays, taaConfig.IsCashAllocatedForNonActives,
+                m_cashEquivalentQuotes, new Dictionary<DebugDetailToHtml, bool>(), ref warningToUser, ref noteToUserBacktest, ref errorMessage, ref debugMessage, ref pv, m_lastWeights);
+
+            return true;
+        }
+
+
+        // copied from BackTester. Try to keep the code absolutely the same. Later, we may put them into a common DLL, but it is very rare that VirtualBroker has to do a whole historicalBacktesting run.
         private static void DoBacktestInTheTimeInterval_TAA(IList<List<DailyData>> p_quotes, string[] p_tickers, DateTime p_commonAssetStartDate, DateTime p_commonAssetEndDate, double[] p_assetsConstantLeverages,
                 RebalancingPeriodicity p_rebalancingPeriodicity, int p_dailyRebalancingDays, DayOfWeek p_weeklyRebalancingWeekDay, int p_monthlyRebalancingOffset,
                 int[] p_pctChannelLookbackDays, double p_pctChannelPctLimitLower, double p_pctChannelPctLimitUpper, bool p_isPctChannelActiveEveryDay, bool p_isPctChannelConditional,
@@ -354,7 +386,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.AssetData))
                     {
                         double assetChg = p_quotes[iAsset][iQ[iAsset] + iDay].AdjClosePrice / p_quotes[iAsset][iQ[iAsset] + iDay - 1].AdjClosePrice - 1;
-                        noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"${p_quotes[iAsset][iQ[iAsset] + iDay].AdjClosePrice:F2}, {assetChg*100.0:F2}%";
+                        noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"${p_quotes[iAsset][iQ[iAsset] + iDay].AdjClosePrice:F2}, {assetChg * 100.0:F2}%";
                         wasAnyNoteToUser = true;
                     }
 
@@ -406,9 +438,5 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //noteToUserBacktest = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
         } // DoBacktestInTheTimeInterval_TAA
 
-
-
-
-
-    }   // class
+    }
 }

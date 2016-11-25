@@ -87,9 +87,9 @@ namespace SQLab.Controllers.QuickTester.Strategies
             }
 
             if (quotes1 == null)    // it is Cash, set it according to the other, but use cash
-                quotes1 = quotes2.Select(item => new DailyData() { Date = item.Date, ClosePrice = 100.0 }).ToList();
+                quotes1 = quotes2.Select(item => new DailyData() { Date = item.Date, AdjClosePrice = 100.0 }).ToList();
             if (quotes2 == null)    // it is Cash, set it according to the other, but use cash
-                quotes2 = quotes1.Select(item => new DailyData() { Date = item.Date, ClosePrice = 100.0 }).ToList();
+                quotes2 = quotes1.Select(item => new DailyData() { Date = item.Date, AdjClosePrice = 100.0 }).ToList();
 
             string htmlNoteFromStrategy = "", warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
 
@@ -167,14 +167,14 @@ namespace SQLab.Controllers.QuickTester.Strategies
             double bearishEtfPosition = pvDaily * -0.5;
             double cash = pvDaily * 2.0;
 
-            pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
             for (int i = 1; i < pv.Count(); i++)
             {
-                double buEtfChg = quotes1[iBullish + i].ClosePrice / quotes1[iBullish + i - 1].ClosePrice;
+                double buEtfChg = quotes1[iBullish + i].AdjClosePrice / quotes1[iBullish + i - 1].AdjClosePrice;
                 bullishEtfPosition = bullishEtfPosition * buEtfChg;
 
-                double beEtfChg = quotes2[iBearish + i].ClosePrice / quotes2[iBearish + i - 1].ClosePrice;
+                double beEtfChg = quotes2[iBearish + i].AdjClosePrice / quotes2[iBearish + i - 1].AdjClosePrice;
                 bearishEtfPosition = bearishEtfPosition * beEtfChg;
 
                 pvDaily = cash + bullishEtfPosition + bearishEtfPosition;
@@ -185,7 +185,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
                     cash = pvDaily * 2.0;
                 }
-                pv[i].ClosePrice = pvDaily;
+                pv[i].AdjClosePrice = pvDaily;
             }
         }
 
@@ -212,7 +212,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             double bearishEtfPosition = pvDaily * -0.5;
             double cash = pvDaily * 2.0;
 
-            pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
         
             // usually it is 50%=0.5, when it goes under 47%, short more of this side.
             double tooLowStockLeverage = 0.47;     
@@ -226,10 +226,10 @@ namespace SQLab.Controllers.QuickTester.Strategies
             int nOverLeveragedRebalanceToNavAndNeutral = 0;
             for (int i = 1; i < pv.Count(); i++)
             {
-                double buEtfChg = quotes1[iBullish + i].ClosePrice / quotes1[iBullish + i - 1].ClosePrice;
+                double buEtfChg = quotes1[iBullish + i].AdjClosePrice / quotes1[iBullish + i - 1].AdjClosePrice;
                 bullishEtfPosition = bullishEtfPosition * buEtfChg;
 
-                double beEtfChg = quotes2[iBearish + i].ClosePrice / quotes2[iBearish + i - 1].ClosePrice;
+                double beEtfChg = quotes2[iBearish + i].AdjClosePrice / quotes2[iBearish + i - 1].AdjClosePrice;
                 bearishEtfPosition = bearishEtfPosition * beEtfChg;
 
                 pvDaily = cash + bullishEtfPosition + bearishEtfPosition;
@@ -297,7 +297,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                         }
                     }
                 }
-                pv[i].ClosePrice = pvDaily;
+                pv[i].AdjClosePrice = pvDaily;
                 sbDebugToUser.AppendLine($"{pv[i].Date}, {pvDaily}, {Math.Abs(bullishEtfPosition) / pvDaily}, {Math.Abs(bearishEtfPosition) / pvDaily}, {Math.Abs(bullishEtfPosition + bearishEtfPosition) / pvDaily}, {Math.Abs(bullishEtfPosition / bearishEtfPosition)}<br>");
             }   // for
 
@@ -323,7 +323,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //double cash = pvDaily * 2.0;
             double cash = pvDaily - etf1Position - etf2Position;
 
-            pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
             //// usually it is 50%=0.5, when it goes under 47%, short more of this side.
             //double tooLowStockLeverage = 0.47;
@@ -337,10 +337,10 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //int nOverLeveragedRebalanceToNavAndNeutral = 0;
             for (int i = 1; i < pv.Count(); i++)
             {
-                double etf1Chg = quotes1[iEtf1 + i].ClosePrice / quotes1[iEtf1 + i - 1].ClosePrice;
+                double etf1Chg = quotes1[iEtf1 + i].AdjClosePrice / quotes1[iEtf1 + i - 1].AdjClosePrice;
                 etf1Position = etf1Position * etf1Chg;
 
-                double etf2Chg = quotes2[iEtf2 + i].ClosePrice / quotes2[iEtf2 + i - 1].ClosePrice;
+                double etf2Chg = quotes2[iEtf2 + i].AdjClosePrice / quotes2[iEtf2 + i - 1].AdjClosePrice;
                 etf2Position = etf2Position * etf2Chg;
 
                 pvDaily = cash + etf1Position + etf2Position;
@@ -414,7 +414,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     //    }
                     //}
                 }
-                pv[i].ClosePrice = pvDaily;
+                pv[i].AdjClosePrice = pvDaily;
                 sbDebugToUser.AppendLine($"{pv[i].Date}, {pvDaily}, {Math.Abs(etf1Position) / pvDaily}, {Math.Abs(etf2Position) / pvDaily}, {Math.Abs(etf1Position + etf2Position) / pvDaily}, {Math.Abs(etf1Position / etf2Position)}<br>");
             }   // for
 

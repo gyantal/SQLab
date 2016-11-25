@@ -360,7 +360,7 @@ namespace VirtualBroker
                         else
                         {
                             wasAnyErrorInOrders = true;
-                            p_errorStr.AppendLine($"ERROR in {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume},  VirtualOrderId {transaction.VirtualOrderId}: transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}");       // This is Error. not expected
+                            p_errorStr.AppendLine($"ERROR in {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume},  VirtualOrderId {transaction.VirtualOrderId}: transaction.OrderStatus != OrderStatus.Filled. It is {transaction.OrderStatus}, but Volume({transaction.Volume}) and ExecutedVolume({transaction.ExecutedVolume}) are different.");       // This is Error. not expected
                         } // else
                     }
                 }   // else

@@ -62,7 +62,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
     public class DailyData
     {
         public DateTime Date { get; set; }
-        public double ClosePrice { get; set; }
+        public double AdjClosePrice { get; set; }
     }
 
     public class StrategiesCommon
@@ -280,7 +280,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     row => new DailyData()
                     {
                         Date = ((DateTime)row[1]),
-                        ClosePrice = (double)Convert.ToDecimal(row[closePriceIndex])  // row[2] is object(double) if it is a stock (because Adjustment multiplier), and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
+                        AdjClosePrice = (double)Convert.ToDecimal(row[closePriceIndex])  // row[2] is object(double) if it is a stock (because Adjustment multiplier), and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
                     }).ToList();
             }).ToList();
 
@@ -295,11 +295,11 @@ namespace SQLab.Controllers.QuickTester.Strategies
                         int todayInd = returnQuotes[i].FindLastIndex(r => r.Date == todayDate);
                         if (todayInd == -1) // if it is missing
                         {
-                            returnQuotes[i].Add(new DailyData() { Date = todayDate, ClosePrice = (double)realtimeReturn[i] });
+                            returnQuotes[i].Add(new DailyData() { Date = todayDate, AdjClosePrice = (double)realtimeReturn[i] });
                         }
                         else // if it is already in the array, overwrite it
                         {
-                            returnQuotes[i][todayInd].ClosePrice = (double)realtimeReturn[i];
+                            returnQuotes[i][todayInd].AdjClosePrice = (double)realtimeReturn[i];
                         }
                     }
                 }
@@ -325,7 +325,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             {
                 if (true)
                 {
-                    pv.Add(new DailyData() { Date = p_quotes[quotesInd].Date, ClosePrice = p_quotes[quotesInd].ClosePrice });
+                    pv.Add(new DailyData() { Date = p_quotes[quotesInd].Date, AdjClosePrice = p_quotes[quotesInd].AdjClosePrice });
                     quotesInd++;
                 }
             }
@@ -414,7 +414,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             List<DailyData> pv = new List<DailyData>(endDateInd - startDateInd);
             for (int i = startDateInd; i <= endDateInd; i++)
             {
-                pv.Add(new DailyData() { Date = p_quotes[i].Date, ClosePrice = p_quotes[i].ClosePrice });
+                pv.Add(new DailyData() { Date = p_quotes[i].Date, AdjClosePrice = p_quotes[i].AdjClosePrice });
             }
             //return p_quotes.GetRange(startDateInd, endDateInd - startDateInd).Select(r => new DailyData() { Date = r.Date, ClosePrice = r.ClosePrice }).ToList(); // works, but probably slow
             //return p_quotes.GetRange(startDateInd, endDateInd - startDateInd);  // an efficient way of getting a subset of the List, but it is a shallow copy is not OK, as *.ClosePrice will be overwritten in PV
@@ -436,7 +436,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             }
 
             //IEnumerable<string> chartDataToSend = pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "-" + String.Format("{0:0.00}", row.ClosePrice));
-            IEnumerable<string> chartDataToSend = p_pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "," + String.Format("{0:0.00}", row.ClosePrice >= 0 ? row.ClosePrice : 0.0));    // postprocess: TradingViewChart cannot accept negative numbers
+            IEnumerable<string> chartDataToSend = p_pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "," + String.Format("{0:0.00}", row.AdjClosePrice >= 0 ? row.AdjClosePrice : 0.0));    // postprocess: TradingViewChart cannot accept negative numbers
 
             DateTime startDate = p_pv[0].Date;
             DateTime endDate = p_pv[p_pv.Count() - 1].Date;
@@ -445,15 +445,15 @@ namespace SQLab.Controllers.QuickTester.Strategies
             int nTradingDays = p_pv.Count();
             double nYears = nTradingDays / 252.0;   //https://www.google.co.uk/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=how%20many%20trading%20days%20in%20a%20year
 
-            double pvStart = p_pv[0].ClosePrice;
-            double pvEnd = p_pv[p_pv.Count() - 1].ClosePrice;
+            double pvStart = p_pv[0].AdjClosePrice;
+            double pvEnd = p_pv[p_pv.Count() - 1].AdjClosePrice;
             double totalGainPct = pvEnd / pvStart - 1.0;
             double cagr = Math.Pow(totalGainPct + 1, 1.0 / nYears) - 1.0;
 
             var dailyReturns = new double[p_pv.Count() - 1];
             for (int i = 0; i < p_pv.Count() - 1; i++)
             {
-                dailyReturns[i] = p_pv[i + 1].ClosePrice / p_pv[i].ClosePrice - 1.0;
+                dailyReturns[i] = p_pv[i + 1].AdjClosePrice / p_pv[i].AdjClosePrice - 1.0;
             }
             double avgReturn = dailyReturns.Average();
             double dailyStdDev = Math.Sqrt(dailyReturns.Sum(r => (r - avgReturn) * (r - avgReturn)) / ((double)dailyReturns.Count() - 1.0));    //http://www.styleadvisor.com/content/standard-deviation, "Morningstar uses the sample standard deviation method: divide by n-1
@@ -482,9 +482,9 @@ namespace SQLab.Controllers.QuickTester.Strategies
             double quadraticMeanDD = 0.0;
             for (int i = 0; i < p_pv.Count(); i++)
             {
-                if (p_pv[i].ClosePrice > maxPv)
-                    maxPv = p_pv[i].ClosePrice;
-                double dd = p_pv[i].ClosePrice / maxPv - 1.0;
+                if (p_pv[i].AdjClosePrice > maxPv)
+                    maxPv = p_pv[i].AdjClosePrice;
+                double dd = p_pv[i].AdjClosePrice / maxPv - 1.0;
                 drawdowns[i] = dd;
                 quadraticMeanDD += dd * dd;
                 if (dd < maxDD)

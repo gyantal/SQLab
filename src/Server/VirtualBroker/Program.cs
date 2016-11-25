@@ -74,17 +74,23 @@ namespace VirtualBroker
                             Controller.g_controller.EncogXORHelloWorld();
                             break;
                         case "6":
-                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(0);
+                            Console.WriteLine(Controller.g_controller.GetNextScheduleTimes(false).ToString());
                             break;
                         case "7":
-                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(1);
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(0);
                             break;
                         case "8":
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(1);
+                            break;
+                        case "9":
                             Controller.g_controller.TestElapseFirstTriggerWithSimulation(2);
+                            break;
+                        case "10":
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(3);
                             break;
                     }
 
-                } while (userInput != "9" && userInput != "ConsoleIsForcedToShutDown");
+                } while (userInput != "11" && userInput != "ConsoleIsForcedToShutDown");
 
                 Utils.Logger.Info("****** Main() END");
                 Utils.MainThreadIsExiting.Set();
@@ -124,15 +130,17 @@ namespace VirtualBroker
             gHasBeenCalled = true;
             
             Utils.ConsoleWriteLine(ConsoleColor.Magenta, "------- VirtualBroker (type and press Enter) ------- ");
-            Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes");
-            Console.WriteLine($"2. Test IbGateway Connection on port={(int)GatewayUserPort.GyantalMain} (Gyantal user) with clientID=0");
-            Console.WriteLine("3. Test HealthMonitor by sending ErrorFromVirtualBroker");
-            Console.WriteLine("4. Test Realtime price service");
-            Console.WriteLine("5. Test Encog");
-            Console.WriteLine("6. Elapse TaskShema (NeuralSniffer1) First Simulation Trigger");
-            Console.WriteLine("7. Elapse TaskShema (UberVxx) First Simulation Trigger");
-            Console.WriteLine("8. Elapse TaskShema (HarryLong) First Simulation Trigger");
-            Console.WriteLine("9. Exit gracefully (Avoid Ctrl-^C).");
+            Console.WriteLine("1.  Say Hello. Don't do anything. Check responsivenes");
+            Console.WriteLine($"2.  Test IbGateway Connection on port={(int)GatewayUserPort.GyantalMain} (Gyantal user) with clientID=0");
+            Console.WriteLine("3.  Test HealthMonitor by sending ErrorFromVirtualBroker");
+            Console.WriteLine("4.  Test Realtime price service");
+            Console.WriteLine("5.  Test Encog");
+            Console.WriteLine("6.  Show next schedule times");
+            Console.WriteLine("7.  Elapse TaskShema (NeuralSniffer1) First Simulation Trigger");
+            Console.WriteLine("8.  Elapse TaskShema (TAA) First Simulation Trigger");
+            Console.WriteLine("9.  Elapse TaskShema (UberVxx) First Simulation Trigger");
+            Console.WriteLine("10. Elapse TaskShema (HarryLong) First Simulation Trigger");
+            Console.WriteLine("11. Exit gracefully (Avoid Ctrl-^C).");
             string result = null;
             try
             {

@@ -55,6 +55,7 @@ namespace VirtualBroker
 
         public void BuildTasks()
         {
+            // IB MOC orders: https://www.interactivebrokers.com/en/index.php?f=599  (NYSE, NYSE MKT, NYSE Arca: 15:45 ET, Nasdaq: 15:50 ET)
             var neuralSniffer1TaskSchema = new BrokerTaskSchema()
             {
                 Name = "NeuralSniffer1",
@@ -83,7 +84,7 @@ namespace VirtualBroker
                 TriggeredTaskSchema = neuralSniffer1TaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
-                StartTimeOffset = TimeSpan.FromMinutes(-39),
+                StartTimeOffset = TimeSpan.FromMinutes(-43),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
             neuralSniffer1TaskSchema.Triggers.Add(new VbTrigger()
@@ -91,10 +92,54 @@ namespace VirtualBroker
                 TriggeredTaskSchema = neuralSniffer1TaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
-                StartTimeOffset = TimeSpan.FromMinutes(-16),
+                StartTimeOffset = TimeSpan.FromMinutes(-17),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, false } }
             });
             g_taskSchemas.Add(neuralSniffer1TaskSchema);
+
+
+            var taaTaskSchema = new BrokerTaskSchema()
+            {
+                Name = "TAA",
+                BrokerTaskFactory = BrokerTaskTradeStrategy.BrokerTaskFactoryCreate,
+                Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
+                    { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(TAAStrategy.StrategyFactoryCreate) },
+                    { BrokerTaskSetting.OrderExecution, OrderExecution.MarketOnClose },
+                    { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
+                        {
+                        new BrokerTaskPortfolio() { Name = "! Advanced UberTAA with Global Assets Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
+                            MaxTradeValueInCurrency = 15000, // portfolio is 10K original, but it has 7assets+TLT in it.  If everything is Cash (not likely), TLT is used as 10K. So, set it up as 15K just to think about the future.
+                            MinTradeValueInCurrency = 100,
+                            Param = new PortfolioParamTAA() { } }
+                        }
+                    }
+                }
+            };
+            taaTaskSchema.Triggers.Add(new VbTrigger()
+            {
+                TriggeredTaskSchema = taaTaskSchema,
+                TriggerType = TriggerType.DailyOnUsaMarketDay,
+                StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
+                StartTimeOffset = TimeSpan.FromMinutes(20),
+                TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
+            });
+            taaTaskSchema.Triggers.Add(new VbTrigger()
+            {
+                TriggeredTaskSchema = taaTaskSchema,
+                TriggerType = TriggerType.DailyOnUsaMarketDay,
+                StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
+                StartTimeOffset = TimeSpan.FromMinutes(-39),
+                TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
+            });
+            taaTaskSchema.Triggers.Add(new VbTrigger()
+            {
+                TriggeredTaskSchema = taaTaskSchema,
+                TriggerType = TriggerType.DailyOnUsaMarketDay,
+                StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
+                StartTimeOffset = TimeSpan.FromMinutes(-16),
+                TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, false } }
+            });
+            g_taskSchemas.Add(taaTaskSchema);
 
 
             var uberVxxTaskSchema = new BrokerTaskSchema()
@@ -123,7 +168,7 @@ namespace VirtualBroker
                 TriggeredTaskSchema = uberVxxTaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
-                StartTimeOffset = TimeSpan.FromMinutes(20),
+                StartTimeOffset = TimeSpan.FromMinutes(25),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
             uberVxxTaskSchema.Triggers.Add(new VbTrigger()
@@ -174,7 +219,7 @@ namespace VirtualBroker
                 TriggeredTaskSchema = harryLongTaskSchema,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
-                StartTimeOffset = TimeSpan.FromMinutes(25),
+                StartTimeOffset = TimeSpan.FromMinutes(30),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
             harryLongTaskSchema.Triggers.Add(new VbTrigger()
