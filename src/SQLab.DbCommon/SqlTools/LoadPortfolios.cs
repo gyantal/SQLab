@@ -218,7 +218,10 @@ FROM (SELECT * FROM Stock INNER JOIN
             {
                 int stockID = (int)stockAsset[1];
                 IAssetID assetID = DbUtils.MakeAssetID(AssetType.Stock, stockID);
-                assetDescs.Add(assetID, new AssetDesc() { AssetID = assetID, Ticker = (string)stockAsset[2], FullTicker = (string)stockAsset[3], StockExchangeID = (StockExchangeID)(byte)stockAsset[4], CurrencyID = (CurrencyID)(short)stockAsset[5] });
+                assetDescs.Add(assetID, new AssetDesc() { AssetID = assetID, Ticker = (string)stockAsset[2],
+                    FullTicker = (stockAsset[3] == null) ? null : (string)stockAsset[3],
+                    StockExchangeID = (stockAsset[4] == null) ? StockExchangeID.Unknown : (StockExchangeID)(byte)stockAsset[4],
+                    CurrencyID = (CurrencyID)(short)stockAsset[5] });
             }
 
             var splitDivInfosByDate = splitDividendTbl.Select(r =>
@@ -351,31 +354,37 @@ FROM (SELECT * FROM Stock INNER JOIN
                         // cashSaleInCurrency should be added to Cash, find currencyID and the corresponding cash and book the cash
                         if (Math.Abs(cashSaleInCurrency) > 0.002)
                         {
-                            CurrencyID currencyID = assetDescs[pipS.AssetID].CurrencyID;
-                            var pipCashInCurrency = portf.TodayPositions.FirstOrDefault(r => r.AssetTypeID == AssetType.HardCash && r.SubTableID == (int)currencyID);
-                            if (pipCashInCurrency == null)
-                            {
-                                pipCashInCurrency = new PortfolioPosition()
-                                {
-                                    AssetID = DbUtils.MakeAssetID(AssetType.HardCash, (int)currencyID),
-                                    Volume = 0.0,
-                                    LastSplitAdjustedTransactionPrice = 0,
-                                    LastTransactionTimeUtc = trTime
-                                };
-                                portf.TodayPositions.Add(pipCashInCurrency);
-                            }
-
-                            pipCashInCurrency.Volume += cashSaleInCurrency;
-
+                            AddToCashInCurrency(portf, trTime, cashSaleInCurrency, assetDescs[pipS.AssetID].CurrencyID);
                         }
                     }
                     else
-                        throw new Exception("Dividend is not implemented yet.");
+                    {
+                        double dividendValue = pipS.Volume * splitInfo.DividendOrPrevClosePrice;    // Volume can be negative if we short the stock. This is fine, because then cash will be taken away
+                        AddToCashInCurrency(portf, trTime, dividendValue, assetDescs[pipS.AssetID].CurrencyID);
+                    }
                 }
                 splitIndInclusive++;
             }
 
             return splitIndInclusive;
+        }
+
+        private static void AddToCashInCurrency(DbPortfolio p_portf, DateTime p_trTime, double p_cashToAdd, CurrencyID p_currencyID)
+        {
+            var pipCashInCurrency = p_portf.TodayPositions.FirstOrDefault(r => r.AssetTypeID == AssetType.HardCash && r.SubTableID == (int)p_currencyID);
+            if (pipCashInCurrency == null)
+            {
+                pipCashInCurrency = new PortfolioPosition()
+                {
+                    AssetID = DbUtils.MakeAssetID(AssetType.HardCash, (int)p_currencyID),
+                    Volume = 0.0,
+                    LastSplitAdjustedTransactionPrice = 0,
+                    LastTransactionTimeUtc = p_trTime
+                };
+                p_portf.TodayPositions.Add(pipCashInCurrency);
+            }
+
+            pipCashInCurrency.Volume += p_cashToAdd;
         }
     }
 }

@@ -201,6 +201,10 @@ namespace SQLab
                     return false;
                 if (fullExceptionStr.IndexOf(@"Microsoft.AspNetCore.Server.Kestrel.BadHttpRequestException: Missing method") != -1)
                     return false;
+                if (fullExceptionStr.IndexOf(@"Connection processing ended abnormally") != -1)  // System.NullReferenceException at  at Microsoft.AspNetCore.Server.Kestrel.Internal.Http.PathNormalizer.ContainsDotSegments(String path)
+                    return false;
+                if (fullExceptionStr.IndexOf(@"Missing request target") != -1)      // 'Microsoft.AspNetCore.Server.Kestrel.BadHttpRequestException: Missing request target.'
+                    return false;
                 return true;
             }
 

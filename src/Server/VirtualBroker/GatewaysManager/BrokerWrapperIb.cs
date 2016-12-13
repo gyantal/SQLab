@@ -409,7 +409,7 @@ namespace VirtualBroker
                 // for daily High, Daily Low, Previous Close, etc. don't check this staleness
                 bool doCheckDataStaleness = !Double.IsNaN(item.Value.Price) &&
                     (item.Key != TickType.LOW && item.Key != TickType.HIGH && item.Key != TickType.CLOSE);
-                if (doCheckDataStaleness && (DateTime.UtcNow - item.Value.Time).TotalMinutes > 5.0)
+                if (doCheckDataStaleness && (DateTime.UtcNow - item.Value.Time).TotalMinutes > 35.0)
                 {
                     Utils.Logger.Warn($"Warning. Something may be wrong. We have the RT price of {item.Key} for '{p_contract.Symbol}' , but it is older than 5 minutes. Maybe Gateway was disconnected. Returning False for price.");
                     isOk = false;
