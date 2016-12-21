@@ -3,8 +3,7 @@
 
 function onHeadProcessing() {
     console.log('onHeadProcessing()');
-
-
+    
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
@@ -16,7 +15,10 @@ function onHeadProcessing() {
 
 function processData(dataStr)
 {
+    //Splitting data got from C#.
     var data = JSON.parse(dataStr);
+
+    //Creating first row (dates) of webpage.
     var divTimeNow = document.getElementById("idTimeNow");
     var divLiveDataDate = document.getElementById("idLiveDataDate");
     var divLiveDataTime = document.getElementById("idLiveDataTime");
@@ -30,12 +32,15 @@ function processData(dataStr)
     divLastDataDate.innerText =data.lastDataDate;
    
     creatingTables(data);
+
+    //Setting charts visible after getting data.
     document.getElementById("inviCharts").style.visibility = "visible";
 }
 function creatingTables(data) {
 
     var monthList = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
+    //Creating JavaScript data arrays by splitting.
     var currDataArray = data.currDataVec.split(",");
     var currDataDaysArray = data.currDataDaysVec.split(",");
     var prevDataArray = data.prevDataVec.split(",");
@@ -89,7 +94,7 @@ function creatingTables(data) {
     }
 
 
-
+    //Creating the HTML code of 1+6 tables.
     var currTableMtx = "<table class=\"currData\"><tr align=\"center\"><td></td><td>Date</td><td>F1</td><td>F2</td><td>F3</td><td>F4</td><td>F5</td><td>F6</td><td>F7</td><td>F8</td><td>Short Term Contango</td><td>Long Term Contango</td><td>F2-F1 Spread</td><td>F3-F2 Spread</td><td>F4-F3 Spread</td><td>F5-F4 Spread</td><td>F6-F5 Spread</td><td>F7-F6 Spread</td><td>F8-F7 Spread</td></tr><tr align=\"center\"><td align=\"left\">Currently </td><td rowspan=\"2\">" + data.lastDataDate + "</td>";
     for (var i = 0; i < 17; i++) {
         if (currDataArray[i] == 0) {
@@ -280,7 +285,7 @@ function creatingTables(data) {
     }
     aMedianBackwardTableMtx += "</table>";
 
-
+    //"Sending" data to HTML file.
     var currTableMtx2 = document.getElementById("idCurrTableMtx");
     currTableMtx2.innerHTML = currTableMtx;
     var aMeanTotalTableMtx2 = document.getElementById("idAMeanTotalTableMtx");
@@ -296,7 +301,7 @@ function creatingTables(data) {
     var aMeanTotalTableMtx25 = document.getElementById("idMedianBackwardTableMtx");
     aMeanTotalTableMtx25.innerHTML = aMedianBackwardTableMtx;
 
-
+    //Splitting data to charts. 
     var resultsToChartFutPricesTemp = data.resultsToChartFutPricesMtx.split("ß ");
     var resultsToChartFutPricesTable = new Array();
     for (var i = 0; i < resultsToChartFutPricesTemp.length; i++) {
@@ -406,7 +411,7 @@ function creatingTables(data) {
         medianBackwardSpreads[i] = medianBackwardSpreadsRows;
     }
 
-    //var nCurrData = (currDataArray[7] > 0) ? 8 : 7;
+    //--var nCurrData = (currDataArray[7] > 0) ? 8 : 7;
     var nCurrData = 7;
     var currDataPrices = new Array(nCurrData);
     for (var i = 0; i < nCurrData; i++) {
@@ -424,7 +429,7 @@ function creatingTables(data) {
         currDataSpreads[i] = currDataSpreadsRows;
     }
 
-
+    //Declaring data sets to charts.
     var datasets1 = {
            "current": {
             label: "Current",
@@ -497,11 +502,10 @@ function creatingTables(data) {
 
     
 }
+// Creating first chart: prices by days to expiration.
 function flotPlotMyData1(datasets1) {
-
-
-    // hard-code color indices to prevent them from shifting as
-    // countries are turned on/off
+    //-- hard-code color indices to prevent them from shifting as
+    //-- countries are turned on/off
 
     var i = 0;
     $.each(datasets1, function (key, val) {
@@ -558,9 +562,9 @@ function flotPlotMyData1(datasets1) {
     plotAccordingToChoices();
 
 }
+
+// Creating second chart: spreads by days to expiration.
 function flotPlotMyData2(datasets2) {
-
-
     // hard-code color indices to prevent them from shifting as
     // countries are turned on/off
 
