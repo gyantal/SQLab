@@ -8,6 +8,7 @@ using SqCommon;
 using System.Text;
 using SQCommon.MathNet;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
