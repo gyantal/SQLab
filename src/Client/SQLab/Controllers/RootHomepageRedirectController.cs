@@ -27,6 +27,7 @@ namespace SQLab.Controllers
     [Route("~/QuickTester", Name = "QuickTester")]
     [Route("~/WithdrawalSimulator", Name = "WithdrawalSimulator")]
     [Route("~/WithdrawalSimulatorHelp", Name = "WithdrawalSimulatorHelp")]
+    [Route("~/VixFuturesAnalyser", Name = "VixFuturesAnalyser")]
 #if !DEBUG
     [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
 #endif
@@ -81,6 +82,9 @@ namespace SQLab.Controllers
                     break;
                 case "/withdrawalsimulatorhelp":
                     fileName = "WithdrawalSimulatorHelp.html";
+                    break;
+                case "/vixfuturesanalyser":
+                    fileName = "VixFuturesAnalyser.html";
                     break;
                 default:
 #if DEBUG   // for the Index page, give Dashboard according to DEBUG or RELEASE

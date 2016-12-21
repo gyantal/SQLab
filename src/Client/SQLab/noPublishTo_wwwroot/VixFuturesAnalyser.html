@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html style="background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%); background-attachment: fixed; /*background-repeat: repeat overflow: visible; /*avoid scrollbars  min-height: 200% min-width: 200%*/">
+
+<head>
+    <meta charset="utf-8" />
+    <title>VIX Futures Analyser</title>
+
+    <link rel="stylesheet" type="text/css" href="/css/VixFuturesAnalyser.css">
+    <script language="javascript" type="text/javascript" src="http://www.flotcharts.org/flot/jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="http://www.flotcharts.org/flot/jquery.flot.js"></script>
+    <script type="text/javascript" src="/js/VixFuturesAnalyser.js"></script>
+    
+    <script>
+        onHeadProcessing();
+    </script>
+          
+</head>
+
+<body >
+   <h1> VIX Futures Analyser</h1>
+    <br>
+    &emsp;&emsp;&emsp;&emsp;<span id="idTimeNow"></span>&emsp;&emsp;
+    <span id="idLiveDataDate"></span> <span id="idLiveDataTime"></span>&emsp;&emsp;
+    <span id="idFirstDataDate"></span><span id="idLastDataDate"></span>.
+    <br><br>
+    <span id="idCurrTableMtx"></span>
+    <br><br>
+    <table class="histData">
+    <tr><td><span id="idAMeanTotalTableMtx"></span></td><td>&emsp;&emsp;&emsp;&emsp;</td><td><span id="idMedianTotalTableMtx"></span></td></tr>
+    <tr><td><br><br></td></tr>
+    <tr><td><span id="idAMeanContangoTableMtx"></span></td><td>&emsp;&emsp;&emsp;&emsp;</td><td><span id="idMedianContangoTableMtx"></span></td></tr>
+    <tr><td><br><br></td></tr>
+    <tr><td><span id="idAMeanBackwardTableMtx"></span></td><td>&emsp;&emsp;&emsp;&emsp;</td><td><span id="idMedianBackwardTableMtx"></span></td></tr>
+    </table>
+<hr>
+<br>
+    <div id="inviCharts" style="visibility: hidden">
+    <h3 align="center">Arithmetic mean and median of VIX futures by calendar days until expiration</h3>
+    <div class="demo-container">
+        <div id="placeholder1" class="demo-placeholder" style="float:left; width:675px;"></div>
+        <p id="choices1" style="float:right; width:135px;"></p>
+    </div>
+    <br>
+    <h3 align="center">Arithmetic mean and median of VIX futures spreads by calendar days until expiration</h3>
+        <div class="demo-container">
+            <div id="placeholder2" class="demo-placeholder" style="float:left; width:675px;"></div>
+            <p id="choices2" style="float:right; width:135px;"></p>
+        </div>
+                
+    </div>
+   
+</body>
+</html>
