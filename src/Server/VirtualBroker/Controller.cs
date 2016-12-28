@@ -207,7 +207,11 @@ namespace VirtualBroker
                             MinTradeValueInCurrency = 100,
                             Param = new PortfolioParamHarryLong() { } },
                         new BrokerTaskPortfolio() { Name = "! Harry Long (Contango-Bond) harvester Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
-                            MaxTradeValueInCurrency = 200000, // For Mr.C.: portfolio is 100K original. Set MaxValue=200K  (assuming portfolio double in a year)
+                            MaxTradeValueInCurrency = 400000, // For Mr.C.: portfolio is 200K original. Set MaxValue=400K  (assuming portfolio double in a year)
+                            MinTradeValueInCurrency = 200,
+                            Param = new PortfolioParamHarryLong() {  } },
+                        new BrokerTaskPortfolio() { Name = "! IB T. Risky 2 Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.TuSecondary,
+                            MaxTradeValueInCurrency = 10000, // For Tu: portfolio is 5K original. Set MaxValue=10K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 200,
                             Param = new PortfolioParamHarryLong() {  } }
                         }

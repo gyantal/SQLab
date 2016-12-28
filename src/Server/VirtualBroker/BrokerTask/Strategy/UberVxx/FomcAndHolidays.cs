@@ -42,9 +42,10 @@ namespace VirtualBroker
             //2. Holidays section (separation is not necessary)
             DateTime holidayDateUpperThresholdET = nextTradingDayET_Date.AddDays(15);  // 15 is optimal as: T-5 is played for Xmas, and T+5 is played for NewYear, and they can overlap. It can be any other number, not only 15, the code will find the closest one.
             DateTime holidayDateLowerThresholdET = nextTradingDayET_Date.AddDays(-15);
-            // NewYear and Xmas is close to each other, so multiple holidays can be collected. We have to find the closest one.
-            DateProperty closestHolidayET = null;
-            int closestHolidayOffsetInd = Int32.MaxValue;
+            // NewYear and Xmas is close to each other, so multiple holidays can be collected. Finding the closest one is not enough. 
+            // 2016 -12-28 was Xmas(T+2) was closest (no signal, so we followed Connor daily FollowThrough), but NewYear(T-3) as second closest (had bearish signal.). We should have followed NewYear(T-3), as that was profitable.
+            // So we have to collect all holidays within the -15..+15 day's range, and go to the second or third too if first closest doesn't have a signal
+            List<DateProperty> holidaysInRange = new List<DateProperty>();
             for (int i = specialDates.Count - 1; i >= 0; i--)
             {
                 if (specialDates[i].DateLoc > holidayDateUpperThresholdET)
@@ -56,79 +57,92 @@ namespace VirtualBroker
                     continue;
 
                 Utils.Logger.Debug($"Potential holiday date found: {specialDates[i].DateLoc}");
-                int offsetInd = CalculateOffsetIndOfTradingDateFromEvent(nextTradingDayET_Date, specialDates[i].DateLoc);
-                if (Math.Abs(offsetInd) < Math.Abs(closestHolidayOffsetInd))
-                {
-                    closestHolidayOffsetInd = offsetInd;
-                    closestHolidayET = specialDates[i];
-                }
+                holidaysInRange.Add(specialDates[i]);
             }
-            if (closestHolidayET != null)
-            {
-                DatePropertiesFlags holidayFlagOnly = closestHolidayET.Flags & DatePropertiesFlags._KindOfUsaHoliday;
-                Utils.Logger.Debug($"Closest holiday '{holidayFlagOnly}' on {closestHolidayET.DateLoc.ToString("yyyy-MM-dd")}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
-                Utils.ConsoleWriteLine(null, false, $"Closest holiday '{holidayFlagOnly}' on {closestHolidayET.DateLoc.ToString("yyyy-MM-dd")}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
-                m_detailedReportSb.AppendLine($"Closest holiday '{holidayFlagOnly}' on {closestHolidayET.DateLoc.ToString("yyyy-MM-dd")}, day T{((closestHolidayOffsetInd >= 0) ? "+" : "-")}{Math.Abs(closestHolidayOffsetInd)}");
 
-                // Holiday days was revised in 2015-11, based on that here is the latest in 2016-04: https://docs.google.com/document/d/1Kaazv6gjDfffHG3cjNgSMuseoe45UftMKiZP8XPO2pA/edit
-                switch (holidayFlagOnly)
+            // order holidaysInRange by closeness
+            var holidaysInRangeOrdered = holidaysInRange.OrderBy(r =>
+            {
+                int offsetInd = CalculateOffsetIndOfTradingDateFromEvent(nextTradingDayET_Date, r.DateLoc);
+                return Math.Abs(offsetInd);
+            });
+
+            foreach (var holiday in holidaysInRangeOrdered)
+            {
+                int offsetInd = CalculateOffsetIndOfTradingDateFromEvent(nextTradingDayET_Date, holiday.DateLoc);
+                double? holidaySignal = GetHolidaySignal(holiday, offsetInd);
+                if (holidaySignal != null)
                 {
-                    case DatePropertiesFlags.NewYear:
-                        if (closestHolidayOffsetInd == +1 || closestHolidayOffsetInd == +2 || closestHolidayOffsetInd == +3 || closestHolidayOffsetInd == +4 || closestHolidayOffsetInd == +5)
-                            return -1.0;    // VXX negative short forecast, which is bullish for the market
-                        if (closestHolidayOffsetInd == -1 || closestHolidayOffsetInd == -2 || closestHolidayOffsetInd == -3)
-                            return 1.0;    // VXX positive long forecast, which is bearish for the market
-                        break;
-                    case DatePropertiesFlags.MLutherKing:
-                        if (closestHolidayOffsetInd == -1)
-                            return -1.0;    // VXX negative short forecast, which is bullish for the market
-                        break;
-                    case DatePropertiesFlags.SuperBowl:     // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
-                        if (closestHolidayOffsetInd == 0)
-                            return 1.0;    // VXX positive long forecast, which is bearish for the market
-                        break;
-                    case DatePropertiesFlags.Presidents:
-                        break;
-                    case DatePropertiesFlags.GoodFriday:
-                        if (closestHolidayOffsetInd == +1 || closestHolidayOffsetInd == -1 || closestHolidayOffsetInd == -2 || closestHolidayOffsetInd == -3)
-                            return -1.0;    // VXX negative short forecast, which is bullish for the market
-                        break;
-                    case DatePropertiesFlags.Memorial:      // it was put here just for testing the implementation. In 2016-05, this was the next potential holiday
-                        if (closestHolidayOffsetInd == -1 || closestHolidayOffsetInd == +1)
-                            return -1.0;    // VXX negative short forecast, which is bullish for the market
-                        break;
-                    case DatePropertiesFlags.Independence:
-                        if (closestHolidayOffsetInd == -1 || closestHolidayOffsetInd == -2 || closestHolidayOffsetInd == -3 || closestHolidayOffsetInd == -4 || closestHolidayOffsetInd == -5)
-                            return -1.0;    // VXX negative short forecast, which is bullish for the market
-                        break;
-                    case DatePropertiesFlags.Labor:
-                        if (closestHolidayOffsetInd == +1 || closestHolidayOffsetInd == -1 || closestHolidayOffsetInd == -2 || closestHolidayOffsetInd == -3)
-                            return -1.0;    // VXX negative short forecast, which is bullish for the market
-                        if (closestHolidayOffsetInd == -4 || closestHolidayOffsetInd == -5)
-                            return 1.0;    // VXX positive long forecast, which is bearish for the market
-                        break;
-                    case DatePropertiesFlags.Columbus: // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
-                        break;
-                    case DatePropertiesFlags.Veterans: // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
-                        break;
-                    case DatePropertiesFlags.Thanksgiving:
-                        if (closestHolidayOffsetInd == -1 || closestHolidayOffsetInd == -2 || closestHolidayOffsetInd == -3 || closestHolidayOffsetInd == -4)
-                            return -1.0;    // VXX negative short forecast, which is bullish for the market
-                        if (closestHolidayOffsetInd == +1 || closestHolidayOffsetInd == +2)
-                            return 1.0;    // VXX positive long forecast, which is bearish for the market
-                        break;
-                    case DatePropertiesFlags.Xmas:
-                        if (closestHolidayOffsetInd == -1 || closestHolidayOffsetInd == -2 || closestHolidayOffsetInd == -3 || closestHolidayOffsetInd == -4 || closestHolidayOffsetInd == -5)
-                            return -1.0;    // VXX negative short forecast, which is bullish for the market
-                        break;  
-                    default:
-                        break;
-                }            
+                    DatePropertiesFlags holidayFlagOnly = holiday.Flags & DatePropertiesFlags._KindOfUsaHoliday;
+                    Utils.Logger.Debug($"Closest holiday with signal '{holidayFlagOnly}' on {holiday.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
+                    Utils.ConsoleWriteLine(null, false, $"Closest holiday with signal '{holidayFlagOnly}' on {holiday.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
+                    m_detailedReportSb.AppendLine($"Closest holiday with signal '{holidayFlagOnly}' on {holiday.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
+                    return holidaySignal;
+                }
             }
 
             return null;
         }
 
+        private double? GetHolidaySignal(DateProperty p_holiday, int p_offsetInd)
+        {
+            DatePropertiesFlags holidayFlagOnly = p_holiday.Flags & DatePropertiesFlags._KindOfUsaHoliday;
+            // Holiday days was revised in 2015-11, based on that here is the latest in 2016-04: https://docs.google.com/document/d/1Kaazv6gjDfffHG3cjNgSMuseoe45UftMKiZP8XPO2pA/edit
+            switch (holidayFlagOnly)
+            {
+                case DatePropertiesFlags.NewYear:
+                    if (p_offsetInd == +1 || p_offsetInd == +2 || p_offsetInd == +3 || p_offsetInd == +4 || p_offsetInd == +5)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3)
+                        return 1.0;    // VXX positive long forecast, which is bearish for the market
+                    break;
+                case DatePropertiesFlags.MLutherKing:
+                    if (p_offsetInd == -1)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    break;
+                case DatePropertiesFlags.SuperBowl:     // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
+                    if (p_offsetInd == 0)
+                        return 1.0;    // VXX positive long forecast, which is bearish for the market
+                    break;
+                case DatePropertiesFlags.Presidents:
+                    break;
+                case DatePropertiesFlags.GoodFriday:
+                    if (p_offsetInd == +1 || p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    break;
+                case DatePropertiesFlags.Memorial:      // it was put here just for testing the implementation. In 2016-05, this was the next potential holiday
+                    if (p_offsetInd == -1 || p_offsetInd == +1)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    break;
+                case DatePropertiesFlags.Independence:
+                    if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4 || p_offsetInd == -5)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    break;
+                case DatePropertiesFlags.Labor:
+                    if (p_offsetInd == +1 || p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    if (p_offsetInd == -4 || p_offsetInd == -5)
+                        return 1.0;    // VXX positive long forecast, which is bearish for the market
+                    break;
+                case DatePropertiesFlags.Columbus: // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
+                    break;
+                case DatePropertiesFlags.Veterans: // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
+                    break;
+                case DatePropertiesFlags.Thanksgiving:
+                    if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    if (p_offsetInd == +1 || p_offsetInd == +2)
+                        return 1.0;    // VXX positive long forecast, which is bearish for the market
+                    break;
+                case DatePropertiesFlags.Xmas:
+                    if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4 || p_offsetInd == -5)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    break;
+                default:
+                    break;
+            }
+            return null;
+        }
 
         private int CalculateOffsetIndOfTradingDateFromEvent(DateTime p_tradingDate, DateTime p_eventDate)
         {

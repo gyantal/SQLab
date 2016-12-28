@@ -27,6 +27,8 @@ namespace VirtualBroker
                         return "U1034066";  // Wife
                     case 7303:
                         return "U988767";  // Charmat
+                    case 7304:
+                        return "U1156489";  // Tu
                     default:
                         return null;
                 }

@@ -57,18 +57,18 @@ namespace VirtualBroker
             m_mainGateway = null;
             try
             {
-                Gateway gateway1, gateway2;
+                Gateway gateway1 = null, gateway2 = null, gateway3 = null;
                 if (!Controller.IsRunningAsLocalDevelopment())
                 {
                     gateway1 = new Gateway(GatewayUser.GyantalMain) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41};
                     gateway2 = new Gateway(GatewayUser.CharmatSecondary, 200000.0 /* HarryLong is played 100K, double it */, 1000000.0  /* 1M */ ) { VbAccountsList = "U988767", SocketPort = (int)GatewayUserPort.CharmatSecondary, BrokerConnectionClientID = 42};
+                    gateway3 = new Gateway(GatewayUser.TuSecondary, 200000.0 /* HarryLong is played 100K, double it */, 1000000.0  /* 1M */ ) { VbAccountsList = "U1156489", SocketPort = (int)GatewayUserPort.TuSecondary, BrokerConnectionClientID = 43 };
                     //Gateway gateway2 = new Gateway() { GatewayUser = GatewayUser.CharmatWifeMain, VbAccountsList = "U1034066", SocketPort = 7302 };
                     m_mainGatewayUser = GatewayUser.CharmatSecondary;
                 }
                 else
                 {
                     gateway1 = new Gateway(GatewayUser.GyantalMain) { VbAccountsList = "U407941", SocketPort = 7301 };    // correct one
-                    gateway2 = null;
                     m_mainGatewayUser = GatewayUser.GyantalMain;
                 }
 
@@ -76,6 +76,8 @@ namespace VirtualBroker
                 m_gateways.Add(gateway1);
                 if (gateway2 != null)   // sometimes (for development), 1 gateway is used only
                     m_gateways.Add(gateway2);
+                if (gateway3 != null)   // sometimes (for development), 1 gateway is used only
+                    m_gateways.Add(gateway3);
 
                 //Task connectTask1 = Task.Factory.StartNew(ReconnectToGateway, gateway1, TaskCreationOptions.LongRunning);
                 //Task connectTask2 = Task.Factory.StartNew(ReconnectToGateway, gateway2, TaskCreationOptions.LongRunning);
