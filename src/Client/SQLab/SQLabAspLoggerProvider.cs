@@ -94,7 +94,8 @@ namespace SQLab
                     }
                     catch (Exception e) // "System.ArgumentException: Decoded string is not a valid IDN name." at Microsoft.AspNetCore.Http.HostString.ToUriComponent()
                     {
-                        message = "Log Message could'n be formatted to ASCII by the Formatter. Probably bad URL input query. Investigate log files about the URL query.";
+                        // swallow the exception and substitute Message with the Exception data.
+                        message = "SQLabAspLoggerProvider.Log(): Log Message could'n be formatted to ASCII by the Formatter. Probably bad URL input query. Investigate log files about the URL query. Exception is this: " + e.ToString();
                     }
                     //if (exception != null)  // formatter function doesn't put the Exception into the message, so add it.
                     //{
@@ -206,6 +207,9 @@ namespace SQLab
                 if (fullExceptionStr.IndexOf(@"Missing request target") != -1)      // 'Microsoft.AspNetCore.Server.Kestrel.BadHttpRequestException: Missing request target.'
                     return false;
                 if (fullExceptionStr.IndexOf(@"System.IndexOutOfRangeException: Index was outside the bounds of the array." + Environment.NewLine + "   at Microsoft.AspNetCore.Routing.Template.TemplateMatcher.TryMatch") != -1)      // A Kestrel error when this query arrived: "Request starting HTTP/1.1 GET https://23.20.243.199//recordings//theme/main.css". Probably they will fix it, but I don't want to receive errors about it.
+                    return false;
+                if ((fullExceptionStr.IndexOf(@"System.ArgumentException: Decoded string is not a valid IDN name.") != -1) &&      // If this Exception occurs in Kestrel, swallow it. If it occurs in our code, we send the error.
+                    (fullExceptionStr.IndexOf(@"at Microsoft.AspNetCore.Hosting.Internal.HostingLoggerExtensions.RequestStarting(") != -1))
                     return false;
                 return true;
             }
