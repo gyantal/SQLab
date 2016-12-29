@@ -696,7 +696,7 @@ namespace SQLab.Controllers
             //--for (int i = 0; i < p_vixCentralRec.Length; i++)
             //--sb.AppendLine(p_vixCentralRec[i].ToString());
             //--sb.Append(@"""," + Environment.NewLine + @"""timeNow"": """ + timeNow.ToString() + " EST");
-            sb.Append(@"""timeNow"": """ + timeNowET.ToString("yyyy-MM-dd") + " EST");
+            sb.Append(@"""timeNow"": """ + timeNowET.ToString("yyyy-MM-dd HH:mm") + " EST");
 
             sb.Append(@"""," + Environment.NewLine + @"""liveDataDate"": """ + p_liveDate);
 
