@@ -715,6 +715,9 @@ namespace VirtualBroker
             return p_realOrderId;
         }
 
+        // note that even MKT (not LMT) orders can hand out and fail due to Short restrictions ("not available for short" or "The SEC Rule 201 (aka "Up-tick Rule) has been triggered", shorting is possible only on Upticks.)
+        // see "MOC order execution and short or long decisions (IB).txt"
+        // + at the moment, if VBroker fails and time-outs on the trade, we have to do the trade manually quickly, or let VBroker do it next day automatically.
         public bool WaitOrder(int p_realOrderId, bool p_isSimulatedTrades)
         {
             // wait here

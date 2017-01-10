@@ -60,9 +60,9 @@ namespace VirtualBroker
                 Gateway gateway1 = null, gateway2 = null, gateway3 = null;
                 if (!Controller.IsRunningAsLocalDevelopment())
                 {
-                    gateway1 = new Gateway(GatewayUser.GyantalMain) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41};
-                    gateway2 = new Gateway(GatewayUser.CharmatSecondary, 200000.0 /* HarryLong is played 100K, double it */, 1000000.0  /* 1M */ ) { VbAccountsList = "U988767", SocketPort = (int)GatewayUserPort.CharmatSecondary, BrokerConnectionClientID = 42};
-                    gateway3 = new Gateway(GatewayUser.TuSecondary, 200000.0 /* HarryLong is played 100K, double it */, 1000000.0  /* 1M */ ) { VbAccountsList = "U1156489", SocketPort = (int)GatewayUserPort.TuSecondary, BrokerConnectionClientID = 43 };
+                    gateway1 = new Gateway(GatewayUser.GyantalMain, p_accountMaxTradeValueInCurrency: 35000 /* UberVXX is 8K, 2xleveraged=16K, double=32K*/, p_accountMaxEstimatedValueSumRecentlyAllowed: 70000) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41};
+                    gateway2 = new Gateway(GatewayUser.CharmatSecondary, p_accountMaxTradeValueInCurrency: 300000.0 /* HarryLong is played 200K*65%=150K, double it */, p_accountMaxEstimatedValueSumRecentlyAllowed: 1000000  /* 1M */ ) { VbAccountsList = "U988767", SocketPort = (int)GatewayUserPort.CharmatSecondary, BrokerConnectionClientID = 42};
+                    gateway3 = new Gateway(GatewayUser.TuSecondary, p_accountMaxTradeValueInCurrency: 7000.0 /* HarryLong is played 5K*65%=3.5K, double it */, p_accountMaxEstimatedValueSumRecentlyAllowed: 20000  /* 1M */ ) { VbAccountsList = "U1156489", SocketPort = (int)GatewayUserPort.TuSecondary, BrokerConnectionClientID = 43 };
                     //Gateway gateway2 = new Gateway() { GatewayUser = GatewayUser.CharmatWifeMain, VbAccountsList = "U1034066", SocketPort = 7302 };
                     m_mainGatewayUser = GatewayUser.CharmatSecondary;
                 }

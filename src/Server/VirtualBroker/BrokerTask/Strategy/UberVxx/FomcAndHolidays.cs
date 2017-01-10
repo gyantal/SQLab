@@ -74,9 +74,9 @@ namespace VirtualBroker
                 if (holidaySignal != null)
                 {
                     DatePropertiesFlags holidayFlagOnly = holiday.Flags & DatePropertiesFlags._KindOfUsaHoliday;
-                    Utils.Logger.Debug($"Closest holiday with signal '{holidayFlagOnly}' on {holiday.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
-                    Utils.ConsoleWriteLine(null, false, $"Closest holiday with signal '{holidayFlagOnly}' on {holiday.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
-                    m_detailedReportSb.AppendLine($"Closest holiday with signal '{holidayFlagOnly}' on {holiday.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
+                    Utils.Logger.Debug($"Closest holiday with signal: '{holidayFlagOnly}' on {holiday.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
+                    Utils.ConsoleWriteLine(null, false, $"Closest holiday with signal: '{holidayFlagOnly}' on {holiday.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
+                    m_detailedReportSb.AppendLine($"Closest holiday with signal: '{holidayFlagOnly}' on {holiday.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
                     return holidaySignal;
                 }
             }
