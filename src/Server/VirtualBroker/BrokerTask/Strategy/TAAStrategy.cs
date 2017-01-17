@@ -158,22 +158,31 @@ namespace VirtualBroker
                 taaConfig.RebalancingPeriodicity, taaConfig.DailyRebalancingDays, taaConfig.WeeklyRebalancingWeekDay, taaConfig.MonthlyRebalancingOffset,
                 taaConfig.PctChannelLookbackDays, taaConfig.PctChannelPctLimitLower, taaConfig.PctChannelPctLimitUpper,
                 taaConfig.IsPctChannelActiveEveryDay, false, taaConfig.HistVolLookbackDays, taaConfig.IsCashAllocatedForNonActives,
-                m_cashEquivalentQuotes, new Dictionary<DebugDetailToHtml, bool>(), ref warningToUser, ref noteToUserBacktest, ref errorMessage, ref debugMessage, ref pv, m_lastWeights);
+                m_cashEquivalentQuotes, 
+                new Dictionary<DebugDetailToHtml, bool> {   { DebugDetailToHtml.Date, true }, { DebugDetailToHtml.PV, true }, { DebugDetailToHtml.AssetFinalWeights, true },
+                                                            { DebugDetailToHtml.CashWeight, true }, { DebugDetailToHtml.AssetData, true }, { DebugDetailToHtml.PctChannels, true } }, 
+                6 /* calendar days, so consider long weekends as extra 2-3 days */, Environment.NewLine,
+                ref warningToUser, ref noteToUserBacktest, ref errorMessage, ref debugMessage, ref pv, m_lastWeights);
 
+            Utils.Logger.Debug(noteToUserBacktest);
             return true;
         }
 
 
         // copied from BackTester. Try to keep the code absolutely the same. Later, we may put them into a common DLL, but it is very rare that VirtualBroker has to do a whole historicalBacktesting run.
         private static void DoBacktestInTheTimeInterval_TAA(IList<List<DailyData>> p_quotes, string[] p_tickers, DateTime p_commonAssetStartDate, DateTime p_commonAssetEndDate, double[] p_assetsConstantLeverages,
-                RebalancingPeriodicity p_rebalancingPeriodicity, int p_dailyRebalancingDays, DayOfWeek p_weeklyRebalancingWeekDay, int p_monthlyRebalancingOffset,
-                int[] p_pctChannelLookbackDays, double p_pctChannelPctLimitLower, double p_pctChannelPctLimitUpper, bool p_isPctChannelActiveEveryDay, bool p_isPctChannelConditional,
-                int p_histVolLookbackDays,
-                bool p_isCashAllocatedForNonActives, List<DailyData> p_cashEquivalentQuotes,
-                Dictionary<DebugDetailToHtml, bool> p_debugDetailToHtml,
-                ref string p_noteToUserCheckData, ref string p_noteToUserBacktest, ref string errorMessage, ref string debugMessage, ref List<DailyData> p_pv, double[] p_lastWeights)
+              RebalancingPeriodicity p_rebalancingPeriodicity, int p_dailyRebalancingDays, DayOfWeek p_weeklyRebalancingWeekDay, int p_monthlyRebalancingOffset,
+              int[] p_pctChannelLookbackDays, double p_pctChannelPctLimitLower, double p_pctChannelPctLimitUpper, bool p_isPctChannelActiveEveryDay, bool p_isPctChannelConditional,
+              int p_histVolLookbackDays,
+              bool p_isCashAllocatedForNonActives, List<DailyData> p_cashEquivalentQuotes,
+              Dictionary<DebugDetailToHtml, bool> p_debugDetailToHtml, int p_nCalendarDaysToDebugDetailToHtml, string p_noteToUserNewLine,
+              ref string p_noteToUserCheckData, ref string p_noteToUserBacktest, ref string errorMessage, ref string debugMessage, ref List<DailyData> p_pv, double[] p_lastWeights)
         {
             StringBuilder noteToUser = new StringBuilder("DoBacktestInTheTimeInterval_TAA()");
+            DateTime nowDate = DateTime.UtcNow.Date;
+            DateTime debugDetailToHtmlMinDate = DateTime.MinValue;
+            if (p_nCalendarDaysToDebugDetailToHtml < (nowDate - DateTime.MinValue).TotalDays)
+                debugDetailToHtmlMinDate = nowDate.AddDays(-1 * p_nCalendarDaysToDebugDetailToHtml);
             List<DailyData> pv = null;
             // implement CLMT in a way, that those data days don't restrict Strategy StartDate. If they are not available on a day, simple 100% is used. CLMT: "SMA(SPX,50d,200d); PR(XLU,VTI,20d)"
             // 1. Determine commonAssetStartDate
@@ -369,58 +378,61 @@ namespace VirtualBroker
                 }   // if rebalancing
 
 
-                bool wasAnyNoteToUser = false;
-                string noteToUserRow = String.Empty;
-                if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.Date))
+                if (pv[iDay].Date >= debugDetailToHtmlMinDate)
                 {
-                    noteToUserRow += $"{pv[iDay].Date.ToString("yyyy-MM-dd")}";
-                    wasAnyNoteToUser = true;
-                }
-                if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.PV))
-                {
-                    noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{pv[iDay].AdjClosePrice:F2}";
-                    wasAnyNoteToUser = true;
-                }
-                for (int iAsset = 0; iAsset < nAssets; iAsset++)
-                {
-                    if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.AssetData))
+                    bool wasAnyNoteToUser = false;
+                    string noteToUserRow = String.Empty;
+                    if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.Date))
                     {
-                        double assetChg = p_quotes[iAsset][iQ[iAsset] + iDay].AdjClosePrice / p_quotes[iAsset][iQ[iAsset] + iDay - 1].AdjClosePrice - 1;
-                        noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"${p_quotes[iAsset][iQ[iAsset] + iDay].AdjClosePrice:F2}, {assetChg * 100.0:F2}%";
+                        noteToUserRow += $"{pv[iDay].Date.ToString("yyyy-MM-dd")}";
                         wasAnyNoteToUser = true;
                     }
-
-                    if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.PctChannels))
+                    if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.PV))
                     {
-                        for (int iChannel = 0; iChannel < p_pctChannelLookbackDays.Length; iChannel++)
+                        noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{pv[iDay].AdjClosePrice:F2}";
+                        wasAnyNoteToUser = true;
+                    }
+                    for (int iAsset = 0; iAsset < nAssets; iAsset++)
+                    {
+                        if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.AssetData))
                         {
-                            noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetPctChannelsLower[iAsset, iChannel]:F3}";
-                            noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetPctChannelsUpper[iAsset, iChannel]:F3}";
-                            noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetPctChannelsSignal[iAsset, iChannel]}";
+                            double assetChg = p_quotes[iAsset][iQ[iAsset] + iDay].AdjClosePrice / p_quotes[iAsset][iQ[iAsset] + iDay - 1].AdjClosePrice - 1;
+                            noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"${p_quotes[iAsset][iQ[iAsset] + iDay].AdjClosePrice:F2}, {assetChg * 100.0:F2}%";
+                            wasAnyNoteToUser = true;
                         }
-                        wasAnyNoteToUser = true;
-                    }
 
-                    if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.AssetData))
-                    {
-                        noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetScores[iAsset]},{assetHV[iAsset]:F6}, {assetWeights[iAsset]:F3}";
-                        wasAnyNoteToUser = true;
-                    }
+                        if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.PctChannels))
+                        {
+                            for (int iChannel = 0; iChannel < p_pctChannelLookbackDays.Length; iChannel++)
+                            {
+                                noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetPctChannelsLower[iAsset, iChannel]:F3}";
+                                noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetPctChannelsUpper[iAsset, iChannel]:F3}";
+                                noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetPctChannelsSignal[iAsset, iChannel]}";
+                            }
+                            wasAnyNoteToUser = true;
+                        }
 
-                    if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.AssetFinalWeights))
+                        if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.AssetData))
+                        {
+                            noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetScores[iAsset]},{assetHV[iAsset]:F6}, {assetWeights[iAsset]:F3}";
+                            wasAnyNoteToUser = true;
+                        }
+
+                        if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.AssetFinalWeights))
+                        {
+                            double wAsset = assetPos[iAsset] / pvDaily * 100;
+                            noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{wAsset:F2}%,,";
+                            wasAnyNoteToUser = true;
+                        }
+                    }
+                    if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.CashWeight))
                     {
-                        double wAsset = assetPos[iAsset] / pvDaily * 100;
-                        noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{wAsset:F2}%,,";
+                        noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{cash / pvDaily * 100:F2}%";
                         wasAnyNoteToUser = true;
                     }
+                    if (!String.IsNullOrEmpty(noteToUserRow))
+                        noteToUser.Append(noteToUserRow + p_noteToUserNewLine);
                 }
-                if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.CashWeight))
-                {
-                    noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{cash / pvDaily * 100:F2}%";
-                    wasAnyNoteToUser = true;
-                }
-                if (!String.IsNullOrEmpty(noteToUserRow))
-                    noteToUser.Append(noteToUserRow + "<br/>");
             } // march for all days
 
             if (p_lastWeights != null)
@@ -437,6 +449,7 @@ namespace VirtualBroker
             p_noteToUserBacktest = noteToUser.ToString();
             //noteToUserBacktest = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
         } // DoBacktestInTheTimeInterval_TAA
+
 
     }
 }
