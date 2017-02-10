@@ -56,14 +56,12 @@ namespace SqCommon
             {
                 // 1. Get section from <thead> to </tbody> for the holidays
                 // 2. Get section from ">*", ">**", ">***" to </p> to get the 3 footnotes
-                int iTHead = webPage.IndexOf(@"{""head"":");
+                int iTHead = webPage.IndexOf(@"{""head"":");        // holiday table appears twice in the HTML. One in the middle, but one at the end is shorter, cleaner, get that.
                 int iTBody = webPage.IndexOf(@"""foot"":", iTHead);
                 string holidayTable = webPage.Substring(iTHead, iTBody - iTHead);
 
-                //int iFootnoteStart = webPage.IndexOf(">*", iTBody);   // 2016-01-01: Footnote section was After the "table" in the html source
-                //int iFootnoteEnd = webPage.IndexOf("The NYSE", iFootnoteStart);
-                int iFootnoteEnd = webPage.LastIndexOf(@"""table""", iTHead);// 2016-09-14: Footnote section went Before the "table" in the html source
-                int iFootnoteStart = webPage.LastIndexOf(">*Each", iFootnoteEnd, StringComparison.CurrentCultureIgnoreCase); 
+                int iFootnoteEnd = webPage.LastIndexOf(@"""table""", iTHead);// Footnote section is Before the second-holiday-table in the html source
+                int iFootnoteStart = webPage.LastIndexOf(">* Each", iFootnoteEnd, StringComparison.CurrentCultureIgnoreCase);   // 2017-02-08: a ">*Each" got a space as ">* Each"
                 string footnote = webPage.Substring(iFootnoteStart, iFootnoteEnd - iFootnoteStart);
 
                 int year1 = -1, year2 = -1;

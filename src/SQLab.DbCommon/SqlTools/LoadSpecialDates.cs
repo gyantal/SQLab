@@ -58,6 +58,7 @@ namespace DbCommon
             //      But we don't need those. And if a CivilHoliday day has a stock market open, that day is not included here.
             // 15 <binary 1111, bottom 4 bits>: USA Civil Holidays, all civil holidays irrespective of that stock market was open or not. 151 rows. (911Attacks excluded)
             //      However, on 2016-05-20, the database is not yet filled with examples of SuperBowl or other lesser holidays when the stock market was open. But we don't need that data yet. 
+            // Balazs's HolidayResearch Excel table should contain old dates, Future dates should be collected by a Crawler, or by a Warning email to Supervisors.
             // 8192: FOMC-MeetingLastDay, about 136 rows from 2000-02-02
             // this SQL query will get all dates, except one time-stock market close days like "911Attacks", "HurricaneSandy", "FuneralReagen" (not regular), 
             // exclude "|EarlyCloseTimeLoc=13:00 EST|Christmas Eve Day|" days, because we don't need open market EarlyCloseTimeLoc days.

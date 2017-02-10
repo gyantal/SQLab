@@ -154,6 +154,7 @@ namespace DbCommon
     // MarketOpenDayHolidays = ColombusDay OR SuperBowl
     // else
     // MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
+    // Balazs's HolidayResearch Excel table should contain old dates for SuperBowl and other holidays, Future dates should be collected by a Crawler, or by a Warning email to Supervisors.
     [Flags]
     public enum DatePropertiesFlags : short // dbo.DateProperties.Flags
     {
@@ -162,7 +163,7 @@ namespace DbCommon
         // Flags specific to the USA:
         NewYear = 1,
         MLutherKing = 2,
-        SuperBowl = 3,          // as of 2016, this is not a stock market holiday, only civil holiday
+        SuperBowl = 3,          // as of 2016, this is not a stock market holiday, only civil holiday, 2017-02-03: it is not in our database, but I am happy to skip this, it shouldn't be significant
         Presidents = 4,
         GoodFriday = 5,
         Memorial = 6,

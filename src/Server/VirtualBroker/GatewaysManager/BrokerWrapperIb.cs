@@ -718,6 +718,12 @@ namespace VirtualBroker
         // note that even MKT (not LMT) orders can hand out and fail due to Short restrictions ("not available for short" or "The SEC Rule 201 (aka "Up-tick Rule) has been triggered", shorting is possible only on Upticks.)
         // see "MOC order execution and short or long decisions (IB).txt"
         // + at the moment, if VBroker fails and time-outs on the trade, we have to do the trade manually quickly, or let VBroker do it next day automatically.
+        // Shorting problem: "Order held while securities are located.": (if it happens too many times, consider to change traded instrument e.g. from UVXY to TVIX)
+        // Also UVXY borrowing fee rate: 12.16%, while TVIX is 3.73%. That is 8% difference per year, althought with 35% Harry Long weight, it is only about 3% CAGR.
+        // in 2017-01: UVXY is 28, while TVIX is 6. After TVIX will have a reverse split, consider trading TVIX instead of UVXY, if these shorting problems occur
+        // failed shorting happened:
+        // 2017-01-23: UVXY : "not located" (while at the same time TVIX was available for short)
+        // 2017-02-08 and 09: UVXY : "not located" (while at the same time TVIX was available for short)
         public bool WaitOrder(int p_realOrderId, bool p_isSimulatedTrades)
         {
             // wait here

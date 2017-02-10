@@ -4,6 +4,7 @@ using SqCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace VirtualBroker
 {
@@ -62,9 +63,17 @@ namespace VirtualBroker
 
                 // log the last 3 values (for later debugging)
                 int quoteLength = quotes.Count;
-                Utils.Logger.Trace($"{p_tickers[iTicker]},{quotes[quoteLength - 3].Date.ToString("yyyy-MM-dd")}: {quotes[quoteLength - 3].AdjClosePrice}");
-                Utils.Logger.Trace($"{p_tickers[iTicker]},{quotes[quoteLength - 2].Date.ToString("yyyy-MM-dd")}: {quotes[quoteLength - 2].AdjClosePrice}");
-                Utils.Logger.Trace($"{p_tickers[iTicker]},{quotes[quoteLength - 1].Date.ToString("yyyy-MM-dd")}: {quotes[quoteLength - 1].AdjClosePrice}");
+                Utils.Logger.Debug($"{p_tickers[iTicker]},{quotes[quoteLength - 3].Date.ToString("yyyy-MM-dd")}: {quotes[quoteLength - 3].AdjClosePrice}");
+                Utils.Logger.Debug($"{p_tickers[iTicker]},{quotes[quoteLength - 2].Date.ToString("yyyy-MM-dd")}: {quotes[quoteLength - 2].AdjClosePrice}");
+                Utils.Logger.Debug($"{p_tickers[iTicker]},{quotes[quoteLength - 1].Date.ToString("yyyy-MM-dd")}: {quotes[quoteLength - 1].AdjClosePrice}");
+
+                // 2017-01-19: sbTracer is for debugging porpuses. To check that SQ DB is consistent with AdjustedClosePrices
+                StringBuilder sbTracer = new StringBuilder($"{p_tickers[iTicker]}," + Environment.NewLine);
+                foreach (var q in quotes)
+                {
+                    sbTracer.AppendLine($"{q.Date.ToString("yyyy-MM-dd")},{q.AdjClosePrice:F3}");
+                }
+                Utils.Logger.Trace(sbTracer.ToString());
             }
 
             return allQuotes;
