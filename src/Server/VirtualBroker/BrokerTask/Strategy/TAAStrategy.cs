@@ -153,7 +153,7 @@ namespace VirtualBroker
         {
             m_lastWeights = new double[taaConfig.Tickers.Length + 1];
             List<DailyData> pv = null;
-            string warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
             DoBacktestInTheTimeInterval_TAA(m_quotes, taaConfig.Tickers, m_quotes[0][0].Date, m_quotes[0].Last().Date, taaConfig.AssetsConstantLeverages,
                 taaConfig.RebalancingPeriodicity, taaConfig.DailyRebalancingDays, taaConfig.WeeklyRebalancingWeekDay, taaConfig.MonthlyRebalancingOffset,
                 taaConfig.PctChannelLookbackDays, taaConfig.PctChannelPctLimitLower, taaConfig.PctChannelPctLimitUpper,
@@ -162,9 +162,9 @@ namespace VirtualBroker
                 new Dictionary<DebugDetailToHtml, bool> {   { DebugDetailToHtml.Date, true }, { DebugDetailToHtml.PV, true }, { DebugDetailToHtml.AssetFinalWeights, true },
                                                             { DebugDetailToHtml.CashWeight, true }, { DebugDetailToHtml.AssetData, true }, { DebugDetailToHtml.PctChannels, true } }, 
                 6 /* calendar days, so consider long weekends as extra 2-3 days */, Environment.NewLine,
-                ref warningToUser, ref noteToUserBacktest, ref errorMessage, ref debugMessage, ref pv, m_lastWeights);
+                ref warningToUser, ref noteToUser, ref errorToUser, ref debugMessage, ref pv, m_lastWeights);
 
-            Utils.Logger.Debug(noteToUserBacktest);
+            Utils.Logger.Debug(noteToUser);
             return true;
         }
 
@@ -176,9 +176,9 @@ namespace VirtualBroker
               int p_histVolLookbackDays,
               bool p_isCashAllocatedForNonActives, List<DailyData> p_cashEquivalentQuotes,
               Dictionary<DebugDetailToHtml, bool> p_debugDetailToHtml, int p_nCalendarDaysToDebugDetailToHtml, string p_noteToUserNewLine,
-              ref string p_noteToUserCheckData, ref string p_noteToUserBacktest, ref string errorMessage, ref string debugMessage, ref List<DailyData> p_pv, double[] p_lastWeights)
+              ref string p_noteToUserCheckData, ref string p_noteToUser, ref string p_errorToUser, ref string p_debugMessage, ref List<DailyData> p_pv, double[] p_lastWeights)
         {
-            StringBuilder noteToUser = new StringBuilder("DoBacktestInTheTimeInterval_TAA()");
+            StringBuilder sbNoteToUser = new StringBuilder("DoBacktestInTheTimeInterval_TAA()");
             DateTime nowDate = DateTime.UtcNow.Date;
             DateTime debugDetailToHtmlMinDate = DateTime.MinValue;
             if (p_nCalendarDaysToDebugDetailToHtml < (nowDate - DateTime.MinValue).TotalDays)
@@ -189,12 +189,12 @@ namespace VirtualBroker
             int commonAssetStartDateInd = p_quotes[0].FindIndex(r => r.Date >= p_commonAssetStartDate);
             int commonAssetEndDateInd = p_quotes[0].FindIndex(commonAssetStartDateInd, r => r.Date >= p_commonAssetEndDate);
 
-            // 2. Determine firstAllDataAvailableDate: shift ShartDate when we have all the data for "Use 60,120,180, 252-day percentile channels"
+            // 2. Determine firstAllDataAvailableDate: shift StartDate when we have all the data for "Use 60,120,180, 252-day percentile channels"
             int requiredLookBackDays = Math.Max(p_pctChannelLookbackDays.Max(), p_histVolLookbackDays);
             int firstAllDataAvailableDateInd = commonAssetStartDateInd + (requiredLookBackDays - 1);
             if (firstAllDataAvailableDateInd > commonAssetEndDateInd)
             {
-                errorMessage = "firstAllDataAvailableDate cannot be determined";
+                p_errorToUser = "firstAllDataAvailableDate cannot be determined";
                 return;
             }
             DateTime firstAllDataAvailableDate = p_quotes[0][commonAssetStartDateInd + (requiredLookBackDays - 1)].Date;
@@ -233,7 +233,7 @@ namespace VirtualBroker
 
             if (firstRebalancingDateInd == -1)
             {
-                errorMessage = "StartDate cannot be determined";
+                p_errorToUser = "StartDate cannot be determined";
                 return;
             }
             firstRebalancingDate = p_quotes[0][firstRebalancingDateInd].Date;
@@ -273,7 +273,7 @@ namespace VirtualBroker
                 }
             }
 
-            noteToUser.AppendLine("Date, pvDaily, {assetPrice, assetPctChange, {PctChannels(Lower,Upper)}, {PctChannels(Signal)}, assetScore, assetHV, assetWeights, assetWeightsBasedOnPV}... ,cashWeight <br />");
+            sbNoteToUser.AppendLine("Date, pvDaily, {assetPrice, assetPctChange, {PctChannels(Lower,Upper)}, {PctChannels(Signal)}, assetScore, assetHV, assetWeights, assetWeightsBasedOnPV}... ,cashWeight <br>");
             for (int iDay = 0; iDay < nDays; iDay++)    // march for all days
             {
                 // 1. Evaluate the value of the portfolio based on assetPos and this day's %change
@@ -334,7 +334,7 @@ namespace VirtualBroker
                     }
                 }
 
-                // 3. At the end of the day, allocate assetPos[]. This will not change PV.
+                // 3. On rebalancing days allocate assetPos[]. This will not change PV.
                 if (isRebalanceDay)
                 {
                     // https://docs.google.com/document/d/1kx3_UuYy_RApp6s0KmO2b4pbwQdClMuzjf6EyJynghs/edit   Clarification of the rules
@@ -434,7 +434,7 @@ namespace VirtualBroker
                         wasAnyNoteToUser = true;
                     }
                     if (!String.IsNullOrEmpty(noteToUserRow))
-                        noteToUser.Append(noteToUserRow + p_noteToUserNewLine);
+                        sbNoteToUser.Append(noteToUserRow + p_noteToUserNewLine);
                 }
             } // march for all days
 
@@ -449,8 +449,8 @@ namespace VirtualBroker
             if (p_pv != null)
                 p_pv = pv;
 
-            p_noteToUserBacktest = noteToUser.ToString();
-            //noteToUserBacktest = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
+            p_noteToUser = sbNoteToUser.ToString();
+            //noteToUser = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
         } // DoBacktestInTheTimeInterval_TAA
 
 

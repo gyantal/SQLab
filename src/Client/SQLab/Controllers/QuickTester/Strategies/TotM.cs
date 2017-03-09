@@ -59,25 +59,25 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, (new string[] { stock }).ToList());
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, (new string[] { stock }).ToList());
             var getAllQuotesData = await getAllQuotesTask;
             stopWatch.Stop();
 
             var stockQoutes = getAllQuotesData.Item1[0];
 
-            string warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
             List<DailyData> pv = StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(stockQoutes, ref warningToUser);
 
-            DoBacktestInTheTimeInterval_TotM(stockQoutes, longOrShortOnBullish, dailyMarketDirectionMaskSummerTotM, dailyMarketDirectionMaskSummerTotMM, dailyMarketDirectionMaskWinterTotM, dailyMarketDirectionMaskWinterTotMM, pv, ref noteToUserBacktest);
+            DoBacktestInTheTimeInterval_TotM(stockQoutes, longOrShortOnBullish, dailyMarketDirectionMaskSummerTotM, dailyMarketDirectionMaskSummerTotMM, dailyMarketDirectionMaskWinterTotM, dailyMarketDirectionMaskWinterTotMM, pv, ref noteToUser);
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
                 //"Number of positions: <span> XXXX </span><br><br>test",
                 //"Number of positions: <span> {{nPositions}} </span><br><br>test",
                 "<b>Bullish</b> (Bearish) on days when mask is Up (Down).<br>" + warningToUser
-                + ((!String.IsNullOrEmpty(warningToUser) && !String.IsNullOrEmpty(noteToUserBacktest)) ? "<br>" : "")
-                + noteToUserBacktest,
-                errorMessage, debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
+                + ((!String.IsNullOrEmpty(warningToUser) && !String.IsNullOrEmpty(noteToUser)) ? "<br>" : "")
+                + noteToUser,
+                errorToUser, debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;
         }
@@ -87,7 +87,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
         //UberVXX: Turn of the Month sub-strategy
         //•	Long VXX on Day -1 (last trading day of the month) with 100%;
         //•	Short VXX on Day 1-3 (first three trading days of the month) with 100%.
-        private static void DoBacktestInTheTimeInterval_TotM(List<DailyData> p_qoutes, string p_longOrShortOnBullish, string p_dailyMarketDirectionMaskSummerTotM, string p_dailyMarketDirectionMaskSummerTotMM, string p_dailyMarketDirectionMaskWinterTotM, string p_dailyMarketDirectionMaskWinterTotMM, List<DailyData> p_pv, ref string p_noteToUserBacktest)
+        private static void DoBacktestInTheTimeInterval_TotM(List<DailyData> p_qoutes, string p_longOrShortOnBullish, string p_dailyMarketDirectionMaskSummerTotM, string p_dailyMarketDirectionMaskSummerTotMM, string p_dailyMarketDirectionMaskWinterTotM, string p_dailyMarketDirectionMaskWinterTotMM, List<DailyData> p_pv, ref string p_noteToUser)
         {
             // 1.0 parameter pre-process
             bool isTradeLongOnBullish = String.Equals(p_longOrShortOnBullish, "Long", StringComparison.CurrentCultureIgnoreCase);
@@ -314,7 +314,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //        @"}" +
             //    @"</script>";
 
-            p_noteToUserBacktest = @"<b>aMean(daily%Chg): " + pctChgTotalAMean.ToString("#0.000%") + @"%</b><br>" +
+            p_noteToUser = @"<b>aMean(daily%Chg): " + pctChgTotalAMean.ToString("#0.000%") + @"%</b><br>" +
                   BuildHtmlTable("Winter, TotM", winterTotMMask, pctChgTotalAMean)
                 + BuildHtmlTable("Winter, TotMM", winterTotMMMask, pctChgTotalAMean)
                 + BuildHtmlTable("Summer, TotM", summerTotMMask, pctChgTotalAMean)
@@ -322,7 +322,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 + BuildHtmlTable("United, TotM", allYearTotMMask, pctChgTotalAMean)
                 + BuildHtmlTable("United, TotMM", allYearTotMMMask, pctChgTotalAMean);
 
-            //p_noteToUserBacktest = @"<table style=""width:100%"">  <tr>    <td>Smith</td>     <td>50</td>  </tr>  <tr>   <td>Jackson</td>     <td>94</td>  </tr></table>";
+            //p_noteToUser = @"<table style=""width:100%"">  <tr>    <td>Smith</td>     <td>50</td>  </tr>  <tr>   <td>Jackson</td>     <td>94</td>  </tr></table>";
         }
 
         private static MaskItems CreateMaskItems(string p_dailyMarketDirectionMaskStr)
@@ -528,7 +528,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
         //UberVXX: Turn of the Month sub-strategy
         //•	Long VXX on Day -1 (last trading day of the month) with 100%;
         //•	Short VXX on Day 1-3 (first three trading days of the month) with 100%.
-        //private static void DoBacktestInTheTimeInterval_TotM_20150327(List<DailyData> p_qoutes, string p_longOrShortOnBullish, string p_dailyMarketDirectionMaskSummerTotM, string p_dailyMarketDirectionMaskSummerTotMM, string p_dailyMarketDirectionMaskWinterTotM, string p_dailyMarketDirectionMaskWinterTotMM, List<DailyData> p_pv, ref string p_noteToUserBacktest)
+        //private static void DoBacktestInTheTimeInterval_TotM_20150327(List<DailyData> p_qoutes, string p_longOrShortOnBullish, string p_dailyMarketDirectionMaskSummerTotM, string p_dailyMarketDirectionMaskSummerTotMM, string p_dailyMarketDirectionMaskWinterTotM, string p_dailyMarketDirectionMaskWinterTotMM, List<DailyData> p_pv, ref string p_noteToUser)
         //{
         //    // 1.0 parameter pre-process
         //    bool isTradeLongOnBullish = String.Equals(p_longOrShortOnBullish, "Long", StringComparison.CurrentCultureIgnoreCase);
@@ -733,7 +733,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
 
-        //    p_noteToUserBacktest = @"<table style=""width:100%"">  <tr>    <td>Smith</td>     <td>50</td>  </tr>  <tr>   <td>Jackson</td>     <td>94</td>  </tr></table>";
+        //    p_noteToUser = @"<table style=""width:100%"">  <tr>    <td>Smith</td>     <td>50</td>  </tr>  <tr>   <td>Jackson</td>     <td>94</td>  </tr></table>";
         //}
 
 

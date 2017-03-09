@@ -167,7 +167,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
         //public static async Task<Tuple<IList<object[]>,TimeSpan>> GetHistQuotesAsync(IEnumerable<QuoteRequest> p_req, HQCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
-        public static async Task<Tuple<List<object[]>, TimeSpan>> GetHistQuotesAsync(GeneralStrategyParameters p_generalParams, List<string> p_tickers, ushort p_sqlReturnedColumns)
+        public static async Task<Tuple<List<object[]>, TimeSpan>> GetHistQuotesAsync(DateTime p_startDateUtc, DateTime p_endDateUtc, List<string> p_tickers, ushort p_sqlReturnedColumns)
         {
             List<string> stockTickers = p_tickers.Where(r => !r.StartsWith("^")).ToList();
             List<string> indicesTickers = p_tickers.Where(r => r.StartsWith("^")).ToList();
@@ -176,13 +176,13 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             int requestNQuotes = Int32.MaxValue;
             DateTime? requestStartDateExcgLocal = null, requestEndDateExcgLocal = null;
-            if (p_generalParams.startDateUtc != DateTime.MinValue)
+            if (p_startDateUtc != DateTime.MinValue)
             {
-                ConvertUtcToExchangeLocal(p_generalParams.startDateUtc, ref etZone, ref requestStartDateExcgLocal);
+                ConvertUtcToExchangeLocal(p_startDateUtc, ref etZone, ref requestStartDateExcgLocal);
             }
-            if (p_generalParams.endDateUtc != DateTime.MaxValue)
+            if (p_endDateUtc != DateTime.MaxValue)
             {
-                ConvertUtcToExchangeLocal(p_generalParams.endDateUtc, ref etZone, ref requestEndDateExcgLocal);
+                ConvertUtcToExchangeLocal(p_endDateUtc, ref etZone, ref requestEndDateExcgLocal);
             }
 
             Stopwatch stopWatch = Stopwatch.StartNew();
@@ -229,7 +229,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
 
-        public static async Task<Tuple<IList<List<DailyData>>, TimeSpan, TimeSpan>> GetHistoricalAndRealtimesQuotesAsync(GeneralStrategyParameters p_generalParams, List<string> p_tickers, CancellationToken p_canc = default(CancellationToken))
+        public static async Task<Tuple<IList<List<DailyData>>, TimeSpan, TimeSpan>> GetHistoricalAndRealtimesQuotesAsync(DateTime p_startDateUtc, DateTime p_endDateUtc, List<string> p_tickers, CancellationToken p_canc = default(CancellationToken))
         {
             //- SPY 300K CSV SQLqueryTime (local server), msecond times for  (for Azure in-house datacenter, these will be less)
             //All data: Open, High, Low, Close, Volume : 886, 706, 1237, 761, 727, Avg = 863
@@ -241,10 +241,10 @@ namespace SQLab.Controllers.QuickTester.Strategies
             ushort sqlReturnedColumns = QuoteRequest.TDC;       // QuoteRequest.All or QuoteRequest.TDOHLCVS
 
             //var sqlReturnTask = GetHistQuotesAsync(p_tickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = Int32.MaxValue, NonAdjusted = false, ReturnedColumns = sqlReturnedColumns }), HQCommon.AssetType.Stock, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
-            var sqlReturnTask = GetHistQuotesAsync(p_generalParams, p_tickers, sqlReturnedColumns);
+            var sqlReturnTask = GetHistQuotesAsync(p_startDateUtc, p_endDateUtc, p_tickers, sqlReturnedColumns);
 
             Task<Tuple<IList<double?>, TimeSpan>> realtimeReturnTask = null;
-            if (p_generalParams.endDateUtc >= DateTime.UtcNow)
+            if (p_endDateUtc >= DateTime.UtcNow)
                 realtimeReturnTask = GetRealtimesQuotesAsync(p_tickers);
 
             // Control returns here before GetHistoricalQuotesAsync() returns.  // ... Prompt the user.
@@ -428,11 +428,11 @@ namespace SQLab.Controllers.QuickTester.Strategies
         //by “throwing away all the positive returns and take the standard deviation of negative returns”.
         //We hope that by reading this article, you can see how this is incorrect
         // George: a little problem to me, but left it like this: underPerfFromTarget is distance from Zero, while in StDev, it was distance from Avg.
-        public static StrategyResult CreateStrategyResultFromPV(List<DailyData> p_pv, string p_htmlNoteFromStrategy, string p_errorMessage, string p_debugMessage)
+        public static StrategyResult CreateStrategyResultFromPV(List<DailyData> p_pv, string p_htmlNoteToUser, string p_errorToUser, string p_debugMessage)
         {
             if (p_pv == null)
             {
-                return new StrategyResult() { htmlNoteFromStrategy=p_htmlNoteFromStrategy, errorMessage = p_errorMessage, debugMessage= p_debugMessage };
+                return new StrategyResult() { htmlNoteFromStrategy=p_htmlNoteToUser, errorMessage = p_errorToUser, debugMessage= p_debugMessage };
             }
 
             //IEnumerable<string> chartDataToSend = pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "-" + String.Format("{0:0.00}", row.ClosePrice));
@@ -546,8 +546,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
                 chartData = chartDataToSend.ToList(),
 
-                htmlNoteFromStrategy = p_htmlNoteFromStrategy,
-                errorMessage = p_errorMessage,
+                htmlNoteFromStrategy = p_htmlNoteToUser,
+                errorMessage = p_errorToUser,
                 debugMessage = p_debugMessage
             };
 

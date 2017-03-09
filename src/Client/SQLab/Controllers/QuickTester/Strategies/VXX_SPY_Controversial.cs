@@ -37,11 +37,11 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, (new string[] { "VXX", "SPY" }).ToList());
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, (new string[] { "VXX", "SPY" }).ToList());
             var getAllQuotesData = await getAllQuotesTask;
             stopWatch.Stop();
 
-            string warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
             DateTime startDate, endDate;
             StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(getAllQuotesData.Item1, new string[] { "VXX", "SPY" }, ref warningToUser, out startDate, out endDate);
             List<DailyData> pv = StrategiesCommon.DeepCopyQuoteRange(getAllQuotesData.Item1[0], startDate, endDate);
@@ -50,7 +50,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             var spyQoutes = getAllQuotesData.Item1[1];
             if (String.Equals(p_strategyName, "VXX_SPY_Controversial", StringComparison.CurrentCultureIgnoreCase))
             {
-                DoBacktestInTheTimeInterval_VXX_SPY_Controversial(vxxQoutes, spyQoutes, spyMinPctMove, vxxMinPctMove, longOrShortTrade, pv, ref noteToUserBacktest);
+                DoBacktestInTheTimeInterval_VXX_SPY_Controversial(vxxQoutes, spyQoutes, spyMinPctMove, vxxMinPctMove, longOrShortTrade, pv, ref noteToUser);
             }
             else
             {
@@ -59,7 +59,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-               warningToUser + "***" + noteToUserBacktest, errorMessage,
+               warningToUser + "***" + noteToUser, errorToUser,
                debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;
@@ -76,7 +76,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
         // Balazs's parameter was 0.1% and 0.125%, but that decreased the profit
         // with spyMinPctMove == 0.01, vxxMinPctMove = 0.01, go To Cash: I got better CAGR than the Going Short (Going Long is bad, because of volatility drag)
         // increasing vxxMinPctMove is not good, because when vxxPctMove is very, very high, next day can be strong MR, so VXX can go down a lot. We don't want to miss those profits, so we don't increase the vxxMinPctMove too much
-        private static void DoBacktestInTheTimeInterval_VXX_SPY_Controversial(List<DailyData> vxxQoutes, List<DailyData> spyQoutes, double spyMinPctMove, double vxxMinPctMove, string longOrShortTrade, List<DailyData> pv, ref string noteToUserBacktest)
+        private static void DoBacktestInTheTimeInterval_VXX_SPY_Controversial(List<DailyData> vxxQoutes, List<DailyData> spyQoutes, double spyMinPctMove, double vxxMinPctMove, string longOrShortTrade, List<DailyData> pv, ref string noteToUser)
         {
             bool? isTradeLongVXX = null;        // it means Cash
             if (String.Equals(longOrShortTrade, "Long"))
@@ -130,7 +130,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 pv[i].AdjClosePrice = pvDaily;
             }
 
-            noteToUserBacktest = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
+            noteToUser = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
         }   //DoBacktestInTheTimeInterval_VXX_SPY_Controversial()
 
 

@@ -162,10 +162,21 @@ namespace VirtualBroker
                 // 2. Get realtime RUT data (if IBGateway doesn't give it), but IBGateway gives it.
                 var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.LAST, new PriceAndTime() }, { TickType.CLOSE, new PriceAndTime() } };    // we are interested in the following Prices
                 StrongAssert.True(Controller.g_gatewaysWatcher.GetMktDataSnapshot(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if realtime RUT is not given.");
-                double rus2000LastClose = rtPrices[TickType.CLOSE].Price;
-                // on 2016-05-02, RUT close price: YF: 1130.85, GF and IB: 1130.84, therefore 1 penny difference should be accepted.
-                // on 2016-05-20, RUT close price: YF: 1,094.76, GF and IB: 1,094.78, therefore 2 penny difference should be accepted.
-                StrongAssert.True(Utils.IsNear(rus2000LastClose, m_rut[m_rut.Count - 1].AdjClosePrice, 0.025), Severity.NoException, $"Warning only! RUT: IB Last Close price ({rus2000LastClose}) should be the same as in SQL DB ({m_rut[m_rut.Count - 1].AdjClosePrice}). Maybe SQL DB has no yesterday data. Execution and trading will coninue as usual by using yesterday price from SQL DB  ({m_rut[m_rut.Count - 1].AdjClosePrice}). However, it is better to check the crawlers that fills SQL DB.");
+                double rus2000LastCloseIB = rtPrices[TickType.CLOSE].Price;
+
+                // Only for RUT index: This safety check has to be split for normal weekdays (1 day difference) for normal weekends (3 days difference) vs. 3-days-weekend (4+ days difference) because after 3-days weekends IB gives wrong PreviousClose: it gives a calculated one for Monday when there was no trading. However, the last one is the Friday one in our database. This is probably because IB can use 'calculated' indices instead of the one officially given by the exchange.
+                var daysSinceLastSQLPrice = (dateNowInET.Date - m_rut[m_rut.Count - 1].Date).TotalDays;
+                if (daysSinceLastSQLPrice <= 3)
+                {
+                    // on 2016-05-02, RUT close price: YF: 1130.85, GF and IB: 1130.84, therefore 1 penny difference should be accepted.
+                    // on 2016-05-20, RUT close price: YF: 1,094.76, GF and IB: 1,094.78, therefore 2 penny difference should be accepted.
+                    StrongAssert.True(Utils.IsNear(rus2000LastCloseIB, m_rut[m_rut.Count - 1].AdjClosePrice, 0.025), Severity.NoException, $"Warning only! RUT: IB Last Close price ({rus2000LastCloseIB}) should be the same as last Close in SQL DB ({m_rut[m_rut.Count - 1].AdjClosePrice}). Maybe SQL DB has no yesterday data. Execution and trading will continue as usual by using last known price from SQL DB  ({m_rut[m_rut.Count - 1].AdjClosePrice}) as yesterday data. However, it is better to check the crawlers that fills SQL DB.");
+                } else
+                {
+                    // after 3 days-weekends (Sa-Su-Mo) rus2000LastCloseIB = Monday's calculated RUT close, which is not in our database, so we cannot do safety check, but it is OK. After long weekends we simply trust the SQL database data.
+                    StrongAssert.True(daysSinceLastSQLPrice <= 6, Severity.NoException, $"Warning! There is no RUT historical data in the SQL DB for the last 7 days. It is likely an error. Execution and trading will continue as usual by using last known price from SQL DB  ({m_rut[m_rut.Count - 1].AdjClosePrice}) as yesterday data. However, it is better to check the crawlers that fills SQL DB.");
+                }
+
 
                 double rus2000Last = rtPrices[TickType.LAST].Price;    // as an Index, there is no Ask,Bid, therefore, there is no MidPrice, only LastPrice
                 // append an extra CSVData representing today close value (estimating)

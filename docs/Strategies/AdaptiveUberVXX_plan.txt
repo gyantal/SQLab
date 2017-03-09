@@ -433,6 +433,14 @@ Starting in 1994, the FOMC began to issue a policy statement (“FOMC statement”) 
 - separate Summer/Winter because Balazs did that and it is succesfull
 
 11. Improve (2) the whole framework.
+
+- check that Balazs's style 2017-revision is used or not. In theory, because VBroker is adaptive, it will learn the proper signals, so we don't need Balazs's modified 2017 signals
+for those parts that learn themselves. However, if there are parts that are not adaptive, but hard coded (FOMC), for thise it is worth checking Balazs' revision.
+https://docs.google.com/document/d/1OAMwErTzAxezrqcgyan4kgapF5OcG3VFF6Y5zpm5Xkk
+
+- Implement Balazs's style CLMT leverage decrease for more safety or leverage increase for more profit. (leverage decrease decreased the StDev and MaxDD)
+https://docs.google.com/document/d/1OAMwErTzAxezrqcgyan4kgapF5OcG3VFF6Y5zpm5Xkk
+
 - Fine tune leverage: use forecasted volatility for position sizing (Combination of Kelly and the volDrag): 
 as "UberVXX: Highly Volatile VXX Days Exit Signal": instead of that basic do something more general.
 Apart from forecasting future profit, forecast future volatility too. 

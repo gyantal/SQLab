@@ -114,7 +114,7 @@ namespace VirtualBroker
             if (!Controller.IsRunningAsLocalDevelopment())      // When VBroker.exe is developed, we don't want to run HealthMonitor.exe every time on localhost
             {
                 string briefReport = (wasAllOrdersOk) ? $"BrokerTask {BrokerTaskSchema.Name} was OK." : $"BrokerTask {BrokerTaskSchema.Name} had ERROR. {errorStr.ToString()} Inform supervisors to investigate log files for more detail. ";
-                string healthMonitorMsg = $"<BriefReport>{briefReport}</BriefReport><DetailedReport>{detailedReportSb.ToString().Replace(Environment.NewLine, "<br/>")}</DetailedReport>";
+                string healthMonitorMsg = $"<BriefReport>{briefReport}</BriefReport><DetailedReport>{detailedReportSb.ToString().Replace(Environment.NewLine, "<br>")}</DetailedReport>";
 
                 if (!new HealthMonitorMessage()
                 {

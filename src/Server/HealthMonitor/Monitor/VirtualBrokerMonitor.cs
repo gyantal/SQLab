@@ -22,7 +22,7 @@ namespace HealthMonitor
         //at SqCommon.StrongAssert.Fail_core(Severity p_severity, String p_message, Object[] p_args) in /home/ubuntu/SQ/Server/VirtualBroker/src/SQLab.Common/Utils/StrongAssert.cs:line 127
         // at VirtualBroke...'", ResponseFormat: "None"
         // 2. Strategy messages OK. Strategy specific. HTML format.
-        // Message ID:"ReportOkFromVirtualBroker", ParamStr: "<BriefReport>BrokerTask HarryLong was OK.</BriefReport><DetailedReport>11-09T20:59:49: 'HarryLong'<br/><font color="#10ff10">Target: UVXY:-35%, TMV:-65%</font><br/>Real SellAsset  6 UVXY ($82)<br/>Real BuyAsset  29 TMV ($626)<br/>Real BuyAsset  46 UVXY ($626)<br/>Real BuyAsset  581 TMV ($12541)<br/></DetailedReport>", ResponseFormat: "None"
+        // Message ID:"ReportOkFromVirtualBroker", ParamStr: "<BriefReport>BrokerTask HarryLong was OK.</BriefReport><DetailedReport>11-09T20:59:49: 'HarryLong'<br><font color="#10ff10">Target: TVIX:-35%, TMV:-65%</font><br/>Real SellAsset  6 UVXY ($82)<br/>Real BuyAsset  29 TMV ($626)<br/>Real BuyAsset  46 UVXY ($626)<br/>Real BuyAsset  581 TMV ($12541)<br/></DetailedReport>", ResponseFormat: "None"
         private void MessageFromVirtualBroker(TcpClient p_tcpClient, HealthMonitorMessage p_message)
         {
             if (p_message.ResponseFormat == HealthMonitorMessageResponseFormat.String)

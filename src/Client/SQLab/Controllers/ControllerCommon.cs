@@ -44,7 +44,7 @@ namespace SQLab.Controllers
 
             if (!Utils.IsAuthorizedGoogleUsers(p_config, email))
             {
-                return p_controller.Content(@"<HTML><body>Google Authorization Is Required. Your Google account: '<strong>" + email + @"'</strong> is not accepted.<br/>" +
+                return p_controller.Content(@"<HTML><body>Google Authorization Is Required. Your Google account: '<strong>" + email + @"'</strong> is not accepted.<br>" +
                    @"<A href=""/logout"">logout this Google user </a> and login with another one." +
                     "</body></HTML>", "text/html");
             }

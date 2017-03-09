@@ -160,6 +160,7 @@ export class AppComponent implements OnInit, AfterViewInit {
             var strategy = this.strategies[i];
             if (strategy.IsMenuItemIdHandled(menuItemId)) {
                 this.selectedStrategy = strategy;
+                strategy.OnStrategySelected(menuItemId);
                 this.selectedSubStrategyName = strategy.GetHtmlUiName(menuItemId);
                 this.selectedSubStrategyHelpUri = strategy.GetHelpUri(menuItemId);
                 break;

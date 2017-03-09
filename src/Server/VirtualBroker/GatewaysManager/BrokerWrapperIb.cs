@@ -715,15 +715,31 @@ namespace VirtualBroker
             return p_realOrderId;
         }
 
-        // note that even MKT (not LMT) orders can hand out and fail due to Short restrictions ("not available for short" or "The SEC Rule 201 (aka "Up-tick Rule) has been triggered", shorting is possible only on Upticks.)
+        // + note that even MKT (not LMT) orders can hand out and fail due to Short restrictions ("not available for short" or "The SEC Rule 201 (aka "Up-tick Rule) has been triggered", shorting is possible only on Upticks.)
         // see "MOC order execution and short or long decisions (IB).txt"
         // + at the moment, if VBroker fails and time-outs on the trade, we have to do the trade manually quickly, or let VBroker do it next day automatically.
         // Shorting problem: "Order held while securities are located.": (if it happens too many times, consider to change traded instrument e.g. from UVXY to TVIX)
         // Also UVXY borrowing fee rate: 12.16%, while TVIX is 3.73%. That is 8% difference per year, althought with 35% Harry Long weight, it is only about 3% CAGR.
         // in 2017-01: UVXY is 28, while TVIX is 6. After TVIX will have a reverse split, consider trading TVIX instead of UVXY, if these shorting problems occur
         // failed shorting happened:
-        // 2017-01-23: UVXY : "not located" (while at the same time TVIX was available for short)
-        // 2017-02-08 and 09: UVXY : "not located" (while at the same time TVIX was available for short)
+        // + 2017-01-23: UVXY : "not located" (while at the same time TVIX was available for short)
+        // + 2017-02-08 and 09 and 10(Fri), 13(Mon): UVXY : "not located" (while at the same time TVIX was available for short)
+        // + 2017-02-14(Tue): UVXY : "not located" (while at the same time TVIX was available for short)
+        // "M38482892	2017/02/14 16:33:39 (this is 33 minutes after market closed)	SHORT STOCK POSITION BOUGHT IN	This alert is to inform you that due to a recall IB is unable meet your 
+        // settlement delivery obligations for the short stock position(s) listed below for account U****941. As current SEC regulations require that all transactions be settled 
+        // on the standard settlement date, these short stock positions have been bought-in. While IB tries to give advanced notice of a possible buy-in, due to the time frame of this fail, 
+        // in this instance we were unable to do so. The positions listed below have been bought-in: UVXY (84 shares)
+        // This shows the danger of waiting too much. If the "Shortable" column in IB is off for 4 days then on day 5, I had this problem. And IB DIDN'T even warn about it.
+        // it was simply bought in 20 minutes after market closed, and they sent the Message in the email 33 minutes after market close. In the old times, at least they warned me on the previous day.
+        // I expected that warning email. I wanted to switch to TVIX after that warning email. However, we cannot rely on that warning email. Next time, it is not shortable for 3 days, assume the worst.
+        // My UVXY position was $1500.  The ClosePrice was 18.75. However, 20 minutes after market closed, price was 18.50, even better. 40 minutes after market close, when I noticed it, price was even better, 18.32.
+        // But their buying price was 19.02. Considering the 18.75 MOC price, it is about 1.4% loss, which is $21. However, who knows, maybe UVXY tomorrow mean reverts. So it was good.
+        // Funny news: next day at MOC price was 19.81. So IB buying it for 19.02 was better than if I change UVXY to TVIX 1 day later. 
+        // It was a 4.3% better price for me, so actually I profited $62 on the fact that IB made this forced buy-in without warning me before.
+        // + 2017-02-14: Decision was made to switch from UVXY to TVIX, as UVXY cannot be shorted. If TVIX is difficult to short, I may short 2x VXX, or long 2x XIV or long 2x SXVY.
+        // on the top of it Borrowing fees: UVXY: it was 12%, but now 20%. TVIX: 3.5%.
+
+
         public bool WaitOrder(int p_realOrderId, bool p_isSimulatedTrades)
         {
             // wait here

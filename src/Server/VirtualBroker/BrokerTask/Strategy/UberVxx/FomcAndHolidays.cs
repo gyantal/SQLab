@@ -88,6 +88,7 @@ namespace VirtualBroker
         {
             DatePropertiesFlags holidayFlagOnly = p_holiday.Flags & DatePropertiesFlags._KindOfUsaHoliday;
             // Holiday days was revised in 2015-11, based on that here is the latest in 2016-04: https://docs.google.com/document/d/1Kaazv6gjDfffHG3cjNgSMuseoe45UftMKiZP8XPO2pA/edit
+            // Holiday days was revised in 2017-02: https://docs.google.com/document/d/1OAMwErTzAxezrqcgyan4kgapF5OcG3VFF6Y5zpm5Xkk
             switch (holidayFlagOnly)
             {
                 case DatePropertiesFlags.NewYear:
@@ -97,7 +98,7 @@ namespace VirtualBroker
                         return 1.0;    // VXX positive long forecast, which is bearish for the market
                     break;
                 case DatePropertiesFlags.MLutherKing:
-                    if (p_offsetInd == -1)
+                    if (p_offsetInd == -1 || p_offsetInd == -2)
                         return -1.0;    // VXX negative short forecast, which is bullish for the market
                     break;
                 // as of 2016, SuperBowl is not a stock market holiday, only civil holiday, 2017-02-03: it is not in our database, but I am happy to skip this, it shouldn't be significant
@@ -107,31 +108,33 @@ namespace VirtualBroker
                         return 1.0;    // VXX positive long forecast, which is bearish for the market
                     break;
                 case DatePropertiesFlags.Presidents:
+                    if (p_offsetInd == -1 || p_offsetInd == -2)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
                     break;
                 case DatePropertiesFlags.GoodFriday:
-                    if (p_offsetInd == +1 || p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3)
+                    if (p_offsetInd == +1 || p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4)
                         return -1.0;    // VXX negative short forecast, which is bullish for the market
                     break;
-                case DatePropertiesFlags.Memorial:      // it was put here just for testing the implementation. In 2016-05, this was the next potential holiday
-                    if (p_offsetInd == -1 || p_offsetInd == +1)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                case DatePropertiesFlags.Memorial:
                     break;
                 case DatePropertiesFlags.Independence:
                     if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4 || p_offsetInd == -5)
                         return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    if (p_offsetInd == +1)
+                        return 1.0;    // VXX positive long forecast, which is bearish for the market
                     break;
                 case DatePropertiesFlags.Labor:
-                    if (p_offsetInd == +1 || p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
                     if (p_offsetInd == -4 || p_offsetInd == -5)
                         return 1.0;    // VXX positive long forecast, which is bearish for the market
+                    if (p_offsetInd == +3 || p_offsetInd == +2 || p_offsetInd == +1 || p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3)
+                        return -1.0;    // VXX negative short forecast, which is bullish for the market
                     break;
                 case DatePropertiesFlags.Columbus: // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
                     break;
                 case DatePropertiesFlags.Veterans: // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
                     break;
                 case DatePropertiesFlags.Thanksgiving:
-                    if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4)
+                    if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4 || p_offsetInd == +3 || p_offsetInd == +4)
                         return -1.0;    // VXX negative short forecast, which is bullish for the market
                     if (p_offsetInd == +1 || p_offsetInd == +2)
                         return 1.0;    // VXX positive long forecast, which is bearish for the market

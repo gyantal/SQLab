@@ -11,7 +11,196 @@ namespace SQLab.Controllers.QuickTester.Strategies
 {
     public partial class LEtfDistcrepancy
     {
+
+
         public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
+        {
+            if (p_strategyName != "LETFDiscrepancy1" && p_strategyName != "LETFDiscrepancy2" && p_strategyName != "LETFDiscrepancy3" && p_strategyName != "LETFDiscrepancy4")
+                return null;
+            Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
+
+            // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
+            // 1. read parameter strings
+            string assetsStr = p_allParamsDict["Assets"][0];                                         // "TVIX,TMV"
+            string assetsWeightPctStr = p_allParamsDict["AssetsConstantWeightPct"][0];         // "-35,-65"
+            string rebalancingFrequencyStr = p_allParamsDict["RebalancingFrequency"][0];             // "Daily,1d";   // "Daily,2d"(trading days),"Weekly,Fridays", "Monthly,T-1"/"Monthly,T+0" (last/first trading day of the month)
+
+
+            // 2. Process parameter strings to numbers, enums; do parameter checking
+            string[] tickers = assetsStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            double[] assetsWeightPctInput = assetsWeightPctStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(r => Double.Parse(r)).ToArray();
+            double[] assetsWeights = new double[tickers.Length];
+            for (int i = 0; i < tickers.Length; i++)
+            {
+                tickers[i] = tickers[i].Trim(); // remove extra whitespace from end
+                if (i < assetsWeightPctInput.Length)
+                    assetsWeights[i] = assetsWeightPctInput[i] / 100.0;   // weights were given in percentange, "-35,-65". Convert it to -0.35 as weights
+                else
+                    assetsWeights[i] = 1.0;       // fill up with default 1.0=100%, if it is not given in the input
+            }
+
+            string[] rebalancingFrequencyStrSplits = rebalancingFrequencyStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            RebalancingPeriodicity rebalancingPeriodicity = RebalancingPeriodicity.Daily;
+            int dailyRebalancingDays = 1;   // 1d means every day, 2d means every 2nd days, 20d means, every 20th days
+            DayOfWeek weeklyRebalancingWeekDay = DayOfWeek.Friday;
+            int monthlyRebalancingOffset = -1;       // +1 means T+1, -1 means T-1
+            switch (rebalancingFrequencyStrSplits[0])
+            {
+                case "Monthly":
+                case "Weekly":
+                    throw new NotImplementedException("Only Daily rebalancing frequency is implemented. Use 5d for weekly and 20d for monhly if necessary.");
+                default:    // "Daily"
+                    dailyRebalancingDays = Int32.Parse(rebalancingFrequencyStrSplits[1].Replace("d", ""));  // "Daily,2d"
+                    break;
+            }
+
+            // 3. After Parameters are processed, load ticker price histories from DB and real time
+            List<string> tickersNeeded = new List<string>();
+            for (int i = 0; i < tickers.Length; i++)
+            {
+                if (!tickers[i].Equals("Cash"))
+                    tickersNeeded.Add(tickers[i]);
+            }
+            Stopwatch stopWatch = Stopwatch.StartNew();
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, tickersNeeded);  // only the necessary quotes are asked from SQL. Good.
+            Tuple<IList<List<DailyData>>, TimeSpan, TimeSpan> getAllQuotesData = await getAllQuotesTask;
+            IList<List<DailyData>> quotesNeeded = getAllQuotesData.Item1;
+            stopWatch.Stop();
+            IList<List<DailyData>> quotes = new List<List<DailyData>>();
+            for (int i = 0; i < tickers.Length; i++)
+            {
+                if (tickers[i].Equals("Cash"))  // only 1 Cash ticker likely to exist; create its quote with the longest history quote
+                {
+                    int longestHistoryQuoteInd = -1;
+                    int longestHistoryQuoteLength = Int32.MinValue;
+                    for (int j = 0; j < quotesNeeded.Count; j++)
+                    {
+                        if (quotesNeeded[j].Count > longestHistoryQuoteLength)
+                        {
+                            longestHistoryQuoteLength = quotesNeeded[j].Count;
+                            longestHistoryQuoteInd = j;
+                        }
+                    }
+                    quotes.Add(quotesNeeded[longestHistoryQuoteInd].Select(item => new DailyData() { Date = item.Date, AdjClosePrice = 100.0 }).ToList());
+                }
+                else
+                {
+                    int indNeeded = tickersNeeded.IndexOf(tickers[i]);
+                    quotes.Add(quotesNeeded[indNeeded]);
+                    
+                }
+            }
+
+          
+
+            string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
+            DateTime commonAssetStartDate, commonAssetEndDate;
+            StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(quotes, tickers, ref warningToUser, out commonAssetStartDate, out commonAssetEndDate);
+
+            List<DailyData> pv = new List<DailyData>();
+            DoBacktestInTheTimeInterval_HarryLong(p_generalParams, quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsWeights,
+                    rebalancingPeriodicity, dailyRebalancingDays, weeklyRebalancingWeekDay, monthlyRebalancingOffset,
+                    "<br>", ref warningToUser, ref noteToUser, ref errorToUser, ref debugMessage, ref pv);
+
+            stopWatchTotalResponse.Stop();
+            StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
+               warningToUser + "***" + noteToUser,
+               errorToUser,
+               debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
+            string jsonReturn = JsonConvert.SerializeObject(strategyResult);
+            return jsonReturn;
+        }
+
+        private static void DoBacktestInTheTimeInterval_HarryLong(GeneralStrategyParameters p_generalParams, IList<List<DailyData>> p_quotes, string[] p_tickers, DateTime p_commonAssetStartDate, DateTime p_commonAssetEndDate, double[] p_assetsWeights,
+               RebalancingPeriodicity p_rebalancingPeriodicity, int p_dailyRebalancingDays, DayOfWeek p_weeklyRebalancingWeekDay, int p_monthlyRebalancingOffset,
+               string p_noteToUserNewLine,
+               ref string p_noteToUserCheckData, ref string p_noteToUser, ref string p_errorToUser, ref string p_debugMessage, ref List<DailyData> p_pv)
+        {
+            StringBuilder sbNoteToUser = new StringBuilder("Rebalances at the specified frequencies. HarryLong style.<br>");
+            StringBuilder sbDebugToUser = new StringBuilder("Date, PVDaily, PvLeverage, Weight_1 ... Weight_N<br>");
+
+            List<DailyData> pv = null;
+            // implement CLMT in a way, that those data days don't restrict Strategy StartDate. If they are not available on a day, simple 100% is used. CLMT: "SMA(SPX,50d,200d); PR(XLU,VTI,20d)"
+            // 1. CommonAssetStartDate is already correct, because only the necessary quotes are asked from SQL. (After backtest StartDate). Good.
+            int commonAssetStartDateInd = p_quotes[0].FindIndex(r => r.Date >= p_commonAssetStartDate);
+            int commonAssetEndDateInd = p_quotes[0].FindIndex(commonAssetStartDateInd, r => r.Date >= p_commonAssetEndDate);
+            int firstRebalancingDateInd = commonAssetStartDateInd;
+
+            // 4. pvStartDate is now final, calculate the index of that startDate for each asset quotes
+            DateTime pvStartDate = p_commonAssetStartDate;
+            DateTime pvEndDate = p_commonAssetEndDate;
+            int nDays = commonAssetEndDateInd - firstRebalancingDateInd + 1;        // startDate, endDate is included
+            int nAssets = p_quotes.Count;
+            int[] iQ = new int[nAssets];
+            for (int i = 0; i < nAssets; i++)
+            {
+                iQ[i] = p_quotes[i].FindIndex(r => r.Date >= pvStartDate);
+            }
+
+            pv = new List<DailyData>(nDays);
+
+            double pvDaily = 100.0;
+            double cash = pvDaily;
+            double[] assetPos = new double[nAssets];        // default values are 0.0
+            double[] assetWeights = new double[nAssets];    // default values are 0.0
+
+            for (int iDay = 0; iDay < nDays; iDay++)    // march for all days
+            {
+                // 1. Evaluate the value of the portfolio based on assetPos and this day's %change
+                
+                pvDaily = 0;
+                if (iDay != 0)    // on first day, don't calculate %change, we may not have previous day
+                {
+                    for (int iAsset = 0; iAsset < nAssets; iAsset++)
+                    {
+                        double assetChg = (p_quotes[iAsset][iQ[iAsset] + iDay].AdjClosePrice / p_quotes[iAsset][iQ[iAsset] + iDay - 1].AdjClosePrice - 1);
+                        assetPos[iAsset] *= (1.0 + assetChg);
+                        pvDaily += assetPos[iAsset];
+                        
+                    }
+                }
+                pvDaily += cash;    // cash has to be added, on first day or on other days
+                pv.Add(new DailyData() { Date = p_quotes[0][firstRebalancingDateInd + iDay].Date, AdjClosePrice = pvDaily });
+
+                // 2. Debug info to UI
+                sbDebugToUser.Append($"{pv[iDay].Date},{pvDaily},");
+                double totalAssetPosExposure = 0.0;
+                for (int iAsset = 0; iAsset < nAssets; iAsset++)
+                {
+                    totalAssetPosExposure += Math.Abs(assetPos[iAsset]);
+                    sbDebugToUser.Append($"{Math.Abs(assetPos[iAsset]) / pvDaily},");
+                }
+                sbDebugToUser.AppendLine($"{Math.Abs(totalAssetPosExposure) / pvDaily}<br>");
+
+                // 3. On rebalancing days allocate assetPos[]. This will not change PV.
+                bool isRebalanceDay = false;
+                if (p_rebalancingPeriodicity == RebalancingPeriodicity.Daily)
+                    isRebalanceDay = (iDay % p_dailyRebalancingDays == 0); // test: every periodic days
+                if (isRebalanceDay)
+                {
+                    // With assetWeights known, do the rebalancing of assetPos[]
+                    cash = pvDaily; // at rebalancing, we simulate that we sell assets, so everything is converted to Cash 1 seconds before MarketClose
+                    for (int iAsset = 0; iAsset < nAssets; iAsset++)
+                    {
+                        assetPos[iAsset] = pvDaily * p_assetsWeights[iAsset];        // weight can be 0.5 positive = 50%, or  negative = -0.5, -50%. In that case we short the asset.
+                        cash -= assetPos[iAsset];    // if weight is positive, assetPos is positive, so we take it away from cash. Otherwise, we short the Asset, and cash is increased.
+                    }
+                }   // if rebalancing
+                
+            }  // march for all days
+
+            if (p_pv != null)
+                p_pv = pv;
+
+            p_noteToUser = sbNoteToUser.ToString();
+            p_debugMessage = sbDebugToUser.ToString();
+        }
+
+
+
+
+
+        public static async Task<string> GenerateQuickTesterResponseOld(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
         {
             if (p_strategyName != "LETFDiscrepancy1" && p_strategyName != "LETFDiscrepancy2" && p_strategyName != "LETFDiscrepancy3" && p_strategyName != "LETFDiscrepancy4")
                 return null;
@@ -69,7 +258,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             if (!ticker2.Equals("Cash"))
                 tickers.Add(ticker2);
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, tickers);
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, tickers);
             Tuple<IList<List<DailyData>>, TimeSpan, TimeSpan> getAllQuotesData = await getAllQuotesTask;
             stopWatch.Stop();
 
@@ -91,7 +280,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             if (quotes2 == null)    // it is Cash, set it according to the other, but use cash
                 quotes2 = quotes1.Select(item => new DailyData() { Date = item.Date, AdjClosePrice = 100.0 }).ToList();
 
-            string htmlNoteFromStrategy = "", warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            string htmlNoteFromStrategy = "", errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
 
             List<DailyData> pv = null;
             if (String.Equals(p_strategyName, "LETFDiscrepancy1", StringComparison.CurrentCultureIgnoreCase))
@@ -114,7 +303,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 }
                 else if (String.Equals(p_strategyName, "LETFDiscrepancy4", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    DoBacktestInTheTimeInterval_HarryLong(quotes1, quotes2, weight1 / 100.0, weight2 / 100.0, rebalancingTradingDays, pv, ref warningToUser);
+                    DoBacktestInTheTimeInterval_HarryLongOld(quotes1, quotes2, weight1 / 100.0, weight2 / 100.0, rebalancingTradingDays, pv, ref warningToUser);
                 }
                 else
                 {
@@ -126,7 +315,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-                htmlNoteFromStrategy + ". " + warningToUser + "***" + noteToUserBacktest, errorMessage,
+                htmlNoteFromStrategy + ". " + warningToUser + "***" + noteToUser, errorToUser,
                 debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;
@@ -306,7 +495,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
 
-        private static void DoBacktestInTheTimeInterval_HarryLong(List<DailyData> quotes1, List<DailyData> quotes2, double p_weight1, double p_weight2, int p_rebalancingTradingDays, List<DailyData> pv, ref string p_htmlNoteFromStrategy)
+        private static void DoBacktestInTheTimeInterval_HarryLongOld(List<DailyData> quotes1, List<DailyData> quotes2, double p_weight1, double p_weight2, int p_rebalancingTradingDays, List<DailyData> pv, ref string p_htmlNoteFromStrategy)
         {
             p_htmlNoteFromStrategy = "Rebalances at the specified frequencies. But AddToTheWinningSideWithLeverage.";
             StringBuilder sbDebugToUser = new StringBuilder("Date, PVDaily, Etf1Weight, Etf2Weight, Leverage, RatioEtf1PerEtf2<br>");

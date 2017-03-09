@@ -20,29 +20,29 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //string assetsStr = p_allParamsDict["Assets"][0];                                         // "MDY,ILF,FEZ,EEM,EPP,VNQ,TLT"
 
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, (new string[] { "VXX", "SPY" }).ToList());
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, (new string[] { "VXX", "SPY" }).ToList());
             var getAllQuotesData = await getAllQuotesTask;
             stopWatch.Stop();
 
-            string warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
             DateTime startDate, endDate;
             StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(getAllQuotesData.Item1, new string[] { "VXX", "SPY" }, ref warningToUser, out startDate, out endDate);
             List<DailyData> pv = StrategiesCommon.DeepCopyQuoteRange(getAllQuotesData.Item1[0], startDate, endDate);
 
             var vxxQoutes = getAllQuotesData.Item1[0];
             var spyQoutes = getAllQuotesData.Item1[1];
-            DoBacktestInTheTimeInterval_AdaptiveUberVxx(vxxQoutes, spyQoutes, 0.001, 0.001, "Long", pv, ref noteToUserBacktest);
+            DoBacktestInTheTimeInterval_AdaptiveUberVxx(vxxQoutes, spyQoutes, 0.001, 0.001, "Long", pv, ref noteToUser);
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-               warningToUser + "***" + noteToUserBacktest, errorMessage,
+               warningToUser + "***" + noteToUser, errorToUser,
                debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;
         }
 
 
-        private static void DoBacktestInTheTimeInterval_AdaptiveUberVxx(List<DailyData> vxxQoutes, List<DailyData> spyQoutes, double spyMinPctMove, double vxxMinPctMove, string longOrShortTrade, List<DailyData> pv, ref string noteToUserBacktest)
+        private static void DoBacktestInTheTimeInterval_AdaptiveUberVxx(List<DailyData> vxxQoutes, List<DailyData> spyQoutes, double spyMinPctMove, double vxxMinPctMove, string longOrShortTrade, List<DailyData> pv, ref string noteToUser)
         {
             // temporary copy from private static void DoBacktestInTheTimeInterval_VXX_SPY_Controversial()
 
@@ -98,7 +98,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 pv[i].AdjClosePrice = pvDaily;
             }
 
-            noteToUserBacktest = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
+            noteToUser = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
         }   //DoBacktestInTheTimeInterval_VXX_SPY_Controversial()
 
 

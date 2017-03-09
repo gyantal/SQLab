@@ -342,12 +342,13 @@ FROM (SELECT * FROM Stock INNER JOIN
                     if (splitInfo.IsSplit)
                     {
                         // VXX: OldVolume: 4, NewVolume: 1 means that for every 4 old stocks, there is 1 new stock. The Fractional stocks can be calculated using PrevClosePrice as cash
-                        double oldVolume = pipS.Volume;
-                        int nOldGroups = (int)(oldVolume / (double)splitInfo.OldVolume + 0.0001);
-                        double fractionalOldShares = oldVolume - nOldGroups * splitInfo.OldVolume;
-                        int nNewShares = nOldGroups * splitInfo.NewVolume; // rounding to the nearest Integer, but consider these are doubles
-                        double cashSaleInCurrency = fractionalOldShares * splitInfo.DividendOrPrevClosePrice;
-                        SqCommon.Utils.Logger.Debug($"TransactionAccumulator splits. Date:{splitInfo.TimeUtc.ToString("yyyy-MM-dd")}, oldVolume:{oldVolume:F2}, fractionalOldShares:{fractionalOldShares}, nNewShares:{nNewShares}, cashSaleInCurrency:{cashSaleInCurrency:F2}");
+                        double oldVolumeAbs = Math.Abs(pipS.Volume);    // if shorted, the oldVolume is negative. e.g. -330. With 1:5 reverse split, newVolume should be -66. But "+ 0.0001" is sensitive to that.
+                        int oldVolumeSign = Math.Sign(pipS.Volume);
+                        int nOldGroups = (int)(oldVolumeAbs / (double)splitInfo.OldVolume + 0.0001);    
+                        double fractionalOldSharesAbs = oldVolumeAbs - nOldGroups * splitInfo.OldVolume;
+                        int nNewShares = oldVolumeSign * nOldGroups * splitInfo.NewVolume; // rounding to the nearest Integer, but consider these are doubles
+                        double cashSaleInCurrency = oldVolumeSign * fractionalOldSharesAbs * splitInfo.DividendOrPrevClosePrice;
+                        SqCommon.Utils.Logger.Debug($"TransactionAccumulator splits. Date:{splitInfo.TimeUtc.ToString("yyyy-MM-dd")}, oldVolume:{pipS.Volume:F2}, fractionalOldShares:{fractionalOldSharesAbs}, nNewShares:{nNewShares}, cashSaleInCurrency:{cashSaleInCurrency:F2}");
                         pipS.Volume = nNewShares;
                         pipS.LastSplitAdjustedTransactionPrice *= (double)splitInfo.OldVolume / (double)splitInfo.NewVolume;
 

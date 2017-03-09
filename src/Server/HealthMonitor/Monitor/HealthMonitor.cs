@@ -274,7 +274,7 @@ namespace HealthMonitor
                 sb.Append((p_isHtml) ? @"<span class=""sqImportantError""> ERROR</span>" : $" ERROR{Environment.NewLine}");
             Utils.Logger.Trace("DailySummaryReport(). rtps_1");
 
-            sb.Append((p_isHtml) ? @"<br/><strong>VBroker</strong>:" : "VBroker:"); // try to be concise in the email, so user has to spend only 1 second to evaluate: OK or ERROR. (don't put extra info, because it takes too long to evaluate)
+            sb.Append((p_isHtml) ? @"<br><strong>VBroker</strong>:" : "VBroker:"); // try to be concise in the email, so user has to spend only 1 second to evaluate: OK or ERROR. (don't put extra info, because it takes too long to evaluate)
             DateTime utcStartOfToday = DateTime.UtcNow.Date;
             bool wasAllOkToday = true;
             int nReportsToday = 0;
@@ -310,7 +310,7 @@ namespace HealthMonitor
                         sb2.Append("    - " + m_VbReport[i].Item1.ToString("HH:mm:ss")
                             + (String.IsNullOrEmpty(strategyName) ? "" : " (" + strategyName + ")") +
                             ": " + ((m_VbReport[i].Item2) ? "OK" : "ERROR") +
-                            ((p_isHtml) ? "<br/>" : Environment.NewLine));
+                            ((p_isHtml) ? "<br>" : Environment.NewLine));
                         
 
                     }
@@ -332,20 +332,20 @@ namespace HealthMonitor
 
             if (sb2.Length > 0)
             {
-                sb.Append((p_isHtml) ? "<br/>" : Environment.NewLine);
+                sb.Append((p_isHtml) ? "<br>" : Environment.NewLine);
                 sb.Append(sb2);
             }
 
             Utils.Logger.Trace($"DailySummaryReport(). lastDetailedVBrokerReports.Count: '{lastDetailedVBrokerReports.Count}'");
             if (lastDetailedVBrokerReports.Count > 0)
             {
-                sb.AppendLine((p_isHtml) ? @"<br/><hr><br/><span class=""sqDetail""><strong>VBroker Detailed</strong>:<br/>" : "VBroker Detailed:");
+                sb.AppendLine((p_isHtml) ? @"<br><hr><br><span class=""sqDetail""><strong>VBroker Detailed</strong>:<br>" : "VBroker Detailed:");
                 foreach (var lastDetailedReport in lastDetailedVBrokerReports)
                 {
                     Utils.Logger.Trace($"DailySummaryReport(). ItemKey: {lastDetailedReport.Key}");
                     Utils.Logger.Trace($"DailySummaryReport(). ItemValue: {lastDetailedReport.Value}");
                     string detailedRep = lastDetailedReport.Value.Replace("#10ff10", "green");      // on the website: #10ff10 is better, lighter, because of background. In email, background is white. "green" is darker. Better.
-                    sb.Append((p_isHtml) ? $"{detailedRep}<br/>" : detailedRep + Environment.NewLine + Environment.NewLine);        // fine tune later
+                    sb.Append((p_isHtml) ? $"{detailedRep}<br>" : detailedRep + Environment.NewLine + Environment.NewLine);        // fine tune later
                 }
                 sb.AppendLine((p_isHtml) ? @"</span>" : $"{Environment.NewLine}");
             }

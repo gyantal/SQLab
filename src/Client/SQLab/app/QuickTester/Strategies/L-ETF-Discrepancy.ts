@@ -5,15 +5,20 @@ import 'rxjs/add/operator/map';
 import { Strategy } from './Strategy';
 
 export class LEtfDistcrepancy extends Strategy {
-    public etfPairs = ["URE-SRS", "DRN-DRV", "FAS-FAZ", "XIV-VXX", "ZIV-VXZ",];
-    public selectedEtfPairs: string = "URE-SRS";
-    //app.selectedEtfPairsIdx = 1;   // zero based, so it is December
-    public rebalancingFrequency: string = "1d";  // "5d"
-    // Harry Long params
-    public etf1: string = "TVIX";
-    public weight1: string = "-35";      // 25% short
-    public etf2: string = "TMV";
-    public weight2: string = "-65";
+    public assets: string = "TVIX,TMV";
+    public assetsConstantWeightPct: string = "-35,-65";             // "-35,-65";
+    public rebalancingFrequency: string = "Daily,1d";   // "Daily,2d"(trading days),"Weekly,Fridays", "Monthly,T-1"/"Monthly,T+0" (last/first trading day of the month)
+
+
+    //public etfPairs = ["URE-SRS", "DRN-DRV", "FAS-FAZ", "XIV-VXX", "ZIV-VXZ",];
+    //public selectedEtfPairs: string = "URE-SRS";
+    ////app.selectedEtfPairsIdx = 1;   // zero based, so it is December
+    //public rebalancingFrequency: string = "1d";  // "5d"
+    //// Harry Long params
+    //public etf1: string = "TVIX";
+    //public weight1: string = "-35";      // 25% short
+    //public etf2: string = "TMV";
+    //public weight2: string = "-65";
 
     constructor(p_app: AppComponent) {
         super("LEtfDistcrepancy", p_app);
@@ -22,6 +27,14 @@ export class LEtfDistcrepancy extends Strategy {
 
     IsMenuItemIdHandled(p_subStrategyId: string): boolean {
         return (p_subStrategyId == "idMenuItemLETFDiscrepancy1") || (p_subStrategyId == "idMenuItemLETFDiscrepancy2") || (p_subStrategyId == "idMenuItemLETFDiscrepancy3") || (p_subStrategyId == "idMenuItemLETFDiscrepancy4");
+    }
+
+    OnStrategySelected(p_subStrategyId: string): boolean {
+        if ((p_subStrategyId == "idMenuItemLETFDiscrepancy1") || (p_subStrategyId == "idMenuItemLETFDiscrepancy2") || (p_subStrategyId == "idMenuItemLETFDiscrepancy3"))
+            this.SetParams("idParamSetHL_-50URE_-50SRS");
+        else if (p_subStrategyId == "idMenuItemLETFDiscrepancy4")
+            this.SetParams("idParamSetHL_-35TVIX_-65TMV");
+        return true;
     }
 
     GetHtmlUiName(p_subStrategyId: string): string {     // go to HTML UI
@@ -40,7 +53,7 @@ export class LEtfDistcrepancy extends Strategy {
     }
 
     GetTradingViewChartName(p_subStrategyId: string): string {     // go to HTML UI
-        return "L- ETF Discrepancy";
+        return "L-ETF Discrepancy";
     }
 
     GetWebApiName(p_subStrategyId: string): string {
@@ -72,8 +85,8 @@ export class LEtfDistcrepancy extends Strategy {
     }
 
     GetStrategyParams(p_subStrategyId: string): string {
-        return "&ETFPairs=" + this.selectedEtfPairs + "&RebalancingFrequency=" + this.rebalancingFrequency
-            + "&ETF1=" + this.etf1 + "&Weight1=" + this.weight1 + "&ETF2=" + this.etf2 + "&Weight2=" + this.weight2;
+        return "&Assets=" + this.assets + "&AssetsConstantWeightPct=" + this.assetsConstantWeightPct
+            + "&RebalancingFrequency=" + this.rebalancingFrequency;
     }
 
 
@@ -83,11 +96,11 @@ export class LEtfDistcrepancy extends Strategy {
 
 
 
-    public etfPairsChanged(newValue) {
-        console.log("etfPairsChanged(): " + newValue);
-        this.selectedEtfPairs = newValue;
-        this.app.tipToUser = this.selectedEtfPairs + "+" + this.selectedEtfPairs;
-    }
+    //public etfPairsChanged(newValue) {
+    //    console.log("etfPairsChanged(): " + newValue);
+    //    this.selectedEtfPairs = newValue;
+    //    this.app.tipToUser = this.selectedEtfPairs + "+" + this.selectedEtfPairs;
+    //}
 
     public MenuItemParamSetsClicked(event) {
         console.log("MenuItemParamSetsClicked()");
@@ -100,71 +113,62 @@ export class LEtfDistcrepancy extends Strategy {
     public SetParams(idValue) {
         switch (idValue) {
             case "idParamSetHL_-25TVIX_-75TMV":     // original Harry Long
-                this.etf1 = "TVIX";
-                this.weight1 = "-25";      // %, negative is Short
-                this.etf2 = "TMV";
-                this.weight2 = "-75";      // %, negative is Short
-                break;
-            case "idParamSetHL_-50VXX_-50XIV":
-                this.etf1 = "VXX";
-                this.weight1 = "-50";      // %, negative is Short
-                this.etf2 = "XIV";
-                this.weight2 = "-50";      // %, negative is Short
+                this.assets = "TVIX,TMV";
+                this.assetsConstantWeightPct = "-25,-75";   // %, negative is Short
                 break;
             case "idParamSetHL_50VXX_50XIV":
-                this.etf1 = "VXX";
-                this.weight1 = "50";      // %, negative is Short
-                this.etf2 = "XIV";
-                this.weight2 = "50";      // %, negative is Short
-                break;
-            case "idParamSetHL_-50URE_-50SRS":
-                this.etf1 = "URE";
-                this.weight1 = "-50";      // %, negative is Short
-                this.etf2 = "SRS";
-                this.weight2 = "-50";      // %, negative is Short
+                this.assets = "VXX,XIV";
+                this.assetsConstantWeightPct = "50,50";   // %, negative is Short
                 break;
             case "idParamSetHL_-50VXX.SQ_225TLT":
-                this.etf1 = "VXX.SQ";
-                this.weight1 = "-50";      // %, negative is Short
-                this.etf2 = "TLT";
-                this.weight2 = "225";      // %, negative is Short
+                this.assets = "VXX.SQ,TLT";
+                this.assetsConstantWeightPct = "-50,225";   // %, negative is Short
                 break;
             case "idParamSetHL_-50VXX_225TLT":
-                this.etf1 = "VXX";
-                this.weight1 = "-50";      // %, negative is Short
-                this.etf2 = "TLT";
-                this.weight2 = "225";      // %, negative is Short
+                this.assets = "VXX,TLT";
+                this.assetsConstantWeightPct = "-50,225";   // %, negative is Short
                 break;
             case "idParamSetHL_50XIV_225TLT":
-                this.etf1 = "XIV";
-                this.weight1 = "50";      // %, negative is Short
-                this.etf2 = "TLT";
-                this.weight2 = "225";      // %, negative is Short
+                this.assets = "XIV,TLT";
+                this.assetsConstantWeightPct = "50,225";   // %, negative is Short
                 break;
             case "idParamSetHL_25XIV_112TLT":   // long only strategy (good) play with half leverage. would we do it? No forced Buy-in of shorts.
-                this.etf1 = "XIV";
-                this.weight1 = "25";      // %, negative is Short
-                this.etf2 = "TLT";
-                this.weight2 = "112";      // %, negative is Short
+                this.assets = "XIV,TLT";
+                this.assetsConstantWeightPct = "25,112";   // %, negative is Short
                 break;
             case "idParamSetHL_-25TVIX_75CASH":
-                this.etf1 = "TVIX";
-                this.weight1 = "-25";      // %, negative is Short
-                this.etf2 = "Cash";
-                this.weight2 = "75";      // %, negative is Short
+                this.assets = "TVIX,Cash";
+                this.assetsConstantWeightPct = "-25,75";   // %, negative is Short
                 break;
             case "idParamSetHL_25CASH_-75TMV":
-                this.etf1 = "Cash";
-                this.weight1 = "25";      // %, negative is Short
-                this.etf2 = "TMV";
-                this.weight2 = "-75";      // %, negative is Short
+                this.assets = "Cash,TMV";
+                this.assetsConstantWeightPct = "25,-70";   // %, negative is Short
+                break;
+            // *** 50%-50% shorts ***
+            case "idParamSetHL_-50URE_-50SRS":
+                this.assets = "URE,SRS";
+                this.assetsConstantWeightPct = "-50,-50";   // %, negative is Short
+                break;
+            case "idParamSetHL_-50DRN_-50DRV":
+                this.assets = "DRN,DRV";
+                this.assetsConstantWeightPct = "-50,-50";   // %, negative is Short
+                break;
+            case "idParamSetHL_-50FAS_-50FAZ":
+                this.assets = "FAS,FAZ";
+                this.assetsConstantWeightPct = "-50,-50";   // %, negative is Short
+                break;
+            case "idParamSetHL_-50VXX_-50XIV":
+                this.assets = "VXX,XIV";
+                this.assetsConstantWeightPct = "-50,-50";   // %, negative is Short
+                break;
+            case "idParamSetHL_-50VXZ_-50ZIV":
+                this.assets = "VXZ,ZIV";
+                this.assetsConstantWeightPct = "-50,-50";   // %, negative is Short
                 break;
             case "idParamSetHL_-35TVIX_-65TMV":
             default:
-                this.etf1 = "TVIX";
-                this.weight1 = "-35";      // %, negative is Short
-                this.etf2 = "TMV";
-                this.weight2 = "-65";      // %, negative is Short
+                this.assets = "TVIX,TMV";
+                this.assetsConstantWeightPct = "-35,-65";   // %, negative is Short
                 break;
         }
     }

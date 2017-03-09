@@ -93,7 +93,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             if (!String.IsNullOrEmpty(cashEquivalentTicker))
                 tickersNeeded.Add(cashEquivalentTicker);
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, tickersNeeded);
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, tickersNeeded);   // Not good; for TAA, we need more quotes, earlier than p_generalParams.StartDate
             Tuple<IList<List<DailyData>>, TimeSpan, TimeSpan> getAllQuotesData = await getAllQuotesTask;
             stopWatch.Stop();
             IList<List<DailyData>> quotes;
@@ -108,22 +108,22 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
             
-            string warningToUser = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
             DateTime commonAssetStartDate, commonAssetEndDate;
             StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(quotes, tickers, ref warningToUser, out commonAssetStartDate, out commonAssetEndDate);
 
             List<DailyData> pv = new List<DailyData>();
-            DoBacktestInTheTimeInterval_TAA(quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsConstantLeverages,
+            DoBacktestInTheTimeInterval_TAA(p_generalParams, quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsConstantLeverages,
                     rebalancingPeriodicity, dailyRebalancingDays, weeklyRebalancingWeekDay, monthlyRebalancingOffset,
                     pctChannelLookbackDays, pctChannelPctLimitLower, pctChannelPctLimitUpper, isPctChannelActiveEveryDay, isPctChannelConditional,
                     histVolLookbackDays,
                     isCashAllocatedForNonActives, cashEquivalentQuotes,
-                    debugDetailToHtml, Int32.MaxValue, "<br/>", ref warningToUser, ref noteToUserBacktest, ref errorMessage, ref debugMessage, ref pv, null);
+                    debugDetailToHtml, Int32.MaxValue, "<br>", ref warningToUser, ref noteToUser, ref errorToUser, ref debugMessage, ref pv, null);
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-               warningToUser + "***" + noteToUserBacktest,
-               errorMessage,
+               warningToUser + "***" + noteToUser,
+               errorToUser,
                debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;
@@ -133,15 +133,15 @@ namespace SQLab.Controllers.QuickTester.Strategies
         // https://www.r-bloggers.com/an-attempt-at-replicating-david-varadis-percentile-channels-strategy/ 
         // https://quantstrattrader.wordpress.com/2015/02/20/a-closer-update-to-david-varadis-percentile-channels-strategy/
         // not Implemented parameters: isPctChannelConditional (not necessary to implement it, it is just a wider version of the normal pctChannel), dynamicLeverageClmtParams, uberVxxEventsParams
-        private static void DoBacktestInTheTimeInterval_TAA(IList<List<DailyData>> p_quotes, string[] p_tickers, DateTime p_commonAssetStartDate, DateTime p_commonAssetEndDate, double[] p_assetsConstantLeverages,
+        private static void DoBacktestInTheTimeInterval_TAA(GeneralStrategyParameters p_generalParams, IList<List<DailyData>> p_quotes, string[] p_tickers, DateTime p_commonAssetStartDate, DateTime p_commonAssetEndDate, double[] p_assetsConstantLeverages,
                RebalancingPeriodicity p_rebalancingPeriodicity, int p_dailyRebalancingDays, DayOfWeek p_weeklyRebalancingWeekDay, int p_monthlyRebalancingOffset,
                int[] p_pctChannelLookbackDays, double p_pctChannelPctLimitLower, double p_pctChannelPctLimitUpper, bool p_isPctChannelActiveEveryDay, bool p_isPctChannelConditional,
                int p_histVolLookbackDays,
                bool p_isCashAllocatedForNonActives, List<DailyData> p_cashEquivalentQuotes,
                Dictionary<DebugDetailToHtml, bool> p_debugDetailToHtml, int p_nCalendarDaysToDebugDetailToHtml, string p_noteToUserNewLine,
-               ref string p_noteToUserCheckData, ref string p_noteToUserBacktest, ref string errorMessage, ref string debugMessage, ref List<DailyData> p_pv, double[] p_lastWeights)
+               ref string p_noteToUserCheckData, ref string p_noteToUser, ref string p_errorToUser, ref string p_debugMessage, ref List<DailyData> p_pv, double[] p_lastWeights)
         {
-            StringBuilder noteToUser = new StringBuilder("DoBacktestInTheTimeInterval_TAA()");
+            StringBuilder sbNoteToUser = new StringBuilder("DoBacktestInTheTimeInterval_TAA()");
             DateTime nowDate = DateTime.UtcNow.Date;
             DateTime debugDetailToHtmlMinDate = DateTime.MinValue;
             if (p_nCalendarDaysToDebugDetailToHtml < (nowDate - DateTime.MinValue).TotalDays)
@@ -152,12 +152,12 @@ namespace SQLab.Controllers.QuickTester.Strategies
             int commonAssetStartDateInd = p_quotes[0].FindIndex(r => r.Date >= p_commonAssetStartDate);
             int commonAssetEndDateInd = p_quotes[0].FindIndex(commonAssetStartDateInd, r => r.Date >= p_commonAssetEndDate);
 
-            // 2. Determine firstAllDataAvailableDate: shift ShartDate when we have all the data for "Use 60,120,180, 252-day percentile channels"
+            // 2. Determine firstAllDataAvailableDate: shift StartDate when we have all the data for "Use 60,120,180, 252-day percentile channels"
             int requiredLookBackDays = Math.Max(p_pctChannelLookbackDays.Max(), p_histVolLookbackDays);
             int firstAllDataAvailableDateInd = commonAssetStartDateInd + (requiredLookBackDays - 1);
             if (firstAllDataAvailableDateInd > commonAssetEndDateInd)
             {
-                errorMessage = "firstAllDataAvailableDate cannot be determined";
+                p_errorToUser = "firstAllDataAvailableDate cannot be determined";
                 return;
             }
             DateTime firstAllDataAvailableDate = p_quotes[0][commonAssetStartDateInd + (requiredLookBackDays - 1)].Date;
@@ -196,7 +196,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             if (firstRebalancingDateInd == -1)
             {
-                errorMessage = "StartDate cannot be determined";
+                p_errorToUser = "StartDate cannot be determined";
                 return;
             }
             firstRebalancingDate = p_quotes[0][firstRebalancingDateInd].Date;
@@ -236,7 +236,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 }
             }
 
-            noteToUser.AppendLine("Date, pvDaily, {assetPrice, assetPctChange, {PctChannels(Lower,Upper)}, {PctChannels(Signal)}, assetScore, assetHV, assetWeights, assetWeightsBasedOnPV}... ,cashWeight <br />");
+            sbNoteToUser.AppendLine("Date, pvDaily, {assetPrice, assetPctChange, {PctChannels(Lower,Upper)}, {PctChannels(Signal)}, assetScore, assetHV, assetWeights, assetWeightsBasedOnPV}... ,cashWeight <br>");
             for (int iDay = 0; iDay < nDays; iDay++)    // march for all days
             {
                 // 1. Evaluate the value of the portfolio based on assetPos and this day's %change
@@ -297,7 +297,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     }
                 }
 
-                // 3. At the end of the day, allocate assetPos[]. This will not change PV.
+                // 3. On rebalancing days allocate assetPos[]. This will not change PV.
                 if (isRebalanceDay)
                 {
                     // https://docs.google.com/document/d/1kx3_UuYy_RApp6s0KmO2b4pbwQdClMuzjf6EyJynghs/edit   Clarification of the rules
@@ -397,7 +397,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                         wasAnyNoteToUser = true;
                     }
                     if (!String.IsNullOrEmpty(noteToUserRow))
-                        noteToUser.Append(noteToUserRow + p_noteToUserNewLine);
+                        sbNoteToUser.Append(noteToUserRow + p_noteToUserNewLine);
                 }
             } // march for all days
 
@@ -412,8 +412,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
             if (p_pv != null)
                 p_pv = pv;
 
-            p_noteToUserBacktest = noteToUser.ToString();
-            //noteToUserBacktest = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
+            p_noteToUser = sbNoteToUser.ToString();
+            //noteToUser = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
         } // DoBacktestInTheTimeInterval_TAA
 
 
