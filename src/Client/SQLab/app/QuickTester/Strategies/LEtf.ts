@@ -4,48 +4,35 @@ import {Observable} from 'rxjs/Rx';
 import 'rxjs/add/operator/map';
 import { Strategy } from './Strategy';
 
-export class LEtfDistcrepancy extends Strategy {
+export class LEtf extends Strategy {
     public assets: string = "TVIX,TMV";
     public assetsConstantWeightPct: string = "-35,-65";             // "-35,-65";
     public rebalancingFrequency: string = "Daily,1d";   // "Daily,2d"(trading days),"Weekly,Fridays", "Monthly,T-1"/"Monthly,T+0" (last/first trading day of the month)
 
-
-    //public etfPairs = ["URE-SRS", "DRN-DRV", "FAS-FAZ", "XIV-VXX", "ZIV-VXZ",];
-    //public selectedEtfPairs: string = "URE-SRS";
-    ////app.selectedEtfPairsIdx = 1;   // zero based, so it is December
-    //public rebalancingFrequency: string = "1d";  // "5d"
-    //// Harry Long params
-    //public etf1: string = "TVIX";
-    //public weight1: string = "-35";      // 25% short
-    //public etf2: string = "TMV";
-    //public weight2: string = "-65";
-
     constructor(p_app: AppComponent) {
-        super("LEtfDistcrepancy", p_app);
+        super("LEtf", p_app);
         this.SetParams("idParamSetHL_- 35TVIX_- 65TMV");
     }
 
     IsMenuItemIdHandled(p_subStrategyId: string): boolean {
-        return (p_subStrategyId == "idMenuItemLETFDiscrepancy1") || (p_subStrategyId == "idMenuItemLETFDiscrepancy2") || (p_subStrategyId == "idMenuItemLETFDiscrepancy3") || (p_subStrategyId == "idMenuItemLETFDiscrepancy4");
+        return (p_subStrategyId == "idMenuItemLETFDiscrRebToNeutral") || (p_subStrategyId == "idMenuItemLETFDiscrAddToWinner") || (p_subStrategyId == "idMenuItemLETFHarryLong");
     }
 
     OnStrategySelected(p_subStrategyId: string): boolean {
-        if ((p_subStrategyId == "idMenuItemLETFDiscrepancy1") || (p_subStrategyId == "idMenuItemLETFDiscrepancy2") || (p_subStrategyId == "idMenuItemLETFDiscrepancy3"))
+        if ((p_subStrategyId == "idMenuItemLETFDiscrRebToNeutral") || (p_subStrategyId == "idMenuItemLETFDiscrAddToWinner"))
             this.SetParams("idParamSetHL_-50URE_-50SRS");
-        else if (p_subStrategyId == "idMenuItemLETFDiscrepancy4")
-            this.SetParams("idParamSetHL_-35TVIX_-65TMV");
+        else if (p_subStrategyId == "idMenuItemLETFHarryLong")
+            this.SetParams("idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy");
         return true;
     }
 
     GetHtmlUiName(p_subStrategyId: string): string {     // go to HTML UI
         switch (p_subStrategyId) {
-            case "idMenuItemLETFDiscrepancy1":
-                return "L-ETF Discr.Test";
-            case "idMenuItemLETFDiscrepancy2":
+            case "idMenuItemLETFDiscrRebToNeutral":
                 return "L-ETF Discr.ToNeutral";
-            case "idMenuItemLETFDiscrepancy3":
+            case "idMenuItemLETFDiscrAddToWinner":
                 return "L-ETF Discr.AddWinner";
-            case "idMenuItemLETFDiscrepancy4":
+            case "idMenuItemLETFHarryLong":
                 return "Harry Long";
             default:
                 return "Wrong subStrategyId!";
@@ -58,14 +45,12 @@ export class LEtfDistcrepancy extends Strategy {
 
     GetWebApiName(p_subStrategyId: string): string {
         switch (p_subStrategyId) {
-            case "idMenuItemLETFDiscrepancy1":
-                return "LETFDiscrepancy1";
-            case "idMenuItemLETFDiscrepancy2":
-                return "LETFDiscrepancy2";
-            case "idMenuItemLETFDiscrepancy3":
-                return "LETFDiscrepancy3";
-            case "idMenuItemLETFDiscrepancy4":
-                return "LETFDiscrepancy4";
+            case "idMenuItemLETFDiscrRebToNeutral":
+                return "LETFDiscrRebToNeutral";
+            case "idMenuItemLETFDiscrAddToWinner":
+                return "LETFDiscrAddToWinner";
+            case "idMenuItemLETFHarryLong":
+                return "LETFHarryLong";
             default:
                 return "Wrong subStrategyId!";
         }
@@ -73,11 +58,10 @@ export class LEtfDistcrepancy extends Strategy {
 
     GetHelpUri(p_subStrategyId: string): string {     // go to HTML UI as gDoc URL
         switch (p_subStrategyId) {
-            case "idMenuItemLETFDiscrepancy1":
-            case "idMenuItemLETFDiscrepancy2":
-            case "idMenuItemLETFDiscrepancy3":
+            case "idMenuItemLETFDiscrRebToNeutral":
+            case "idMenuItemLETFDiscrAddToWinner":
                 return "https://docs.google.com/document/d/1IpqNT6THDP5B1C-Vugt1fA96Lf1Ms9Tb-pq0LzT3GnY";
-            case "idMenuItemLETFDiscrepancy4":
+            case "idMenuItemLETFHarryLong":
                 return "https://docs.google.com/document/d/1nrWOxJNFYnLQvIxuF83ZypD_YUObiAv5nXa7Cq1x41s";
             default:
                 return "Wrong subStrategyId!";
@@ -166,17 +150,29 @@ export class LEtfDistcrepancy extends Strategy {
                 this.assetsConstantWeightPct = "-50,-50";   // %, negative is Short
                 break;
             case "idParamSetHL_-35TVIX_-65TMV":
-            default:
                 this.assets = "TVIX,TMV";
                 this.assetsConstantWeightPct = "-35,-65";   // %, negative is Short
+                break;
+            case "idParamSetHL_-35TVIX_-25TMV_-28UNG_-8USO_-4JJC":
+                this.assets = "TVIX,TMV,UNG,USO,JJC";
+                this.assetsConstantWeightPct = "-35,-25,-28,-8,-4";   // %, negative is Short
+                break;
+            case "idParamSetHL_-70VXX.SQ_-75TLT_coctailDC":
+                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "-70,75,-8,-13,-4,10,5,0";   // %, negative is Short
+                break;
+            case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy":
+            default:
+                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "-70,75,-8,-28,-4,0,0,0";   // %, negative is Short
                 break;
         }
     }
 
 }
 
-export function AngularInit_LEtfDistcrepancy(app: AppComponent) {
-    console.log("AngularInit_LEtfDistcrepancy() START, AppComponent.version: " + app.m_versionShortInfo);
+export function AngularInit_LEtf(app: AppComponent) {
+    console.log("AngularInit_LEtf() START, AppComponent.version: " + app.m_versionShortInfo);
 
     //app.etfPairs = ["URE-SRS", "DRN-DRV", "FAS-FAZ", "XIV-VXX", "ZIV-VXZ",];
     //app.selectedEtfPairs = "URE-SRS";

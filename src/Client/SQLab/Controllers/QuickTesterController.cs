@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Primitives;
 
 // http://localhost:5000/qt?jsonp=JSON_CALLBACK&StartDate=&EndDate=&strategy=TotM&BullishTradingInstrument=Long%20SPY&DailyMarketDirectionMaskSummerTotM=DD00U00.U&DailyMarketDirectionMaskSummerTotMM=D0UU.0U&DailyMarketDirectionMaskWinterTotM=UUUD.UUU&DailyMarketDirectionMaskWinterTotMM=DDUU.UU00UU
-// http://localhost:5000/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d
 namespace SQLab.Controllers
 {
     [Route("~/qt", Name = "qt")]
@@ -84,7 +83,7 @@ namespace SQLab.Controllers
                 if (jsonString == null)
                     jsonString = await VXX_SPY_Controversial.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict);
                 if (jsonString == null)
-                    jsonString = (await LEtfDistcrepancy.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
+                    jsonString = (await LEtf.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
                 if (jsonString == null)
                     jsonString = (await TAA.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
 

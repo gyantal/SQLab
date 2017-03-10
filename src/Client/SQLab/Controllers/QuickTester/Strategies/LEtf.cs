@@ -9,20 +9,19 @@ using System.Threading.Tasks;
 
 namespace SQLab.Controllers.QuickTester.Strategies
 {
-    public partial class LEtfDistcrepancy
+    public partial class LEtf
     {
-
 
         public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
         {
-            if (p_strategyName != "LETFDiscrepancy1" && p_strategyName != "LETFDiscrepancy2" && p_strategyName != "LETFDiscrepancy3" && p_strategyName != "LETFDiscrepancy4")
+            if (p_strategyName != "LETFDiscrRebToNeutral" && p_strategyName != "LETFDiscrAddToWinner" && p_strategyName != "LETFHarryLong")
                 return null;
             Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
 
             // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
             // 1. read parameter strings
             string assetsStr = p_allParamsDict["Assets"][0];                                         // "TVIX,TMV"
-            string assetsWeightPctStr = p_allParamsDict["AssetsConstantWeightPct"][0];         // "-35,-65"
+            string assetsWeightPctStr = p_allParamsDict["AssetsConstantWeightPct"][0];              // "-35,-65"
             string rebalancingFrequencyStr = p_allParamsDict["RebalancingFrequency"][0];             // "Daily,1d";   // "Daily,2d"(trading days),"Weekly,Fridays", "Monthly,T-1"/"Monthly,T+0" (last/first trading day of the month)
 
 
@@ -87,7 +86,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 {
                     int indNeeded = tickersNeeded.IndexOf(tickers[i]);
                     quotes.Add(quotesNeeded[indNeeded]);
-                    
+
                 }
             }
 
@@ -98,7 +97,21 @@ namespace SQLab.Controllers.QuickTester.Strategies
             StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(quotes, tickers, ref warningToUser, out commonAssetStartDate, out commonAssetEndDate);
 
             List<DailyData> pv = new List<DailyData>();
-            DoBacktestInTheTimeInterval_HarryLong(p_generalParams, quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsWeights,
+
+            if (String.Equals(p_strategyName, "LETFDiscrRebToNeutral", StringComparison.CurrentCultureIgnoreCase))
+            {
+                DoBacktestInTheTimeInterval_RebalanceToNeutral(p_generalParams, quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsWeights,
+                    rebalancingPeriodicity, dailyRebalancingDays, weeklyRebalancingWeekDay, monthlyRebalancingOffset,
+                    "<br>", ref warningToUser, ref noteToUser, ref errorToUser, ref debugMessage, ref pv);
+            }
+            else if (String.Equals(p_strategyName, "LETFDiscrAddToWinner", StringComparison.CurrentCultureIgnoreCase))
+            {
+                DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(p_generalParams, quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsWeights,
+                    rebalancingPeriodicity, dailyRebalancingDays, weeklyRebalancingWeekDay, monthlyRebalancingOffset,
+                    "<br>", ref warningToUser, ref noteToUser, ref errorToUser, ref debugMessage, ref pv);
+            }
+            else
+                DoBacktestInTheTimeInterval_HarryLong(p_generalParams, quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsWeights,
                     rebalancingPeriodicity, dailyRebalancingDays, weeklyRebalancingWeekDay, monthlyRebalancingOffset,
                     "<br>", ref warningToUser, ref noteToUser, ref errorToUser, ref debugMessage, ref pv);
 
@@ -119,7 +132,6 @@ namespace SQLab.Controllers.QuickTester.Strategies
             StringBuilder sbNoteToUser = new StringBuilder("Rebalances at the specified frequencies. HarryLong style.<br>");
             StringBuilder sbDebugToUser = new StringBuilder("Date, PVDaily, PvLeverage, Weight_1 ... Weight_N<br>");
 
-            List<DailyData> pv = null;
             // implement CLMT in a way, that those data days don't restrict Strategy StartDate. If they are not available on a day, simple 100% is used. CLMT: "SMA(SPX,50d,200d); PR(XLU,VTI,20d)"
             // 1. CommonAssetStartDate is already correct, because only the necessary quotes are asked from SQL. (After backtest StartDate). Good.
             int commonAssetStartDateInd = p_quotes[0].FindIndex(r => r.Date >= p_commonAssetStartDate);
@@ -137,7 +149,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 iQ[i] = p_quotes[i].FindIndex(r => r.Date >= pvStartDate);
             }
 
-            pv = new List<DailyData>(nDays);
+            List<DailyData> pv = new List<DailyData>(nDays);
 
             double pvDaily = 100.0;
             double cash = pvDaily;
@@ -200,153 +212,21 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
 
-        public static async Task<string> GenerateQuickTesterResponseOld(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
+        // Idea: every 5-20 days, rebalance it to market neutral;
+        //This is equivalent of the HarryLong with 2 tickers, "URE, SRS", with -50%,-50% weight and daily rebalancing.Because HarryLong always Rebalances to neutral (=fixed) weights.
+        //So, this code is not necessary here.However, the AddToTheWinningSideWithLeverage() cannot be simulated with HarryLong, so keep this couple of lines of code for simplicity 
+        //and easy comparison to the AddToTheWinningSideWithLeverage() version.
+        private static void DoBacktestInTheTimeInterval_RebalanceToNeutral(GeneralStrategyParameters p_generalParams, IList<List<DailyData>> p_quotes, string[] p_tickers, DateTime p_commonAssetStartDate, DateTime p_commonAssetEndDate, double[] p_assetsWeights,
+               RebalancingPeriodicity p_rebalancingPeriodicity, int p_dailyRebalancingDays, DayOfWeek p_weeklyRebalancingWeekDay, int p_monthlyRebalancingOffset,
+               string p_noteToUserNewLine,
+               ref string p_noteToUserCheckData, ref string p_noteToUser, ref string p_errorToUser, ref string p_debugMessage, ref List<DailyData> p_pv)
         {
-            if (p_strategyName != "LETFDiscrepancy1" && p_strategyName != "LETFDiscrepancy2" && p_strategyName != "LETFDiscrepancy3" && p_strategyName != "LETFDiscrepancy4")
-                return null;
-            Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
+            p_noteToUser = "Rebalances to be market neutral at the specified frequencies. Using only the first 2 tickers in the list.";
 
-            // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
-            string etfPairs = p_allParamsDict["ETFPairs"][0];
-            string rebalancingFrequency = p_allParamsDict["RebalancingFrequency"][0];
-            string etf1 = p_allParamsDict["ETF1"][0];
-            string weightStr1 = p_allParamsDict["Weight1"][0];
-            string etf2 = p_allParamsDict["ETF2"][0];
-            string weightStr2 = p_allParamsDict["Weight2"][0];
+            DateTime pvStartDate = p_commonAssetStartDate;
 
-            double weight1 = Double.NaN;
-            if (!Double.TryParse(weightStr1, out weight1))
-                return @"{ ""errorMessage"":  ""Error: Weight1 cannot be converted to Number : " + weightStr1 + @""" }";
-            
-            double weight2 = Double.NaN;
-            if (!Double.TryParse(weightStr2, out weight2))
-                return @"{ ""errorMessage"":  ""Error: Weight2 cannot be converted to Number : " + weightStr2 + @""" }";
-
-            int ind = etfPairs.IndexOf('-');
-            if (ind == -1)
-            {
-                return @"{ ""errorMessage"":  ""Error: cannot find tickers in : " + etfPairs + @""" }";
-            }
-            string etfPairs1 = etfPairs.Substring(0, ind);
-            string etfPairs2 = etfPairs.Substring(ind + 1);
-
-            string ticker1 = null, ticker2 = null;
-            if (p_strategyName == "LETFDiscrepancy4")       // in HarryLong strategy use these as tickers
-            {
-                ticker1 = etf1;
-                ticker2 = etf2;
-            }else
-            {
-                ticker1 = etfPairs1;
-                ticker2 = etfPairs2;
-            }
-
-            int rebalancingTradingDays;
-            if (!Int32.TryParse(rebalancingFrequency.TrimEnd(new char[] { 'd', 'D' }), out rebalancingTradingDays))
-                rebalancingTradingDays = Int32.MaxValue;        //So we don't rebalance
-
-            // startDates
-            // URE: Feb 2, 2007
-            // SRS: Feb 1, 2007
-            // XIV: Nov 30, 2010
-            // VXX: Jan 30, 2009
-            // FAS: Nov 19, 2008
-            // FAZ: Nov 19, 2008
-            List<string> tickers = new List<string>();
-            if (!ticker1.Equals("Cash"))
-                tickers.Add(ticker1);
-            if (!ticker2.Equals("Cash"))
-                tickers.Add(ticker2);
-            Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, tickers);
-            Tuple<IList<List<DailyData>>, TimeSpan, TimeSpan> getAllQuotesData = await getAllQuotesTask;
-            stopWatch.Stop();
-
-            IList<List<DailyData>> quotes12 = getAllQuotesData.Item1;
-            List<DailyData> quotes1 = null, quotes2 = null;
-            if (!ticker1.Equals("Cash"))
-            {
-                quotes1 = quotes12[0];
-                quotes12.RemoveAt(0);
-            }
-            if (!ticker2.Equals("Cash"))
-            {
-                quotes2 = quotes12[0];
-                quotes12.RemoveAt(0);
-            }
-
-            if (quotes1 == null)    // it is Cash, set it according to the other, but use cash
-                quotes1 = quotes2.Select(item => new DailyData() { Date = item.Date, AdjClosePrice = 100.0 }).ToList();
-            if (quotes2 == null)    // it is Cash, set it according to the other, but use cash
-                quotes2 = quotes1.Select(item => new DailyData() { Date = item.Date, AdjClosePrice = 100.0 }).ToList();
-
-            string htmlNoteFromStrategy = "", errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
-
-            List<DailyData> pv = null;
-            if (String.Equals(p_strategyName, "LETFDiscrepancy1", StringComparison.CurrentCultureIgnoreCase))
-            {
-                pv = quotes1; // only testing: PV = First of the ETF pair
-            }
-            else
-            {
-                DateTime startDate, endDate;
-                StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness((new List<DailyData>[] { quotes1, quotes2 }).ToList(), new string[] { ticker1, ticker2 }, ref warningToUser, out startDate, out endDate);
-                pv = StrategiesCommon.DeepCopyQuoteRange(quotes1, startDate, endDate);
-
-                if (String.Equals(p_strategyName, "LETFDiscrepancy2", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    DoBacktestInTheTimeInterval_RebalanceToNeutral(quotes1, quotes2, rebalancingTradingDays, pv, ref warningToUser);
-                }
-                else if (String.Equals(p_strategyName, "LETFDiscrepancy3", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(quotes1, quotes2, rebalancingTradingDays, pv, ref warningToUser);
-                }
-                else if (String.Equals(p_strategyName, "LETFDiscrepancy4", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    DoBacktestInTheTimeInterval_HarryLongOld(quotes1, quotes2, weight1 / 100.0, weight2 / 100.0, rebalancingTradingDays, pv, ref warningToUser);
-                }
-                else
-                {
-
-                }
-
-            }
-
-
-            stopWatchTotalResponse.Stop();
-            StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-                htmlNoteFromStrategy + ". " + warningToUser + "***" + noteToUser, errorToUser,
-                debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
-            string jsonReturn = JsonConvert.SerializeObject(strategyResult);
-            return jsonReturn;
-            //{
-            //  "Name": "Apple",
-            //  "Expiry": "2008-12-28T00:00:00",
-            //  "Sizes": [
-            //    "Small"
-            //  ]
-            //}
-
-            //returnStr = "[" + String.Join(Environment.NewLine,
-            //    (await Tools.GetHistoricalQuotesAsync(new[] {
-            //        new QuoteRequest { Ticker = "VXX", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
-            //        new QuoteRequest { Ticker = "SPY", nQuotes = 3 }
-            //    }, HQCommon.AssetType.Stock))
-            //    .Select(row => String.Join(",", row))) + "]";
-
-            //returnStr = returnStr.Replace(" 00:00:00", "");
-            //returnStr = returnStr.Replace("\n", ",");
-
-            //return @"[{""Symbol"":""VXX""},{""Symbol"":""^VIX"",""LastUtc"":""2015-01-08T19:25:48"",""Last"":17.45,""UtcTimeType"":""LastChangedTime""}]";
-        }
-
-        // every 5-20 days, rebalance it to market neutral;
-        private static void DoBacktestInTheTimeInterval_RebalanceToNeutral(List<DailyData> quotes1, List<DailyData> quotes2, int p_rebalancingTradingDays, List<DailyData> pv, ref string p_htmlNoteFromStrategy)
-        {
-            p_htmlNoteFromStrategy = "Rebalances to be market neutral at the specified frequencies.";
-            DateTime pvStartDate = pv[0].Date;
-            DateTime pvEndDate = pv[pv.Count() - 1].Date;
-
+            List<DailyData> quotes1 = p_quotes[0];
+            List<DailyData> quotes2 = p_quotes[1];
             // note: bullishQuotes[0].Date, bearishQuotes[0].Date refers to different date. We have to find the StartDate in both.
             int iBullish = quotes1.FindIndex(row => row.Date == pvStartDate);
             int iBearish = quotes2.FindIndex(row => row.Date == pvStartDate);
@@ -356,9 +236,12 @@ namespace SQLab.Controllers.QuickTester.Strategies
             double bearishEtfPosition = pvDaily * -0.5;
             double cash = pvDaily * 2.0;
 
-            pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            int iBullishEndDateInd = quotes1.FindIndex(iBullish, r => r.Date >= p_commonAssetEndDate);
+            int nDays = iBullishEndDateInd - iBullish + 1;        // startDate, endDate is included
+            List<DailyData> pv = new List<DailyData>(nDays);
+            pv.Add(new DailyData() { Date = quotes1[iBullish].Date, AdjClosePrice = pvDaily });  // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
-            for (int i = 1; i < pv.Count(); i++)
+            for (int i = 1; i < nDays; i++) // march for all days
             {
                 double buEtfChg = quotes1[iBullish + i].AdjClosePrice / quotes1[iBullish + i - 1].AdjClosePrice;
                 bullishEtfPosition = bullishEtfPosition * buEtfChg;
@@ -367,31 +250,38 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 bearishEtfPosition = bearishEtfPosition * beEtfChg;
 
                 pvDaily = cash + bullishEtfPosition + bearishEtfPosition;
-                if (i % p_rebalancingTradingDays == 0)    // every periodic days
+                if (i % p_dailyRebalancingDays == 0)    // every periodic days
                 {
                     bullishEtfPosition = pvDaily * -0.5;
                     bearishEtfPosition = pvDaily * -0.5;
 
                     cash = pvDaily * 2.0;
                 }
-                pv[i].AdjClosePrice = pvDaily;
-            }
+                pv.Add(new DailyData() { Date = quotes1[iBullish + i].Date, AdjClosePrice = pvDaily });
+            } // march for all days
+
+            if (p_pv != null)
+                p_pv = pv;
         }
 
 
         //- the previous strategy: rebalance every 20 days: 13.18%CAGR. rebalancing 10day: CAGR: 14.79% .not much. And I have to pay the borrowing fee.
         //So I didn't gain money this way:
-        //+ I didn't rebalance to market Neutral, but I did a market bet.... shorting more money into the one that went down, and keeping
+        //+ I didn't rebalance to market Neutral in real life, but I did a market bet.... shorting more money into the one that went down, and keeping
         //the overleverage of the other side.
         //Test this: every X, 20 days. Keep the other leg. Short more from the etf that is down. 
         //So, I follow the trend: put more money into the right place. That is how I played.
-        private static void DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(List<DailyData> quotes1, List<DailyData> quotes2, int p_rebalancingTradingDays, List<DailyData> pv, ref string p_htmlNoteFromStrategy)
+        private static void DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(GeneralStrategyParameters p_generalParams, IList<List<DailyData>> p_quotes, string[] p_tickers, DateTime p_commonAssetStartDate, DateTime p_commonAssetEndDate, double[] p_assetsWeights,
+               RebalancingPeriodicity p_rebalancingPeriodicity, int p_dailyRebalancingDays, DayOfWeek p_weeklyRebalancingWeekDay, int p_monthlyRebalancingOffset,
+               string p_noteToUserNewLine,
+               ref string p_noteToUserCheckData, ref string p_noteToUser, ref string p_errorToUser, ref string p_debugMessage, ref List<DailyData> p_pv)
         {
-            p_htmlNoteFromStrategy = "Rebalances at the specified frequencies. But AddToTheWinningSideWithLeverage.";
+            p_noteToUser = "Rebalances at the specified frequencies. But AddToTheWinningSideWithLeverage. Using only the first 2 tickers in the list.";
             StringBuilder sbDebugToUser = new StringBuilder("Date, PVDaily, BullishLeverage, BearishLeverage, Leverage, RatioBullishPerBearish<br>");
-            DateTime pvStartDate = pv[0].Date;
-            DateTime pvEndDate = pv[pv.Count() - 1].Date;
+            DateTime pvStartDate = p_commonAssetStartDate;
 
+            List<DailyData> quotes1 = p_quotes[0];
+            List<DailyData> quotes2 = p_quotes[1];
             // note: bullishQuotes[0].Date, bearishQuotes[0].Date refers to different date. We have to find the StartDate in both.
             int iBullish = quotes1.FindIndex(row => row.Date == pvStartDate);
             int iBearish = quotes2.FindIndex(row => row.Date == pvStartDate);
@@ -401,8 +291,11 @@ namespace SQLab.Controllers.QuickTester.Strategies
             double bearishEtfPosition = pvDaily * -0.5;
             double cash = pvDaily * 2.0;
 
-            pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
-        
+            int iBullishEndDateInd = quotes1.FindIndex(iBullish, r => r.Date >= p_commonAssetEndDate);
+            int nDays = iBullishEndDateInd - iBullish + 1;        // startDate, endDate is included
+            List<DailyData> pv = new List<DailyData>(nDays);
+            pv.Add(new DailyData() { Date = quotes1[iBullish].Date, AdjClosePrice = pvDaily });  // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+
             // usually it is 50%=0.5, when it goes under 47%, short more of this side.
             double tooLowStockLeverage = 0.47;     
             double tooHighPortfolioLeverage = 2.0;      // we can play double leverage, because it is quite balanced LongShort, so not risky
@@ -413,7 +306,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             int nUnderLeveragedShortMoreWinning = 0;
             int nOkLeveragedDoNothing = 0;
             int nOverLeveragedRebalanceToNavAndNeutral = 0;
-            for (int i = 1; i < pv.Count(); i++)
+            for (int i = 1; i < nDays; i++)  // march for all days
             {
                 double buEtfChg = quotes1[iBullish + i].AdjClosePrice / quotes1[iBullish + i - 1].AdjClosePrice;
                 bullishEtfPosition = bullishEtfPosition * buEtfChg;
@@ -423,7 +316,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
                 pvDaily = cash + bullishEtfPosition + bearishEtfPosition;
 
-                if (i % p_rebalancingTradingDays == 0)    // every periodic days
+                if (i % p_dailyRebalancingDays == 0)    // every periodic days
                 {
                     double leverage = Math.Abs(bullishEtfPosition + bearishEtfPosition) / pvDaily;
                     if (leverage >= tooHighPortfolioLeverage)    // if we are over-leveraged -> bad. Margin call risk. Rebalance to NAV and market neutral.
@@ -486,129 +379,15 @@ namespace SQLab.Controllers.QuickTester.Strategies
                         }
                     }
                 }
-                pv[i].AdjClosePrice = pvDaily;
+                pv.Add(new DailyData() { Date = quotes1[iBullish + i].Date, AdjClosePrice = pvDaily });
                 sbDebugToUser.AppendLine($"{pv[i].Date}, {pvDaily}, {Math.Abs(bullishEtfPosition) / pvDaily}, {Math.Abs(bearishEtfPosition) / pvDaily}, {Math.Abs(bullishEtfPosition + bearishEtfPosition) / pvDaily}, {Math.Abs(bullishEtfPosition / bearishEtfPosition)}<br>");
-            }   // for
+            }   // march for all days
 
-            p_htmlNoteFromStrategy = p_htmlNoteFromStrategy + ". nRatioUnbalanceShortMoreWinning: " + nRatioUnbalanceShortMoreWinning + ", nUnderLeveragedShortMoreWinning: " + nUnderLeveragedShortMoreWinning + ",nOkLeveragedDoNothing: " + nOkLeveragedDoNothing + ",nOverLeveragedRebalanceToNavAndNeutral: " + nOverLeveragedRebalanceToNavAndNeutral;
-            p_htmlNoteFromStrategy = p_htmlNoteFromStrategy + "<br>" + sbDebugToUser.ToString();
-        }
+            if (p_pv != null)
+                p_pv = pv;
 
-
-        private static void DoBacktestInTheTimeInterval_HarryLongOld(List<DailyData> quotes1, List<DailyData> quotes2, double p_weight1, double p_weight2, int p_rebalancingTradingDays, List<DailyData> pv, ref string p_htmlNoteFromStrategy)
-        {
-            p_htmlNoteFromStrategy = "Rebalances at the specified frequencies. But AddToTheWinningSideWithLeverage.";
-            StringBuilder sbDebugToUser = new StringBuilder("Date, PVDaily, Etf1Weight, Etf2Weight, Leverage, RatioEtf1PerEtf2<br>");
-            DateTime pvStartDate = pv[0].Date;
-            DateTime pvEndDate = pv[pv.Count() - 1].Date;
-
-            // note: bullishQuotes[0].Date, bearishQuotes[0].Date refers to different date. We have to find the StartDate in both.
-            int iEtf1 = quotes1.FindIndex(row => row.Date == pvStartDate);
-            int iEtf2 = quotes2.FindIndex(row => row.Date == pvStartDate);
-
-            double pvDaily = 100.0;
-            double etf1Position = pvDaily * p_weight1;  // on day0, we short -25% TVIX, -75% TMV, p_weight1 is negative if we short, positive if we long.
-            double etf2Position = pvDaily * p_weight2;
-            //double cash = pvDaily * 2.0;
-            double cash = pvDaily - etf1Position - etf2Position;
-
-            pv[0].AdjClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
-
-            //// usually it is 50%=0.5, when it goes under 47%, short more of this side.
-            //double tooLowStockLeverage = 0.47;
-            //double tooHighPortfolioLeverage = 2.0;      // we can play double leverage, because it is quite balanced LongShort, so not risky
-            //double ratioTooLow = 0.77;  // 1/1.3=0.77
-            //double ratioTooHigh = 1.3;
-
-            //int nRatioUnbalanceShortMoreWinning = 0;
-            //int nUnderLeveragedShortMoreWinning = 0;
-            //int nOkLeveragedDoNothing = 0;
-            //int nOverLeveragedRebalanceToNavAndNeutral = 0;
-            for (int i = 1; i < pv.Count(); i++)
-            {
-                double etf1Chg = quotes1[iEtf1 + i].AdjClosePrice / quotes1[iEtf1 + i - 1].AdjClosePrice;
-                etf1Position = etf1Position * etf1Chg;
-
-                double etf2Chg = quotes2[iEtf2 + i].AdjClosePrice / quotes2[iEtf2 + i - 1].AdjClosePrice;
-                etf2Position = etf2Position * etf2Chg;
-
-                pvDaily = cash + etf1Position + etf2Position;
-
-                if (i % p_rebalancingTradingDays == 0)    // every periodic days
-                {
-                    etf1Position = pvDaily * p_weight1; //Rebalance to NAV and to proposed weights.
-                    etf2Position = pvDaily * p_weight2;
-
-                    cash = pvDaily - etf1Position - etf2Position;
-
-                    //double leverage = Math.Abs(etf1Position + etf2Position) / pvDaily;
-                    //if (leverage >= tooHighPortfolioLeverage)    // if we are over-leveraged -> bad. Margin call risk. Rebalance to NAV and market neutral.
-                    //{
-                    //    nOverLeveragedRebalanceToNavAndNeutral++;
-                    //    etf1Position = pvDaily * -0.5;
-                    //    etf2Position = pvDaily * -0.5;
-
-                    //    cash = pvDaily * 2.0;
-                    //}
-                    //else
-                    //{
-                    //    // bullishEtfLeverage = 44%, while bearishLeverage = 96%. Altogether = 140% leverage.
-                    //    // it was allowed and BullishLeverage was not increased, because it was over 47%. Bad.
-                    //    // We should watch the Ratio of Bullish / Bearish.So, this thing wouldn't happen. In real life, I have already rebalanced it much earlier.
-                    //    // However, the current solution works that it adds only to the Winning side. It adds only to the smaller position.
-                    //    // This is kind of OK. But it means everytime we do this RatioBuPerBe rebalancing, we increase by 10-20% (never decrease) the total leverage,.
-                    //    // So, in about 5 RatioRebalancing, we reach Leverage of 2.0 from 1.0, which means we will do the tooHighPortfolioLeverage rebalancing.
-                    //    // Therefore, it would be nice to not do this ratioRebalancing too frequently => instead of 20% discrepancy, try 30% ratio difference.
-                    //    double ratioBullishPerBearish = Math.Abs(etf1Position / etf2Position);
-                    //    if (ratioBullishPerBearish < ratioTooLow)       // bullishEtfPosition is too small, increase it
-                    //    {
-                    //        nRatioUnbalanceShortMoreWinning++;
-                    //        // try to increase buEtfLeverage
-                    //        double positionIncrement = -1 * (Math.Min(etf2Position, -0.5 * pvDaily) - etf1Position); // bearishEtfPosition, bullishEtfPosition are negative
-                    //        etf1Position -= positionIncrement;
-                    //        cash += positionIncrement;
-                    //    }
-                    //    else if (ratioBullishPerBearish > ratioTooHigh)  // bearishEtfPosition is too small, increase it
-                    //    {
-                    //        nRatioUnbalanceShortMoreWinning++;
-                    //        // try to increase buEtfLeverage
-                    //        double positionIncrement = -1 * (Math.Min(etf1Position, -0.5 * pvDaily) - etf2Position); // bearishEtfPosition, bullishEtfPosition are negative
-                    //        etf2Position -= positionIncrement;
-                    //        cash += positionIncrement;
-                    //    }
-
-
-                    //    double buEtfLeverage = Math.Abs(etf1Position) / pvDaily;
-                    //    if (buEtfLeverage <= tooLowStockLeverage)    // if we are under-leveraged -> short more of the winning side (Trend Following)
-                    //    {
-                    //        nUnderLeveragedShortMoreWinning++;
-                    //        // try to increase buEtfLeverage
-                    //        double positionIncrement = -1 * (Math.Min(etf2Position, -0.5 * pvDaily) - etf1Position); // bearishEtfPosition, bullishEtfPosition are negative
-                    //        etf1Position -= positionIncrement;
-                    //        cash += positionIncrement;
-                    //    }
-                    //    else
-                    //    {
-                    //        double beEtfLeverage = Math.Abs(etf2Position) / pvDaily;
-                    //        if (beEtfLeverage <= tooLowStockLeverage)    // if we are under-leveraged -> short more of the winning side (Trend Following)
-                    //        {
-                    //            nUnderLeveragedShortMoreWinning++;
-                    //            // try to increase buEtfLeverage
-                    //            double positionIncrement = -1 * (Math.Min(etf1Position, -0.5 * pvDaily) - etf2Position); // bearishEtfPosition, bullishEtfPosition are negative
-                    //            etf2Position -= positionIncrement;
-                    //            cash += positionIncrement;
-                    //        }
-                    //        else
-                    //            nOkLeveragedDoNothing++;
-                    //    }
-                    //}
-                }
-                pv[i].AdjClosePrice = pvDaily;
-                sbDebugToUser.AppendLine($"{pv[i].Date}, {pvDaily}, {Math.Abs(etf1Position) / pvDaily}, {Math.Abs(etf2Position) / pvDaily}, {Math.Abs(etf1Position + etf2Position) / pvDaily}, {Math.Abs(etf1Position / etf2Position)}<br>");
-            }   // for
-
-            //p_htmlNoteFromStrategy = p_htmlNoteFromStrategy + ". nRatioUnbalanceShortMoreWinning: " + nRatioUnbalanceShortMoreWinning + ", nUnderLeveragedShortMoreWinning: " + nUnderLeveragedShortMoreWinning + ",nOkLeveragedDoNothing: " + nOkLeveragedDoNothing + ",nOverLeveragedRebalanceToNavAndNeutral: " + nOverLeveragedRebalanceToNavAndNeutral;
-            p_htmlNoteFromStrategy = p_htmlNoteFromStrategy + "<br>" + sbDebugToUser.ToString();
+            p_noteToUser = p_noteToUser + ". nRatioUnbalanceShortMoreWinning: " + nRatioUnbalanceShortMoreWinning + ", nUnderLeveragedShortMoreWinning: " + nUnderLeveragedShortMoreWinning + ",nOkLeveragedDoNothing: " + nOkLeveragedDoNothing + ",nOverLeveragedRebalanceToNavAndNeutral: " + nOverLeveragedRebalanceToNavAndNeutral;
+            p_noteToUser = p_noteToUser + "<br>" + sbDebugToUser.ToString();
         }
 
 

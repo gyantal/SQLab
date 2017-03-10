@@ -3,7 +3,7 @@ import { Http } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import { Strategy } from './Strategies/Strategy'
 import { VXX_SPY_Controversial } from './Strategies/VXX_SPY_Controversial'
-import { LEtfDistcrepancy, AngularInit_LEtfDistcrepancy } from './Strategies/L-ETF-Discrepancy'
+import { LEtf, AngularInit_LEtf } from './Strategies/LEtf'
 import { TotM } from './Strategies/TotM'
 import { AdaptiveUberVxx } from './Strategies/AdaptiveUberVxx'
 import { AssetAllocation } from './Strategies/AssetAllocation'
@@ -47,7 +47,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     public inputEndDateStr: string = "";    // empty string means: today
 
     // Inputs area
-    public strategy_LEtfDistcrepancy: LEtfDistcrepancy;     // strategy variables are needed separately, because HTML uses them
+    public strategy_LEtf: LEtf;     // strategy variables are needed separately, because HTML uses them
     public strategy_VXX_SPY_Controversial: VXX_SPY_Controversial;
     public strategy_TotM: TotM;
     public strategy_AdaptiveUberVxx: AdaptiveUberVxx;
@@ -114,13 +114,13 @@ export class AppComponent implements OnInit, AfterViewInit {
         //this.getHMData(gDefaultHMData);
         this.m_userEmail = gSqUserEmail;
 
-        this.strategy_LEtfDistcrepancy = new LEtfDistcrepancy(this);
+        this.strategy_LEtf = new LEtf(this);
         this.strategy_VXX_SPY_Controversial = new VXX_SPY_Controversial(this);
         this.strategy_TotM = new TotM(this);
         this.strategy_AdaptiveUberVxx = new AdaptiveUberVxx(this);
         this.strategy_AssetAllocation = new AssetAllocation(this);
 
-        this.strategies = [this.strategy_LEtfDistcrepancy, this.strategy_VXX_SPY_Controversial, this.strategy_TotM, this.strategy_AdaptiveUberVxx, this.strategy_AssetAllocation];
+        this.strategies = [this.strategy_LEtf, this.strategy_VXX_SPY_Controversial, this.strategy_TotM, this.strategy_AdaptiveUberVxx, this.strategy_AssetAllocation];
         //this.SelectStrategy("idMenuItemAdaptiveUberVxx"); // there is no #if DEBUG in TS yet. We use TotM rarely in production anyway, so UberVXX can be the default, even while developing it.
         this.SelectStrategy("idMenuItemTAA");   // temporary default until it is being developed
         this.TradingViewChartOnready();

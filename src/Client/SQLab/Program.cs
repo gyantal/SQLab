@@ -157,11 +157,9 @@ namespace SQLab
         };
         public static string RunningEnvStr(RunningEnvStrType p_runningEnvStrType)
         {
-            Dictionary<RunningEnvironment, string> dictRe = null;
-            if (RunningEnvStrDict.TryGetValue(p_runningEnvStrType, out dictRe))
+            if (RunningEnvStrDict.TryGetValue(p_runningEnvStrType, out Dictionary<RunningEnvironment, string> dictRe))
             {
-                string str = null;
-                if (dictRe.TryGetValue(Utils.RunningEnv(), out str))
+                if (dictRe.TryGetValue(Utils.RunningEnv(), out string str))
                 {
                     return str;
                 }
