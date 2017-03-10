@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using System.Security.Cryptography.X509Certificates;
 using SqCommon;
 using System.Threading;
@@ -32,7 +32,8 @@ namespace SQLab
 #endif
             Console.WriteLine($"Hello SQLab WebServer, v1.0.12 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
             Console.Title = "SQLab WebServer v1.0.12";
-            if (!Utils.InitDefaultLogger("Client." + typeof(Program).Namespace))    // will be "Client.SQLab.log"
+            //if (!Utils.InitDefaultLogger("Client." + typeof(Program).Namespace))    // will be "Client.SQLab.log"
+            if (!Utils.InitDefaultLogger(typeof(Program).Namespace))    // will be "Client.SQLab.log"
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
 

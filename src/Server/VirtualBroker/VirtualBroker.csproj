@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SQLab.Common\SQLab.Common.csproj" />
+    <ProjectReference Include="..\..\SQLab.DbCommon\SQLab.DbCommon.csproj" />
+    <ProjectReference Include="..\..\SQLab.RxCommon\SQLab.RxCommon.csproj" />
+    <ProjectReference Include="..\..\ThirdParty\IbApiSocketClient\IbApiSocketClient.csproj" />
+  </ItemGroup>
+
+</Project>

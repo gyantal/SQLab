@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SQLab.Common\SQLab.Common.csproj" />
+    <ProjectReference Include="..\ThirdParty\Reactive\System.Reactive.PlatformServices\System.Reactive.PlatformServices.csproj" />
+  </ItemGroup>
+
+</Project>

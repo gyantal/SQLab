@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <DefineConstants>$(DefineConstants);NO_EVENTARGS_CONSTRAINT;HAS_EDI;HAS_WINRT;HAS_PROGRESS;PREFER_ASYNC;HAS_AWAIT;HAS_APTCA;NO_REMOTING;NO_SERIALIZABLE;NO_THREAD;CRIPPLED_REFLECTION;PLIB;USE_TIMER_SELF_ROOT</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="*\**\ImmutableList.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\System.Reactive.Core\System.Reactive.Core.csproj" />
+  </ItemGroup>
+
+</Project>

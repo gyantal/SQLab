@@ -1,9 +1,0 @@
-{
-  "projects": [
-    ".",
-    "ThirdParty/Reactive",
-    "ThirdParty",
-    "Server",
-    "Test"
-  ]
-}

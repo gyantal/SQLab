@@ -33,7 +33,7 @@ namespace Overmind
 # elif DEBUG
             runtimeConfig = "DEBUG";
 #endif
-            Console.WriteLine($"Hello Overmind, v1.0.11 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+            Console.WriteLine($"Hello Overmind, v1.0.12 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
             Console.Title = "Overmind v1.0.11";
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app

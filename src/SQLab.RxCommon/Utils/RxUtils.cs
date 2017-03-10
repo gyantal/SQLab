@@ -17,10 +17,10 @@ namespace RxCommon
             try
             {
                 var currDir = Directory.GetCurrentDirectory();  // where the project.json is G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor
-                var currProject = Path.Combine(currDir, "project.json"); // we can open it and read its contents later
+                var currProject = Path.Combine(currDir, p_filenameWithoutExt + ".csproj"); // we can open it and read its contents later
                 if (!File.Exists(currProject))
                 {
-                    Console.WriteLine($"!Error. We assume Current Directory is where project.json is. Cannot find: {currProject}");
+                    Console.WriteLine($"!Error. We assume Current Directory is where {p_filenameWithoutExt}.csproj is. Cannot find: {currProject}");
                     return false;
                 }
                 string logDir = Path.Combine(currDir, "..", "..", "..", "logs");

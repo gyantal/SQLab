@@ -215,7 +215,7 @@ ModelManifest.xml
 *.map
 /logs
 /src/Client/SQLab/typings/globals
-/src/Client/SQLab/wwwroot/charting_library
+/src/Client/SQLab/wwwroot/charting_library/
 /src/Client/SQLab/wwwroot/app/HealthMonitor/app.module.js
 /src/Client/SQLab/wwwroot/app/HealthMonitor/app.component.js
 /src/Client/SQLab/wwwroot/app/HealthMonitor/main.js
@@ -231,4 +231,3 @@ ModelManifest.xml
 /src/Client/SQLab/wwwroot/app/QuickTester/Strategies/TotM.js
 /src/Client/SQLab/wwwroot/app/QuickTester/Strategies/VXX_SPY_Controversial.js
 /src/Client/SQLab/wwwroot/app/QuickTester/Strategies/AssetAllocation.js
-
