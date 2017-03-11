@@ -36,11 +36,11 @@ namespace SqCommon
         public void StartTcpMessageListenerThreads()
         {
             // start 1 thread to listen TCP traffic (that can create many threads for reading message)
-            Task tcpListenerTask = Task.Factory.StartNew(TcpListenerLoop, TaskCreationOptions.LongRunning);  // it is a Background Thread. Checked. Tasks create Background Threads always.
+            Task tcpListenerTask = Task.Factory.StartNew(TcpListenerLoop, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("ParallelTcpListener.MainListener");  // it is a Background Thread. Checked. Tasks create Background Threads always.
 
             // start 2 threads max to process Messages (limit to not overwhelm the Server CPU)
-            Task msgProcessing1 = Task.Factory.StartNew(MessageProcessorWorkerLoop, TaskCreationOptions.LongRunning);  // it is a Background Thread. Checked. Tasks create Background Threads always.
-            Task msgProcessing2 = Task.Factory.StartNew(MessageProcessorWorkerLoop, TaskCreationOptions.LongRunning);  // it is a Background Thread. Checked. Tasks create Background Threads always.
+            Task msgProcessing1 = Task.Factory.StartNew(MessageProcessorWorkerLoop, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("ParallelTcpListener.processor1");  // it is a Background Thread. Checked. Tasks create Background Threads always.
+            Task msgProcessing2 = Task.Factory.StartNew(MessageProcessorWorkerLoop, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("ParallelTcpListener.processor2");  // it is a Background Thread. Checked. Tasks create Background Threads always.
         }
 
         

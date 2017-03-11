@@ -171,7 +171,8 @@ namespace VirtualBroker
                     // on 2016-05-02, RUT close price: YF: 1130.85, GF and IB: 1130.84, therefore 1 penny difference should be accepted.
                     // on 2016-05-20, RUT close price: YF: 1,094.76, GF and IB: 1,094.78, therefore 2 penny difference should be accepted.
                     StrongAssert.True(Utils.IsNear(rus2000LastCloseIB, m_rut[m_rut.Count - 1].AdjClosePrice, 0.025), Severity.NoException, $"Warning only! RUT: IB Last Close price ({rus2000LastCloseIB}) should be the same as last Close in SQL DB ({m_rut[m_rut.Count - 1].AdjClosePrice}). Maybe SQL DB has no yesterday data. Execution and trading will continue as usual by using last known price from SQL DB  ({m_rut[m_rut.Count - 1].AdjClosePrice}) as yesterday data. However, it is better to check the crawlers that fills SQL DB.");
-                } else
+                }
+                else
                 {
                     // after 3 days-weekends (Sa-Su-Mo) rus2000LastCloseIB = Monday's calculated RUT close, which is not in our database, so we cannot do safety check, but it is OK. After long weekends we simply trust the SQL database data.
                     StrongAssert.True(daysSinceLastSQLPrice <= 6, Severity.NoException, $"Warning! There is no RUT historical data in the SQL DB for the last 7 days. It is likely an error. Execution and trading will continue as usual by using last known price from SQL DB  ({m_rut[m_rut.Count - 1].AdjClosePrice}) as yesterday data. However, it is better to check the crawlers that fills SQL DB.");
@@ -181,7 +182,7 @@ namespace VirtualBroker
                 double rus2000Last = rtPrices[TickType.LAST].Price;    // as an Index, there is no Ask,Bid, therefore, there is no MidPrice, only LastPrice
                 // append an extra CSVData representing today close value (estimating)
                 m_rut.Add(new QuoteData() { Date = dateNowInET, AdjClosePrice = rus2000Last });
-                
+
 
                 // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
                 if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.

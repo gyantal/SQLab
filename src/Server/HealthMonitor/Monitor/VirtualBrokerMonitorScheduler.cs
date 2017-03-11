@@ -57,7 +57,7 @@ namespace HealthMonitor
         internal void InitVbScheduler()
         {
             Utils.Logger.Info("VbScheduler:Init()");
-            Task schedulerTask = Task.Factory.StartNew(VbSchedulerThreadRun, TaskCreationOptions.LongRunning);  // a separate thread. Not on ThreadPool
+            Task schedulerTask = Task.Factory.StartNew(VbSchedulerThreadRun, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("HealthMonitor.VbSchedulerThreadRun");  // a separate thread. Not on ThreadPool
         }
 
         private void VbSchedulerThreadRun()

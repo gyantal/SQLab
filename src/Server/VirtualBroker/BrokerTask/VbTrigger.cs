@@ -32,7 +32,7 @@ namespace VirtualBroker
                 Controller.g_brokerScheduler.ScheduleTrigger(this, isMarketTradingDay, marketOpenTimeUtc, marketCloseTimeUtc);
             }
 
-            Task.Factory.StartNew(BrokerTaskExecutionThreadRun, TaskCreationOptions.LongRunning);  // a separate thread. Not on ThreadPool, because it may take 30+ seconds
+            Task.Factory.StartNew(BrokerTaskExecutionThreadRun, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("VbTrigger.Timer_Elapsed()");  // a separate thread. Not on ThreadPool, because it may take 30+ seconds
         }
 
         private void BrokerTaskExecutionThreadRun()

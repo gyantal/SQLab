@@ -8,6 +8,7 @@ using System.Threading;
 using System.Runtime.Serialization.Json;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 namespace SqCommon
 {
@@ -334,6 +335,22 @@ namespace SqCommon
         //        return Platform.Windows;
         //}
         //}
+
+        // A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. 
+        // http://stackoverflow.com/questions/7883052/a-tasks-exceptions-were-not-observed-either-by-waiting-on-the-task-or-accessi
+        public static Task LogUnobservedTaskExceptions(this Task p_task, string p_msg)
+        {
+            Utils.Logger.Info("LogUnobservedTaskExceptions().Registering for " + p_msg);
+            p_task.ContinueWith(t =>
+             {
+                 var aggException = t.Exception.Flatten();
+                 foreach (var exception in aggException.InnerExceptions)
+                     Utils.Logger.Error(exception, "LogUnobservedTaskExceptions().ContinueWithTask(): " + p_msg);
+             },
+             TaskContinuationOptions.OnlyOnFaulted);
+            Utils.Logger.Info("LogUnobservedTaskExceptions().Registered for " + p_msg);
+            return p_task;
+        }
 
         public static void TcpClientDispose(TcpClient p_tcpClient)
         {

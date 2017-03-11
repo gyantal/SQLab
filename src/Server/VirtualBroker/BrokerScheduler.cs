@@ -14,7 +14,7 @@ namespace VirtualBroker
         internal void Init()
         {
             Utils.Logger.Info("****Scheduler:Init()");
-            Task schedulerTask = Task.Factory.StartNew(SchedulerThreadRun, TaskCreationOptions.LongRunning);  // a separate thread. Not on ThreadPool
+            Task schedulerTask = Task.Factory.StartNew(SchedulerThreadRun, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("BrokerScheduler.SchedulerThreadRun");  // a separate thread. Not on ThreadPool
         }
 
         private void SchedulerThreadRun()

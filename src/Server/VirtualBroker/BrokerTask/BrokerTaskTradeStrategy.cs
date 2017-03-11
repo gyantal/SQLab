@@ -304,7 +304,7 @@ namespace VirtualBroker
                 Task task = Task.Factory.StartNew((transaction) =>
                 {
                     Controller.g_gatewaysWatcher.WaitOrder(p_portfolio.IbGatewayUserToTrade, ((Transaction)transaction).VirtualOrderId, isSimulatedTrades);
-                }, transactions[i]);
+                }, transactions[i]).LogUnobservedTaskExceptions("BrokerTaskTradeStrategy.WaitTransactionsViaBrokerAndCollectExecutionInfo()");
                 tasks.Add(task);
             }
 

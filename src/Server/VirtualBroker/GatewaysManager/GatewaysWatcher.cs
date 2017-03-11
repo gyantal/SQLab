@@ -48,7 +48,7 @@ namespace VirtualBroker
             Utils.Logger.Info("****GatewaysWatcher:Init()");
             PersistedState = new SavedState();
             
-            Task reconnectToGatewaysTask = Task.Factory.StartNew(ReconnectToGateways);  // short running thread on ThreadPool
+            Task reconnectToGatewaysTask = Task.Factory.StartNew(ReconnectToGateways).LogUnobservedTaskExceptions("GatewaysWatcher.ReconnectToGateways()");  // short running thread on ThreadPool
         }
 
         async void ReconnectToGateways()
@@ -81,7 +81,7 @@ namespace VirtualBroker
 
                 //Task connectTask1 = Task.Factory.StartNew(ReconnectToGateway, gateway1, TaskCreationOptions.LongRunning);
                 //Task connectTask2 = Task.Factory.StartNew(ReconnectToGateway, gateway2, TaskCreationOptions.LongRunning);
-                var reconnectTasks = m_gateways.Select(r => Task.Factory.StartNew(ReconnectToGateway, r, TaskCreationOptions.LongRunning));
+                var reconnectTasks = m_gateways.Select(r => Task.Factory.StartNew(ReconnectToGateway, r, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("GatewaysWatcher.reconnectTasks"));
 
                 Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways()  reconnectTasks BEGIN");
                 // At the beginning: Linux had a problem to Connect sequentially on 2 separate threads. Maybe Linux DotNetCore 'Beta' implementation synchronization problem. Temporary connect sequentally. maybe doing Connection sequentially, not parallel would help

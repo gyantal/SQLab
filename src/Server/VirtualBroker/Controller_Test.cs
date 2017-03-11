@@ -2,10 +2,14 @@
 using AIFH_Vol3_Core.Core.ANN;
 using AIFH_Vol3_Core.Core.ANN.Activation;
 using AIFH_Vol3_Core.Core.ANN.Train;
+using DbCommon;
 using IBApi;
 using SqCommon;
 using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;     // this is the only timer available under DotNetCore
@@ -145,6 +149,79 @@ namespace VirtualBroker
 
         }
 
+
+        public void TestSqlDb()
+        {
+            var sqlResult = Test2ExecuteSqlQuery("SELECT * FROM [dbo].[AllTickersView] WHERE Ticker in ('UWM' , 'TWM')", null, null);
+            if (sqlResult.Count > 0)
+            {
+                var result = sqlResult[0].ToDictionary(r => (string)(r[2]), r => new Tuple<IAssetID, string>(DbUtils.MakeAssetID((AssetType)(int)r[0], (int)r[1]), (string)r[3]));
+                Console.WriteLine("TestSqlDb() seems to work. Result of SELECT arrived: " + result["UWM"].Item2 + "'s stockID: " + result["UWM"].Item1.ID);
+            }
+            else
+            {
+                Console.WriteLine("TestSqlDb() seems to NOT work.");
+            }
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+
+        public static IList<List<object[]>> Test2ExecuteSqlQuery(string p_sql, SqlConnection p_conn = null,
+            Dictionary<string, object> p_params = null, CancellationToken p_canc = default(CancellationToken))
+        {
+            Utils.Logger.Info($"ExecuteSqlQueryAsync() START ('{p_sql}')");
+
+            // 2017-03-11: https://github.com/dotnet/corefx/issues/14638
+            //"I've pinpointed it to that if I pass a ConnectionString to the SqlClient that doesn't include an explicit port 
+            //(i.e.simply on the form "Data Source: "), then the exception occurs and ends up in my TaskScheduler.UnobservedTaskException."
+            // TaskScheduler.UnobservedTaskException if port number is not given: (Object name: 'System.Net.Sockets.Socket'.) ---> System.ObjectDisposedException: Cannot access a disposed object.
+            string connString = ExeCfgSettings.ServerHedgeQuantConnectionString.Read();
+            p_conn = new SqlConnection(connString);
+            try
+            {
+                if (p_conn.State != System.Data.ConnectionState.Open)
+                    p_conn.Open();
+                var command = new SqlCommand(p_sql, p_conn) { CommandType = System.Data.CommandType.Text, CommandTimeout= 5 * 60 };
+                var result = new List<List<object[]>>();
+
+                SqlDataReader reader = command.ExecuteReader();
+                while (reader.HasRows)
+                {
+                    var resultInner = new List<object[]>();
+                    while (reader.Read())
+                    {
+                        object[] row = new object[reader.FieldCount];
+                        reader.GetValues(row);
+                        for (int i = row.Length; 0 <= --i;)
+                            if (row[i] is DBNull)
+                                row[i] = null;
+                        resultInner.Add(row);
+                    }
+                    reader.NextResult();
+                    result.Add(resultInner);
+                }
+                reader.Dispose();
+
+                command.Dispose();
+                p_conn.Dispose();   // p_conn.Close();
+                return result;
+            }
+            catch (Exception e)
+            {
+                SqCommon.Utils.Logger.Debug($"Exception: ExecuteSqlQueryAsync() catch inner exception.");
+                return new List<List<object[]>>();
+            }
+            finally
+            {
+                Utils.Logger.Info("ExecuteSqlQueryAsync() END");
+            }
+        }
+
+        
+        
+
         internal StringBuilder GetNextScheduleTimes(bool p_isHtml)
         {
             StringBuilder sb = new StringBuilder();
@@ -158,7 +235,7 @@ namespace VirtualBroker
                         nextTimeUtc = (DateTime)trigger.NextScheduleTimeUtc;
                 }
 
-                sb.AppendLine($"{taskSchema.Name}: {nextTimeUtc.ToString("MM-dd HH:mm:ss")}{((p_isHtml) ? "<br>"  :String.Empty)}");
+                sb.AppendLine($"{taskSchema.Name}: {nextTimeUtc.ToString("MM-dd HH:mm:ss")}{((p_isHtml) ? "<br>" : String.Empty)}");
             }
             return sb;
         }
@@ -212,7 +289,8 @@ namespace VirtualBroker
             //taskGood1.Wait();
 
             // 2. Or don't do Wait(), but protect locally   (for ThreadPool.Worker the only way is to protect locally like this, so maybe get used to this approach)
-            Task taskGood2 = Task.Factory.StartNew(x=> {
+            Task taskGood2 = Task.Factory.StartNew(x =>
+            {
                 try { throw new Exception("Test Exception in a Task"); }
                 catch (Exception e) { HealthMonitorMessage.SendException("Task1 Thread", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker); }
             }, TaskCreationOptions.LongRunning);
@@ -263,7 +341,7 @@ namespace VirtualBroker
 
             BrokerWrapperIb testImpl = new BrokerWrapperIb();
             EClientSocket client = testImpl.ClientSocket;
-            
+
             int portID = (int)GatewayUserPort.GyantalMain;      // the IBGateways ports on Release Linux and Developer Windows local should be the same.
             client.eConnect("127.0.0.1", portID, 0, false);     // it uses connectionID=0, which may be not good. Real VBroker uses 41 and 42 userIDs.
 
@@ -300,6 +378,6 @@ namespace VirtualBroker
             client.eDisconnect();
         }
 
-       
+
     }
 }

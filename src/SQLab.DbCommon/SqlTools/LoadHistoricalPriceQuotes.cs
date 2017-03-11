@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SqCommon;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
@@ -363,13 +364,23 @@ FROM (
         //I think what is actually happening is that the new build of SQLClient is validating this when before it was not.Therefore I'll still go ahead and remove it.
         //>Removing "Trusted_Connection=False;" from connectionString solved the problem.
 
+        // 2017-03-11: https://github.com/dotnet/corefx/issues/14638
+        //"I've pinpointed it to that if I pass a ConnectionString to the SqlClient that doesn't include an explicit port 
+        //(i.e.simply on the form "Data Source: "), then the exception occurs and ends up in my TaskScheduler.UnobservedTaskException."
+        // TaskScheduler.UnobservedTaskException if port number is not given: (Object name: 'System.Net.Sockets.Socket'.) ---> System.ObjectDisposedException: Cannot access a disposed object.
+
         // can RetrieveMultipleResults
         public static async Task<IList<List<object[]>>> ExecuteSqlQueryAsync(string p_sql, SqlConnection p_conn = null,
             Dictionary<string, object> p_params = null, CancellationToken p_canc = default(CancellationToken))
         {
+            Utils.Logger.Info($"ExecuteSqlQueryAsync() START ('{p_sql}')");
             bool leaveTheConnectionOpen = (p_conn != null);
+
             if (p_conn == null)
-                p_conn = new SqlConnection(ExeCfgSettings.ServerHedgeQuantConnectionString.Read());
+            {
+                string connString = ExeCfgSettings.ServerHedgeQuantConnectionString.Read();
+                p_conn = new SqlConnection(connString);
+            }
             try
             {
                 int nTry = int.Parse(ExeCfgSettings.SqlNTryDefault.Read() ?? "4");
@@ -456,7 +467,8 @@ FROM (
             finally
             {
                 using (leaveTheConnectionOpen ? null : p_conn) { }
-            }
+                Utils.Logger.Info("ExecuteSqlQueryAsync() END");
+            }       
         }
 
     } //~ Tools

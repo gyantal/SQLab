@@ -106,6 +106,19 @@ namespace SQLab
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             HealthMonitorMessage.SendException("Website.C#.TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+            e.SetObserved();        //  preventing it from triggering exception escalation policy which, by default, terminates the process.
+
+            Task senderTask = (Task)sender;
+            if (senderTask != null)
+            {
+                Utils.Logger.Info($"TaskScheduler_UnobservedTaskException(): sender is a task. TaskId: {senderTask.Id}, IsCompleted: {senderTask.IsCompleted}, IsCanceled: {senderTask.IsCanceled}, IsFaulted: {senderTask.IsFaulted}, TaskToString(): {senderTask.ToString()}");
+                if (senderTask.Exception == null)
+                    Utils.Logger.Info("SenderTask.Exception is null");
+                else
+                    Utils.Logger.Info($"SenderTask.Exception {senderTask.Exception.ToString()}");
+            }
+            else
+                Utils.Logger.Info("TaskScheduler_UnobservedTaskException(): sender is not a task.");
         }
 
         internal static void StrongAssertMessageSendingEventHandler(StrongAssertMessage p_msg)

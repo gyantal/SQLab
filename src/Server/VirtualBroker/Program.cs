@@ -71,7 +71,8 @@ namespace VirtualBroker
                             break;
                         case "5":
                             //Controller.g_controller.TestHardCrash();
-                            Controller.g_controller.EncogXORHelloWorld();
+                            //Controller.g_controller.EncogXORHelloWorld();
+                            Controller.g_controller.TestSqlDb();
                             break;
                         case "6":
                             Console.WriteLine(Controller.g_controller.GetNextScheduleTimes(false).ToString());
@@ -108,6 +109,19 @@ namespace VirtualBroker
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             HealthMonitorMessage.SendException("VBroker TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+            e.SetObserved();        //  preventing it from triggering exception escalation policy which, by default, terminates the process.
+
+            Task senderTask = (Task)sender;
+            if (senderTask != null)
+            {
+                Utils.Logger.Info($"TaskScheduler_UnobservedTaskException(): sender is a task. TaskId: {senderTask.Id}, IsCompleted: {senderTask.IsCompleted}, IsCanceled: {senderTask.IsCanceled}, IsFaulted: {senderTask.IsFaulted}, TaskToString(): {senderTask.ToString()}");
+                if (senderTask.Exception == null)
+                    Utils.Logger.Info("SenderTask.Exception is null");
+                else
+                    Utils.Logger.Info($"SenderTask.Exception {senderTask.Exception.ToString()}");
+            }
+            else
+                Utils.Logger.Info("TaskScheduler_UnobservedTaskException(): sender is not a task.");
         }
 
         //If there is a Crash or Error, Catch and hadle it. AggregateIBGateway should Report it. HealthMonitor should know about it,
@@ -134,7 +148,8 @@ namespace VirtualBroker
             Console.WriteLine($"2.  Test IbGateway Connection on port={(int)GatewayUserPort.GyantalMain} (Gyantal user) with clientID=0");
             Console.WriteLine("3.  Test HealthMonitor by sending ErrorFromVirtualBroker");
             Console.WriteLine("4.  Test Realtime price service");
-            Console.WriteLine("5.  Test Encog");
+            Console.WriteLine("5.  Test SQL DB or Encog");
+            //Console.WriteLine("5.  Test Encog");
             Console.WriteLine("6.  Show next schedule times");
             Console.WriteLine("7.  Elapse TaskShema (NeuralSniffer1) First Simulation Trigger");
             Console.WriteLine("8.  Elapse TaskShema (TAA) First Simulation Trigger");
