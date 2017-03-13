@@ -229,9 +229,9 @@ FROM (SELECT /*TopN*/ tt.* FROM (
                         if (isSimulated) query = null;
                     }
                     string sql = qHead + String.Join(",", qCols.Where((_, i) => (r.ReturnedColumns & (1 << i)) != 0)) + qTail;
-                    string s, p = String.Join(",", ticker ?? "", r.SubtableID, r.StartDateStr, r.EndDateStr, r.nQuotes,
+                    string p = String.Join(",", ticker ?? "", r.SubtableID, r.StartDateStr, r.EndDateStr, r.nQuotes,
                                                  (p_at == DbCommon.AssetType.Stock && !r.NonAdjusted) ? "1" : null);
-                    sqls[sql] = sqls.TryGetValue(sql, out s) ? s + "," + p : p;
+                    sqls[sql] = sqls.TryGetValue(sql, out string s) ? s + "," + p : p;
                 }
             var result = new List<object[]>();
             await Task.WhenAll(sqls.Select(kv => ExecuteSqlQueryAsync(kv.Key, p_canc: p_canc,
@@ -367,7 +367,7 @@ FROM (
         // 2017-03-11: https://github.com/dotnet/corefx/issues/14638
         //"I've pinpointed it to that if I pass a ConnectionString to the SqlClient that doesn't include an explicit port 
         //(i.e.simply on the form "Data Source: "), then the exception occurs and ends up in my TaskScheduler.UnobservedTaskException."
-        // TaskScheduler.UnobservedTaskException if port number is not given: (Object name: 'System.Net.Sockets.Socket'.) ---> System.ObjectDisposedException: Cannot access a disposed object.
+        // TaskScheduler.UnobservedTaskException if port number (",1433") is not given in ConnectionString: (Object name: 'System.Net.Sockets.Socket'.) ---> System.ObjectDisposedException: Cannot access a disposed object.
 
         // can RetrieveMultipleResults
         public static async Task<IList<List<object[]>>> ExecuteSqlQueryAsync(string p_sql, SqlConnection p_conn = null,

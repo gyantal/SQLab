@@ -176,7 +176,7 @@ namespace VirtualBroker
             // 2017-03-11: https://github.com/dotnet/corefx/issues/14638
             //"I've pinpointed it to that if I pass a ConnectionString to the SqlClient that doesn't include an explicit port 
             //(i.e.simply on the form "Data Source: "), then the exception occurs and ends up in my TaskScheduler.UnobservedTaskException."
-            // TaskScheduler.UnobservedTaskException if port number is not given: (Object name: 'System.Net.Sockets.Socket'.) ---> System.ObjectDisposedException: Cannot access a disposed object.
+            // TaskScheduler.UnobservedTaskException if port number (",1433") is not given in ConnectionString: (Object name: 'System.Net.Sockets.Socket'.) ---> System.ObjectDisposedException: Cannot access a disposed object.
             string connString = ExeCfgSettings.ServerHedgeQuantConnectionString.Read();
             p_conn = new SqlConnection(connString);
             try
@@ -210,7 +210,7 @@ namespace VirtualBroker
             }
             catch (Exception e)
             {
-                SqCommon.Utils.Logger.Debug($"Exception: ExecuteSqlQueryAsync() catch inner exception.");
+                SqCommon.Utils.Logger.Debug($"Exception: ExecuteSqlQueryAsync() catch inner exception: " + e.ToString());
                 return new List<List<object[]>>();
             }
             finally
@@ -250,8 +250,7 @@ namespace VirtualBroker
 
             foreach (var trigger in g_taskSchemas[p_taskSchemaInd].Triggers)
             {
-                object isSimulationObj;
-                if (trigger.TriggerSettings.TryGetValue(BrokerTaskSetting.IsSimulatedTrades, out isSimulationObj))
+                if (trigger.TriggerSettings.TryGetValue(BrokerTaskSetting.IsSimulatedTrades, out object isSimulationObj))
                 {
                     if ((bool)isSimulationObj)  // execute only if isSimulation  of the Trigger == True
                     {

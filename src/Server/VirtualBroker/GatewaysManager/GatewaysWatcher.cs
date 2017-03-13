@@ -72,8 +72,7 @@ namespace VirtualBroker
                     m_mainGatewayUser = GatewayUser.GyantalMain;
                 }
 
-                m_gateways = new List<Gateway>();   // delete previous Gateway connections
-                m_gateways.Add(gateway1);
+                m_gateways = new List<Gateway>() { gateway1 };   // delete previous Gateway connections
                 if (gateway2 != null)   // sometimes (for development), 1 gateway is used only
                     m_gateways.Add(gateway2);
                 if (gateway3 != null)   // sometimes (for development), 1 gateway is used only
@@ -136,6 +135,9 @@ namespace VirtualBroker
                 // for HarryLong
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TVIX"));
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TMV"));
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UNG"));
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("USO"));
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("JJC"));
 
                 // for TAA, but it is only temporary. We will not stream this unnecessary data all day long, as TAA can take its time. It only trades MOC. Extra 2-3 seconds doesn't matter.
                 // "TLT"+ "MDY","ILF","FEZ","EEM","EPP","VNQ","IBB"  +  "MVV", "URE", "BIB"

@@ -67,6 +67,18 @@ namespace SqCommon
             return (r1 < r2) && !IsNear(r1, r2, eps);
         }
 
+        /// <summary> False if r1 or r2 is NaN </summary>
+        public static bool IsMore(double r1, double r2)
+        {
+            return (r1 > r2) && !IsNear(r1, r2, REAL_EPS);
+        }
+
+        /// <summary> Negative epsilon specifies a dynamic epsilon (see EpsilonEqCmp) </summary>
+        public static bool IsMore(double r1, double r2, double eps)
+        {
+            return (r1 > r2) && !IsNear(r1, r2, eps);
+        }
+
         public static bool IsNear(float r1, float r2, float eps)
         {
             //if (eps <= -1)
@@ -80,6 +92,8 @@ namespace SqCommon
         {
             return IsNear(r1, r2, FLOAT_EPS);
         }
+
+       
 
         #endregion
 

@@ -241,8 +241,8 @@ namespace VirtualBroker
                         //jsonResultBuilder.AppendFormat(@"{{""Symbol"": ""{0}"", ""Ask"": {1}, ""Bid"", {2} }}", ticker, ask.Price, bid.Price);
 
                         // Warning. I am not sure why this return "" things is here inside the for loop. We may have to eliminate it. or change it to continue.
-                        PriceAndTime last, ask = null, bid = null;
-                        bool isFound = rtPrices.TryGetValue(TickType.LAST, out last);
+                        PriceAndTime ask = null, bid = null;
+                        bool isFound = rtPrices.TryGetValue(TickType.LAST, out PriceAndTime last);
                         if (!isFound)
                             return resultPrefix + @"{ ""Message"":  ""No last price yet. Maybe later."" }" + resultPostfix;    // this didn't happen with the Fixed tickers, as the records are already in the Array at Program start
                         if (sqTicker[0] != '^')

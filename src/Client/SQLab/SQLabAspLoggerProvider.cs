@@ -161,57 +161,66 @@ namespace SQLab
                 // also we are not interested in Kestrel Exception. Some of these exceptions are not bugs, but correctSSL or Authentication fails.
                 // we only interested in our bugs our Controller C# code
                 string fullExceptionStr = p_exception.ToString();   // You can simply print exception.ToString() -- that will also include the full text for all the nested InnerExceptions.
-                Utils.Logger.Debug($"IsSendableToHealthMonitorForEmailing(). Checking fullExceptionStr:'{fullExceptionStr}'");
+                bool isSendable = true;
                 if (fullExceptionStr.IndexOf("SSL Handshake failed with OpenSSL error") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf("ECONNRESET connection reset by peer") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf("The handshake failed due to an unexpected packet format") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf("ENOTCONN socket is not connected") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf("Authentication failed because the remote party has closed the transport stream") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"The path in 'value' must start with '/'") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"System.Threading.Tasks.TaskCanceledException: The request was aborted") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"The decryption operation failed, see inner exception") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Unrecognized HTTP version") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Malformed request: invalid headers") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Malformed request: MethodIncomplete") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Malformed request: TargetIncomplete") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Malformed request: VersionIncomplete") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"SSL Read BIO failed with OpenSSL error") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"The input string contains non-ASCII or null characters") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Error -110 ETIMEDOUT connection timed out") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"UvException: Error -32 EPIPE broken pipe") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Received an unexpected EOF or 0 bytes from the transport stream") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Microsoft.AspNetCore.Server.Kestrel.BadHttpRequestException: Invalid method") != -1)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Microsoft.AspNetCore.Server.Kestrel.BadHttpRequestException: Missing method") != -1)
-                    return false;
+                    isSendable = false;
+                if (fullExceptionStr.IndexOf(@"Microsoft.AspNetCore.Server.Kestrel.BadHttpRequestException: Invalid request line") != -1)
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Connection processing ended abnormally") != -1)  // System.NullReferenceException at  at Microsoft.AspNetCore.Server.Kestrel.Internal.Http.PathNormalizer.ContainsDotSegments(String path)
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"Missing request target") != -1)      // 'Microsoft.AspNetCore.Server.Kestrel.BadHttpRequestException: Missing request target.'
-                    return false;
+                    isSendable = false;
                 if (fullExceptionStr.IndexOf(@"System.IndexOutOfRangeException: Index was outside the bounds of the array." + Environment.NewLine + "   at Microsoft.AspNetCore.Routing.Template.TemplateMatcher.TryMatch") != -1)      // A Kestrel error when this query arrived: "Request starting HTTP/1.1 GET https://23.20.243.199//recordings//theme/main.css". Probably they will fix it, but I don't want to receive errors about it.
-                    return false;
+                    isSendable = false;
                 if ((fullExceptionStr.IndexOf(@"System.ArgumentException: Decoded string is not a valid IDN name.") != -1) &&      // If this Exception occurs in Kestrel, swallow it. If it occurs in our code, we send the error.
                     (fullExceptionStr.IndexOf(@"at Microsoft.AspNetCore.Hosting.Internal.HostingLoggerExtensions.RequestStarting(") != -1))
-                    return false;
-                return true;
+                    isSendable = false;
+                if (fullExceptionStr.IndexOf("A call to SSPI failed") != -1)
+                    isSendable = false;
+
+
+
+
+                Utils.Logger.Debug($"IsSendableToHealthMonitorForEmailing().IsSendable:{isSendable}, FullExceptionStr:'{fullExceptionStr}'");
+                return isSendable;
             }
 
             public void Dispose()

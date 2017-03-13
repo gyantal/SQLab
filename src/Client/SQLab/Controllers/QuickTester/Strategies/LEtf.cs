@@ -93,8 +93,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
           
 
             string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
-            DateTime commonAssetStartDate, commonAssetEndDate;
-            StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(quotes, tickers, ref warningToUser, out commonAssetStartDate, out commonAssetEndDate);
+            StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(quotes, tickers, ref warningToUser, out DateTime commonAssetStartDate, out DateTime commonAssetEndDate);
 
             List<DailyData> pv = new List<DailyData>();
 
@@ -238,8 +237,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             int iBullishEndDateInd = quotes1.FindIndex(iBullish, r => r.Date >= p_commonAssetEndDate);
             int nDays = iBullishEndDateInd - iBullish + 1;        // startDate, endDate is included
-            List<DailyData> pv = new List<DailyData>(nDays);
-            pv.Add(new DailyData() { Date = quotes1[iBullish].Date, AdjClosePrice = pvDaily });  // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            List<DailyData> pv = new List<DailyData>(nDays) {
+                new DailyData() { Date = quotes1[iBullish].Date, AdjClosePrice = pvDaily }};  // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
             for (int i = 1; i < nDays; i++) // march for all days
             {
@@ -293,8 +292,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             int iBullishEndDateInd = quotes1.FindIndex(iBullish, r => r.Date >= p_commonAssetEndDate);
             int nDays = iBullishEndDateInd - iBullish + 1;        // startDate, endDate is included
-            List<DailyData> pv = new List<DailyData>(nDays);
-            pv.Add(new DailyData() { Date = quotes1[iBullish].Date, AdjClosePrice = pvDaily });  // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+            List<DailyData> pv = new List<DailyData>(nDays) {
+                new DailyData() { Date = quotes1[iBullish].Date, AdjClosePrice = pvDaily } }; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
 
             // usually it is 50%=0.5, when it goes under 47%, short more of this side.
             double tooLowStockLeverage = 0.47;     

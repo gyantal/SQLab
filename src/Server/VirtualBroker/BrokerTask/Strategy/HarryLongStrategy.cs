@@ -38,7 +38,7 @@ namespace VirtualBroker
         public void Init(StringBuilder p_detailedReportSb)
         {
             m_detailedReportSb = p_detailedReportSb;
-            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(new List<string>() { harryLongConfig.Ticker1, harryLongConfig.Ticker2 }));   // task will start to run on another thread (in the threadpool)
+            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(harryLongConfig.Tickers.ToList()));   // task will start to run on another thread (in the threadpool)
         }
 
         public string StockIdToTicker(int p_stockID)
@@ -64,23 +64,28 @@ namespace VirtualBroker
         {
             Utils.Logger.Info("HarryLongStrategy.GeneratePositionSpecs() Begin.");
 
-            string consoleMsg = $"Target: { harryLongConfig.Ticker1}:{harryLongConfig.Weight1 * 100}%, { harryLongConfig.Ticker2}:{harryLongConfig.Weight2 * 100}%";
+            StringBuilder consoleMsgSb = new StringBuilder($"Target: ");
+            for (int i = 0; i < harryLongConfig.Tickers.Length; i++)
+            {
+                consoleMsgSb.Append($"Target: { harryLongConfig.Tickers[i]}:{harryLongConfig.AssetsWeights[i] * 100}%");
+                if (i != harryLongConfig.Tickers.Length - 1)
+                    consoleMsgSb.Append(", ");
+            }
+            string consoleMsg = consoleMsgSb.ToString();
             Utils.ConsoleWriteLine(ConsoleColor.Green, false, consoleMsg);
             Utils.Logger.Info(consoleMsg);
             m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">{consoleMsg}</font>");
 
             List <PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
-            // if Weight is 0,  the target position is 0.
-            if (harryLongConfig.Weight1 > 0.0000001)
-                specs.Add(new PortfolioPositionSpec() { Ticker = harryLongConfig.Ticker1, PositionType = PositionType.Long, Size = WeightedSize.Create(Math.Abs(harryLongConfig.Weight1)) });
-            else if (harryLongConfig.Weight1 < -0.0000001)
-                specs.Add(new PortfolioPositionSpec() { Ticker = harryLongConfig.Ticker1, PositionType = PositionType.Short, Size = WeightedSize.Create(Math.Abs(harryLongConfig.Weight1)) });
-
-            if (harryLongConfig.Weight2 > 0.0000001)
-                specs.Add(new PortfolioPositionSpec() { Ticker = harryLongConfig.Ticker2, PositionType = PositionType.Long, Size = WeightedSize.Create(Math.Abs(harryLongConfig.Weight2)) });
-            else if (harryLongConfig.Weight2 < -0.0000001)
-                specs.Add(new PortfolioPositionSpec() { Ticker = harryLongConfig.Ticker2, PositionType = PositionType.Short, Size = WeightedSize.Create(Math.Abs(harryLongConfig.Weight2)) });
-
+            for (int i = 0; i < harryLongConfig.Tickers.Length; i++)
+            {
+                double weight = harryLongConfig.AssetsWeights[i];
+                // if weight is 0,  the target position is 0.
+                if (Utils.IsMore(weight, 0))        // using REAL_EPS
+                    specs.Add(new PortfolioPositionSpec() { Ticker = harryLongConfig.Tickers[i], PositionType = PositionType.Long, Size = WeightedSize.Create(Math.Abs(weight)) });
+                else if (Utils.IsLess(weight, 0))
+                    specs.Add(new PortfolioPositionSpec() { Ticker = harryLongConfig.Tickers[i], PositionType = PositionType.Short, Size = WeightedSize.Create(Math.Abs(weight)) });
+            }
             return specs;
         }
     }

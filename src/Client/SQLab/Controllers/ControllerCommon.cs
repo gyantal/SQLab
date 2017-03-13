@@ -33,8 +33,7 @@ namespace SQLab.Controllers
             //    sbUser.AppendLine(claim.Type + ": " + claim.Value);
             //}
 
-            string email, ip;
-            GetRequestUserAndIP(p_controller, out email, out ip);
+            GetRequestUserAndIP(p_controller, out string email, out string ip);
 
             p_logger.LogInformation($"!!! User '{email}' from '{ip}' requesting '{((p_controller.HttpContext.Request.Path.HasValue) ? p_controller.HttpContext.Request.Path.Value : String.Empty)}'.");
             if (email == "Unknown")
@@ -90,9 +89,7 @@ namespace SQLab.Controllers
 
         public static T GetHeaderValueAs<T>(Controller p_controller, string p_headerName)
         {
-            StringValues values;
-
-            if (p_controller.HttpContext?.Request?.Headers?.TryGetValue(p_headerName, out values) ?? false)
+            if (p_controller.HttpContext?.Request?.Headers?.TryGetValue(p_headerName, out StringValues values) ?? false)
             {
                 string rawValues = values.ToString();   // writes out as Csv when there are multiple.
 
