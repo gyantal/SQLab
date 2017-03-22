@@ -168,6 +168,7 @@ namespace IBApi
                 case DELAYED_VOLUME:              return "delayedVolume";
                 case DELAYED_CLOSE:               return "delayedClose";
                 case DELAYED_OPEN:                return "delayedOpen";
+                case MID:                         return "MID";
                 default:                          return "unknown";
             }
         }

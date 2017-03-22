@@ -42,14 +42,14 @@ namespace SqCommon
         }
 
         // all the exceptions are sent, because they are important Even if many happens in a 30 minutes period
-        public static void SendException(string p_locationMsg, Exception e, HealthMonitorMessageID p_healthMonId)
+        public static void SendException(string p_locationMsg, Exception p_e, HealthMonitorMessageID p_healthMonId)
         {
             //Utils.Logger.Warn($"HealthMonitorMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
-            Utils.Logger.Warn($"HealthMonitorMessage.SendException(): Exception occured in {p_locationMsg}. Exception: '{ e.ToString()}'");
+            Utils.Logger.Warn($"HealthMonitorMessage.SendException(): Exception occured in {p_locationMsg}. Exception: '{ p_e.ToString()}'");
             if (!(new HealthMonitorMessage()
             {
                 ID = p_healthMonId,
-                ParamStr = $"Exception in {p_locationMsg}. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'",
+                ParamStr = $"Exception in {p_locationMsg}. Exception: '{ p_e.ToStringWithShortenedStackTrace(400)}'",
                 ResponseFormat = HealthMonitorMessageResponseFormat.None
             }.SendMessage().Result))
             {

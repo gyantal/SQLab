@@ -17,6 +17,7 @@ namespace VirtualBroker
 
     public class BrokerWrapperIb : IBrokerWrapper
     {
+        GatewayUser m_gatewayUser;
         EClientSocket clientSocket;
         public readonly EReaderSignal Signal = new EReaderMonitorSignal();
         EReader m_eReader;
@@ -58,8 +59,9 @@ namespace VirtualBroker
         }
 
 
-        public virtual bool Connect(int p_socketPort, int p_brokerConnectionClientID)
+        public virtual bool Connect(GatewayUser p_gatewayUser, int p_socketPort, int p_brokerConnectionClientID)
         {
+            m_gatewayUser = p_gatewayUser;
             Utils.Logger.Info($"ClientSocket.eConnect(127.0.0.1, {p_socketPort}, {p_brokerConnectionClientID}, false)");
             ClientSocket.eConnect("127.0.0.1", p_socketPort, p_brokerConnectionClientID, false);
             //Create a reader to consume messages from the TWS. The EReader will consume the incoming messages and put them in a queue
@@ -179,8 +181,9 @@ namespace VirtualBroker
 
         public virtual void error(int id, int errorCode, string errorMsg)
         {
-            string errMsg = "ErrId: " + id + ", ErrCode: " + errorCode + ", Msg: " + errorMsg;
+            string errMsg = "Id: " + id + ", ErrCode: " + errorCode + ", Msg: " + errorMsg;
             Utils.Logger.Debug("BrokerWrapper.error(). " + errMsg); // even if we return and continue, Log it, so it is conserved in the log file.
+            bool isAddOrderInfoToErrMsg = false;
 
             if (id == -1)       // -1 probably means there is no ID of the error. It is a special notation.
             {
@@ -221,6 +224,12 @@ namespace VirtualBroker
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
+            if (errorCode == 201)
+            {
+                // Id: 19, ErrCode: 201, Msg: Order rejected - reason:The contract is not available for short sale
+                isAddOrderInfoToErrMsg = true;
+            }
+
             // after subscribing to Market Snapshot data for a ticker, and we call ClientSocket.cancelMktData(p_marketDataId); that is executed properly
             // however IBGateway receives prices for the same ticker, and gives back the Error message here.
             // It occurs after alwayl all CannceMktData(). We should ignore it.
@@ -236,6 +245,12 @@ namespace VirtualBroker
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
+            if (errorCode == 404)
+            {
+                // ErrId: 28, ErrCode: 404, Msg: Order held while securities are located.  // when stocks cannot be borrowed for shorting. OrderID = Id
+                isAddOrderInfoToErrMsg = true;
+            }
+
             if (errorCode == 506)
             {
                 // sometimes it happens at connection. skip this error. IF Connection doesn't happen after trying it 3 times. VBGateway will notify HealthMonitor anyway.
@@ -245,10 +260,20 @@ namespace VirtualBroker
                 return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
-
             // SERIOUS ERRORS AFTER THIS LINE. Notify HealthMonitor.
             // after asking realtime price as "s=^VIX,^^^VIX201610,^^^VIX201611,^VXV,^^^VIX201701,VXX,^^^VIX201704&f=l"
             // Code: 200, Msg: The contract description specified for VIX is ambiguous; you must specify the multiplier or trading class.
+            if (isAddOrderInfoToErrMsg)
+            {
+                if (!OrderSubscriptions.TryGetValue(id, out OrderSubscription orderSubscription))
+                {
+                    errMsg += $". OrderId {id} cannot be found in OrderSubscriptions";
+                }
+                else
+                {
+                    errMsg += $". OrderId {id} is found in OrderSubscriptions: {orderSubscription.Order.Action} {orderSubscription.Order.TotalQuantity} {orderSubscription.Contract.Symbol} on GatewayUser {m_gatewayUser}.";
+                }
+            }
             error(errMsg);
         }
 
@@ -372,14 +397,12 @@ namespace VirtualBroker
                 {
                     if (item.Key == TickType.MID)
                     {
-                        PriceAndTime priceAndTimeAsk = null;
-                        if (tickData.TryGetValue(TickType.ASK, out priceAndTimeAsk))
+                        if (tickData.TryGetValue(TickType.ASK, out PriceAndTime priceAndTimeAsk))
                         {
-                            PriceAndTime priceAndTimeBid = null;
-                            if (tickData.TryGetValue(TickType.BID, out priceAndTimeBid))
+                            if (tickData.TryGetValue(TickType.BID, out PriceAndTime priceAndTimeBid))
                             {
-                                item.Value.Time = (priceAndTimeAsk.Time < priceAndTimeBid.Time) ? priceAndTimeAsk.Time : priceAndTimeBid.Time;  // use the older, smaller Time
                                 item.Value.Price = (priceAndTimeAsk.Price + priceAndTimeBid.Price) / 2.0;
+                                item.Value.Time = (priceAndTimeAsk.Time < priceAndTimeBid.Time) ? priceAndTimeAsk.Time : priceAndTimeBid.Time;  // use the older, smaller Time  
                             }
                         }
                     }
@@ -390,6 +413,24 @@ namespace VirtualBroker
                         {
                             item.Value.Time = priceAndTime.Time;
                             item.Value.Price = priceAndTime.Price;
+                        }
+                    }
+
+                    if (item.Key == TickType.MID || item.Key == TickType.LAST)  // override the time to timestamp, which comes every 1 second.  if item.Key = LastClose price, we don't need to bother with this
+                    {
+                        // it happens that ASK, BID doesn't change for 40-60 minutes, when the $price is small. For example USO was ASK=10.11, BID=10.10 on 2017-03-22. In even smaller case 1 cent change could be 1%, which means ASK, BID may not change for the whole day.
+                        // However, LastPrice was changing more frequently (every minute), alternating between 10.10 or 10.11. When checking the Staleness of MID price, we should use the LastPrice Time, not the time of ASK or BID, because that may not change.
+                        // we can give the benefit of the doubt that if askBid is given, but changed a long time ago, LastPrice is also given => we use the lastPrice time, and assume AskBid is still the same value as it was 30 minutes ago.
+                        // However, if lastPrice is not frequent either, it is not good either. 
+                        // Timestamp comes exactly every 1 second  (if there is a good connection with IB Gateway). That is the best solution to check whether the data is stale.
+
+                        if (Int64.TryParse(mktDataSubscr.LastTimestampStr, out Int64 timestamp))
+                        {
+                            item.Value.Time = Utils.UnixTimeStampToDateTimeUtc(timestamp);      // override it to a more recent time
+                        }
+                        else  // if time stamp is invalid, NaN, etc. give a warning, but continue
+                        {
+                            Utils.Logger.Warn($"Warning. Timestamp {mktDataSubscr.LastTimestampStr} cannot be converted to Int64. We have the Realtime price of {TickType.getField(item.Key)} for '{p_contract.Symbol}', which is {item.Value.Price:F2}. Maybe Gateway was disconnected. Instead of timestamp date, we fall back to the data last update date.");
                         }
                     }
                 }
@@ -409,10 +450,14 @@ namespace VirtualBroker
                 // for daily High, Daily Low, Previous Close, etc. don't check this staleness
                 bool doCheckDataStaleness = !Double.IsNaN(item.Value.Price) &&
                     (item.Key != TickType.LOW && item.Key != TickType.HIGH && item.Key != TickType.CLOSE);
-                if (doCheckDataStaleness && (DateTime.UtcNow - item.Value.Time).TotalMinutes > 35.0)
+                if (doCheckDataStaleness)
                 {
-                    Utils.Logger.Warn($"Warning. Something may be wrong. We have the RT price of {item.Key} for '{p_contract.Symbol}' , but it is older than 5 minutes. Maybe Gateway was disconnected. Returning False for price.");
-                    isOk = false;
+                    DateTime quoteAcquirationTime = item.Value.Time;
+                    if ((DateTime.UtcNow - quoteAcquirationTime).TotalMinutes > 35.0)
+                    {
+                        Utils.Logger.Warn($"Warning. Something may be wrong. We have the Realtime price of {TickType.getField(item.Key)} for '{p_contract.Symbol}', which is {item.Value.Price:F2} , but it is older than 35 minutes. Maybe Gateway was disconnected. Returning False for price.");
+                        isOk = false;
+                    }
                 }
             }
 
@@ -447,7 +492,7 @@ namespace VirtualBroker
         //Tick Price. Ticker Id:1001, Field: low, Price: 20.95, CanAutoExecute: 0
         //Tick Price. Ticker Id:1001, Field: close, Price: 21.59, CanAutoExecute: 0
         //Tick Price. Ticker Id:1001, Field: open, Price: 21.31, CanAutoExecute: 0
-        //Tick string. Ticker Id:1001, Type: lastTimestamp, Value: 1457126686
+        //Tick string. Ticker Id:1001, Type: lastTimestamp, Value: 1457126686, which is a UNIX timestamp epoch: https://www.epochconverter.com/  seconds since Jan 01 1970. (UTC)
 
         ////2. These were the initial values. Later, this is the regular changes that comes 
         //Tick Generic. Ticker Id:1001, Field: halted, Value: 0
@@ -628,8 +673,7 @@ namespace VirtualBroker
             Utils.Logger.Info("OrderStatus. Id: " + p_realOrderId + ", Status: " + status + ", Filled" + filled + ", Remaining: " + remaining
                 + ", AvgFillPrice: " + avgFillPrice + ", PermId: " + permId + ", ParentId: " + parentId + ", LastFillPrice: " + lastFillPrice + ", ClientId: " + clientId + ", WhyHeld: " + whyHeld);
 
-            OrderSubscription orderSubscription = null;
-            if (!OrderSubscriptions.TryGetValue(p_realOrderId, out orderSubscription))
+            if (!OrderSubscriptions.TryGetValue(p_realOrderId, out OrderSubscription orderSubscription))
             {
                 Utils.Logger.Error($"OrderSubscription orderId {p_realOrderId} is not expected");
                 return;
@@ -743,8 +787,7 @@ namespace VirtualBroker
         public bool WaitOrder(int p_realOrderId, bool p_isSimulatedTrades)
         {
             // wait here
-            OrderSubscription orderSubscription = null;
-            if (!OrderSubscriptions.TryGetValue(p_realOrderId, out orderSubscription))
+            if (!OrderSubscriptions.TryGetValue(p_realOrderId, out OrderSubscription orderSubscription))
             {
                 Utils.Logger.Error($"OrderSubscription orderId {p_realOrderId} is not expected");
                 return false;

@@ -38,8 +38,8 @@ namespace VirtualBroker
         public ConcurrentDictionary<int, PriceAndTime> Prices { get; set; }
         // Do we get this value every second really?, even if no new Ask or Bid Price has changed? If that is true, it is a good validator that we have the current price data or not.
         // If we don't get TimeStamp every second, we can use the Time value in the PriceAndTime() to know when did we received the data.
-        // This tick represents "timestamp of the last Last tick" value in seconds (counted from 00:00:00 1 Jan 1970 GMT). 
-        public string LastTimestampStr { get; set; } = "0";   // store it quickly in i String, it arrives in a string. Do not process it unnecessarily.
+        // This tick represents "timestamp of the last Last tick" value in seconds (counted from 00:00:00 1 Jan 1970 UTC).  Value: 1457126686, which is a UNIX timestamp epoch: https://www.epochconverter.com/  seconds since Jan 01 1970. (UTC)
+        public string LastTimestampStr { get; set; } = "0";   // store it quickly in i String, it arrives in a string. Do not process it unnecessarily.  
 
         public MktDataSubscription()
         {
@@ -85,7 +85,7 @@ namespace VirtualBroker
     {
         string IbAccountsList { get; set; }
 
-        bool Connect(int p_socketPort, int p_brokerConnectionClientID);
+        bool Connect(GatewayUser p_gatewayUser, int p_socketPort, int p_brokerConnectionClientID);
         void Disconnect();
         bool IsConnected();
 

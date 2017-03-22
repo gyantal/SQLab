@@ -105,7 +105,25 @@ namespace SQLab
         // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
-            HealthMonitorMessage.SendException("Website.C#.TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+            //1. Any wrong http request that is quickly aborted later will raise UnobservedTaskException() at the next GC.Collect():
+            //"TaskScheduler_UnobservedTaskException. Exception: 'System.AggregateException: A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. As a result, the unobserved exception was rethrown by the finalizer thread. (The request was aborted) ---> System.Threading.Tasks.TaskCanceledException: The request was aborted
+            //   --- End of inner exception stack trace ---
+            //---> (Inner Exception #0) System.Threading.Tasks.TaskCanceledException: The request was aborted<---
+            //"
+            //For example: http://www.snifferquant.net/aaaa  (however, I cannot reproduce with this, because I don't abort the request in my browser. However, these guys ask a fake query, and they quickly abort the request, so they can do 50 queries per second very quickly.)
+            //0315T21:27:14.379#3#Info: Request starting HTTP/1.1 GET http://www.snifferquant.net/aaaa    
+            //0315T21:27:14.379#3#Info: Request finished in 0.2086ms 404 
+            //And there are many naughty guys, who just simply try random queries for vulnerability seek. 
+            //Is 3 seconds I quickly had 50 of these (that were aborted quickly too) like:
+            //0315T21:27:14.119#9#Info: Request starting HTTP/1.1 GET http://23.20.243.199/w00tw00t.at.blackhats.romanian.anti-sec:)  
+            //0315T21:27:14.126#9#Info: Request finished in 6.942ms 404 
+            //0315T21:27:14.379#3#Info: Request starting HTTP/1.1 GET http://23.20.243.199/scripts/setup.php  
+            //0315T21:27:14.379#3#Info: Request finished in 0.2086ms 404 
+            //>see: my custom code hasn't been even invoked. Kestrel returns 404 not found, and my code has no chance to do anything at all.
+            //>Solution: It is inevitable that crooks tries this query-and-abort and Kestrel is written badly that it doesn't handle Abortion properly.
+            //So, in UnobservedTaskException() filters these aborts and don't send it to HealthMonitor.
+            if (SQLabCommonAspLogger.IsSendableToHealthMonitorForEmailing(e.Exception))
+                HealthMonitorMessage.SendException("Website.C#.TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
             e.SetObserved();        //  preventing it from triggering exception escalation policy which, by default, terminates the process.
 
             Task senderTask = (Task)sender;

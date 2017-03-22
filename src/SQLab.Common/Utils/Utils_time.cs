@@ -119,7 +119,20 @@ namespace SqCommon
         }
 
 
+        public static DateTime UnixTimeStampToDateTimeUtc(long p_unixTimeStamp)      // Int would roll over to a negative in 2038 (if you are using UNIX timestamp), so long is safer
+        {
+            // Unix timestamp is seconds past epoch
+            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddSeconds(p_unixTimeStamp).ToLocalTime();
+            return dtDateTime;
+        }
 
-       
+        public static DateTime UnixTimeStampToDateTimeLoc(long p_unixTimeStamp)      // Int would roll over to a negative in 2038 (if you are using UNIX timestamp), so long is safer
+        {
+            return UnixTimeStampToDateTimeUtc(p_unixTimeStamp).ToLocalTime();
+        }
+
+
+
     }
 }

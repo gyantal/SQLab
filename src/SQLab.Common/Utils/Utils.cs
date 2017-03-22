@@ -448,11 +448,12 @@ namespace SqCommon
             int nDownload = 0;
             do
             {
+
                 try
                 {
                     nDownload++;
                     p_webpage = new HttpClient().GetStringAsync(p_url).Result;
-                    Utils.Logger.Debug(String.Format("DownloadStringWithRetry()__{0}, nDownload-{1}, Length of reply:{2}", p_url, nDownload, p_webpage.Length));
+                    Utils.Logger.Debug(String.Format("DownloadStringWithRetry() OK:{0}, nDownload-{1}, Length of reply:{2}", p_url, nDownload, p_webpage.Length));
                     return true;
                 }
                 catch (Exception ex)

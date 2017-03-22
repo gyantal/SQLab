@@ -183,7 +183,7 @@ namespace VirtualBroker
                         else
                             ibWrapper = new BrokerWrapperYF();     // Before market open, or After market close. Simulated real time price is needed to determine current portfolio $size.
                     }
-                    if (!ibWrapper.Connect(gateway.SocketPort, gateway.BrokerConnectionClientID))
+                    if (!ibWrapper.Connect(gateway.GatewayUser, gateway.SocketPort, gateway.BrokerConnectionClientID))
                     {
                         Utils.Logger.Error($"Timeout or other Error (like serverVersion=14). Cannot connect to IbGateway {gateway.GatewayUser} on port { gateway.SocketPort}. Trials: {nConnectionRetry}/{nMaxRetry}");
                         continue;

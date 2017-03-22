@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Net.Sockets;
 using System.IO;
 using SqCommon;
+using System.Threading;
 
 // For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -148,5 +149,37 @@ namespace SQLab.Controllers
         }
 
 
+
+        [HttpGet]   // Ping is accessed by the HealthMonitor every 9 minutes (to keep it alive), no no GoogleAuth there
+        public ActionResult TestUnobservedTaskException20170315()
+        {
+            Utils.Logger.Info("TestUnobservedTaskException20170315() BEGIN");
+            GC.Collect();       // temp: for debugging exceptions
+            GC.WaitForPendingFinalizers();
+            Utils.Logger.Info("TestUnobservedTaskException20170315() GC.Collected() 1");
+            Thread.Sleep(1000);
+            Utils.Logger.Info("TestUnobservedTaskException20170315() Sleep(1000) 1");
+
+            string webpageHist;
+            bool isOk = Utils.DownloadStringWithRetry(out webpageHist, "http://vixcentral.com/historical/?days=10000", 3, TimeSpan.FromSeconds(2), true);
+            if (!isOk)
+                return null;
+
+            Utils.Logger.Info("TestUnobservedTaskException20170315() 300K was downloaded");
+            Thread.Sleep(1000);
+            Utils.Logger.Info("TestUnobservedTaskException20170315() Sleep(1000) 2");
+
+            ////Downloading live data from vixcentral.com.
+            //string webpageLive;
+            //bool isOkLive = Utils.DownloadStringWithRetry(out webpageLive, "http://vixcentral.com", 3, TimeSpan.FromSeconds(2), true);
+            //if (!isOkLive)
+            //    return null;
+
+            GC.Collect();       // temp: for debugging exceptions
+            GC.WaitForPendingFinalizers();
+            Utils.Logger.Info("TestUnobservedTaskException20170315() GC.Collected() 2");
+
+            return Content(@"<HTML><body>TestUnobservedTaskException20170315() finished OK. <br> Webserver UtcNow:" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "</body></HTML>", "text/html");
+        }
     }
 }
