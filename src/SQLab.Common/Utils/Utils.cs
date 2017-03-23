@@ -535,6 +535,7 @@ namespace SqCommon
                     p_config["EmailRobin"].ToLower(),
                     p_config["EmailLaci"].ToLower(),
                     p_config["EmailBalazs"].ToLower(),
+                    p_config["EmailTamas"].ToLower(),
                     p_config["EmailCharmat0"].ToLower(),
                     p_config["EmailCharmat1"].ToLower(),
                     p_config["EmailCharmat2"].ToLower(),

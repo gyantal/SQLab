@@ -318,7 +318,7 @@ namespace VirtualBroker
         public virtual int ReqMktDataStream(Contract p_contract, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null)
         {
             int marketDataId = GetUniqueReqMktDataID;
-            Utils.Logger.Debug($"ReqMktDataStream() { marketDataId} START");
+            Utils.Logger.Debug($"ReqMktDataStream() {p_contract.Symbol}: { marketDataId} START");
             ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
             //mainClient.reqMktData(marketDataId, contractSPY, "221", false, null);
             ClientSocket.reqMktData(marketDataId, p_contract, null, p_snapshot, null);
@@ -402,7 +402,7 @@ namespace VirtualBroker
                             if (tickData.TryGetValue(TickType.BID, out PriceAndTime priceAndTimeBid))
                             {
                                 item.Value.Price = (priceAndTimeAsk.Price + priceAndTimeBid.Price) / 2.0;
-                                item.Value.Time = (priceAndTimeAsk.Time < priceAndTimeBid.Time) ? priceAndTimeAsk.Time : priceAndTimeBid.Time;  // use the older, smaller Time  
+                                item.Value.Time = (priceAndTimeAsk.Time > priceAndTimeBid.Time) ? priceAndTimeAsk.Time : priceAndTimeBid.Time;  // use the later, bigger Time  (we know that data is not stale, it is actual)
                             }
                         }
                     }
@@ -422,11 +422,21 @@ namespace VirtualBroker
                         // However, LastPrice was changing more frequently (every minute), alternating between 10.10 or 10.11. When checking the Staleness of MID price, we should use the LastPrice Time, not the time of ASK or BID, because that may not change.
                         // we can give the benefit of the doubt that if askBid is given, but changed a long time ago, LastPrice is also given => we use the lastPrice time, and assume AskBid is still the same value as it was 30 minutes ago.
                         // However, if lastPrice is not frequent either, it is not good either. 
-                        // Timestamp comes exactly every 1 second  (if there is a good connection with IB Gateway). That is the best solution to check whether the data is stale.
-
+                        // Most of the time, (if last or ask or bid doesn't change) Timestamp comes exactly every 1 second  (if there is a good connection with IB Gateway). That is the best solution to check whether the data is stale.
+                        // However, on 2017-03-23, for MVV it was different. Timestamp come sporadically in the morning, just once every 3 minutes. and at 18:35, the last timestamp come. After that no Timestamp, but Ask,Bid changed every 1 second.
+                        //0323T17:28:41.123#18#5#Info: Tick string. Ticker Id:1019, Type: lastTimestamp, Value: 1490290120
+                        //0323T17: 32:33.175#18#5#Info: Tick string. Ticker Id:1019, Type: lastTimestamp, Value: 1490290352
+                        //0323T17: 32:40.564#18#5#Info: Tick string. Ticker Id:1019, Type: lastTimestamp, Value: 1490290360
+                        //0323T18: 35:11.396#18#5#Info: Tick string. Ticker Id:1019, Type: lastTimestamp, Value: 1490294111		// that was the last timestamp
+                        //... but later, askbid changes frequently:
+                        //0323T18: 35:11.645#18#5#Info: Tick Price. Tick Id:1019, Field: bidPrice, Price: 98.83, CanAutoExecute: 1
+                        //0323T18: 35:11.896#18#5#Info: Tick Price. Tick Id:1019, Field: bidPrice, Price: 98.81, CanAutoExecute: 1
+                        //Therefore, timestamp alone cannot be used. So, Find the Max(TimeStampTime, AskBid time)
                         if (Int64.TryParse(mktDataSubscr.LastTimestampStr, out Int64 timestamp))
                         {
-                            item.Value.Time = Utils.UnixTimeStampToDateTimeUtc(timestamp);      // override it to a more recent time
+                            DateTime timestampTime = Utils.UnixTimeStampToDateTimeUtc(timestamp);
+                            if (timestampTime > item.Value.Time)    // use the later, bigger Time  (we know that data is not stale, it is actual)
+                                item.Value.Time = timestampTime;
                         }
                         else  // if time stamp is invalid, NaN, etc. give a warning, but continue
                         {
@@ -455,7 +465,7 @@ namespace VirtualBroker
                     DateTime quoteAcquirationTime = item.Value.Time;
                     if ((DateTime.UtcNow - quoteAcquirationTime).TotalMinutes > 35.0)
                     {
-                        Utils.Logger.Warn($"Warning. Something may be wrong. We have the Realtime price of {TickType.getField(item.Key)} for '{p_contract.Symbol}', which is {item.Value.Price:F2} , but it is older than 35 minutes. Maybe Gateway was disconnected. Returning False for price.");
+                        Utils.Logger.Warn($"Warning. Something may be wrong. We have the Realtime price of {TickType.getField(item.Key)} for '{p_contract.Symbol}' (MarketDataId:{mktDataSubscr.MarketDataId}), which is {item.Value.Price:F2} , but it ({quoteAcquirationTime.ToString()}) is older than 35 minutes. Maybe Gateway was disconnected. Returning False for price.");
                         isOk = false;
                     }
                 }
@@ -521,9 +531,9 @@ namespace VirtualBroker
             //}
             // instead of Thread.Sleep(2000);  // wait until data is here; TODO: make it sophisticated later
             //RtpAppController.gBrokerAPI.m_priceTickARE.Reset();
-            //Console.WriteLine("Tick Price. Ticker Id:"+tickerId+", Field: "+ TickType.getField(field) + ", Price: " +price+", CanAutoExecute: "+canAutoExecute);
+            //Console.WriteLine("Tick Price. Tick Id:"+tickerId+", Field: "+ TickType.getField(field) + ", Price: " +price+", CanAutoExecute: "+canAutoExecute);
             // Logger.Warn will put it to the Console too. Temporary
-            //Utils.Logger.Warn("Tick Price. Ticker Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
+            //Utils.Logger.Warn("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
             Utils.Logger.Info("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
 
             MktDataSubscription mktDataSubscription = null;
@@ -553,7 +563,7 @@ namespace VirtualBroker
                     tickData[field].Time = DateTime.UtcNow;
                 }
                 else
-                    Console.WriteLine("Tick Price. Ticker Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
+                    Console.WriteLine("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
             }
 
             if (mktDataSubscription.MarketDataArrived != null)
@@ -564,12 +574,12 @@ namespace VirtualBroker
         public virtual void tickSize(int tickerId, int field, int size)
         {
             // we don't need the AskSize, BidSize, LastSize values, so we don't process them unnecessarily.
-            //Console.WriteLine("Tick Size. Ticker Id:" + tickerId + ", Field: " + TickType.getField(field)  + ", Size: " + size);
+            //Console.WriteLine("Tick Size. Tick Id:" + tickerId + ", Field: " + TickType.getField(field)  + ", Size: " + size);
         }
 
         public virtual void tickString(int tickerId, int tickType, string p_value)
         {
-            Utils.Logger.Info("Tick string. Ticker Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + p_value);
+            Utils.Logger.Info("Tick string. Tick Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + p_value);
             // lastTimestamp example: "1303329585"
             if (tickType == TickType.LAST_TIMESTAMP)
             {
@@ -582,12 +592,12 @@ namespace VirtualBroker
                 mktDataSubscription.LastTimestampStr = p_value;
             }
             else
-                Console.WriteLine("Tick string. Ticker Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + p_value);
+                Console.WriteLine("Tick string. Tick Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + p_value);
         }
 
         public virtual void tickGeneric(int tickerId, int field, double value)
         {
-            Utils.Logger.Info("Tick Generic. Ticker Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value);
+            Utils.Logger.Info("Tick Generic. Tick Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value);
             if (field == TickType.HALTED)
             {
                 //https://www.interactivebrokers.co.uk/en/software/api/apiguide/tables/tick_types.htm
@@ -596,11 +606,11 @@ namespace VirtualBroker
                 //2 = Volatility only halt (trading halt is imposed by the exchange to protect against extreme volatility).
                 if (value > 0.0)
                 {
-                    Utils.Logger.Warn("Trading is halted. Tick Generic. Ticker Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value);
+                    Utils.Logger.Warn("Trading is halted. Tick Generic. Tick Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value);
                 }
                 return;
             } else
-                Console.WriteLine("Tick Generic. Ticker Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value);
+                Console.WriteLine("Tick Generic. Tick Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value);
         }
 
         public virtual void tickEFP(int tickerId, int tickType, double basisPoints, string formattedBasisPoints, double impliedFuture, int holdDays, string futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate)
