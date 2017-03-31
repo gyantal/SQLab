@@ -15,6 +15,28 @@ namespace VirtualBroker
     public enum GatewayUser { None, Demo, GyantalMain, GyantalSecondary, GyantalPaper, CharmatMain, CharmatSecondary, CharmatPaper, CharmatWifeMain, CharmatWifeSecondary, CharmatWifePaper, TuMain, TuSecondary, }
     public enum GatewayUserPort : int { None, Demo, GyantalMain = 7301, GyantalSecondary = 7301, GyantalPaper, CharmatMain = 7303, CharmatSecondary = 7303, CharmatPaper, CharmatWifeMain, CharmatWifeSecondary, CharmatWifePaper, TuMain = 7304, TuSecondary = 7304, }
 
+    public static class GatewayExtensions
+    {
+        public static string ToShortFriendlyString(this GatewayUser me)
+        {
+            switch (me)
+            {
+                case GatewayUser.None:
+                    return "None";
+                case GatewayUser.GyantalMain:
+                case GatewayUser.GyantalSecondary:
+                    return "G";
+                case GatewayUser.CharmatMain:
+                case GatewayUser.CharmatSecondary:
+                    return "DC";
+                case GatewayUser.TuMain:
+                case GatewayUser.TuSecondary:
+                    return "T";
+                default:
+                    return "ERR";
+            }
+        }
+    }
 
     public class VirtualOrder
     {
@@ -203,9 +225,10 @@ namespace VirtualBroker
             // 2. Execute different orderTypes MKT, MOC
             // vbOrderId and ibOrderID is different, because some Limit orders, or other tricky orders are executed in real life by many concrete IB orders
             // or there are two opposite vbOrder that cancels each other out at MOC, therefore there is no ibOrder at all
-            Utils.ConsoleWriteLine(null, false, $"{(p_isSimulatedTrades ? "Simulated" : "Real")} {p_transactionType}  {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
-            Utils.Logger.Info($"{(p_isSimulatedTrades?"Simulated":"Real")} {p_transactionType} {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
-            p_detailedReportSb.AppendLine($"{(p_isSimulatedTrades ? "Simulated" : "Real")} {p_transactionType}  {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})");
+            string logMsg = $"{this.GatewayUser.ToShortFriendlyString()}: {(p_isSimulatedTrades ? "Simulated" : "Real")} {p_transactionType} {p_volume} {p_contract.Symbol} (${estimatedTransactionValue:F0})";
+            Utils.ConsoleWriteLine(null, false, logMsg);
+            Utils.Logger.Info(logMsg);
+            p_detailedReportSb.AppendLine(logMsg);
 
             if (p_orderExecution == OrderExecution.Market)
             {

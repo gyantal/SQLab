@@ -87,7 +87,7 @@ namespace VirtualBroker
                 return param.PlayingInstrumentVixShortLeverage;
         }
 
-        public List<PortfolioPositionSpec> GeneratePositionSpecs()
+        public List<PortfolioPositionSpec> GeneratePositionSpecs(IPortfolioParam p_portfolioParam)
         {
             Utils.Logger.Info("UberVxxStrategy.GeneratePositionSpecs() Begin.");
             if (!GetHistoricalAndRealTimeDataForAllParts())

@@ -101,6 +101,7 @@ namespace VirtualBroker
         public bool IsErrorOccured { get; set; }    // if IBGatewayUser is not connected, or there is an error in processing, then stop further processing, and raise Error message, and Supervisor handles manually
 
         public double PortfolioUsdSize { get; set; }
+        public List<PortfolioPositionSpec> ProposedPositionSpecs { get; set; }
         public List<PortfolioPosition> ProposedPositions { get; set; }
         public List<Transaction> ProposedTransactions { get; set; }
     }

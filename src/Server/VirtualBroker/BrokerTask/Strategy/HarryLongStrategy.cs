@@ -12,13 +12,6 @@ using Utils = SqCommon.Utils;
 namespace VirtualBroker
 {
 
-    // Portfolio specific parameters are here. User1's portfolio1 may use double leverage than User2's portfolio2. The Common Strategy params should go to StrategyConfig.cs
-    public class PortfolioParamHarryLong : IPortfolioParam 
-    {
-        //public double PlayingInstrumentTicker1Leverage { get; set; }
-        //public double PlayingInstrumentTicker2Leverage { get; set; }
-    }
-
     public partial class HarryLongStrategy : IBrokerStrategy
     {
         StringBuilder m_detailedReportSb;
@@ -26,7 +19,7 @@ namespace VirtualBroker
         Task<Dictionary<string, Tuple<IAssetID, string>>> m_loadAssetIdTask = null;
         Dictionary<string, Tuple<IAssetID, string>> m_tickerToAssetId = null;   // ticker => AssetID : FullTicker mapping
 
-        public bool IsSameStrategyForAllUsers { get; set; } = true;
+        public bool IsSameStrategyForAllUsers { get; set; } = false;
 
         HarryLongConfig harryLongConfig = new HarryLongConfig();
 
@@ -38,7 +31,7 @@ namespace VirtualBroker
         public void Init(StringBuilder p_detailedReportSb)
         {
             m_detailedReportSb = p_detailedReportSb;
-            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(harryLongConfig.Tickers.ToList()));   // task will start to run on another thread (in the threadpool)
+            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(harryLongConfig.AllPotentialTickersOfPortfolios.ToList()));   // task will start to run on another thread (in the threadpool)
         }
 
         public string StockIdToTicker(int p_stockID)
@@ -60,15 +53,28 @@ namespace VirtualBroker
             return 1.0;
         }
 
-        public List<PortfolioPositionSpec> GeneratePositionSpecs()
+        public List<PortfolioPositionSpec> GeneratePositionSpecs(IPortfolioParam p_portfolioParam)
         {
             Utils.Logger.Info("HarryLongStrategy.GeneratePositionSpecs() Begin.");
+            PortfolioParamHarryLong portfolioParam = (PortfolioParamHarryLong)p_portfolioParam;
+
+            string[] tickers;
+            double[] assetsWeights;
+            if (portfolioParam != null)
+            {
+                tickers = portfolioParam.Tickers;
+                assetsWeights = portfolioParam.AssetsWeights;
+            } else
+            {
+                tickers = harryLongConfig.DefaultTradedTickers;
+                assetsWeights = harryLongConfig.DefaultTradedAssetsWeights;
+            }
 
             StringBuilder consoleMsgSb = new StringBuilder($"Target: ");
-            for (int i = 0; i < harryLongConfig.Tickers.Length; i++)
+            for (int i = 0; i < tickers.Length; i++)
             {
-                consoleMsgSb.Append($"Target: { harryLongConfig.Tickers[i]}:{harryLongConfig.AssetsWeights[i] * 100}%");
-                if (i != harryLongConfig.Tickers.Length - 1)
+                consoleMsgSb.Append($"{ tickers[i]}:{assetsWeights[i] * 100}%");
+                if (i != tickers.Length - 1)
                     consoleMsgSb.Append(", ");
             }
             string consoleMsg = consoleMsgSb.ToString();
@@ -77,14 +83,14 @@ namespace VirtualBroker
             m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">{consoleMsg}</font>");
 
             List <PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
-            for (int i = 0; i < harryLongConfig.Tickers.Length; i++)
+            for (int i = 0; i < tickers.Length; i++)
             {
-                double weight = harryLongConfig.AssetsWeights[i];
+                double weight = assetsWeights[i];
                 // if weight is 0,  the target position is 0.
                 if (Utils.IsMore(weight, 0))        // using REAL_EPS
-                    specs.Add(new PortfolioPositionSpec() { Ticker = harryLongConfig.Tickers[i], PositionType = PositionType.Long, Size = WeightedSize.Create(Math.Abs(weight)) });
+                    specs.Add(new PortfolioPositionSpec() { Ticker = tickers[i], PositionType = PositionType.Long, Size = WeightedSize.Create(Math.Abs(weight)) });
                 else if (Utils.IsLess(weight, 0))
-                    specs.Add(new PortfolioPositionSpec() { Ticker = harryLongConfig.Tickers[i], PositionType = PositionType.Short, Size = WeightedSize.Create(Math.Abs(weight)) });
+                    specs.Add(new PortfolioPositionSpec() { Ticker = tickers[i], PositionType = PositionType.Short, Size = WeightedSize.Create(Math.Abs(weight)) });
             }
             return specs;
         }

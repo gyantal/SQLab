@@ -591,7 +591,16 @@ namespace VirtualBroker
                 }
                 mktDataSubscription.LastTimestampStr = p_value;
             }
-            else
+            else if (tickType == TickType.ASK_EXCH || tickType == TickType.BID_EXCH || tickType == TickType.LAST_EXCH)
+            {
+                //https://www.interactivebrokers.com/en/index.php?f=5061&ns=T&nhf=T
+                //Show Quote Exchange
+                //A single data request from the API can receive aggregate quotes from multiple exchanges.With API versions 9.72.18 and TWS 9.62 and higher, the tick types 'bidExch'(tick type 32), 'askExch'(tick type 33), 'lastExch'(tick type 84) are used to identify the source of a quote.To preserve bandwidth, the data returned to these tick types consists of a sequence of capital letters rather than a long list of exchange names for every returned exchange name field.To find the full exchange name corresponding to a single letter code returned in tick types 32, 33, or 84, and API function IBApi::EClient::reqSmartComponents is available.
+                //The code for "ARCA" may be "P".In that case if "P" is returned to the exchange tick types, that would indicate the quote was provided by ARCA.
+                //Tick string.Tick Id: 1010, Type: askExch, Value: QT
+                //Tick string.Tick Id: 1003, Type: askExch, Value: CBQWTMJ
+                // it comes ever second. Don't log to file and don't write to console.
+            } else
                 Console.WriteLine("Tick string. Tick Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + p_value);
         }
 

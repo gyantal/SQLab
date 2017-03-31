@@ -65,17 +65,41 @@ namespace VirtualBroker
             // try to make IsSameStrategyForAllUsers true, because then it is enough to run the complex Strategy calculation only once, 
             // Strategy gives only a guideline for the BrokerTask, who customize it to portfolios. Modify Leverage (1x, 2x), or change trading instrument (long XIV, instead of short VXX)
             if (Strategy.IsSameStrategyForAllUsers)
-                proposedPositionSpecs = Strategy.GeneratePositionSpecs(); // Strategy calculates suggested positions only once (it may be a long calculation, like Neural Network), and use it for all portfolios
-            else
-                throw new NotImplementedException();
-
-            StrongAssert.True(proposedPositionSpecs != null, Severity.ThrowException, "Error. Strategy.GeneratePositionSpecs() returned null. There is no point to continue. Crash here.");
-
-            proposedPositionSpecs.ForEach(suggestedItem =>
             {
-                Utils.ConsoleWriteLine(null, false, $"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}");
-                Utils.Logger.Info($"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}");
-            });
+                proposedPositionSpecs = Strategy.GeneratePositionSpecs(null); // Strategy calculates suggested positions only once (it may be a long calculation, like Neural Network), and use it for all portfolios
+                StrongAssert.True(proposedPositionSpecs != null, Severity.ThrowException, "Error. Strategy.GeneratePositionSpecs() returned null. There is no point to continue. Crash here.");
+                proposedPositionSpecs.ForEach(suggestedItem =>
+                {
+                    string logMsg = $"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}";
+                    Utils.ConsoleWriteLine(null, false, logMsg);
+                    Utils.Logger.Info(logMsg);
+                });
+                for (int i = 0; i < portfolios.Count; i++)
+                {
+                    portfolios[i].ProposedPositionSpecs = proposedPositionSpecs;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < portfolios.Count; i++)
+                {
+                    string logMsg = $"Portfolio of user {portfolios[i].IbGatewayUserToTrade.ToShortFriendlyString()}";
+                    Utils.ConsoleWriteLine(null, false, logMsg);
+                    Utils.Logger.Info(logMsg);
+                    proposedPositionSpecs = Strategy.GeneratePositionSpecs(portfolios[i].Param); // Strategy calculates suggested positions only once (it may be a long calculation, like Neural Network), and use it for all portfolios
+                    StrongAssert.True(proposedPositionSpecs != null, Severity.ThrowException, "Error. Strategy.GeneratePositionSpecs() returned null. There is no point to continue. Crash here.");
+                    proposedPositionSpecs.ForEach(suggestedItem =>
+                    {
+                        logMsg = $"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}";
+                        Utils.ConsoleWriteLine(null, false, logMsg);
+                        Utils.Logger.Info(logMsg);
+                    });
+
+                    portfolios[i].ProposedPositionSpecs = proposedPositionSpecs;
+                }
+            }
+
+
 
             //*************************  3. Get realtime prices and Generate futurePortfolios with volumes and send transactions
             for (int i = 0; i < portfolios.Count; i++)
@@ -84,7 +108,7 @@ namespace VirtualBroker
                     continue;
                 //************************* 3.1  Generate futurePortfolios with volumes, number of proposed shares
                 CalculatePortfolioUsdSizeFromRealTime(portfolios[i]);
-                DetermineProposedPositions(portfolios[i], proposedPositionSpecs);
+                DetermineProposedPositions(portfolios[i]);
 
                 //************************* 3.2  Generate Transactions from the difference of current vs. target
                 DetermineProposedTransactions(portfolios[i]);
@@ -160,16 +184,17 @@ namespace VirtualBroker
                 }
             }
             p_portfolio.PortfolioUsdSize = portfolioUsdSize;
-            Utils.ConsoleWriteLine(null, false, $"Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}");
-            Utils.Logger.Info($"!!!Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}");
+            string logMsg = $"{p_portfolio.IbGatewayUserToTrade.ToShortFriendlyString()}: Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}";
+            Utils.ConsoleWriteLine(null, false, logMsg);
+            Utils.Logger.Info(logMsg);
         }
 
-        private void DetermineProposedPositions(BrokerTaskPortfolio p_portfolio, List<PortfolioPositionSpec> p_proposedPositionSpecs)
+        private void DetermineProposedPositions(BrokerTaskPortfolio p_portfolio)
         {
-            double leverage = Strategy.GetPortfolioLeverage(p_proposedPositionSpecs, p_portfolio.Param);
+            double leverage = Strategy.GetPortfolioLeverage(p_portfolio.ProposedPositionSpecs, p_portfolio.Param);
             double totalRiskedCapital = p_portfolio.PortfolioUsdSize * leverage;
             var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };   // MID is the most honest price. LAST may happened 1 hours ago
-            p_portfolio.ProposedPositions = p_proposedPositionSpecs.Select(r =>
+            p_portfolio.ProposedPositions = p_portfolio.ProposedPositionSpecs.Select(r =>
             {
                 int volume = 0;
                 if (r.Size is FixedSize)

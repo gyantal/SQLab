@@ -75,7 +75,7 @@ namespace VirtualBroker
             return m_tickerToAssetId[p_ticker].Item1;
         }
 
-        public List<PortfolioPositionSpec> GeneratePositionSpecs()
+        public List<PortfolioPositionSpec> GeneratePositionSpecs(IPortfolioParam p_portfolioParam)
         {
             Utils.Logger.Info("NeuralSniffer1Strategy.GeneratePositionSpecs() Begin.");
             int lookbackWindowSize = nnConfig.lookbackWindowSize + 3;       // in general we want 202 historical + 1 today price => that will generate 202 %change bars (but because last 2 days data is used, that will be 200 samples)

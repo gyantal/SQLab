@@ -72,7 +72,7 @@ namespace VirtualBroker
             return 1.0;
         }
 
-        public List<PortfolioPositionSpec> GeneratePositionSpecs()
+        public List<PortfolioPositionSpec> GeneratePositionSpecs(IPortfolioParam p_portfolioParam)
         {
             Utils.Logger.Info("TAAStrategy.GeneratePositionSpecs() Begin.");
             // the asset.IsActive depends not only of the recent 150 days, but maybe all about its previous history.

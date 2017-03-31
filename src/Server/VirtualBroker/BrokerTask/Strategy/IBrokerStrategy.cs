@@ -79,7 +79,7 @@ namespace VirtualBroker
         bool IsSameStrategyForAllUsers { get; set; }        // if it is true it is enough to run only once, and trade on many portfolios
 
         void Init(StringBuilder p_detailedReportSb);
-        List<PortfolioPositionSpec> GeneratePositionSpecs();
+        List<PortfolioPositionSpec> GeneratePositionSpecs(IPortfolioParam p_portfolioParam);
         string StockIdToTicker(int p_stockID);
         IAssetID TickerToAssetID(string p_ticker);
 
