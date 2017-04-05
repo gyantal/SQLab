@@ -226,7 +226,7 @@ ModelManifest.xml
 /src/Client/SQLab/wwwroot/app/QuickTester/Utils.js
 /src/Client/SQLab/wwwroot/app/QuickTester/Strategies/Strategy.js
 /src/Client/SQLab/wwwroot/app/QuickTester/Strategies/AdaptiveUberVxx.js
-/src/Client/SQLab/wwwroot/app/QuickTester/Strategies/L-ETF-Discrepancy.js
+/src/Client/SQLab/wwwroot/app/QuickTester/Strategies/L-ETF.js
 /src/Client/SQLab/wwwroot/app/QuickTester/Strategies/TotM.js
 /src/Client/SQLab/wwwroot/app/QuickTester/Strategies/VXX_SPY_Controversial.js
 /src/Client/SQLab/wwwroot/app/QuickTester/Strategies/AssetAllocation.js

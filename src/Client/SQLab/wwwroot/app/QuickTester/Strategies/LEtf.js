@@ -23,7 +23,7 @@ var LEtf = (function (_super) {
         if ((p_subStrategyId == "idMenuItemLETFDiscrRebToNeutral") || (p_subStrategyId == "idMenuItemLETFDiscrAddToWinner"))
             this.SetParams("idParamSetHL_-50URE_-50SRS");
         else if (p_subStrategyId == "idMenuItemLETFHarryLong")
-            this.SetParams("idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy");
+            this.SetParams("idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy2");
         return true;
     };
     LEtf.prototype.GetHtmlUiName = function (p_subStrategyId) {
@@ -148,9 +148,13 @@ var LEtf = (function (_super) {
                 this.assetsConstantWeightPct = "-70,75,-8,-13,-4,10,5,0"; // %, negative is Short
                 break;
             case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy":
-            default:
                 this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "-70,75,-8,-28,-4,0,0,0"; // %, negative is Short
+                break;
+            case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy2":
+            default:
+                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "-70,105,-10,-30,-5,0,0,0"; // %, negative is Short
                 break;
         }
     };
