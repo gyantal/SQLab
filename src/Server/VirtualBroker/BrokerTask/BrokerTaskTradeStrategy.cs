@@ -67,13 +67,16 @@ namespace VirtualBroker
             if (Strategy.IsSameStrategyForAllUsers)
             {
                 proposedPositionSpecs = Strategy.GeneratePositionSpecs(null); // Strategy calculates suggested positions only once (it may be a long calculation, like Neural Network), and use it for all portfolios
-                StrongAssert.True(proposedPositionSpecs != null, Severity.ThrowException, "Error. Strategy.GeneratePositionSpecs() returned null. There is no point to continue. Crash here.");
+                StrongAssert.True(proposedPositionSpecs != null, Severity.ThrowException, "Error. Strategy.GeneratePositionSpecs() returned null. There is no point to continue. Crash this thread here.");
                 proposedPositionSpecs.ForEach(suggestedItem =>
                 {
                     string logMsg = $"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}";
                     Utils.ConsoleWriteLine(null, false, logMsg);
                     Utils.Logger.Info(logMsg);
                 });
+                double proposedTotalLeverage = proposedPositionSpecs.Sum(r => (r.Size is WeightedSize) ? Math.Abs(((WeightedSize)r.Size).Weight) : throw new NotImplementedException()  );
+                StrongAssert.True(proposedTotalLeverage <= 3.0, Severity.ThrowException, $"Error. Proposed TotalLeverage ({proposedTotalLeverage}) is unexpectedly high. It is safer to Crash this thread here.");
+
                 for (int i = 0; i < portfolios.Count; i++)
                 {
                     portfolios[i].ProposedPositionSpecs = proposedPositionSpecs;
@@ -87,13 +90,15 @@ namespace VirtualBroker
                     Utils.ConsoleWriteLine(null, false, logMsg);
                     Utils.Logger.Info(logMsg);
                     proposedPositionSpecs = Strategy.GeneratePositionSpecs(portfolios[i].Param); // Strategy calculates suggested positions only once (it may be a long calculation, like Neural Network), and use it for all portfolios
-                    StrongAssert.True(proposedPositionSpecs != null, Severity.ThrowException, "Error. Strategy.GeneratePositionSpecs() returned null. There is no point to continue. Crash here.");
+                    StrongAssert.True(proposedPositionSpecs != null, Severity.ThrowException, "Error. Strategy.GeneratePositionSpecs() returned null. There is no point to continue. Crash this thread here.");
                     proposedPositionSpecs.ForEach(suggestedItem =>
                     {
                         logMsg = $"Strategy suggestion: {suggestedItem.Ticker}: {suggestedItem.PositionType}-{suggestedItem.Size}";
                         Utils.ConsoleWriteLine(null, false, logMsg);
                         Utils.Logger.Info(logMsg);
                     });
+                    double proposedTotalLeverage = proposedPositionSpecs.Sum(r => (r.Size is WeightedSize) ? Math.Abs(((WeightedSize)r.Size).Weight) : throw new NotImplementedException());
+                    StrongAssert.True(proposedTotalLeverage <= 3.0, Severity.ThrowException, $"Error. Proposed TotalLeverage ({proposedTotalLeverage}) is unexpectedly high. It is safer to Crash this thread here.");
 
                     portfolios[i].ProposedPositionSpecs = proposedPositionSpecs;
                 }
