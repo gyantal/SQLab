@@ -15,6 +15,7 @@ namespace SqCommon
         TestMakingPhoneCall,
         ReportErrorFromVirtualBroker,
         ReportOkFromVirtualBroker,
+        ReportWarningFromVirtualBroker,
         SendDailySummaryReportEmail,
         GetHealthMonitorCurrentState,   // not used at the moment
         GetHealthMonitorCurrentStateToHealthMonitorWebsite,
@@ -59,7 +60,7 @@ namespace SqCommon
 
         public static void SendStrongAssert(string p_locationMsg, StrongAssertMessage p_msg, HealthMonitorMessageID p_healthMonId)
         {
-            Send(p_locationMsg, $"StrongAssert. Severity: {p_msg.Severity}, Message { p_msg.Message}, StackTrace: { p_msg.StackTrace}", p_healthMonId);
+            Send(p_locationMsg, $"StrongAssert Warning (if Severity is NoException, it is just a mild Warning. If Severity is ThrowException, that exception triggers a separate message to HealthMonitor as an Error). Severity: {p_msg.Severity}, Message: { p_msg.Message}, StackTrace: { p_msg.StackTrace}", p_healthMonId);
         }
 
         static DateTime gLastMessageTime = DateTime.MinValue;

@@ -56,22 +56,22 @@ namespace HealthMonitor
                 }
             }
 
-            bool isError = (p_message.ID == HealthMonitorMessageID.ReportErrorFromVirtualBroker);
-            if (!isError && (briefReport != null))
+            bool isErrorOrWarning = (p_message.ID == HealthMonitorMessageID.ReportErrorFromVirtualBroker) || (p_message.ID == HealthMonitorMessageID.ReportWarningFromVirtualBroker);
+            if (!isErrorOrWarning && (briefReport != null))
             {
                 // sometimes the message seems OK, but if the messageParam contains the word "Error" treat it as error. For example, if this email was sent to the user, with the Message that everything is OK, treat it as error
                 // "***Trade: ERROR"   + "*** StrongAssert failed (severity==Exception): BrokerAPI.GetStockMidPoint(VXX,...) failed"
                 // "ibNet_ErrorMsg(). TickerID: 742, ErrorCode: 404, ErrorMessage: 'Order held while securities are located.'
                 // "Error. A transaction was not executed. p_brokerAPI.GetExecutionData = null for Sell VXX Volume: 266. Check that it was not executed and if not, perform it manually then enter into the DB.
-                isError = (briefReport.IndexOf("Error", StringComparison.CurrentCultureIgnoreCase) != -1);  // in DotNetCore, there is no StringComparison.InvariantCultureIgnoreCase
+                isErrorOrWarning = (briefReport.IndexOf("Error", StringComparison.CurrentCultureIgnoreCase) != -1);  // in DotNetCore, there is no StringComparison.InvariantCultureIgnoreCase
             }
 
             lock (m_VbReport)
-                m_VbReport.Add(new Tuple<DateTime, bool, string, string>(DateTime.UtcNow, !isError, ((briefReport != null) ? briefReport : "ReportFromVirtualBroker without BriefReport"), ((detailedReport != null) ? detailedReport : p_message.ParamStr)));
+                m_VbReport.Add(new Tuple<DateTime, bool, string, string>(DateTime.UtcNow, !isErrorOrWarning, ((briefReport != null) ? briefReport : "ReportFromVirtualBroker without BriefReport"), ((detailedReport != null) ? detailedReport : p_message.ParamStr)));
 
-            if (isError)
+            if (isErrorOrWarning)
             {
-                Utils.Logger.Info("ErrorFromVirtualBroker().");
+                Utils.Logger.Info("Error or Warning FromVirtualBroker().");
                 InformSupervisors("SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { ((briefReport != null) ? briefReport : p_message.ParamStr) }", 
                     "There is an Error in Virtual Broker. ... I repeat: Error in Virtual Broker.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
             }

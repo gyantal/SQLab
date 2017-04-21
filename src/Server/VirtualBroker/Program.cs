@@ -130,7 +130,7 @@ namespace VirtualBroker
         internal static void StrongAssertMessageSendingEventHandler(StrongAssertMessage p_msg)
         {
             Utils.Logger.Info("StrongAssertEmailSendingEventHandler()");
-            HealthMonitorMessage.SendStrongAssert("VirtualBroker", p_msg, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+            HealthMonitorMessage.SendStrongAssert("VirtualBroker", p_msg, (p_msg.Severity == Severity.NoException) ? HealthMonitorMessageID.ReportWarningFromVirtualBroker: HealthMonitorMessageID.ReportErrorFromVirtualBroker);
         }
 
 

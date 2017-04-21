@@ -40,6 +40,7 @@ namespace HealthMonitor
                 case HealthMonitorMessageID.TestHardCash:
                     throw new Exception("Testing Hard Crash by Throwing this Exception");
                 case HealthMonitorMessageID.ReportErrorFromVirtualBroker:
+                case HealthMonitorMessageID.ReportWarningFromVirtualBroker:
                 case HealthMonitorMessageID.ReportOkFromVirtualBroker:
                     MessageFromVirtualBroker(p_tcpClient, message);
                     break;
