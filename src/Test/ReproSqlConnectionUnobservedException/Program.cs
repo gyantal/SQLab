@@ -9,8 +9,8 @@ namespace ReproSqlConnectionUnobservedException
         static void Main(string[] args)
         {
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;     // You have to attach this ! Without it you will not see the Error.
-            string connStringGood = "Server=tcp:ZZZ.database.windows.net,1433;Database=ZZZ;User ID=ZZZ@ZZZ;Password=ZZZ;Encrypt=True;Connection Timeout=600;";
-            string connStringBad = "Server=tcp:ZZZ.database.windows.net;Database=ZZZ;User ID=ZZZ@ZZZ;Password=ZZZ;Encrypt=True;Connection Timeout=600;";
+            string connStringGood = "Server=tcp:ZZZ.database.windows.net,1433;Database=ZZZ;User ID=ZZZ@ZZZ;Password=ZZZ;Connection Timeout=600;";
+            string connStringBad = "Server=tcp:ZZZ.database.windows.net;Database=ZZZ;User ID=ZZZ@ZZZ;Password=ZZZ;Connection Timeout=600;";
 
             string userInput = String.Empty;
             do
