@@ -8,6 +8,12 @@
 # !!!!!!!!!!!!!     DO a FULL       BUILD ALL  before deploying to Linux 
 
 
+import platform
+print(platform.python_version())
+
+import platform
+print(platform.architecture()[0])
+
 import os        # listdir, isfile
 import paramiko  # for sftp
 import colorama  # for colourful print
