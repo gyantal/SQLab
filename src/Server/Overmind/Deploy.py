@@ -1,4 +1,7 @@
-﻿import os        # listdir, isfile
+﻿import platform
+print("Python version: " + platform.python_version() + " (" + platform.architecture()[0] + ")")
+
+import os        # listdir, isfile
 import paramiko  # for sftp
 import colorama  # for colourful print
 from stat import S_ISDIR

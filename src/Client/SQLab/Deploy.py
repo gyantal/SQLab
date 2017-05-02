@@ -9,10 +9,7 @@
 
 
 import platform
-print(platform.python_version())
-
-import platform
-print(platform.architecture()[0])
+print("Python version: " + platform.python_version() + " (" + platform.architecture()[0] + ")")
 
 import os        # listdir, isfile
 import paramiko  # for sftp
