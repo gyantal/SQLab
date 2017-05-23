@@ -82,7 +82,7 @@ namespace SQLab.Controllers
                     yffColumnsList.Add(previousCommand);
                 } else
                 {
-                    yffColumnsList = new List<string>() { "d", "o", "h", "l", "c", "v", "c1" };
+                    yffColumnsList = new List<string>() { "d", "o", "h", "l", "c", "c1", "v" };
                 }
 
 
@@ -199,6 +199,13 @@ namespace SQLab.Controllers
                         cells[0] = String.Format(@"Date.UTC({0},{1},{2})", date.Year, date.Month - 1, date.Day);
                     else
                         cells[0] = String.Format(@"{0}-{1}-{2}", date.Year, date.Month, date.Day);
+
+                    // Prices in the given CSV as "15.830000" is pointless. Convert it to "15.8" if possible, 		"16.059999"	should be converted too
+                    for (int j = 1; j < 6; j++)
+                    {
+                        if (Double.TryParse(cells[j], out double price))
+                            cells[j] = price.ToString("0.###");
+                    }
 
                     //Volume is sometimes "000"; convert it to "0"
                     if (Int64.TryParse(cells[6], out long volume))  // Volume was the 5th index, not it is the 6th index (the last item)
