@@ -44,7 +44,7 @@ app.controller('DifferentMonthsCtrl', function ($scope, $http) {   // runs after
 
         // OpenPrice is not necessary, but we may need it later for a Close to Open analysis; so query it
         //var url = "http://hqacompute.cloudapp.net/q/yff?yffOutFormat=json&yffColumns=dohlc&jsonp=JSON_CALLBACK&yffUri=ichart.finance.yahoo.com/table.csv&s=%5EVIX&a=0&b=2&c=1990&d=" + mm + "&e=" + dd + "&f=" + yyyy + "&g=d&ignore=.csv";
-        var url = "/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dohlc&jsonp=JSON_CALLBACK&yffUri=ichart.finance.yahoo.com/table.csv&s=%5EVIX&a=0&b=2&c=1990&d=" + mm + "&e=" + dd + "&f=" + yyyy + "&g=d&ignore=.csv";
+        var url = "/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dohlc&jsonp=JSON_CALLBACK&yffUri=query1.finance.yahoo.com/v7/finance/download/%5EVIX&period1=1990-01-02&period2=UtcNow&interval=1d&events=history";
 
 
         $http.jsonp(url).

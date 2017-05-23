@@ -123,7 +123,7 @@ namespace SqCommon
         {
             // Unix timestamp is seconds past epoch
             System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-            dtDateTime = dtDateTime.AddSeconds(p_unixTimeStamp).ToLocalTime();
+            dtDateTime = dtDateTime.AddSeconds(p_unixTimeStamp).ToLocalTime();      // TODO: Warning. possible error. Why is it converted to .ToLocalTime();  ?
             return dtDateTime;
         }
 
@@ -132,7 +132,13 @@ namespace SqCommon
             return UnixTimeStampToDateTimeUtc(p_unixTimeStamp).ToLocalTime();
         }
 
-
+        public static long DateTimeUtcToUnixTimeStamp(DateTime p_utcDate)      // Int would roll over to a negative in 2038 (if you are using UNIX timestamp), so long is safer
+        {
+            // Unix timestamp is seconds past epoch
+            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            TimeSpan span = p_utcDate - dtDateTime;
+            return (long)span.TotalSeconds;
+        }
 
     }
 }
