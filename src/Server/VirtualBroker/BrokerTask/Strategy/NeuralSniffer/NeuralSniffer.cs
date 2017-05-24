@@ -257,16 +257,16 @@ namespace VirtualBroker.Strategy.NeuralSniffer
             {
                 double inputStd = nnInput.Select(r => r[0]).ToArray().StandardDeviation();
                 return NeuralSnifferUtil.NaiveLearner1DForecast(nnInput.Select(r => r[0]).ToArray(), nnOutput.Select(r => r[0]).ToArray(), new double[] { -0.6717, 0.0, 0.6717, Double.PositiveInfinity }.ScalarProduct(inputStd), testInput[0]);
-                //%4 bins with equal distribution: %25% of the samples are under -0.6717 std away
+                //4 bins with equal distribution: %25% of the samples are under -0.6717 std away
                 //range4Bins = [-0.6717  0 0.6717 inf];
                 //tick4Bins = [2*-0.6717 -0.6717 0 0.6717];
-                //%6 bins with equal distribution: 16.6%: -0.9678; 33.3%: -0.429; 50%: 0, 
+                //6 bins with equal distribution: 16.6%: -0.9678; 33.3%: -0.429; 50%: 0, 
                 //range6Bins = [-0.96787  -0.429 0 0.429 0.96787 inf];
                 //tick6Bins = [(-0.96787-0.96787+0.429) -0.96787  -0.429 0 0.429 0.96787];
-                //%10 bins with equal distribution: 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%: -1.2801/-0.8391/-0.5216/-0.2513/0/0.2513/0.5216/0.8391/1.2801
+                //10 bins with equal distribution: 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%: -1.2801/-0.8391/-0.5216/-0.2513/0/0.2513/0.5216/0.8391/1.2801
                 //range10Bins = [-1.2801 -0.8391 -0.5216 -0.2513 0 0.2513 0.5216 0.8391 1.2801 inf];
                 //tick10Bins = [-1.2801-(1.2801-0.8391) -1.2801 -0.8391 -0.5216 -0.2513 0 0.2513 0.5216 0.8391 1.2801];
-                //%20 bins with equal distribution: 5%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%: 
+                //20 bins with equal distribution: 5%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%: 
                 //range20Bins = [-1.6445 -1.2801 -1.0343 -0.8391 -0.6717 -0.5216 -0.3828 -0.2513 -0.1244 0 0.1244 0.2513 0.3828 0.5216 0.6717 0.8391 1.0343 1.2801 1.6445 inf];
                 //tick20Bins = [-1.6445-(1.6445-1.2801) -1.6445 -1.2801 -1.0343 -0.8391 -0.6717 -0.5216 -0.3828 -0.2513 -0.1244 0 0.1244 0.2513 0.3828 0.5216 0.6717 0.8391 1.0343 1.2801 1.6445];
 

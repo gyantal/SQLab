@@ -31,12 +31,12 @@ namespace SQLab.Controllers
         public ActionResult Index()
         {
             var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
-            Tuple<string, string> contentAndType = GenerateRtpResponse().Result;
+            Tuple<string, string> contentAndType = GenerateQtResponse().Result;
             return Content(contentAndType.Item1, contentAndType.Item2);
 
         }
 
-        private async Task<Tuple<string, string>> GenerateRtpResponse()
+        private async Task<Tuple<string, string>> GenerateQtResponse()
         {
             string jsonpCallback = null;
             string uriQuery = "";
@@ -50,7 +50,7 @@ namespace SQLab.Controllers
                 }
 
                 uriQuery = uriQuery.Substring(1);   // remove '?'
-                uriQuery = uriQuery.Replace("%20", " ").Replace("%5E", "^");    // de-coding from URL to normal things
+                uriQuery = Uri.UnescapeDataString(uriQuery);    // change %20 to ' ', and %5E to '^'  , "^VIX" is encoded in the URI as "^%5EVIX"
 
                 // QueryString paramsQs = new QueryString("?" + p_params);
                 Dictionary<string, StringValues> allParamsDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uriQuery);   // unlike ParseQueryString in System.Web, this returns a dictionary of type IDictionary<string, string[]>, so the value is an array of strings. This is how the dictionary handles multiple query string parameters with the same name.

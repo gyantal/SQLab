@@ -51,7 +51,6 @@ namespace SQLab.Controllers.QuickTester.Strategies
             string dailyMarketDirectionMaskWinterTotM = p_allParamsDict["DailyMarketDirectionMaskWinterTotM"][0];
             string dailyMarketDirectionMaskWinterTotMM = p_allParamsDict["DailyMarketDirectionMaskWinterTotMM"][0];
 
-            //bullishTradingInstrument = bullishTradingInstrument.Replace("%20", " ");
             int ind = bullishTradingInstrument.IndexOf(' ');        // "long SPY", "long QQQ", "short VXX"
             StrongAssert.True(ind != -1 && ind != (bullishTradingInstrument.Length - 1), "bullishTradingInstrument parameter cannot be interpreted: " + bullishTradingInstrument);
             string stock = bullishTradingInstrument.Substring(ind + 1);
