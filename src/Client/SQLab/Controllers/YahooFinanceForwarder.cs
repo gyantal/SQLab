@@ -13,14 +13,43 @@ using YahooFinanceAPI;
 using System.IO;
 using Microsoft.Extensions.Primitives;
 
-//// Future work: after Robert confirmed that v8 (without crumbs) gives same good data as v7 (with crumbs), we may change implementation to that  (maybe not, as it gives slightly different data)
-//egy hasonló már le van implementálva a programban,  csak    query1.finance.yahoo.com/v7/finance/download/... helyett query2.finance.yahoo.com/v8/finance/chart/...  lásd itt:
+// *********************************************************************************************************************
+// WARNING !!!! THIS SERVICE DOESN'T ADJUST FOR DIVIDENDS (ONLY FOR SPLITS) , BECAUSE YF DATA DOESN'T ADJUST FOR DIVIDEND.
+// *********************************************************************************************************************
+
+
+
+// 1. Example to use it.
+// https://www.snifferquant.net/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dc1&jsonp=JsonpCallbackFunc&yffUri=query1.finance.yahoo.com/v7/finance/download/%5EVIX&period1=1990-01-02&period2=UtcNow&interval=1d&events=history
+
+// 2. YF has non-adjusted data, dividend is not adjusted at all, splits are adjusted, but weirdly
+// 2.1 dividend is not adjusted at all
+// https://finance.yahoo.com/quote/AAPL/history?p=AAPL
+// "May 11, 2017	152.45	154.07	152.31	153.95	153.95	27,255,100
+// May 11, 2017	0.63 Dividend"
+// https://www.snifferquant.net/YahooFinanceForwarder?yffOutFormat=json&jsonp=JsonpCallbackFunc&yffUri=query1.finance.yahoo.com/v7/finance/download/AAPL&period1=2017-02-02&period2=2017-05-22&interval=1d&events=history
+// 2.2 VXX 4:1 spilts are adjusted, but weirdo
+// based on VXX 2016-08-09 1:4 split: Open/High/Low is adjusted, Close is not adjusted, AdjClose is adjusted again.
+// https://www.snifferquant.net/YahooFinanceForwarder?yffOutFormat=json&jsonp=JsonpCallbackFunc&yffUri=query1.finance.yahoo.com/v7/finance/download/VXX&period1=2016-08-01&period2=2017-05-22&interval=1d&events=history
+// Date         Open        High        Low         Close       Adj Close   Volume
+// 08/08/2016	37.599998	37.799999	37.200001	9.3	        37.200001	46298800
+// 09/08/2016	36.709999	37.200001	35.880001	36.560001	36.560001	13481100
+// 2.3 Luckily, yffColumns=dc1 which is c1=adjustedClose, it works well, because it uses the last column = AdjClose, which is adjusted.
+// https://www.snifferquant.net/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dc1&jsonp=JsonpCallbackFunc&yffUri=query1.finance.yahoo.com/v7/finance/download/VXX&period1=2016-08-01&period2=2017-05-22&interval=1d&events=history
+
+// 3. It is an option to discontinue this web-service, as there is a chance it gives bad data. It gives bad data if there are dividends. However, in case of indices (VIX, SPX), or ETN-s (VXX), there is no dividend
+// only splits, and in this case this service works fine. But be warned. WARNING !!!! THIS SERVICE DOESN'T ADJUST FOR DIVIDENDS (ONLY FOR SPLITS) , BECAUSE YF DATA DOESN'T ADJUST FOR DIVIDEND.
+// We need to develop a separate service, getting data from SQL and supporting many tickers at once, that will be Dividend adjusted. We have C# code for that, so we don't need to implement this service for C# usage, only if we want to use it from JavaScript on the client side.
+
+//4. Future work: after Robert confirmed that v8 (without crumbs) gives same good data as v7 (with crumbs), we may change implementation to that  (maybe not, as it gives slightly different data)
+// Temporary comment here, remove it after Robert made his investigation:
+//"egy hasonló már le van implementálva a programban,  csak    query1.finance.yahoo.com/v7/finance/download/... helyett query2.finance.yahoo.com/v8/finance/chart/...  lásd itt:
 //https://incode.browse.cloudforge.com/cgi-bin/hedgequant/HedgeQuant/src/Server/YahooQuoteCrawler/Crawler.cs?revision=7881&view=markup#l1612
 //és ehhez nem kell se crumbs, se cookie a tapasztalatom szerint, és mint mondtam sok benne az adathiba.
 //Majd valamikor megnézem hogy a query1.finance.yahoo.com/v7/-es API jobb adatokat ad-e mint a query2.finance.yahoo.com/v8/-as,
-//de ez egy hosszabb nekigyűrkőzést igénylő munka/vizsgálódás.
+//de ez egy hosszabb nekigyűrkőzést igénylő munka/vizsgálódás."
 
-// https://www.snifferquant.net/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dc1&jsonp=JsonpCallbackFunc&yffUri=query1.finance.yahoo.com/v7/finance/download/%5EVIX&period1=1990-01-02&period2=UtcNow&interval=1d&events=history
+
 namespace SQLab.Controllers
 {
     //[Route("api/[controller]")]
