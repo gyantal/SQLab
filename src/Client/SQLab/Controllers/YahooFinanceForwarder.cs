@@ -13,6 +13,13 @@ using YahooFinanceAPI;
 using System.IO;
 using Microsoft.Extensions.Primitives;
 
+//// Future work: after Robert confirmed that v8 (without crumbs) gives same good data as v7 (with crumbs), we may change implementation to that  (maybe not, as it gives slightly different data)
+//egy hasonló már le van implementálva a programban,  csak    query1.finance.yahoo.com/v7/finance/download/... helyett query2.finance.yahoo.com/v8/finance/chart/...  lásd itt:
+//https://incode.browse.cloudforge.com/cgi-bin/hedgequant/HedgeQuant/src/Server/YahooQuoteCrawler/Crawler.cs?revision=7881&view=markup#l1612
+//és ehhez nem kell se crumbs, se cookie a tapasztalatom szerint, és mint mondtam sok benne az adathiba.
+//Majd valamikor megnézem hogy a query1.finance.yahoo.com/v7/-es API jobb adatokat ad-e mint a query2.finance.yahoo.com/v8/-as,
+//de ez egy hosszabb nekigyűrkőzést igénylő munka/vizsgálódás.
+
 // https://www.snifferquant.net/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dc1&jsonp=JsonpCallbackFunc&yffUri=query1.finance.yahoo.com/v7/finance/download/%5EVIX&period1=1990-01-02&period2=UtcNow&interval=1d&events=history
 namespace SQLab.Controllers
 {
