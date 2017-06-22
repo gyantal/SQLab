@@ -203,7 +203,7 @@ namespace VirtualBroker
                     //IB Error. ErrId: -1, ErrCode: 2103, Msg: Market data farm connection is broken:usfarm
                     //IB Error. ErrId: -1, ErrCode: 1100, Msg: Connectivity between IB and Trader Workstation has been lost.
                     //IB Error. ErrId: -1, ErrCode: 1102, Msg: Connectivity between IB and Trader Workstation has been restored - data maintained.
-                    if (!IsApproximatelyMarketTradingTime())
+                    if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
                         return; // skip processing the error further. Don't send it to HealthMonitor.
 
 
@@ -220,7 +220,8 @@ namespace VirtualBroker
                 // ErrId: 2165, ErrCode: 200, Msg: No security definition has been found for the request
                 // ErrId: 2116, ErrCode: 200, Msg: No security definition has been found for the request
                 // ErrId: 2144, ErrCode: 200, Msg: No security definition has been found for the request
-                if (!IsApproximatelyMarketTradingTime())
+                // Id: 1611, ErrCode: 200, Msg: The contract description specified for GLD is ambiguous.  // GLD can be USA or London stock or Futures, Options, etc.
+                if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
@@ -241,7 +242,7 @@ namespace VirtualBroker
             {
                 // real-time price is queried. And Market data was subscribed, but at the weekend, it returns an error. Swallow it at the weekends.
                 // ErrId: 1049, ErrCode: 354, Msg: Requested market data is not subscribed.
-                if (!IsApproximatelyMarketTradingTime())
+                if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
@@ -277,7 +278,8 @@ namespace VirtualBroker
             error(errMsg);
         }
 
-        public bool IsApproximatelyMarketTradingTime()
+        // there are some weird IB errors that happen usually when IB server is down. 99% of the time it is at the weekend, or when pre or aftermarket. In this exceptional times, ignore errors.
+        public bool IsApproximatelyMarketTradingTimeForIgnoringIBErrors()
         {
             DateTime utcNow = DateTime.UtcNow;
             DateTime etNow = Utils.ConvertTimeFromUtcToEt(utcNow);
@@ -285,7 +287,7 @@ namespace VirtualBroker
                 return false;
 
             // The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET.
-            if (etNow.Hour <= 8 || etNow.Hour >= 5)   // if it is not Approximately around market hours => no Error
+            if (etNow.Hour <= 8 || etNow.Hour >= 17)   // if it is not Approximately around market hours => no Error
                 return false;
 
             // you can skip holiday days too later

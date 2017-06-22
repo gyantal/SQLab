@@ -38,6 +38,11 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     assetsWeights[i] = 1.0;       // fill up with default 1.0=100%, if it is not given in the input
             }
 
+            // if assetWeight[i] = 0, we don't need the ticker to be honest. In theory, we could drop those tickers totally. We would save to query Historical SQL data or realtime data for those zero weight stocks.
+            // However, that would change the commonAssetStartDate if we skip zero-weight stocks, and we may not want that. We liked that firstRebalancingDate = commonAssetStartDate, because we can test multiple ETFs together.
+            // If there is no RT price for a zero-weight ticker (like GLD in 2017-06, but later we fixed that error, 'contract was ambiguous') a workaround is to remove GLD from the list of ETFs textbox.
+            // However, note that VBroker 'should' give "SnapshotTime" RT price for all stocks, not only for the ones that are registered with ReqMktDataStream(); 
+
             string[] rebalancingFrequencyStrSplits = rebalancingFrequencyStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             RebalancingPeriodicity rebalancingPeriodicity = RebalancingPeriodicity.Daily;
             int dailyRebalancingDays = 1;   // 1d means every day, 2d means every 2nd days, 20d means, every 20th days
