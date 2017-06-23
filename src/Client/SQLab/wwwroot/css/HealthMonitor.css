@@ -18,6 +18,12 @@ body { background-color: transparent;  }
             width: calc(100% - 3ex);
 		}*/
 
+body {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    font-size: 120%;
+    line-height: 1.1;
+}
+
 h3 {
     margin-top: 0.2em;
     margin-bottom: 0.1em;
@@ -29,10 +35,7 @@ h4 {
     display: inline-block;
 }
 
-body {
-    font-size: 125%;
-    /*color: #18212E;*/
-}
+
 
 .headerBackground {
     position: absolute;
