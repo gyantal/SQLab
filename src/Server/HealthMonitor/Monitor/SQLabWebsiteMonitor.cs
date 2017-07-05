@@ -27,7 +27,7 @@ namespace HealthMonitor
             }
 
             Utils.Logger.Info("ErrorFromSqLabWebsite().");
-            InformSupervisors("SQ HealthMonitor: ERROR from SQLab Website.", $"SQ HealthMonitor: ERROR from SQLab Website. MessageParamStr: { p_message.ParamStr}", null, ref m_lastSqWebsiteInformSupervisorLock, ref m_lastSqWebsiteErrorEmailTime, ref m_lastSqWebsiteErrorPhoneCallTime);
+            InformSupervisors(InformSuperVisorsUrgency.StandardWithTimer, "SQ HealthMonitor: ERROR from SQLab Website.", $"SQ HealthMonitor: ERROR from SQLab Website. MessageParamStr: { p_message.ParamStr}", null, ref m_lastSqWebsiteInformSupervisorLock, ref m_lastSqWebsiteErrorEmailTime, ref m_lastSqWebsiteErrorPhoneCallTime);
         }
 
     

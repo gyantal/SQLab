@@ -134,7 +134,11 @@ namespace VirtualBroker
                     wasAllOrdersOk = false;
             }
             if (!wasAllOrdersOk)
-                Utils.Logger.Error("Not all trading orders was OK. " + errorStr.ToString());
+            {
+                string errStr = "Not all trading orders were OK. " + errorStr.ToString();
+                detailedReportSb.AppendLine($"<font color=\"#ff1010\">***ERROR. {errStr}</font>");
+                Utils.Logger.Error(errStr);
+            }
 
             // ********************* 5. Write All Transactions into DB in one go, not one by one
             WriteAllExecutedTransactionsToDB(portfolios);

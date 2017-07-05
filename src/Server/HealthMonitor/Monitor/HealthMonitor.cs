@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace HealthMonitor
 {
+    [Flags]
+    public enum InformSuperVisorsUrgency { StandardWithTimer = 0, UrgentInfoSendEmail = 1, UrgentInfoMakePhonecall = 2 }
+
     public class SavedState : PersistedState   // data to persist between restarts of the crawler process
     {
         public bool IsDailyEmailReportEnabled { get; set; } = true;
@@ -124,7 +127,7 @@ namespace HealthMonitor
             catch (Exception e)
             {
                 Utils.Logger.Info(e, "ScheduleDailyTimers() Exception.");
-                InformSupervisors($"SQ HealthMonitor: ScheduleDailyTimers() Exception.", $"SQ HealthMonitor: ScheduleDailyTimers() Exception. Check log file.", $"HealthMonitor Schedule Daily Timers Exception. ... I repeat: HealthMonitor Schedule Daily Timers Exception.", ref m_lastHealthMonInformSupervisorLock, ref m_lastHealthMonErrorEmailTime, ref m_lastHealthMonErrorPhoneCallTime);
+                InformSupervisors(InformSuperVisorsUrgency.StandardWithTimer, $"SQ HealthMonitor: ScheduleDailyTimers() Exception.", $"SQ HealthMonitor: ScheduleDailyTimers() Exception. Check log file.", $"HealthMonitor Schedule Daily Timers Exception. ... I repeat: HealthMonitor Schedule Daily Timers Exception.", ref m_lastHealthMonInformSupervisorLock, ref m_lastHealthMonErrorEmailTime, ref m_lastHealthMonErrorPhoneCallTime);
             }
             Utils.Logger.Info("ScheduleDailyTimers() END");
         }
@@ -311,7 +314,7 @@ namespace HealthMonitor
                             + (String.IsNullOrEmpty(strategyName) ? "" : " (" + strategyName + ")") +
                             ": " + ((m_VbReport[i].Item2) ? "OK" : "ERROR") +
                             ((p_isHtml) ? "<br>" : Environment.NewLine));
-                        
+
 
                     }
                 }
@@ -358,16 +361,21 @@ namespace HealthMonitor
         }
 
 
-        private void InformSupervisors(string p_emailSubject, string p_emailBody, string p_phonecallText, ref Object p_informSupervisorLock, ref DateTime p_lastEmailTime, ref DateTime p_lastPhoneCallTime)
+        private void InformSupervisors(InformSuperVisorsUrgency p_urgency, string p_emailSubject, string p_emailBody, string p_phonecallText, ref Object p_informSupervisorLock, ref DateTime p_lastEmailTime, ref DateTime p_lastPhoneCallTime)
         {
             bool doInformSupervisors = false;
-            lock (p_informSupervisorLock)   // if InformSupervisors is called on two different threads at the same time, (if VBroker notified us twice very quickly), we still want to inform user only once
+            if (p_urgency.HasFlag(InformSuperVisorsUrgency.UrgentInfoSendEmail) || p_urgency.HasFlag(InformSuperVisorsUrgency.UrgentInfoMakePhonecall))
+                doInformSupervisors = true;
+            else
             {
-                TimeSpan timeFromLastEmail = DateTime.UtcNow - p_lastEmailTime;
-                if (timeFromLastEmail > TimeSpan.FromMinutes(10))
+                lock (p_informSupervisorLock)   // if InformSupervisors is called on two different threads at the same time, (if VBroker notified us twice very quickly), we still want to inform user only once
                 {
-                    doInformSupervisors = true;
-                    p_lastEmailTime = DateTime.UtcNow;
+                    TimeSpan timeFromLastEmail = DateTime.UtcNow - p_lastEmailTime;
+                    if (timeFromLastEmail > TimeSpan.FromMinutes(10))
+                    {
+                        doInformSupervisors = true;
+                        p_lastEmailTime = DateTime.UtcNow;
+                    }
                 }
             }
 
@@ -397,8 +405,9 @@ namespace HealthMonitor
                 Utils.Logger.Info("InformSupervisors(). Making Phonecall.");
 
                 TimeSpan timeFromLastCall = DateTime.UtcNow - p_lastPhoneCallTime;
-                if (timeFromLastCall > TimeSpan.FromMinutes(30))
-                {
+                TimeSpan minTimeFromLastCall = p_urgency.HasFlag(InformSuperVisorsUrgency.UrgentInfoMakePhonecall) ? TimeSpan.FromSeconds(3) : TimeSpan.FromMinutes(30);
+                if (timeFromLastCall > minTimeFromLastCall)
+                    {
                     var call = new PhoneCall
                     {
                         FromNumber = Caller.Gyantal,

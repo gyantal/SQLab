@@ -72,7 +72,7 @@ namespace HealthMonitor
             if (isErrorOrWarning)
             {
                 Utils.Logger.Info("Error or Warning FromVirtualBroker().");
-                InformSupervisors("SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { ((briefReport != null) ? briefReport : p_message.ParamStr) }", 
+                InformSupervisors(InformSuperVisorsUrgency.UrgentInfoSendEmail, "SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { ((briefReport != null) ? briefReport : p_message.ParamStr) }", 
                     "There is an Error in Virtual Broker. ... I repeat: Error in Virtual Broker.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
             }
         }
@@ -111,7 +111,7 @@ namespace HealthMonitor
             if (expectedMessage == null)    // Send email, make phonecall
             {
                 Utils.Logger.Debug("HmVb.CheckOKMessageArrived(): OK.");
-                InformSupervisors($"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} didn't arrive.", $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} did't arrive.", $"Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive. ... I repeat: Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
+                InformSupervisors(InformSuperVisorsUrgency.UrgentInfoSendEmail, $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} didn't arrive.", $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} did't arrive.", $"Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive. ... I repeat: Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
             }
             else
             {
