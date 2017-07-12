@@ -22,7 +22,7 @@ export class LEtf extends Strategy {
         if ((p_subStrategyId == "idMenuItemLETFDiscrRebToNeutral") || (p_subStrategyId == "idMenuItemLETFDiscrAddToWinner"))
             this.SetParams("idParamSetHL_-50URE_-50SRS");
         else if (p_subStrategyId == "idMenuItemLETFHarryLong")
-            this.SetParams("idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy4");
+            this.SetParams("idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy5");
         return true;
     }
 
@@ -174,9 +174,13 @@ export class LEtf extends Strategy {
                 this.assetsConstantWeightPct = "-70,111,-11,-34,0,0,0,0";   // %, negative is Short
                 break;
             case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy4":   // Markowitz MPT optimal weight using 135% allocation
-            default:
                 this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "-70,171,-17,-52,0,0,0,0";   // %, negative is Short
+                break;
+            case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy5":   // Markowitz MPT optimal weight using 135% allocation
+            default:
+                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "-70,213,-21,-66,0,0,0,0";   // %, negative is Short
                 break;
         }
     }

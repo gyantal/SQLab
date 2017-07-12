@@ -11,7 +11,7 @@
     "SQLab": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "http://localhost:5000/sqstudies",
+      "launchUrl": "http://localhost:5000/QuickTester",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

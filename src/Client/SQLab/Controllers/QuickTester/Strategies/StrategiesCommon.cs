@@ -383,7 +383,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     if (firstQuoteDate != p_quotes[i][quotesInd[i]].Date)
                     {
                         isAlldatesSame = false;
-                        p_noteToUserCheckData = $"Missing Days. Days of Data don't match in the quotes. FirstQuote({p_tickers[0]}) date: '{firstQuoteDate.ToString("yyyy-MM-dd")}' doesn't match with ticker({p_tickers[i]}) date: '{p_quotes[i][quotesInd[i]].Date.ToString("yyyy-MM-dd")}'. Backtest goes only until this day.";
+                        p_noteToUserCheckData = $"Warning! Missing Days! Days of Data don't match in the quotes. FirstQuote({p_tickers[0]}) date: '{firstQuoteDate.ToString("yyyy-MM-dd")}' doesn't match with ticker({p_tickers[i]}) date: '{p_quotes[i][quotesInd[i]].Date.ToString("yyyy-MM-dd")}'. Backtest goes only until this day.";
                         break;
                     }
                 }
