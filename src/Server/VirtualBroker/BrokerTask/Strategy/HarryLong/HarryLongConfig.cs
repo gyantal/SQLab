@@ -7,7 +7,7 @@ namespace VirtualBroker
 {
     public class HarryLongConfig
     {
-        public string[] AllPotentialTickersOfPortfolios = new string[] { "TVIX", "TMV", "UWT", "UGAZ", "BOIL", "USO", };
+        public string[] AllPotentialTickersOfPortfolios = new string[] { "TVIX", "TMV", "UWT", "UGAZ" };
 
         public string[] DefaultTradedTickers = new string[] { "TVIX", "TMV" };            // strategy default is used only if PortfolioParamHarryLong is not given
         public double[] DefaultTradedAssetsWeights = new double[] { -0.35, -0.65 };       // strategy default is used only if PortfolioParamHarryLong is not given
