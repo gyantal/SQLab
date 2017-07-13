@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,6 +87,68 @@ namespace DbCommon
             Console.ReadKey();
         }
 #endif
+
+        public static async Task<Tuple<List<object[]>, TimeSpan>> GetHistQuotesAsync(DateTime p_startDateUtc, DateTime p_endDateUtc, List<string> p_tickers, ushort p_sqlReturnedColumns)
+        {
+            List<string> stockTickers = p_tickers.Where(r => !r.StartsWith("^")).ToList();
+            List<string> indicesTickers = p_tickers.Where(r => r.StartsWith("^")).ToList();
+
+            TimeZoneInfo etZone = null;
+
+            int requestNQuotes = Int32.MaxValue;
+            DateTime? requestStartDateExcgLocal = null, requestEndDateExcgLocal = null;
+            if (p_startDateUtc != DateTime.MinValue)
+            {
+                ConvertUtcToExchangeLocal(p_startDateUtc, ref etZone, ref requestStartDateExcgLocal);
+            }
+            if (p_endDateUtc != DateTime.MaxValue)
+            {
+                ConvertUtcToExchangeLocal(p_endDateUtc, ref etZone, ref requestEndDateExcgLocal);
+            }
+
+            Stopwatch stopWatch = Stopwatch.StartNew();
+
+            Task<IList<object[]>> stocksSqlReturnTask = null, indicesSqlReturnTask = null;
+            IList<object[]> stocksSqlReturn = null, indicesSqlReturn = null;
+            if (stockTickers.Count != 0)
+                stocksSqlReturnTask = SqlTools.LoadHistoricalQuotesAsync(stockTickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = requestNQuotes, StartDate = requestStartDateExcgLocal, EndDate = requestEndDateExcgLocal, NonAdjusted = false, ReturnedColumns = p_sqlReturnedColumns }), DbCommon.AssetType.Stock, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+            if (indicesTickers.Count != 0)
+                indicesSqlReturnTask = SqlTools.LoadHistoricalQuotesAsync(indicesTickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = requestNQuotes, StartDate = requestStartDateExcgLocal, EndDate = requestEndDateExcgLocal, NonAdjusted = false, ReturnedColumns = p_sqlReturnedColumns }), DbCommon.AssetType.BenchmarkIndex, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+
+            if (stockTickers.Count != 0)
+                stocksSqlReturn = await stocksSqlReturnTask;
+            if (indicesTickers.Count != 0)
+                indicesSqlReturn = await indicesSqlReturnTask;
+            stopWatch.Stop();
+            TimeSpan historicalQueryTimeSpan = stopWatch.Elapsed;
+
+            List<object[]> sqlReturn = null;
+            if (stocksSqlReturn != null)
+                sqlReturn = stocksSqlReturn.ToList();   // the return is a List() already if you look deeper in the implementation
+            if (indicesSqlReturn != null)
+            {
+                if (sqlReturn == null)
+                    sqlReturn = indicesSqlReturn.ToList();
+                else
+                    sqlReturn.AddRange(indicesSqlReturn.ToList());
+            }
+
+            return new Tuple<List<object[]>, TimeSpan>(sqlReturn, historicalQueryTimeSpan);
+        }
+
+        private static void ConvertUtcToExchangeLocal(DateTime p_dateTimeUtc, ref TimeZoneInfo etZone, ref DateTime? requestStartDateExcgLocal)
+        {
+            DateTime startDateUtc = p_dateTimeUtc;
+            if (startDateUtc.TimeOfDay.Ticks == 0) // if it ends with :00:00:00
+            {
+                startDateUtc = new DateTime(startDateUtc.Year, startDateUtc.Month, startDateUtc.Day, 16, 0, 0);
+            }
+
+            if (etZone == null)
+                etZone = Utils.FindSystemTimeZoneById(TimeZoneId.EST);
+            requestStartDateExcgLocal = TimeZoneInfo.ConvertTime(startDateUtc, TimeZoneInfo.Utc, etZone).Date;  // convert UTC to ExcgLocal
+        }
+
 
         public static async Task<IList<object[]>> LoadHistoricalQuotesAsync(IEnumerable<QuoteRequest> p_reqs,
             DbCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
@@ -379,6 +442,12 @@ FROM (
             if (p_conn == null)
             {
                 string connString = ExeCfgSettings.ServerHedgeQuantConnectionString.Read();
+                if (String.IsNullOrEmpty(connString))
+                {
+                    string errMsg = $"Error: ExecuteSqlQueryAsync(): ExeCfgSettings.ServerHedgeQuantConnectionString is not specified. There is no point to continue this method. Raise exception here.";
+                    SqCommon.Utils.Logger.Error(errMsg);
+                    throw new Exception(errMsg);
+                }
                 p_conn = new SqlConnection(connString);
             }
             try

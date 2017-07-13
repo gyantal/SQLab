@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\SQLab.Common\SQLab.Common.csproj" />
+    <ProjectReference Include="..\..\SQLab.DbCommon\SQLab.DbCommon.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,11 +1,23 @@
-﻿using SqCommon;
+﻿using DbCommon;
+using SqCommon;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading;     // this is the only timer available under DotNetCore
+using System.Threading.Tasks;
 
 namespace Overmind
 {
+
+    public class DailyData
+    {
+        public DateTime Date { get; set; }
+        public double AdjClosePrice { get; set; }
+    }
+
     // send Calendar emails (about Birthday (orsi), Pay-Rent, Accountant), 
     // it can do other things like: watch BIDU price and send SMS if it fell more than 5%;
     class Controller
@@ -23,6 +35,19 @@ namespace Overmind
         readonly DateTime g_DailyMorningTimerTime = new DateTime(2000, 1, 1, 9, 05, 0);      // the date part is not used only the time part. Activate every day 9:05, London Time Zone
         readonly DateTime g_DailyMiddayTimerTime = new DateTime(2000, 1, 1, 16, 45, 0);      // the date part is not used only the time part, Activate every day: 16:45, London Time Zone
         const int cHeartbeatTimerFrequencyMinutes = 5;
+
+        static string g_htmlEmailStart =
+@"<!DOCTYPE html><html><head><style>
+.sqNormalText {
+    font-size: 125%;
+}
+.sqImportantOK {
+    font-size: 140%;
+    color: #11228B;
+    font-weight: bold;
+}
+</style></head>
+<body class=""sqNormalText"">";
 
         internal void Start()
         {
@@ -171,72 +196,8 @@ namespace Overmind
                     return;
                 }
 
-                string gyantalEmailInnerlStr = String.Empty;
-                string gyantalPhoneCallInnerStr = String.Empty;
-                string charmatEmailInnerlStr = String.Empty;
-                string charmatPhoneCallInnerStr = String.Empty;
-
-                double biduTodayPctChange = GetTodayPctChange("BIDU");
-                if (Math.Abs(biduTodayPctChange) >= 0.04)
-                {
-                    gyantalEmailInnerlStr += "BIDU price warning: bigger than usual move. In percentage: " + (biduTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
-                    gyantalPhoneCallInnerStr += "the ticker B I D U, ";
-                }
-                double vxxTodayPctChange = GetTodayPctChange("VXX");
-                if (Math.Abs(vxxTodayPctChange) >= 0.06)
-                {
-                    gyantalEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
-                    gyantalPhoneCallInnerStr += "the ticker V X X ";
-                    charmatEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
-                    charmatPhoneCallInnerStr += "the ticker V X X ";
-                }
-
-                double fbTodayPctChange = GetTodayPctChange("FB");
-                if (Math.Abs(fbTodayPctChange) >= 0.04)
-                {
-                    charmatEmailInnerlStr += "Facebook price warning: bigger than usual move. In percentage: " + (fbTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
-                    charmatPhoneCallInnerStr += "the ticker Facebook, ";
-                }
-
-                double amznTodayPctChange = GetTodayPctChange("AMZN");
-                if (Math.Abs(amznTodayPctChange) >= 0.04)
-                {
-                    charmatEmailInnerlStr += "Amazon price warning: bigger than usual move. In percentage: " + (amznTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
-                    charmatPhoneCallInnerStr += "the ticker Amazon, ";
-                }
-
-                double googleTodayPctChange = GetTodayPctChange("FB");
-                if (Math.Abs(googleTodayPctChange) >= 0.04)
-                {
-                    charmatEmailInnerlStr += "Google price warning: bigger than usual move. In percentage: " + (googleTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
-                    charmatPhoneCallInnerStr += "the ticker Google, ";
-                }
-
-                if (!String.IsNullOrEmpty(gyantalEmailInnerlStr))
-                {
-                    new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "Overmind: SnifferQuant Price Warning", Body = gyantalEmailInnerlStr, IsBodyHtml = false }.Send();
-                    var call = new PhoneCall
-                    {
-                        FromNumber = Caller.Gyantal,
-                        ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
-                        Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + gyantalPhoneCallInnerStr +  " ... I repeat " + gyantalPhoneCallInnerStr,
-                        NRepeatAll = 2
-                    };
-                    Console.WriteLine(call.MakeTheCall());
-                }
-
-                if (!String.IsNullOrEmpty(charmatEmailInnerlStr))
-                {
-                    new Email { ToAddresses = Utils.Configuration["EmailCharmat0"], Subject = "SnifferQuant Price Warning", Body = charmatEmailInnerlStr, IsBodyHtml = false }.Send();
-                    var call = new PhoneCall
-                    {
-                        FromNumber = Caller.Gyantal,
-                        ToNumber = PhoneCall.PhoneNumbers[Caller.Charmat0],
-                        Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + charmatPhoneCallInnerStr + " ... I repeat " + charmatPhoneCallInnerStr,
-                        NRepeatAll = 2
-                    };
-                    Console.WriteLine(call.MakeTheCall());
-                }
+                CheckIntradayStockPctChanges();
+                CheckLastClosePrices();
 
                 Utils.Logger.Info("DailyMiddayTimer_Elapsed()-4");
             }
@@ -247,6 +208,76 @@ namespace Overmind
                 new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
             }
             Utils.Logger.Info("DailyMiddayTimer_Elapsed() END");
+        }
+
+        private static void CheckIntradayStockPctChanges()
+        {
+            string gyantalEmailInnerlStr = String.Empty;
+            string gyantalPhoneCallInnerStr = String.Empty;
+            string charmatEmailInnerlStr = String.Empty;
+            string charmatPhoneCallInnerStr = String.Empty;
+
+            double biduTodayPctChange = GetTodayPctChange("BIDU");
+            if (Math.Abs(biduTodayPctChange) >= 0.04)
+            {
+                gyantalEmailInnerlStr += "BIDU price warning: bigger than usual move. In percentage: " + (biduTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                gyantalPhoneCallInnerStr += "the ticker B I D U, ";
+            }
+            double vxxTodayPctChange = GetTodayPctChange("VXX");
+            if (Math.Abs(vxxTodayPctChange) >= 0.06)
+            {
+                gyantalEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
+                gyantalPhoneCallInnerStr += "the ticker V X X ";
+                charmatEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
+                charmatPhoneCallInnerStr += "the ticker V X X ";
+            }
+
+            double fbTodayPctChange = GetTodayPctChange("FB");
+            if (Math.Abs(fbTodayPctChange) >= 0.04)
+            {
+                charmatEmailInnerlStr += "Facebook price warning: bigger than usual move. In percentage: " + (fbTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                charmatPhoneCallInnerStr += "the ticker Facebook, ";
+            }
+
+            double amznTodayPctChange = GetTodayPctChange("AMZN");
+            if (Math.Abs(amznTodayPctChange) >= 0.04)
+            {
+                charmatEmailInnerlStr += "Amazon price warning: bigger than usual move. In percentage: " + (amznTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                charmatPhoneCallInnerStr += "the ticker Amazon, ";
+            }
+
+            double googleTodayPctChange = GetTodayPctChange("FB");
+            if (Math.Abs(googleTodayPctChange) >= 0.04)
+            {
+                charmatEmailInnerlStr += "Google price warning: bigger than usual move. In percentage: " + (googleTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
+                charmatPhoneCallInnerStr += "the ticker Google, ";
+            }
+
+            if (!String.IsNullOrEmpty(gyantalEmailInnerlStr))
+            {
+                new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "Overmind: SnifferQuant Price Warning", Body = gyantalEmailInnerlStr, IsBodyHtml = false }.Send();
+                var call = new PhoneCall
+                {
+                    FromNumber = Caller.Gyantal,
+                    ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
+                    Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + gyantalPhoneCallInnerStr + " ... I repeat " + gyantalPhoneCallInnerStr,
+                    NRepeatAll = 2
+                };
+                Console.WriteLine(call.MakeTheCall());
+            }
+
+            if (!String.IsNullOrEmpty(charmatEmailInnerlStr))
+            {
+                new Email { ToAddresses = Utils.Configuration["EmailCharmat0"], Subject = "SnifferQuant Price Warning", Body = charmatEmailInnerlStr, IsBodyHtml = false }.Send();
+                var call = new PhoneCall
+                {
+                    FromNumber = Caller.Gyantal,
+                    ToNumber = PhoneCall.PhoneNumbers[Caller.Charmat0],
+                    Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + charmatPhoneCallInnerStr + " ... I repeat " + charmatPhoneCallInnerStr,
+                    NRepeatAll = 2
+                };
+                Console.WriteLine(call.MakeTheCall());
+            }
         }
 
         private static double GetTodayPctChange(string p_ticker)
@@ -261,6 +292,80 @@ namespace Overmind
             double todayPercentChange = realTimePrice / yesterdayClose - 1;
             return todayPercentChange;
         }
+
+        private static void CheckLastClosePrices()
+        {
+            // it is difficult with these data sources. Sometimes YF, sometimes GF is not good. We try to use our SQL then.
+            DateTime endDateUtc = DateTime.UtcNow.AddDays(-1);
+            DateTime startDateUtc = endDateUtc.AddDays(-90);   // we need the last 50 items, but ask more trading days. Just to be sure. With this 90 calendar days, we got 62 trading days in July. However, in the Xmas season, we get less. So, keep the 90 calendar days.
+
+            List<string> tickers = new List<string>() { "^VIX" };
+            ushort sqlReturnedColumns = QuoteRequest.TDC;       // QuoteRequest.All or QuoteRequest.TDOHLCVS
+            var sqlReturnTask = SqlTools.GetHistQuotesAsync(startDateUtc, endDateUtc, tickers, sqlReturnedColumns);
+            var sqlReturnData = sqlReturnTask.Result;
+            var sqlReturn = sqlReturnData.Item1;
+
+            List<List<DailyData>> returnQuotes = null;
+            // sql query of "VXX.SQ" gives back tickers of VXX and also tickers of "VXX.SQ"
+            int closePriceIndex = 2;
+
+            returnQuotes = tickers.Select(ticker =>
+            {
+                string tickerWithoutDotSQ = "";
+                if (ticker.EndsWith(".SQ"))
+                    tickerWithoutDotSQ = ticker.Substring(0, ticker.Length - ".SQ".Length);
+                return sqlReturn.Where(row => (string)row[0] == ticker || (string)row[0] == tickerWithoutDotSQ).Select(
+                    row => new DailyData()
+                    {
+                        Date = ((DateTime)row[1]),
+                        AdjClosePrice = (double)Convert.ToDecimal(row[closePriceIndex])  // row[2] is object(double) if it is a stock (because Adjustment multiplier), and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
+                    }).ToList();
+            }).ToList();
+
+
+            // Check that 1.2*SMA(VIX, 50) < VIX_last_close:  (this is used by the VIX spikes document)
+            // this is used in the Balazs's VIX spikes gDoc: https://docs.google.com/document/d/1YA8uBscP1WbxEFIHXDaqR50KIxLw9FBnD7qqCW1z794
+
+            var quotes = returnQuotes[0];
+
+            double lastClose = quotes[quotes.Count - 1].AdjClosePrice;
+            int nSmaDays = 50;
+            double sma = 0;
+            for (int i = 0; i < nSmaDays; i++)
+            {
+                sma += quotes[quotes.Count - 1 - i].AdjClosePrice;
+            }
+            sma /= (double)nSmaDays;
+
+            bool isVixSpike = 1.2 * sma < lastClose;
+            // VIX spike can be detected with another formulation if wished
+            //Maybe I should use this(or Both) in the VIX checking email service
+            //"Marked on the chart are instances where the VIX has risen by at least 30% (from close to"
+            //the highest high) in a five-day period when a previous 30 +% advance had not occurred in the prior ten trading days.There have been 70 such occurrences of these spikes in the above-mentioned time period.
+            //> But Balazs showed it is not really useful.Still, it can be used. Read that article and email again.
+            //See "2017-Forecasting Volatility Tsunamy, Balazs-gmail.pdf"
+
+            if (isVixSpike)  // if  1.2*SMA(VIX, 50) < VIX_last_close, sends an email. So, we can trade VIX MR subjectively.
+            {
+                string subjectPart = "VIX spike detected";
+                StringBuilder sb = new StringBuilder(g_htmlEmailStart);
+                sb.Append(@"<span class=""sqImportantOK""><strong>VIX Spike</strong> is detected!</span><br/><br/>");
+                sb.Append($"Using yesterday close prices for VIX, the condition<br/> <strong>'VIX_lastClose &gt; 1.2 * SMA(VIX, 50)'</strong><br/> ({lastClose:0.##} &gt;  1.2 * {sma:0.##}) was triggered.<br/>");
+                sb.Append(@"Our <a href=""https://docs.google.com/document/d/1YA8uBscP1WbxEFIHXDaqR50KIxLw9FBnD7qqCW1z794"">VIX spikes collection gDoc</a> uses the same formula for identifying panic times.<br/>");
+                sb.Append("Intraday price was not used for this trigger. You need to act with a delay anyway.<br/><br/>");
+                sb.Append("<strong>Action: </strong><br/> This is a Mean Reversion (MR) opportunity.<br/> Trading 'fading the VIX spike' can be considered.<br/>");
+                sb.Append("Maybe risking 1/10th of the portfolio.<br/> Doubling down in another chunk maximum 3 times.<br/>");
+                sb.Append("</body></html>");
+
+                string emailHtmlBody = sb.ToString();
+                new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "Overmind: " + subjectPart, Body = emailHtmlBody, IsBodyHtml = true }.Send();
+                new Email { ToAddresses = Utils.Configuration["EmailCharmat0"], Subject = "SnifferQuant: " + subjectPart, Body = emailHtmlBody, IsBodyHtml = true }.Send();
+                new Email { ToAddresses = Utils.Configuration["EmailBalazs"], Subject = "SnifferQuant: " + subjectPart, Body = emailHtmlBody, IsBodyHtml = true }.Send();
+            }
+
+        }
+
+
 
         // Amazon UK price history can be checked in uk.camelcamelcamel.com, for example: http://uk.camelcamelcamel.com/Sennheiser-Professional-blocking-gaming-headset-Black/product/B00JQDOANK
         private static double? GetAmazonProductPrice(string p_amazonProductUrl)

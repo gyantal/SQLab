@@ -224,10 +224,7 @@ namespace HealthMonitor
         }
 
         string m_dailyReportEmailStr1 =
-@"<!DOCTYPE html>
-<html>
-<head>
-    <style>
+@"<!DOCTYPE html><html><head><style>
 .sqNormalText {
     font-size: 125%;
 }
@@ -244,8 +241,7 @@ namespace HealthMonitor
 .sqDetail {
     font-size: 70%;
 }
-    </style>
-</head>
+</style></head>
 <body class=""sqNormalText"">
     <strong>Realtime Price</strong> Service: ";
 
