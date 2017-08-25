@@ -154,7 +154,9 @@ namespace VirtualBroker
                         new BrokerTaskPortfolio() { Name = "! AdaptiveConnor,VXX autocorrelation (VXX-XIV, stocks, noHedge) Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
                             MaxTradeValueInCurrency = 48000, // portfolio is 5K original, 8K is 2017-01, but it plays double leverage: 16K-20K. 20K is possible. So, almost double the range to 35K too.
                             MinTradeValueInCurrency = 100,
-                            Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 2.0 } },
+                            //Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 2.0 } },
+                            //Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 1.0 } },  // 2017-08-14: "VixShortLeverage" from 2.0 to 1.0, because InitialMargin of 'long SVXY' is 100%, and 'short TVIX' is 300%
+                            Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 2.0 } },  // 2017-08-22: "VixShortLeverage" from 1.0 to 2.0, because InitialMargin of 'long SVXY' has OK margin now. 'Portfolio Margin Details' shows about 43% margin for ZIV, and something similar to XIV. Margins are moderated.
                         new BrokerTaskPortfolio() { Name = "! AdaptiveConnor,VXX autocorrelation (VXX-XIV, stocks, noHedge) Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
                             MaxTradeValueInCurrency = 20000, // >For Mr.C. VXX (10K original, 9K now, I would set MaxValue=20K (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 100,

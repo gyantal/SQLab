@@ -217,7 +217,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     row => new DailyData()
                     {
                         Date = ((DateTime)row[1]),
-                        AdjClosePrice = (double)Convert.ToDecimal(row[closePriceIndex])  // row[2] is object(double) if it is a stock (because Adjustment multiplier), and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
+                        AdjClosePrice = (double)Convert.ToDecimal(row[closePriceIndex])  // row[2] is object(decimal) (from 2017-08-25, it was object(double) before) if it is a stock (because Adjustment multiplier and AS DECIMAL(19,4) in SQL); and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
                     }).ToList();
             }).ToList();
 

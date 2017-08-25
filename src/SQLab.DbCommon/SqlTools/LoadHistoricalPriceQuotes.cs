@@ -233,13 +233,13 @@ END TRY BEGIN CATCH THROW END CATCH;
 SELECT */*Columns*/
 FROM (SELECT /*TopN*/ tt.* FROM (
     SELECT Ticker=@Tsq777, StockID=@idsq777, [Date]=CAST([Date] AS DATE), Volume,
-        [Open] =CAST( OpenPrice*@adjsq777 AS DECIMAL(9,4)), High=CAST(HighPrice*@adjsq777 AS DECIMAL(9,4)),
-        [Close]=CAST(ClosePrice*@adjsq777 AS DECIMAL(9,4)), Low =CAST( LowPrice*@adjsq777 AS DECIMAL(9,4))
+        [Open] =CAST( OpenPrice*@adjsq777 AS DECIMAL(19,4)), High=CAST(HighPrice*@adjsq777 AS DECIMAL(19,4)),
+        [Close]=CAST(ClosePrice*@adjsq777 AS DECIMAL(19,4)), Low =CAST( LowPrice*@adjsq777 AS DECIMAL(19,4))
     FROM StockQuote sq0 WHERE StockID=@idsq777
     UNION ALL
     SELECT Ticker=@T777, StockID=@id777, [Date]=CAST([Date] AS DATE), Volume,
-        [Open] =CAST( OpenPrice*adj.f AS DECIMAL(9,4)), High=CAST( HighPrice*adj.f AS DECIMAL(9,4)),
-        [Close]=CAST(ClosePrice*adj.f AS DECIMAL(9,4)), Low =CAST(  LowPrice*adj.f AS DECIMAL(9,4))
+        [Open] =CAST( OpenPrice*adj.f AS DECIMAL(19,4)), High=CAST( HighPrice*adj.f AS DECIMAL(19,4)),
+        [Close]=CAST(ClosePrice*adj.f AS DECIMAL(19,4)), Low =CAST(  LowPrice*adj.f AS DECIMAL(19,4))
     FROM StockQuote sq1
     CROSS APPLY dbo.GetAdjustmentFactorAt2(sq1.StockID,sq1.Date) adj
     WHERE sq1.StockID=@id777
@@ -299,7 +299,12 @@ FROM (SELECT /*TopN*/ tt.* FROM (
             var result = new List<object[]>();
             await Task.WhenAll(sqls.Select(kv => ExecuteSqlQueryAsync(kv.Key, p_canc: p_canc,
                     p_params: kv.Value == null ? null : new Dictionary<string, object> { { "@p_request", kv.Value } })
-                    .ContinueWith(t => result.AddRange(t.Result[0]))));
+                    .ContinueWith(
+                t => {
+                    // TODO: check if SQL is so wrong that there is not even 0 result; then it will be Index out of Range exception; log it to a log file too.
+                    result.AddRange(t.Result[0]);
+                }
+                )));
             return result;
         }
         #region SQL scripts
@@ -394,13 +399,13 @@ END TRY BEGIN CATCH THROW END CATCH;
 
 WITH Q(Ticker,StockID,[Date],Volume,[Open],High,Low,[Close]) AS (
   SELECT @Tsq, @id0, CAST([Date] AS DATE), Volume,
-     CAST( OpenPrice*@adj0 AS DECIMAL(9,4)), CAST( HighPrice*@adj0 AS DECIMAL(9,4)),
-     CAST(  LowPrice*@adj0 AS DECIMAL(9,4)), CAST(ClosePrice*@adj0 AS DECIMAL(9,4))
+     CAST( OpenPrice*@adj0 AS DECIMAL(19,4)), CAST( HighPrice*@adj0 AS DECIMAL(19,4)),
+     CAST(  LowPrice*@adj0 AS DECIMAL(19,4)), CAST(ClosePrice*@adj0 AS DECIMAL(19,4))
   FROM StockQuote sq0 WHERE StockID=@id0
   UNION ALL
   SELECT @T, @id1, CAST([Date] AS DATE), Volume,
-     CAST( OpenPrice*adj.f AS DECIMAL(9,4)), CAST( HighPrice*adj.f AS DECIMAL(9,4)),
-     CAST(  LowPrice*adj.f AS DECIMAL(9,4)), CAST(ClosePrice*adj.f AS DECIMAL(9,4))
+     CAST( OpenPrice*adj.f AS DECIMAL(19,4)), CAST( HighPrice*adj.f AS DECIMAL(19,4)),
+     CAST(  LowPrice*adj.f AS DECIMAL(19,4)), CAST(ClosePrice*adj.f AS DECIMAL(19,4))
   FROM StockQuote sq1
   CROSS APPLY dbo.GetAdjustmentFactorAt2(@id2,sq1.Date) adj
   WHERE sq1.StockID=@id1
