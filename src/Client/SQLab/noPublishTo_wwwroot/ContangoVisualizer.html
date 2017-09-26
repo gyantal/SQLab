@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html style="background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%); background-attachment: fixed; /*background-repeat: repeat overflow: visible; /*avoid scrollbars  min-height: 200% min-width: 200%*/">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Contango Visualizer</title>
+
+    <link rel="stylesheet" type="text/css" href="/css/ContangoVisualizer.css">
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
+    <script type="text/javascript" src="/js/ContangoVisualizer.js"></script>
+    
+    <!--<script>
+        onHeadProcessing();
+    </script>-->
+          
+</head>
+
+<body >
+   <h1>Contango Visualizer</h1>
+    
+    <br>
+    <div class="center"><button class="button"  style="background: url(/images/vix.jpg); background-size: cover;" onClick="javascript: onHeadProcessing(1)"></button>&emsp;&emsp;<button class="button" style="background: url(/images/crude_oil.jpg); background-size: cover;" onClick="javascript:onHeadProcessing(2)"></button>&emsp;&emsp;<button class="button" style="background: url(/images/natural_gas.jpg); background-size: cover;" onClick="javascript:onHeadProcessing(3)"></button></div>
+    <br>
+    <div id="inviCharts" style="visibility: hidden">
+    <div class="h3" id="idTitleCont"></div>
+    <div class="demo-container">
+        <div id="placeholder1" class="demo-placeholder" style="float:left; width:675px;"></div>
+        <p id="choices1" style="float:right; width:135px;"></p>
+    </div>
+        <p class="center" id="my-link" ></p>
+    </div>
+    
+    <br>
+
+    <br>
+    <div class="center">
+    <span class="center" id="idTimeNow"></span>&emsp;&emsp;
+    <span id="idLiveDataDate"></span> <span id="idLiveDataTime"></span>
+    </div>
+    <br><br>
+    <span id="idCurrTableMtx"></span>
+
+</body>
+</html>
