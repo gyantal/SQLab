@@ -1,4 +1,7 @@
-﻿h1   {
+﻿body {
+    text-align: center;
+}
+h1   {
     font-family: "Comic Sans MS", cursive, sans-serif;
     text-align: center;
     color: blue;
@@ -21,15 +24,22 @@ h2   {
 
 .center {
     text-align: center;
+    border:0;
+    font-size: 13px;
 }
-
+p.center {
+margin-top:0;
+}
+span.center {
+margin:0;
+}
 .button {
     display: inline-block;
     border: none;
     border-radius: 12px;
     cursor: pointer;
-    height: 100px;
-    width: 200px;
+    height: 80px;
+    width: 160px;
     background-size: cover; 
     background-repeat: no-repeat;
     max-width: 100%;
@@ -43,12 +53,15 @@ h2   {
     transform: translateY(4px);
 }
 
-  table.currData{
-    width: 90%;
-    margin: 0 auto;
-    border-collapse:collapse;
+table.currData {
+    width: 80%;
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-bottom: 0;
+    font-size: 13px;
+    border-collapse: collapse;
     border: 1px solid black;
-    }
+}
 
 .currData td {
     width: 5%;
@@ -62,7 +75,7 @@ h2   {
     overflow: hidden;
 }
 
-table.histData{
+.histData{
     width: 95%;
     margin: 0 auto;
     border-collapse:collapse;
@@ -139,29 +152,32 @@ table.resData{
 }
 
 .demo-container {
-	box-sizing: border-box;
-	width: 850px;
-	height: 450px;
-	padding: 20px 15px 15px 15px;
-	margin: 15px auto 30px auto;
-	border: 1px solid #ddd;
-	background: #fff;
-	background: linear-gradient(#f6f6f6 0, #fff 50px);
-	background: -o-linear-gradient(#f6f6f6 0, #fff 50px);
-	background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);
-	background: -moz-linear-gradient(#f6f6f6 0, #fff 50px);
-	background: -webkit-linear-gradient(#f6f6f6 0, #fff 50px);
-	box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-	-o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-	-ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-	-moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-	-webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    width: 600px;
+    height: 300px;
+    padding: 20px 15px 15px 15px;
+    margin: 5px auto 10px auto;
+    border: 1px solid #ddd;
+    /*background: #0094ff;*/
+    font-size: 10px;
+    background: #F4F6F6; /* For browsers that do not support gradients */
+    background: linear-gradient(90deg, #D6EAF8, #D1F2EB); /* Standard syntax */
+    /*background: linear-gradient(#f6f6f6 0, #fff 50px);
+    background: -o-linear-gradient(#f6f6f6 0, #fff 50px);
+    background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);
+    background: -moz-linear-gradient(#f6f6f6 0, #fff 50px);
+    background: -webkit-linear-gradient(#f6f6f6 0, #fff 50px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    -o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    -ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    -moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    -webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);*/
 }
 
 .demo-placeholder {
 	width: 100%;
 	height: 100%;
-	font-size: 14px;
+	font-size: 12px;
 	line-height: 1.2em;
 }
 

@@ -490,7 +490,7 @@ namespace SQLab.Controllers
 
             for (int iRows = 0; iRows < 8; iRows++)
             {
-                if (String.Equals(liveFuturesPrices[iRows], '-'))
+                if (String.Equals(liveFuturesPrices[iRows], "-"))
                 {
                     liveFuturesPrices[iRows] = prevFuturesPrices[iRows];
                 }

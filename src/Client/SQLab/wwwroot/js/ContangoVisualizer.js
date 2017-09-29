@@ -95,32 +95,33 @@ function creatingTables(data) {
             currTableMtx += "<td>" + currDataDaysArray[i] + "</td>";
         }
     }
-    currTableMtx += "</tr></table><br><br>";
+    currTableMtx += "</tr></table>";
    
-    currTableMtx += "<table class=\"currData\"><tr align=\"center\"><td>Contango</td><td>F2-F1</td><td>F3-F2</td><td>F4-F3</td><td>F5-F4</td><td>F6-F5</td><td>F7-F6</td><td>F8-F7</td><td>F7-F4</td><td>(F7-F4)/3</td></tr><tr align=\"center\"><td align=\"left\">Contango %</td><td><b>" + (currDataArray[i] * 100).toFixed(2) + "%</b></td>";
+    var currTableMtx3= "<table class=\"currData\"><tr align=\"center\"><td>Contango</td><td>F2-F1</td><td>F3-F2</td><td>F4-F3</td><td>F5-F4</td><td>F6-F5</td><td>F7-F6</td><td>F8-F7</td><td>F7-F4</td><td>(F7-F4)/3</td></tr><tr align=\"center\"><td align=\"left\">Monthly Contango %</td><td><b>" + (currDataArray[i] * 100).toFixed(2) + "%</b></td>";
     for (var i = 20; i < 27; i++) {
         if (currDataArray[i] == 0) {
-            currTableMtx += "<td>" + "---" + "</td>";
+            currTableMtx3 += "<td>" + "---" + "</td>";
         } else {
-            currTableMtx += "<td>" + (currDataArray[i] * 100).toFixed(2) + "%</td>";
+            currTableMtx3 += "<td>" + (currDataArray[i] * 100).toFixed(2) + "%</td>";
         }
     }
-    currTableMtx += "<td><b>" + (currDataArray[27] * 100).toFixed(2) + "%</b></td>";
-    currTableMtx += "</tr><tr align=\"center\"><td align=\"left\">Difference</td>";
+    currTableMtx3 += "<td><b>" + (currDataArray[27] * 100).toFixed(2) + "%</b></td>";
+    currTableMtx3 += "</tr><tr align=\"center\"><td align=\"left\">Difference</td>";
     for (var i = 10; i < 19; i++) {
         if (currDataArray[i] == 0) {
-            currTableMtx += "<td>" + "---" + "</td>";
+            currTableMtx3 += "<td>" + "---" + "</td>";
         }
         else {
-            currTableMtx += "<td>" + (currDataArray[i] * 100 / 100).toFixed(2) + "</td>";
+            currTableMtx3 += "<td>" + (currDataArray[i] * 100 / 100).toFixed(2) + "</td>";
         }
     }
-    currTableMtx += "</tr></table>";
+    currTableMtx3 += "</tr></table>";
 
     //"Sending" data to HTML file.
     var currTableMtx2 = document.getElementById("idCurrTableMtx");
     currTableMtx2.innerHTML = currTableMtx;
-    
+    var currTableMtx4 = document.getElementById("idCurrTableMtx3");
+    currTableMtx4.innerHTML = currTableMtx3;
       
     var nCurrData = 7;
     var currDataPrices = new Array(nCurrData);
@@ -157,7 +158,7 @@ function creatingTables(data) {
                 data: currDataPrices,
                 points: { show: true },
                 lines: { show: true }
-            },
+             },
             "previous": {
                 label: "Last close",
                 data: prevDataPrices,
@@ -167,8 +168,9 @@ function creatingTables(data) {
             "spot": {
                 label: "Spot VIX",
                 data: spotVixValues,
-                points: { show: true },
-                lines: { show: true }
+                //points: { show: false },
+                lines: { show: true, lineWidth : 1 }
+                //dashes: { show: true, lineWidth: 5 }
             }
         };
     } else {
@@ -227,29 +229,64 @@ function flotPlotMyData1(datasets1) {
 
     function plotAccordingToChoices() {
 
-        var data = [];
+        var dataB = [];
 
         choiceContainer.find("input:checked").each(function () {
             var key = $(this).attr("name");
             if (key && datasets1[key]) {
-                data.push(datasets1[key]);
+                dataB.push(datasets1[key]);
             }
         });
 
 
-        if (data.length > 0) {
-            $.plot("#placeholder1", data, {
+        if (dataB.length > 0) {
+            $.plot("#placeholder1", dataB, {
                 yaxis: {
-
+                    axisLabel: "Futures Price (USD)",
+                    //tickFormatter: function (v, axis) {
+                    //    return "$" + v.toFixed(1);
+                    //}
+                    
                 },
                 xaxis: {
                     tickDecimals: 0,
                     min: 0,
-                    max: 225
+                    max: 225,
+                    axisLabel: "Number of Days till Settlement"
                 },
                 legend: {
-                    position: "nw"
+                    position: "nw",
+                    backgroundColor: "#F4F6F6"
+                },
+                colors: ["#0022FF", "#148F77", "#CB4335"],
+                grid: {
+                    backgroundColor: "#F4F6F6",
+                    hoverable: true
+                },
+                tooltip: {
+                    show: true,
+                //},
+                //tooltipOpts: {
+                    //content: function (label, xval, yval) {
+                    //    var content = "%s %x " + yval;
+                    //    return content;
+                    //}
+                    content: function (label, x, y) {
+                        var xVals = [];
+                        for (var i = 0; i < 7; i++) {
+                            xVals[i] = dataB[0].data[i][0];
+                        };
+                        var indi = xVals.indexOf(x);
+                        var text = "<i>Number of days till expiration: " + dataB[0].data[indi][0] + "<br/></i>";
+                            dataB.forEach(function (series) {
+                                // series_label : value
+                                text += series.label + ' : ' + series.data[indi][1] + "<br/>";
+                            });
+                        
+                        return text;
+                    }
                 }
+                
             });
         }
     }
