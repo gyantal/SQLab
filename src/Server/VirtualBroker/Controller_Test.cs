@@ -268,9 +268,9 @@ namespace VirtualBroker
 
             string s = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
             //string s = @"?s=VXX,SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l"; // without JsonP, AAPL and GOOGL is not streamed
-            //string s = @"?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l"; // without JsonP, this was the old test 1
-            //string s = @"?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction"; // with JsonP, this was the old test 2
-            //string s = @"?s=^VIX,^^^VIX201610,^^^VIX201611,^VXV,^^^VIX201701,VXX,^^^VIX201704&f=l";     // VixTimer asks this http://www.snifferquant.com/dac/VixTimer
+            //string s = @"?s=VXX,^VIX,^GSPC,XIV&f=l"; // without JsonP, this was the old test 1
+            //string s = @"?s=VXX,^VIX,^GSPC,XIV,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction"; // with JsonP, this was the old test 2
+            //string s = @"?s=^VIX,^^^VIX201610,^^^VIX201611,^^^VIX201701,VXX,^^^VIX201704&f=l";     // VixTimer asks this http://www.snifferquant.com/dac/VixTimer
             //string s = @"?s=^^^VIX201610,^^^VIX201611&f=l";     // VixTimer asks this http://www.snifferquant.com/dac/VixTimer
             VirtualBrokerMessage.TcpServerHost = VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener;      // it is a Test inside VBroker server, so use Private IP, not public IP
             string reply = VirtualBrokerMessage.Send(s, VirtualBrokerMessageID.GetRealtimePrice).Result;

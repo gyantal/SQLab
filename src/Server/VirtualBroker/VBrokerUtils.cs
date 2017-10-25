@@ -86,7 +86,7 @@ namespace VirtualBroker
         }
 
         // use YahooFinance ticker terminology (^GSPC instead of SPX); uppercase is a must. Hide it here, so it is not global. threadLock is not required
-        // // VXX,^VIX,^VXV,^GSPC,XIV,#^VIX201610,GOOG
+        // // VXX,^VIX,^GSPC,XIV,#^VIX201610,GOOG
         public static Contract ParseSqTickerToContract(string p_sqTicker)    
         {
             Contract contract;
@@ -95,6 +95,8 @@ namespace VirtualBroker
                 string symbol = p_sqTicker.Substring(1); // skip the "^"
                 if (symbol == "GSPC")       //
                     symbol = "SPX";
+                else if (symbol == "VXV")   // On September 18, 2017 the ticker symbol for the Cboe 3-Month Volatility Index was changed from “VXV” to “VIX3M”; So IB returns 'No security definition has been found' for VXV, but accepts VIX3M.
+                    symbol = "VIX3M";
                 string exchange = (p_sqTicker == "^RUT") ? "RUSSELL" : "CBOE";
                 string localSymbol = symbol;        // maybe it is not necessary. However for RUT, it worked
                 contract = new Contract() { Symbol = symbol, SecType = "IND", Currency = "USD", Exchange = exchange, LocalSymbol = localSymbol };  // remove the ^ when you send to IB

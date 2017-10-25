@@ -39,9 +39,9 @@ namespace VirtualBroker
     // (In JavaScript semicolon says the line end, and they are immediately flowed by a newline that says the same)
 
     // the input is the queryString of this 
-    //http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l 
-    //http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l&jsonp=MyCallBackFunction
-    //string s = @"?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201404,GOOG&f=l&jsonp=MyCallBackFunction";
+    //http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^GSPC,XIV&f=l 
+    //http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^GSPC,XIV&f=l&jsonp=MyCallBackFunction
+    //string s = @"?s=VXX,^VIX,^GSPC,XIV,^^^VIX201404,GOOG&f=l&jsonp=MyCallBackFunction";
 
     public partial class Gateway
     {

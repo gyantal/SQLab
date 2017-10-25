@@ -12,8 +12,8 @@ using Microsoft.AspNetCore.Authorization;
 
 // https://www.snifferquant.net/rtp?s=VXX,SVXY,UWM,TWM,^RUT&f=l  // without JsonP, these tickers are streamed all the time
 // https://www.snifferquant.net/rtp?s=VXX,SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l  // without JsonP, AAPL and GOOGL is not streamed
-// https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l  // without JsonP, this was the old test 1
-// https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction  // with JsonP, this was the old test 2
+// https://www.snifferquant.net/rtp?s=VXX,^VIX,^GSPC,XIV&f=l  // without JsonP, this was the old test 1
+// https://www.snifferquant.net/rtp?s=VXX,^VIX,^GSPC,XIV,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction  // with JsonP, this was the old test 2
 namespace SQLab.Controllers
 {
     //[Route("api/[controller]")]

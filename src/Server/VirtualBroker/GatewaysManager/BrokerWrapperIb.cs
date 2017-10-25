@@ -262,7 +262,7 @@ namespace VirtualBroker
             }
 
             // SERIOUS ERRORS AFTER THIS LINE. Notify HealthMonitor.
-            // after asking realtime price as "s=^VIX,^^^VIX201610,^^^VIX201611,^VXV,^^^VIX201701,VXX,^^^VIX201704&f=l"
+            // after asking realtime price as "s=^VIX,^^^VIX201610,^^^VIX201611,^^^VIX201701,VXX,^^^VIX201704&f=l"
             // Code: 200, Msg: The contract description specified for VIX is ambiguous; you must specify the multiplier or trading class.
             if (isAddOrderInfoToErrMsg)
             {

@@ -43,8 +43,8 @@ namespace HealthMonitor
                 }
 
 
-                //string url = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
-                string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
+                //string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l";
+                string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^GSPC,XIV&f=l";  // 2017-10-25: VXV: IB error: "No security definition has been found for the request", and not even in TWS. So, cancel it.
                 string rtpsReply = String.Empty;
                 if (Utils.DownloadStringWithRetry(out rtpsReply, url, 5, TimeSpan.FromSeconds(5), false))
                     Utils.Logger.Info(url + " returned: " + (rtpsReply.Substring(0, (rtpsReply.Length > 45) ? 45 : rtpsReply.Length)).Replace("\r\n", "").Replace("\n", ""));   // it is better to see it as one line in the log file
