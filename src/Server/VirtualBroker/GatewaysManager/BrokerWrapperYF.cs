@@ -157,6 +157,8 @@ namespace VirtualBroker
             throw new NotImplementedException();
         }
 
+        // 2017-11-03: YF discontinued the service. It only works with V7 API with crumbs (in YFForwarder of the website), however, we want a simpler solution here, which may be not accurate
+        // copy the code from Overmind. GetTodayPctChange(), where CNBC.com query is implemented
         public bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
         {
             if (p_contract.SecType == "FUT")

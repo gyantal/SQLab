@@ -492,14 +492,14 @@
     
 
     <small>
-        <b>Strategy summary: </b> For every day, determine if it is a FollowThrough (FT) day (if up day is followed by up day or down day followed by down day). Otherwise it is a Mean Reversion (MR) day.
+        <strong>Strategy summary: </strong> For every day, determine if it is a FollowThrough (FT) day (if up day is followed by up day or down day followed by down day). Otherwise it is a Mean Reversion (MR) day.
         Calculate the 'FT day probability' by the frequency of occurence in the last X days (lookback days = 50, 100, 200).
         Define a threshold (like p=47% probability) that separates FT and MR regimes.
         In FT regime, play FT, in MR regime play MR for the next day.
     </small>
     <br><br>
     <small>
-        <b>Backtest notes: </b><br>
+        <strong>Backtest notes: </strong><br>
         -StartDate is 2009-12-31 (about 200 days after VXX was born), so different lookbacks can be compared fairly. EndDate is today using the realtime price.<br>
         -Portfolio Value (PV) starts at $1.0.<br>
         -ProbDailyFT Threshold: <i>if 47% is specified, the >47.001% is good FT regime (for example 49% is still a good regime); but exact 47.00% is a bad MR regime.</i> We call FT regime good regime because that was the dominant regime historically.

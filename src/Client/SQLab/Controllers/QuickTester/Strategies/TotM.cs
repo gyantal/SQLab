@@ -73,7 +73,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
                 //"Number of positions: <span> XXXX </span><br><br>test",
                 //"Number of positions: <span> {{nPositions}} </span><br><br>test",
-                "<b>Bullish</b> (Bearish) on days when mask is Up (Down).<br>" + warningToUser
+                "<strong>Bullish</strong> (Bearish) on days when mask is Up (Down).<br>" + warningToUser
                 + ((!String.IsNullOrEmpty(warningToUser) && !String.IsNullOrEmpty(noteToUser)) ? "<br>" : "")
                 + noteToUser,
                 errorToUser, debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
@@ -313,7 +313,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //        @"}" +
             //    @"</script>";
 
-            p_noteToUser = @"<b>aMean(daily%Chg): " + pctChgTotalAMean.ToString("#0.000%") + @"%</b><br>" +
+            p_noteToUser = @"<strong>aMean(daily%Chg): " + pctChgTotalAMean.ToString("#0.000%") + @"%</strong><br>" +
                   BuildHtmlTable("Winter, TotM", winterTotMMask, pctChgTotalAMean)
                 + BuildHtmlTable("Winter, TotMM", winterTotMMMask, pctChgTotalAMean)
                 + BuildHtmlTable("Summer, TotM", summerTotMMask, pctChgTotalAMean)
@@ -453,8 +453,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
         private static string BuildHtmlTable(string p_tableTitle, MaskItems p_maskItems, double p_pctChgTotalAMean)
         {
-            //StringBuilder sb = new StringBuilder(@"<b>" + p_tableTitle + @":</b><br> <table class=""strategyNoteTable1"" width=""400"">");
-            StringBuilder sb = new StringBuilder(@"<b>" + p_tableTitle + @":</b><br> <table class=""strategyNoteTable1"">");
+            StringBuilder sb = new StringBuilder(@"<strong>" + p_tableTitle + @":</strong><br> <table class=""strategyNoteTable1"">");
             sb.Append(@"<th>Day</th><th>nSamples</th><th>WinPct</th><th>&nbsp; aMean &nbsp; </th><th>gMean</th><th>Median</th><th>StDev</th><th>StError</th><th>t-value(0)</th>" +
                 @"<th><div title=""P is calculated by one tailed, one sample T-test"">p-value(0)</div></th>" +
                 @"<th><div title=""With at least 1-P=95% probability: the real population mean (of the daily%changes on day T) > 0 {or opposite if T-value negative}"">Signif>0</div></th>" +

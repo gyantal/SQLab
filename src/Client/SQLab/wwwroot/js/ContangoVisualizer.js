@@ -97,7 +97,7 @@ function creatingTables(data) {
     }
     currTableMtx += "</tr></table>";
    
-    var currTableMtx3= "<table class=\"currData\"><tr align=\"center\"><td>Contango</td><td>F2-F1</td><td>F3-F2</td><td>F4-F3</td><td>F5-F4</td><td>F6-F5</td><td>F7-F6</td><td>F8-F7</td><td>F7-F4</td><td>(F7-F4)/3</td></tr><tr align=\"center\"><td align=\"left\">Monthly Contango %</td><td><b>" + (currDataArray[i] * 100).toFixed(2) + "%</b></td>";
+    var currTableMtx3 = "<table class=\"currData\"><tr align=\"center\"><td>Contango</td><td>F2-F1</td><td>F3-F2</td><td>F4-F3</td><td>F5-F4</td><td>F6-F5</td><td>F7-F6</td><td>F8-F7</td><td>F7-F4</td><td>(F7-F4)/3</td></tr><tr align=\"center\"><td align=\"left\">Monthly Contango %</td><td><strong>" + (currDataArray[i] * 100).toFixed(2) + "%</strong></td>";
     for (var i = 20; i < 27; i++) {
         if (currDataArray[i] == 0) {
             currTableMtx3 += "<td>" + "---" + "</td>";
@@ -105,7 +105,7 @@ function creatingTables(data) {
             currTableMtx3 += "<td>" + (currDataArray[i] * 100).toFixed(2) + "%</td>";
         }
     }
-    currTableMtx3 += "<td><b>" + (currDataArray[27] * 100).toFixed(2) + "%</b></td>";
+    currTableMtx3 += "<td><strong>" + (currDataArray[27] * 100).toFixed(2) + "%</strong></td>";
     currTableMtx3 += "</tr><tr align=\"center\"><td align=\"left\">Difference</td>";
     for (var i = 10; i < 19; i++) {
         if (currDataArray[i] == 0) {

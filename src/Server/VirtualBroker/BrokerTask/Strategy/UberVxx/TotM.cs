@@ -343,7 +343,7 @@ namespace VirtualBroker
         private void RenderStatsForDisplaying(string p_title, SampleStats[] p_forward, SampleStats[] p_backward, bool p_isHtml, StringBuilder p_sbStats)
         {
             if (p_isHtml)
-                p_sbStats.Append(@"<b>" + p_title + @":</b><br> <table class=""strategyNoteTable1"">" +
+                p_sbStats.Append(@"<strong>" + p_title + @":</strong><br> <table class=""strategyNoteTable1"">" +
                     @"<th>Day</th><th>nSamples</th><th>WinPct</th><th>&nbsp; aMean &nbsp; </th><th>gMean</th><th>Median</th><th>StDev</th><th>StError</th><th>t-value(0)</th>" +
                     @"<th><div title=""P is calculated by one tailed, one sample T-test"">p-value(0)</div></th>" +
                     @"<th><div title=""With at least 1-P=95% probability: the real population mean (of the daily%changes on day T) > 0 {or opposite if T-value negative}"">Signif>0</div></th>" +

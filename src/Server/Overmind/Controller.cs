@@ -280,17 +280,72 @@ namespace Overmind
             }
         }
 
-        private static double GetTodayPctChange(string p_ticker)
+        // 2017-11-03: YF discontinued it: http://finance.yahoo.com/d/quotes.csv?s=BIDU : "It has come to our attention that this service is being used in violation of the Yahoo Terms of Service. As such, the service is being discontinued. For all future markets and equities data research, please refer to finance.yahoo.com."
+        //private static double GetTodayPctChange(string p_ticker)
+        //{
+        //    Utils.Logger.Trace("GetTodayPctChange(): " + p_ticker);
+        //    //var biduDelayedPriceCSV = new HttpClient().GetStringAsync("http://download.finance.yahoo.com/d/quotes.csv?s=" + p_ticker + "&f=sl1d1t1c1ohgv&e=.csv").Result;
+        //    var biduDelayedPriceCSV = new HttpClient().GetStringAsync("http://finance.yahoo.com/d/quotes.csv?s=" + p_ticker + "&f=sl1d1t1c1ohgv&e=.csv").Result;
+        //    Utils.Logger.Trace("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV);
+        //    string[] biduDelayedPriceSplit = biduDelayedPriceCSV.Split(new char[] { ',', ' ' });
+        //    double realTimePrice = Double.Parse(biduDelayedPriceSplit[1]);
+        //    double dailyChange = Double.Parse(biduDelayedPriceSplit[4]);
+        //    double yesterdayClose = realTimePrice - dailyChange;
+        //    double todayPercentChange = realTimePrice / yesterdayClose - 1;
+        //    return todayPercentChange;
+        //}
+
+        // 2017-11-02: YF is discontinued (V7 API uses crumbs), GF uses cookies two (although it is fast, and it is real-time), decided to use CNBC for a while
+        // We could do https://www.snifferquant.net/YahooFinanceForwarder?yffOutFormat=csv ..., but that depends on the web service and we don't want this Overmind to depend on a website
+        private static double GetTodayPctChange(string p_exchangeWithTicker)    // for GoogleFinance: TSE:VXX is the Toronto stock exchange, we need "NYSEARCA:VXX"
         {
-            Utils.Logger.Trace("GetTodayPctChange(): " + p_ticker);
-            var biduDelayedPriceCSV = new HttpClient().GetStringAsync("http://download.finance.yahoo.com/d/quotes.csv?s=" + p_ticker + "&f=sl1d1t1c1ohgv&e=.csv").Result;
-            Utils.Logger.Trace("HttpClient().GetStringAsync returned: " + biduDelayedPriceCSV);
-            string[] biduDelayedPriceSplit = biduDelayedPriceCSV.Split(new char[] { ',', ' ' });
-            double realTimePrice = Double.Parse(biduDelayedPriceSplit[1]);
-            double dailyChange = Double.Parse(biduDelayedPriceSplit[4]);
-            double yesterdayClose = realTimePrice - dailyChange;
-            double todayPercentChange = realTimePrice / yesterdayClose - 1;
-            return todayPercentChange;
+            Utils.Logger.Trace("GetTodayPctChange(): " + p_exchangeWithTicker);
+            // https://finance.google.com/finance?q=NYSEARCA%3AVXX
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept", "text/html, application/xhtml+xml, image/jxr, */*");
+            client.DefaultRequestHeaders.Add("Accept-Language", "en-GB, en; q=0.7, hu; q=0.3");
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063");  // this is the Edge string on 2017-11-03
+            //var priceHtml = client.GetStringAsync($"https://finance.google.com/finance?q=NYSEARCA%3AVXX" + p_exchangeWithTicker.Replace(":", "%3A")).Result;
+            var priceHtml = client.GetStringAsync($"https://www.cnbc.com/quotes/?symbol=" + p_exchangeWithTicker.Replace(":", "%3A")).Result;
+            string firstCharsWithSubString = !String.IsNullOrWhiteSpace(priceHtml) && priceHtml.Length >= 300 ? priceHtml.Substring(0, 300) : priceHtml;
+            Utils.Logger.Trace("HttpClient().GetStringAsync returned: " + firstCharsWithSubString);
+
+            double? realTimePrice = null, dailyChange = null;
+            int iLastPriceStart = priceHtml.IndexOf($"\"last\":\"");
+            if (iLastPriceStart != -1)
+            {
+                iLastPriceStart += $"\"last\":\"".Length;
+                int iLastPriceEnd = priceHtml.IndexOf("\"", iLastPriceStart);
+                if (iLastPriceEnd != -1)
+                {
+                    var lastPriceStr = priceHtml.Substring(iLastPriceStart, iLastPriceEnd - iLastPriceStart);
+                    realTimePrice = Double.Parse(lastPriceStr);
+
+                    int iChangePriceStart = priceHtml.IndexOf($"\"change\":\"", iLastPriceEnd);
+                    if (iChangePriceStart != -1)
+                    {
+                        iChangePriceStart += $"\"change\":\"".Length;
+                        int iChangePriceEnd = priceHtml.IndexOf("\"", iChangePriceStart);
+                        if (iChangePriceEnd != -1)
+                        {
+                            var changePriceStr = priceHtml.Substring(iChangePriceStart, iChangePriceEnd - iChangePriceStart);
+                            dailyChange = Double.Parse(changePriceStr);
+
+                            double yesterdayClose = (double)realTimePrice - (double)dailyChange;
+                            double todayPercentChange = (double)realTimePrice / yesterdayClose - 1;
+                            return todayPercentChange;
+                        }
+                    }
+                }
+            }
+
+            //string[] biduDelayedPriceSplit = priceHtml.Split(new char[] { ',', ' ' });
+            //realTimePrice = Double.Parse(biduDelayedPriceSplit[1]);
+            //double dailyChange = Double.Parse(biduDelayedPriceSplit[4]);
+            //double yesterdayClose = realTimePrice - dailyChange;
+            //double todayPercentChange = realTimePrice / yesterdayClose - 1;
+            //return todayPercentChange;
+            return Double.NaN;
         }
 
         private static void CheckLastClosePrices()
@@ -404,15 +459,7 @@ namespace Overmind
             Utils.Logger.Info("TestSendingEmail() START");
             DailyMorningTimer_Elapsed(null);
 
-            //string biduDelayedPriceCSV = new WebClient().DownloadString("http://download.finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv");
-            //string biduDelayedPriceCSV = new WebClient().DownloadString("http://finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv");
-            var biduDelayedPriceCSV = new HttpClient().GetStringAsync("http://finance.yahoo.com/d/quotes.csv?s=BIDU&f=sl1d1t1c1ohgv&e=.csv").Result;
-            string[] biduDelayedPriceSplit = biduDelayedPriceCSV.Split(new char[] { ',', ' ' });
-            double realTimePrice = Double.Parse(biduDelayedPriceSplit[1]);
-
-            double dailyChange = Double.Parse(biduDelayedPriceSplit[4]);
-            double yesterdayClose = realTimePrice - dailyChange;
-            double todayPercentChange = realTimePrice / yesterdayClose - 1;
+            double todayPercentChange = GetTodayPctChange("BIDU");
             Console.WriteLine("BIDU %change: " + (todayPercentChange * 100).ToString("0.00") + @"%");
             Utils.Logger.Info("BIDU %change: " + (todayPercentChange * 100).ToString("0.00") + @"%");
             //if (Math.Abs(todayPercentChange) >= 0.04)

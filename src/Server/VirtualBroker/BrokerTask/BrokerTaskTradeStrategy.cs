@@ -26,7 +26,7 @@ namespace VirtualBroker
             Utils.Logger.Info($"****  StrategyBrokerTask.Run() starts. BrokerTask Name: {BrokerTaskSchema.Name}");
             Utils.ConsoleWriteLine(ConsoleColor.Cyan, true, $"****  BrokerTask starts: '{BrokerTaskSchema.Name}'");
             StringBuilder detailedReportSb = new StringBuilder();
-            detailedReportSb.AppendLine($"{DateTime.UtcNow.ToString("MM-dd'T'HH':'mm':'ss': '")}'{BrokerTaskSchema.Name}'");
+            detailedReportSb.AppendLine($"<font color=\"#000080\"><strong>{DateTime.UtcNow.ToString("MM-dd'T'HH':'mm':'ss': '")}'{BrokerTaskSchema.Name}'</strong></font>");
 
             //************************* 0. Initializations
             var strategyFactoryCreate = (Func<IBrokerStrategy>)BrokerTaskSchema.Settings[BrokerTaskSetting.StrategyFactory];
@@ -112,7 +112,7 @@ namespace VirtualBroker
                 if (portfolios[i].IsErrorOccured)
                     continue;
                 //************************* 3.1  Generate futurePortfolios with volumes, number of proposed shares
-                CalculatePortfolioUsdSizeFromRealTime(portfolios[i]);
+                CalculatePortfolioUsdSizeFromRealTime(portfolios[i], detailedReportSb);
                 DetermineProposedPositions(portfolios[i]);
 
                 //************************* 3.2  Generate Transactions from the difference of current vs. target
@@ -165,7 +165,7 @@ namespace VirtualBroker
 
 
 
-        public void CalculatePortfolioUsdSizeFromRealTime(BrokerTaskPortfolio p_portfolio)
+        public void CalculatePortfolioUsdSizeFromRealTime(BrokerTaskPortfolio p_portfolio, StringBuilder p_detailedReportSb)
         {
             var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };    // MID is the most honest price. LAST may happened 1 hours ago
 
@@ -196,6 +196,7 @@ namespace VirtualBroker
             string logMsg = $"{p_portfolio.IbGatewayUserToTrade.ToShortFriendlyString()}: Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}";
             Utils.ConsoleWriteLine(null, false, logMsg);
             Utils.Logger.Info(logMsg);
+            p_detailedReportSb.AppendLine($"{p_portfolio.IbGatewayUserToTrade.ToShortFriendlyString()}: PV: ${p_portfolio.PortfolioUsdSize/1000.0:F2}K");
         }
 
         private void DetermineProposedPositions(BrokerTaskPortfolio p_portfolio)
@@ -299,7 +300,7 @@ namespace VirtualBroker
             {
                 Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"***Trades: none.");
                 Utils.Logger.Info($"***Trades: none.");
-                p_detailedReportSb.AppendLine($"<font color=\"#10ff10\">***Trades: none.</font>");
+                p_detailedReportSb.AppendLine($"***Trades: none.");
                 return;
             }
 
