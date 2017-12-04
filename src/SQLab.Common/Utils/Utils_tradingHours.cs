@@ -56,22 +56,23 @@ namespace SqCommon
             {
                 // 1. Get section from <thead> to </tbody> for the holidays
                 // 2. Get section from ">*", ">**", ">***" to </p> to get the 3 footnotes
-                int iTHead = webPage.IndexOf(@"{""head"":");        // holiday table appears twice in the HTML. One in the middle, but one at the end is shorter, cleaner, get that.
-                int iTBody = webPage.IndexOf(@"""foot"":", iTHead);
+                int iTHead = webPage.IndexOf(@"<table class=""table table-data"">");        // holiday table appears twice in the HTML. One in the middle, but one at the end is shorter, cleaner, get that.
+                int iTBody = webPage.IndexOf(@"</table>", iTHead);
                 string holidayTable = webPage.Substring(iTHead, iTBody - iTHead);
 
-                int iFootnoteEnd = webPage.LastIndexOf(@"""table""", iTHead);// Footnote section is Before the second-holiday-table in the html source
-                int iFootnoteStart = webPage.LastIndexOf(">* Each", iFootnoteEnd, StringComparison.CurrentCultureIgnoreCase);   // 2017-02-08: a ">*Each" got a space as ">* Each"
+                
+                int iFootnoteStart = webPage.IndexOf(">* Each", iTBody, StringComparison.CurrentCultureIgnoreCase);   // 2017-02-08: a ">*Each" got a space as ">* Each"
+                int iFootnoteEnd = webPage.IndexOf(@"</div>", iFootnoteStart);// in 2017: Footnote section is was Before the second-holiday-table in the html source, in 2018: no
                 string footnote = webPage.Substring(iFootnoteStart, iFootnoteEnd - iFootnoteStart);
 
                 int year1 = -1, year2 = -1;
-                var trs = holidayTable.Split(new string[] { @"{""cells"":[" }, StringSplitOptions.RemoveEmptyEntries);
+                var trs = holidayTable.Split(new string[] { "<tr>\n  ", "<tr>", "</tr>\n  ", "</tr>" }, StringSplitOptions.RemoveEmptyEntries);
                 for (int i = 0; i < trs.Length; i++)
                 {
-                    if (!trs[i].TrimStart().StartsWith(@"{""content"""))
+                    if (!trs[i].TrimStart().StartsWith(@"<td><p>"))
                         continue;
 
-                    var tds = trs[i].Split(new string[] { @"""content"":""", @"""}" }, StringSplitOptions.RemoveEmptyEntries);
+                    var tds = trs[i].Split(new string[] { @"<td><p>", @"</p></td>" }, StringSplitOptions.RemoveEmptyEntries);
                     if (year1 == -1 && year2 == -1)
                     {
                         year1 = Int32.Parse(tds[3]);
