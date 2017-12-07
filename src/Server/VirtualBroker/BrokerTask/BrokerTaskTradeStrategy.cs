@@ -193,7 +193,7 @@ namespace VirtualBroker
                 }
             }
             p_portfolio.PortfolioUsdSize = portfolioUsdSize;
-            string logMsg = $"{p_portfolio.IbGatewayUserToTrade.ToShortFriendlyString()}: Portfolio ({p_portfolio.PortfolioID}) $size (realtime): ${p_portfolio.PortfolioUsdSize:F2}";
+            string logMsg = $"{p_portfolio.IbGatewayUserToTrade.ToShortFriendlyString()}: PortfolioID '{p_portfolio.PortfolioID}': realtime PV: ${p_portfolio.PortfolioUsdSize:F0}";
             Utils.ConsoleWriteLine(null, false, logMsg);
             Utils.Logger.Info(logMsg);
             p_detailedReportSb.AppendLine($"{p_portfolio.IbGatewayUserToTrade.ToShortFriendlyString()}: PV: ${p_portfolio.PortfolioUsdSize/1000.0:F2}K");

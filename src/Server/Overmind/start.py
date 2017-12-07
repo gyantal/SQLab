@@ -16,6 +16,6 @@ print('dotnet build --configuration Release')         # the default is the Debug
 call(['dotnet', 'build', '--configuration', 'Release'])
 #print('dotnet bin/Release/netcoreapp1.0/ubuntu.14.04-x64/Overmind.dll')
 #call(['dotnet', 'bin/Release/netcoreapp1.0/ubuntu.14.04-x64/Overmind.dll'])
-print('dotnet bin/Release/netcoreapp1.1/Overmind.dll')
-call(['dotnet', 'bin/Release/netcoreapp1.1/Overmind.dll'])
+print('dotnet bin/Release/netcoreapp2.0/Overmind.dll')
+call(['dotnet', 'bin/Release/netcoreapp2.0/Overmind.dll'])
 k = input("Press ENTER...")       # raw_input is built but waiting for Enter key 

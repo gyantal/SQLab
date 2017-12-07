@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\SQLab.Common\SQLab.Common.csproj" />
-    <ProjectReference Include="..\..\SQLab.DbCommon\SQLab.DbCommon.csproj" />
-    <ProjectReference Include="..\..\SQLab.RxCommon\SQLab.RxCommon.csproj" />
+    <ProjectReference Include="..\..\Common\DbCommon\DbCommon.csproj" />
+    <ProjectReference Include="..\..\Common\RxCommon\RxCommon.csproj" />
+    <ProjectReference Include="..\..\Common\SqCommon\SqCommon.csproj" />
     <ProjectReference Include="..\..\ThirdParty\IbApiSocketClient\IbApiSocketClient.csproj" />
   </ItemGroup>
 

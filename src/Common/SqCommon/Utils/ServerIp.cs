@@ -26,8 +26,8 @@ namespace SqCommon
             get
             {
                 if (Utils.RunningPlatform() == Platform.Windows)
-                    return "localhost";       // sometimes for clients running on Windows (in development), we want localHost if Testing new HealthMonitor features
-                                              //return "23.20.243.199";      // public IP for the VBrokerDEV server, sometimes for clients running on Windows (in development), we want the proper Healthmonitor if Testing runnig VBroker locally
+                    //return "localhost";       // sometimes for clients running on Windows (in development), we want localHost if Testing new HealthMonitor features
+                    return "23.20.243.199";      // public IP for the VBrokerDEV server, sometimes for clients running on Windows (in development), we want the proper Healthmonitor if Testing runnig VBroker locally
                 else
                     return "23.20.243.199";
             }

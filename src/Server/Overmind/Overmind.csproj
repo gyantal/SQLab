@@ -2,18 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\SQLab.Common\SQLab.Common.csproj" />
-    <ProjectReference Include="..\..\SQLab.DbCommon\SQLab.DbCommon.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="NLog.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\..\Common\DbCommon\DbCommon.csproj" />
+    <ProjectReference Include="..\..\Common\SqCommon\SqCommon.csproj" />
   </ItemGroup>
 
 </Project>

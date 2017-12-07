@@ -10,7 +10,7 @@ from colorama import Fore, Back, Style
 # Parameters to change:
 rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
 rootRemoteDir = "/home/ubuntu/SQ/Server/HealthMonitor/src"
-acceptedSubTreeRoots = ["Server\\HealthMonitor", "SQLab.Common"]        # everything under these relPaths is traversed: files or folders too
+acceptedSubTreeRoots = ["Server\\HealthMonitor", "Common\\SqCommon"]        # everything under these relPaths is traversed: files or folders too
 
 serverHost = "ec2-23-20-243-199.compute-1.amazonaws.com"
 serverPort = 22
@@ -18,7 +18,7 @@ serverUser = "ubuntu"
 serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"
 
 excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties"])
-excludeFileExts = set(["sln", "xproj", "log", "sqlog", "ps1", "py", "sh", "user"])
+excludeFileExts = set(["sln", "xproj", "log", "sqlog", "ps1", "py", "sh", "user", "md"])
 
 # "mkdir -p" means Create intermediate directories as required. 
 # http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist

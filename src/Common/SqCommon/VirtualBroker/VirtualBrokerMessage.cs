@@ -62,14 +62,14 @@ namespace SqCommon
         }
 
 
-        public static async Task<string> Send(string p_msg, VirtualBrokerMessageID p_healthMonId)
+        public static async Task<string> Send(string p_msg, VirtualBrokerMessageID p_vbMessageId)
         {
             //Utils.Logger.Warn($"VirtualBrokerMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
             Utils.Logger.Info($"VirtualBrokerMessage.Send(): Message: '{ p_msg}'");
 
             var t = (new VirtualBrokerMessage()
             {
-                ID = p_healthMonId,
+                ID = p_vbMessageId,
                 ParamStr = $"{p_msg}",
                 ResponseFormat = VirtualBrokerMessageResponseFormat.String
             }.SendMessage());
