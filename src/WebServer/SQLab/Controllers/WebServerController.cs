@@ -93,11 +93,22 @@ namespace SQLab.Controllers
             return Content(sb.ToString(), "text/html");
         }
 
-        [HttpPost, HttpGet]
+        // in theory we only support HTTP POST, because we need the data in the package. However, AWS CloudFront "Redirect HTTP to HTTPS" turned POST to GET. We removed that CloudFront feature.
+        //--- AWS CloudFrontFront settings: 
+        //"Redirect HTTP to HTTPS"  https://www.snifferquant.net/HealthMonitor doesn't work.
+        //to allow both "HTTP and HTTPS": https://www.snifferquant.net/HealthMonitor  works.
+        //That was the solution.
+        //"Redirect HTTP to HTTPS" of CloudFront changes HTTPS POST to GET, ruining it, and even removing the data package of the POST.
+        //Bad.So, solution is that I have to allow CloudFront both HTTP and HTTPS traffic flowing to OriginServer,
+        //and IF I don't want HTTP traffic, I should redirect it locally, on the Kestrel server.
+        //However, it is not an important development, so keep both HTTP and HTTPS for now.
+        //[HttpPost]
+        [HttpPost, HttpGet]     // we only leave HttpGet here so we got a Log message into a log file.
         public ActionResult ReportHealthMonitorCurrentStateToDashboardInJSON()
         {
             long highResWebRequestReceivedTime = System.Diagnostics.Stopwatch.GetTimestamp();
             m_logger.LogInformation("ReportHealthMonitorCurrentStateToDashboardInJSON() is called");
+            // TODO: we should check here if it is a HttpGet (or a message without data package) and return gracefully
 
             try
             {

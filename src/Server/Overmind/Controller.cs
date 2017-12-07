@@ -306,7 +306,9 @@ namespace Overmind
             client.DefaultRequestHeaders.Add("Accept-Language", "en-GB, en; q=0.7, hu; q=0.3");
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063");  // this is the Edge string on 2017-11-03
             //var priceHtml = client.GetStringAsync($"https://finance.google.com/finance?q=NYSEARCA%3AVXX" + p_exchangeWithTicker.Replace(":", "%3A")).Result;
-            var priceHtml = client.GetStringAsync($"https://www.cnbc.com/quotes/?symbol=" + p_exchangeWithTicker.Replace(":", "%3A")).Result;
+            string url = $"https://www.cnbc.com/quotes/?symbol=" + p_exchangeWithTicker.Replace(":", "%3A");
+            Utils.Logger.Trace("HttpClient().GetStringAsync queried with:'" + url + "'");
+            var priceHtml = client.GetStringAsync(url).Result;
             string firstCharsWithSubString = !String.IsNullOrWhiteSpace(priceHtml) && priceHtml.Length >= 300 ? priceHtml.Substring(0, 300) : priceHtml;
             Utils.Logger.Trace("HttpClient().GetStringAsync returned: " + firstCharsWithSubString);
 
