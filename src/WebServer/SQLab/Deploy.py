@@ -27,8 +27,8 @@ else:
     rootLocalDir = "d:\GitHub/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
     serverRsaKeyFile = "d:\SVN\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"  # Dev server
 
-rootRemoteDir = "/home/ubuntu/SQ/Client/SQLab/src"
-acceptedSubTreeRoots = ["Client\\SQLab", "SQLab.Common", "SQLab.DbCommon"]        # everything under these relPaths is traversed: files or folders too
+rootRemoteDir = "/home/ubuntu/SQ/WebServer/SQLab/src"
+acceptedSubTreeRoots = ["WebServer\\SQLab", "Common\\SqCommon", "Common\\DbCommon"]        # everything under these relPaths is traversed: files or folders too
 
 serverHost = "ec2-23-20-243-199.compute-1.amazonaws.com"         # Dev server
 #serverHost = "ec2-54-209-86-129.compute-1.amazonaws.com"         # live VBroker server
@@ -37,7 +37,7 @@ serverPort = 22
 serverUser = "ubuntu"
 
 excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties", "node_modules"])
-excludeFileExts = set(["sln", "xproj", "log", "sqlog", "ps1", "py", "sh", "user"])
+excludeFileExts = set(["sln", "xproj", "log", "sqlog", "ps1", "py", "sh", "user", "md"])
 
 # "mkdir -p" means Create intermediate directories as required. 
 # http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist

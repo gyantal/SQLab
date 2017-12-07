@@ -1,14 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using SqCommon;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using System.Net;
-using Microsoft.Extensions.Logging;
-using System.Text;
-using SqCommon;
-using System.Globalization;
-using Microsoft.AspNetCore.Authorization;
+
 
 // https://www.snifferquant.net/rtp?s=VXX,SVXY,UWM,TWM,^RUT&f=l  // without JsonP, these tickers are streamed all the time
 // https://www.snifferquant.net/rtp?s=VXX,SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l  // without JsonP, AAPL and GOOGL is not streamed

@@ -2,23 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using System.Globalization;
 using Microsoft.AspNetCore.Http;
-using System.Text;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
-using System.Net.Sockets;
-using System.IO;
 using SqCommon;
 using System.Threading;
-
-// For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+using System.Text;
+using System.Net.Sockets;
+using System.IO;
+using System.Globalization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SQLab.Controllers
 {
-    //[Route("api/[controller]")]
+    //[Route("WebServer")]
     public class WebServerController : Controller
     {
         private readonly ILogger<Program> m_logger;
@@ -56,10 +54,10 @@ namespace SQLab.Controllers
             }
 
             sb.Append("Tokens:<br>");
-            sb.Append("Access Token: " + HttpContext.Authentication.GetTokenAsync("access_token").Result + "<br>");
-            sb.Append("Refresh Token: " + HttpContext.Authentication.GetTokenAsync("refresh_token").Result + "<br>");
-            sb.Append("Token Type: " + HttpContext.Authentication.GetTokenAsync("token_type").Result + "<br>");
-            sb.Append("expires_at: " + HttpContext.Authentication.GetTokenAsync("expires_at").Result + "<br>");
+            sb.Append("Access Token: " + HttpContext.GetTokenAsync("access_token").Result + "<br>");
+            sb.Append("Refresh Token: " + HttpContext.GetTokenAsync("refresh_token").Result + "<br>");
+            sb.Append("Token Type: " + HttpContext.GetTokenAsync("token_type").Result + "<br>");
+            sb.Append("expires_at: " + HttpContext.GetTokenAsync("expires_at").Result + "<br>");
             sb.Append("<a href=\"/logout\">Logout</a><br>");
             sb.Append("</body></html>");
 
@@ -95,7 +93,7 @@ namespace SQLab.Controllers
             return Content(sb.ToString(), "text/html");
         }
 
-        [HttpPost]
+        [HttpPost, HttpGet]
         public ActionResult ReportHealthMonitorCurrentStateToDashboardInJSON()
         {
             long highResWebRequestReceivedTime = System.Diagnostics.Stopwatch.GetTimestamp();

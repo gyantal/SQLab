@@ -5,7 +5,6 @@ using SqCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SQLab.Controllers
@@ -55,12 +54,9 @@ namespace SQLab.Controllers
         // http://stackoverflow.com/questions/28664686/how-do-i-get-client-ip-address-in-asp-net-core
         public static bool GetRequestUserAndIP(Controller p_controller, out string p_email, out string p_ip, bool p_tryUseXForwardHeader = true)
         {
-            p_email = "Unknown";
-            foreach (var claim in p_controller.User.Claims)
-            {
-                if (claim.Type == @"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")
-                    p_email = claim.Value;
-            }
+            var userEmailClaim = p_controller.User.Claims.FirstOrDefault(p => p.Type == @"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+            p_email = (userEmailClaim == null) ? "UnknownUser@gmail.com" : userEmailClaim.Value;
+
             p_ip = GetRequestIP(p_controller);
             return true;
         }

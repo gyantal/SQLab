@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using SqCommon;
-using System.Text;
 using SQLab.Controllers.QuickTester.Strategies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Primitives;
 
 // http://localhost:5000/qt?jsonp=JSON_CALLBACK&StartDate=&EndDate=&strategy=TotM&BullishTradingInstrument=Long%20SPY&DailyMarketDirectionMaskSummerTotM=DD00U00.U&DailyMarketDirectionMaskSummerTotMM=D0UU.0U&DailyMarketDirectionMaskWinterTotM=UUUD.UUU&DailyMarketDirectionMaskWinterTotMM=DDUU.UU00UU
 namespace SQLab.Controllers
 {
     [Route("~/qt", Name = "qt")]
+    [Route("~/QuickTester", Name = "QuickTester")]
     public class QuickTesterController : Controller
     {
         private readonly ILogger<Program> m_logger;
@@ -30,10 +30,15 @@ namespace SQLab.Controllers
 #endif
         public ActionResult Index()
         {
-            var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
+            //var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
+            var urlPath = (HttpContext.Request.Path.HasValue) ? HttpContext.Request.Path.Value.ToLower() : String.Empty;
+            if (urlPath == "/qt")
+            {
             Tuple<string, string> contentAndType = GenerateQtResponse().Result;
             return Content(contentAndType.Item1, contentAndType.Item2);
-
+            }
+            else
+                return View();
         }
 
         private async Task<Tuple<string, string>> GenerateQtResponse()

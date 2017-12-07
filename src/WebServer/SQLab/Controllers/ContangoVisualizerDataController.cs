@@ -1,15 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using SqCommon;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
-using SqCommon;
 using System.Text;
-using SQCommon.MathNet;
-using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-
 
 namespace SQLab.Controllers
 {

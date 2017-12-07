@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using System.Security.Cryptography.X509Certificates;
-using SqCommon;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Threading;
+using SqCommon;
+using System.Security.Cryptography.X509Certificates;
+using System.Net;
 
 namespace SQLab
 {
@@ -32,7 +35,6 @@ namespace SQLab
 #endif
             Console.WriteLine($"Hello SQLab WebServer, v1.0.12 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
             Console.Title = "SQLab WebServer v1.0.12";
-            //if (!Utils.InitDefaultLogger("Client." + typeof(Program).Namespace))    // will be "Client.SQLab.log"
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))    // will be "Client.SQLab.log"
                 return; // if we cannot create logger, terminate app
             Utils.Logger.Info($"****** Main() START ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
@@ -46,6 +48,16 @@ namespace SQLab
 
             try
             {
+                BuildWebHost(args).Run();
+            }
+            catch (Exception e)
+            {
+                HealthMonitorMessage.SendException("Website.C#.MainThread", e, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+            }
+        }
+
+        public static IWebHost BuildWebHost(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
                 // for changing the default port 5000 ("UPDATED 2: ASP.NET Core RC2 changes"): http://stackoverflow.com/questions/34212765/how-do-i-get-the-kestrel-web-server-to-listen-to-non-localhost-requests
                 // effect of adding .UseUrls("http://*:80",)
                 // Windows: Firewall will pop up. Allow rule is required.
@@ -56,7 +68,6 @@ namespace SQLab
                 // https://github.com/aspnet/Home/issues/311
                 // A normal user is not allowed to bind sockets to TCP ports < 1024, you need more permissions than the normal user has (read: 'root'-access). The easiest and quickest solution probably is using sudo to start the process, but that's also the most frowned upon solution. The reason is that the process then has every access right on the system.
                 // The cleanest solution and the one that for which Kestrel is developed is using a front-end server / load balancer on port 80(for example nginx, or endpoints in Azure) that forwards the requests to an unprivileged Kestrel on a private port.
-                var host = new WebHostBuilder()
                 .UseUrls("http://*:80", "https://*:443", "http://localhost:5000")        // default only: "http://localhost:5000",  adding "http://*:80" will listen to clients from any IP4 or IP6 address, so Windows Firewall will prompt                 
                 .UseKestrel(options =>
                 {
@@ -86,21 +97,18 @@ namespace SQLab
                     //so it properly Redirects. 
                     // So, final good solution: communication to Origin: HTTP Only ; Communication with Browsers: Redirect HTTP to HTTPS
 
+                    options.Listen(IPAddress.Any, 80);
+                    options.Listen(IPAddress.Any, 5000);
+                    options.Listen(IPAddress.Any, 443, listenOptions =>
+                    {
                     var serverCertificate = LoadHttpsCertificate();
-                    options.UseHttps(serverCertificate);
+                        listenOptions.UseHttps(serverCertificate);
+                    });
                 })
                 .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseIISIntegration()
+                //.UseIISIntegration() onfigures the port and base path the server should listen on when running behind AspNetCoreModule. The app will also be configured to capture startup errors.
                 .UseStartup<Startup>()
                 .Build();
-
-                host.Run();
-            }
-            catch (Exception e)
-            {
-                HealthMonitorMessage.SendException("Website.C#.MainThread", e, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
-            }
-        }
 
         // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
@@ -151,16 +159,16 @@ namespace SQLab
              { RunningEnvStrType.NonCommitedSensitiveDataFullPath,
                 new Dictionary<RunningEnvironment, string>()
                 {
-                    { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/Client/SQLab/SQLab.Client.SQLab.NoGitHub.json" },
-                    { RunningEnvironment.WindowsAGy, "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json" },
-                    { RunningEnvironment.WindowsBL_desktop, "h:/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json" },
-                    { RunningEnvironment.WindowsBL_laptop, "h:/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.Client.SQLab.NoGitHub.json" }
+                    { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/SQLab.WebServer.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsAGy, "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsBL_desktop, "h:/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsBL_laptop, "h:/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" }
                 }
             },
             { RunningEnvStrType.HttpsCertificateFullPath,
                 new Dictionary<RunningEnvironment, string>()
                 {
-                    { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/Client/SQLab/snifferquant.net.pfx" },
+                    { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_desktop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" }
@@ -169,19 +177,20 @@ namespace SQLab
             { RunningEnvStrType.DontPublishToPublicWwwroot,
                 new Dictionary<RunningEnvironment, string>()
                 {
-                    { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/noPublishTo_wwwroot/" },
-                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" },
-                    { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" },
-                    { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\Client\SQLab\noPublishTo_wwwroot\" }
+                    { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/WebServer/SQLab/src/WebServer/SQLab/noPublishTo_wwwroot/" },
+                    { RunningEnvironment.WindowsAGy, @"g:\temp_migratingNetCore2\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
+                    { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },
+                    { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" }
                 }
             },
             { RunningEnvStrType.SQLabFolder,
                 new Dictionary<RunningEnvironment, string>()
                 {
-                    { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/Client/SQLab/src/Client/SQLab/" },
-                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\Client\SQLab\" },
-                    { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\Client\SQLab\" },
-                    { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\Client\SQLab\" }
+                    { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/WebServer/SQLab/src/WebServer/SQLab/" },
+                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\" },
+                    //{ RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\" },  // this will be the new after migration to NetCore2
+                    { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\WebServer\SQLab\" },
+                    { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\WebServer\SQLab\" }
                 }
             }
 

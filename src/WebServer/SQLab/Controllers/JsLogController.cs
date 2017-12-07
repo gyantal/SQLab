@@ -1,18 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System.Globalization;
-using System.IO;
 using SqCommon;
-
-// For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+using System.IO;
 
 namespace SQLab.Controllers
 {
-    //[Route("api/[controller]")]
     // Logger for Javascript code. This can notify Healthmonitor if Crash occurs in HTML JS in the client side.
     public class JsLogController : Controller
     {

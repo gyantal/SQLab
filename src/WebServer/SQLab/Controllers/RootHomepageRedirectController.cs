@@ -2,19 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SqCommon;
-using System.Text;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Authentication;
 using Microsoft.Extensions.Logging;
-using System.Security.Claims;
-
-// For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+using Microsoft.AspNetCore.Authorization;
 
 namespace SQLab.Controllers
 {
-    //[Route("api/[controller]")]
     [Route("~/", Name = "default")]
     // [Route("~/login", Name = "login")]
     //[Route("~/access_denied", Name = "access_denied")]
@@ -23,8 +17,8 @@ namespace SQLab.Controllers
     [Route("~/UserDashboard", Name = "UserDashboard")]
     [Route("~/VolatilityIndicesInDifferentMonths", Name = "VolatilityIndicesInDifferentMonths")]
     [Route("~/VXXAdaptiveConnorLiveBacktest", Name = "VXXAdaptiveConnorLiveBacktest")]
-    [Route("~/HealthMonitor", Name = "HealthMonitor")]
-    [Route("~/QuickTester", Name = "QuickTester")]
+    //[Route("~/HealthMonitor", Name = "HealthMonitor")]
+    //[Route("~/QuickTester", Name = "QuickTester")]
     [Route("~/WithdrawalSimulator", Name = "WithdrawalSimulator")]
     [Route("~/WithdrawalSimulatorHelp", Name = "WithdrawalSimulatorHelp")]
     [Route("~/VixFuturesAnalyser", Name = "VixFuturesAnalyser")]
@@ -73,12 +67,12 @@ namespace SQLab.Controllers
                 case "/vxxadaptiveconnorlivebacktest":
                     fileName = "VXXAdaptiveConnorLiveBacktest.html";
                     break;
-                case "/healthmonitor":
-                    fileName = "HealthMonitor.html";
-                    break;
-                case "/quicktester":
-                    fileName = "QuickTester.html";
-                    break;
+                //case "/healthmonitor":
+                //    fileName = "HealthMonitor.html";
+                //    break;
+                //case "/quicktester":
+                //    fileName = "QuickTester.html";
+                //    break;
                 case "/withdrawalsimulator":
                     fileName = "WithdrawalSimulator.html";
                     break;
@@ -100,7 +94,8 @@ namespace SQLab.Controllers
                     {
                         wwwRootPath = Program.RunningEnvStr(RunningEnvStrType.SQLabFolder);
                         fileName = urlPath.Substring(1); // remove first char '/'
-                    } else
+                    }
+                    else
                     {
                         m_logger.LogWarning($"HttpRequest: '{urlPath}' is not served.");
                     }
@@ -117,14 +112,13 @@ namespace SQLab.Controllers
 
                 switch (urlPath)    // replace unknown@gmail.com with proper gmail user if it is a main page
                 {
+                    case "/developerdashboard":
                     case "/userdashboard":
-                    case "/healthmonitor":
-                    case "/quicktester":
-#if !DEBUG
+                    //case "/healthmonitor":
+                    //case "/quicktester":
                         string email, ip;
                         ControllerCommon.GetRequestUserAndIP(this, out email, out ip);
                         fileStr = fileStr.Replace("unknown@gmail.com", email);
-#endif
                         break;
                     default:
                         break;
