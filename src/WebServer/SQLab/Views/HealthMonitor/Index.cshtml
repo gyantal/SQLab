@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "HealthMonitor";
+    ViewData["FaviconURL"] = "/images/favicon/favicon_healthmonitor1.ico";
+}
+
+@{
+//var gSqUserEmailClaim = Context.User.Claims.FirstOrDefault(p => p.Type == @"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+//var gSqUserEmail = (gSqUserEmailClaim == null) ? "UnknownUser" : gSqUserEmailClaim.Value;
+
+//var txt = "";
+//if (DateTime.Now.Hour > 12)
+//{ txt = "Good Evening"; }
+//else
+//{ txt = "Good Morning"; }
+
+}
+
+<app asp-prerender-module="ClientApp/dist/main-server"
+     asp-prerender-data='new {
+            SqWebAppName = "HealthMonitorWebApp",
+            Cookies = ViewContext.HttpContext.Request.Cookies
+        }'>Loading...</app>
+
+<script src="~/dist/vendor.js" asp-append-version="true"></script>
+@section scripts {
+    <script src="~/dist/main-client.js" asp-append-version="true"></script>
+}

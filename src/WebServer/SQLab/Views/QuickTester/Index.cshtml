@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "QuickTester";
+    ViewData["FaviconURL"] = "/images/favicon/graph-icon-248167/favicon.ico";
+}
+
+<app asp-prerender-module="ClientApp/dist/main-server"
+     asp-prerender-data='new {
+            SqWebAppName = "QuickTesterWebApp",
+            Cookies = ViewContext.HttpContext.Request.Cookies
+        }'>Loading...</app>
+
+<script src="~/dist/vendor.js" asp-append-version="true"></script>
+@section scripts {
+    <script src="~/dist/main-client.js" asp-append-version="true"></script>
+}
+
+

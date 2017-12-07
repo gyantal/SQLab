@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SQLab</title>
+    <base href="~/" />
+
+    <link rel="stylesheet" href="~/dist/vendor.css" asp-append-version="true" />
+    <link href="@ViewData["FaviconURL"]" rel="shortcut icon" type="image/x-icon" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+
+    <script>
+        @{
+            var userEmailClaim = Context.User.Claims.FirstOrDefault(p => p.Type == @"http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+            var userEmail = (userEmailClaim == null) ? "UnknownUser@gmail.com" : userEmailClaim.Value;
+        }
+        var gSqUserEmail = '@userEmail';
+    </script>
+
+    @if ((string)(ViewData["Title"]) == "QuickTester")
+    {
+        @Html.Raw(@"
+<script type=""text/javascript"" src=""/charting_library/charting_library/charting_library.min.js""></script>
+<script type=""text/javascript"" src=""/js/app/QuickTester/datafeedQuickTesterChart.js""></script>
+<script>
+    var gTradingViewChartOnreadyCalled = false;
+    TradingView.onready(function () {
+        console.log(""TradingView.onready()"");   // this is called very early by TradingView. ngOnInit() START and ngAfterViewInit() START is called much later by Angular2
+        gTradingViewChartOnreadyCalled = true;
+        //var controllerElement = document.querySelector('body');
+        //var controllerScope = angular.element(controllerElement).scope();
+        //controllerScope.TradingViewOnready();
+    });
+
+    let GlobalScopeInvertVisibilityOfTableRow = function (paramID) {      // to hook to Angular2 (click) event is not good, because after initial load, Angular2 doesn't re-parse the HTML file for those (click) events. Use the General onclick event instead.
+        console.log(""GlobalScopeInvertVisibilityOfTableRow() START:"" + paramID);
+
+        var tableRow = document.getElementById(paramID);
+        if (tableRow.style.display == 'none')
+            tableRow.style.display = 'table-row';
+        else
+            tableRow.style.display = 'none';
+    };
+</script>
+    ");
+    }
+
+    
+</head>
+<body>
+    @RenderBody()
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>
