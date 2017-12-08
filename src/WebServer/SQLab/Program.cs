@@ -105,6 +105,11 @@ namespace SQLab
                         listenOptions.UseHttps(serverCertificate);
                     });
                 })
+#if RELEASE
+                .UseEnvironment("Production")  // This is better way then setting up the machine wide global ASPNETCORE_ENVIRONMENT env.Variable. User env. variable doesn't work. https://dotnetcoretutorials.com/2017/05/03/environments-asp-net-core/
+#elif DEBUG
+                .UseEnvironment("Development")  // This is better way then setting up the machine wide global ASPNETCORE_ENVIRONMENT env.Variable. User env. variable doesn't work. https://dotnetcoretutorials.com/2017/05/03/environments-asp-net-core/
+#endif
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 //.UseIISIntegration() onfigures the port and base path the server should listen on when running behind AspNetCoreModule. The app will also be configured to capture startup errors.
                 .UseStartup<Startup>()
@@ -178,7 +183,7 @@ namespace SQLab
                 new Dictionary<RunningEnvironment, string>()
                 {
                     { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/WebServer/SQLab/src/WebServer/SQLab/noPublishTo_wwwroot/" },
-                    { RunningEnvironment.WindowsAGy, @"g:\temp_migratingNetCore2\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
+                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
                     { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" }
                 }

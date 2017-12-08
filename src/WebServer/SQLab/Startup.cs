@@ -122,9 +122,18 @@ namespace SQLab
             // set nLog here if NLog works properly
             loggerFactory.AddProvider(new SQLabAspLoggerProvider());
 
-            string envLogMsg = $"ASPNETCORE_ENVIRONMENT={env.EnvironmentName}";
+            
+            string envLogMsg = $"ASP env.EnvironmentName(machine-wide ASPNETCORE_ENVIRONMENT EnvVar or C# .UseEnvironment()):'{env.EnvironmentName}'";
             Console.WriteLine(envLogMsg);
             Utils.Logger.Info(envLogMsg);
+
+            var aspLogLevel = Configuration.GetSection("Logging:LogLevel:Microsoft");
+            string aspLogLevelStr = (aspLogLevel != null) ? aspLogLevel.Value : "NotAvailable";
+            string logLevelMsg = $"ASP logLevel as appsettings.json:'Logging:LogLevel:Microsoft':'{aspLogLevelStr}'";
+            Console.WriteLine(logLevelMsg);
+            Utils.Logger.Info(logLevelMsg);
+
+
 
             if (env.IsDevelopment())
             {
