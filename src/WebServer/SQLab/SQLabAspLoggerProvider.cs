@@ -220,8 +220,13 @@ namespace SQLab
                 isSendable = false;
             if (fullExceptionStr.IndexOf("A call to SSPI failed") != -1)
                 isSendable = false;
-
-
+            // 2017-12: after migrating to DotNetCore2 
+            if (p_exception is Microsoft.AspNetCore.Server.Kestrel.Core.BadHttpRequestException)
+            {
+                // bad request data: "Request is missing Host header."
+                // bad request data: "Invalid request line: ..."
+                isSendable = false;
+            }
 
 
             Utils.Logger.Debug($"IsSendableToHealthMonitorForEmailing().IsSendable:{isSendable}, FullExceptionStr:'{fullExceptionStr}'");
