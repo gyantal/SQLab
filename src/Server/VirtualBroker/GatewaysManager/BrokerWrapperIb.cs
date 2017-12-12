@@ -691,7 +691,7 @@ namespace VirtualBroker
 
         public virtual void orderStatus(int p_realOrderId, string status, double filled, double remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, string whyHeld)
         {
-            Utils.Logger.Info("OrderStatus. Id: " + p_realOrderId + ", Status: " + status + ", Filled" + filled + ", Remaining: " + remaining
+            Utils.Logger.Info("OrderStatus. Id: " + p_realOrderId + ", Status: " + status + ", Filled: " + filled + ", Remaining: " + remaining
                 + ", AvgFillPrice: " + avgFillPrice + ", PermId: " + permId + ", ParentId: " + parentId + ", LastFillPrice: " + lastFillPrice + ", ClientId: " + clientId + ", WhyHeld: " + whyHeld);
 
             if (!OrderSubscriptions.TryGetValue(p_realOrderId, out OrderSubscription orderSubscription))

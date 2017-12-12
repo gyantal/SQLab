@@ -207,15 +207,15 @@ namespace VirtualBroker
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
                         new BrokerTaskPortfolio() { Name = "! Harry Long (Contango-Bond) harvester Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
-                            MaxTradeValueInCurrency = 10000, // For Agy: portfolio is 5K original. Set MaxValue=10K  (assuming portfolio double in a year)
+                            MaxTradeValueInCurrency = 15000, // For Agy: portfolio is 5K original. Set MaxValue=20K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 100,
                             Param = new PortfolioParamHarryLong() { } },
                         new BrokerTaskPortfolio() { Name = "! Harry Long (Contango-Bond) harvester Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
-                            MaxTradeValueInCurrency = 400000, // For Mr.C.: portfolio is 200K original. Set MaxValue=400K  (assuming portfolio double in a year)
+                            MaxTradeValueInCurrency = 600000, // For Mr.C.: portfolio is 200K original. Set MaxValue=400K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 200,  // Markowitz MPT optimal weight using 100% allocation
-                            Param = new PortfolioParamHarryLong() { Tickers = new string[] { "TVIX", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { -0.35, -0.47, -0.04, -0.14 }  } },  
+                            Param = new PortfolioParamHarryLong() { Tickers = new string[] { "SVXY", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.70, -0.47, -0.04, -0.14 }  } },  
                         new BrokerTaskPortfolio() { Name = "! IB T. Risky 2 Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.TuSecondary,
-                            MaxTradeValueInCurrency = 10000, // For Tu: portfolio is 5K original. Set MaxValue=10K  (assuming portfolio double in a year)
+                            MaxTradeValueInCurrency = 15000, // For Tu: portfolio is 5K original. Set MaxValue=15K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 200,
                             Param = new PortfolioParamHarryLong() {  } }
                         }
