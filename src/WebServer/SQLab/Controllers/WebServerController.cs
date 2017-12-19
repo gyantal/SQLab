@@ -190,5 +190,21 @@ namespace SQLab.Controllers
 
             return Content(@"<HTML><body>TestUnobservedTaskException20170315() finished OK. <br> Webserver UtcNow:" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "</body></HTML>", "text/html");
         }
+
+        [HttpGet]   // Ping is accessed by the HealthMonitor every 9 minutes (to keep it alive), no no GoogleAuth there
+        public ActionResult TestGoogleApiGsheet1()
+        {
+            Utils.Logger.Info("TestGoogleApiGsheet1() BEGIN");
+
+            string valuesFromGSheetStr = "Error. Make sure GoogleApiKeyKey, GoogleApiKeyKey is in SQLab.WebServer.SQLab.NoGitHub.json !";
+            if (!String.IsNullOrEmpty(Utils.Configuration["GoogleApiKeyName"]) && !String.IsNullOrEmpty(Utils.Configuration["GoogleApiKeyKey"]))
+            {
+                if (!Utils.DownloadStringWithRetry(out valuesFromGSheetStr, "https://sheets.googleapis.com/v4/spreadsheets/1onwqrdxQIIUJytd_PMbdFKUXnBx3YSRYok0EmJF8ppM/values/A1%3AA3?key=" + Utils.Configuration["GoogleApiKeyKey"], 3, TimeSpan.FromSeconds(2), true))
+                    valuesFromGSheetStr = "Error in DownloadStringWithRetry().";
+            }
+
+            Utils.Logger.Info("TestGoogleApiGsheet1() END");
+            return Content($"<HTML><body>TestGoogleApiGsheet1() finished OK. <br> Received data: '{valuesFromGSheetStr}'</body></HTML>", "text/html");
+        }
     }
 }
