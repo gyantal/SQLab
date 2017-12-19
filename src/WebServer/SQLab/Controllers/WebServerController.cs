@@ -191,7 +191,7 @@ namespace SQLab.Controllers
             return Content(@"<HTML><body>TestUnobservedTaskException20170315() finished OK. <br> Webserver UtcNow:" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "</body></HTML>", "text/html");
         }
 
-        [HttpGet]   // Ping is accessed by the HealthMonitor every 9 minutes (to keep it alive), no no GoogleAuth there
+        [HttpGet]
         public ActionResult TestGoogleApiGsheet1()
         {
             Utils.Logger.Info("TestGoogleApiGsheet1() BEGIN");
