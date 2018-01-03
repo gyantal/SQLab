@@ -41,12 +41,12 @@ namespace SQLab.Controllers
                 var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
             }
 
-            string content = GenerateRtpResponse(this.HttpContext.Request.QueryString.ToString());
+            string content = GenerateRtpResponse(this.HttpContext.Request.QueryString.ToString()).Result;
             return Content(content, "application/json");
 
         }
 
-        public static string GenerateRtpResponse(string p_queryString)
+        public static async Task<string> GenerateRtpResponse(string p_queryString)
         {
             try
             {
@@ -54,7 +54,7 @@ namespace SQLab.Controllers
                 //string queryString = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
                 Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending '{p_queryString}'");
                 Task<string> vbMessageTask = VirtualBrokerMessage.Send(p_queryString, VirtualBrokerMessageID.GetRealtimePrice);
-                string reply = vbMessageTask.Result;
+                string reply = await vbMessageTask;
                 if (vbMessageTask.Exception != null || String.IsNullOrEmpty(reply))
                 {
                     string errorMsg = $"RealtimePrice.GenerateRtpResponse(). Received Null or Empty from VBroker. Check that the VirtualBroker is listering on IP: {VirtualBrokerMessage.TcpServerHost}:{VirtualBrokerMessage.TcpServerPort}";

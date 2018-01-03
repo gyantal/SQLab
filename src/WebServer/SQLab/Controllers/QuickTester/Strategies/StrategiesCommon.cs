@@ -90,7 +90,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             try
             {
-                var realtimeAnswerJSON = RealtimePrice.GenerateRtpResponse(realtimeQuoteUriQuery);
+                var realtimeAnswerJSON = await RealtimePrice.GenerateRtpResponse(realtimeQuoteUriQuery);
                 //using (WebClient webClient = new WebClient())
                 //{
                 //    webClient.Credentials = System.Net.CredentialCache.DefaultNetworkCredentials;

@@ -15,7 +15,7 @@ namespace SQLab.Controllers
         {
 #if DEBUG
             return null;
-#endif
+#else
             // CookieAuthenticationOptions.AutomaticAuthenticate = true (default) causes User to be set
             //var user = HttpContext.User;
             //// Deny anonymous request beyond this point.
@@ -48,6 +48,7 @@ namespace SQLab.Controllers
             }
             else
                 return null;
+#endif
         }
 
         // Some fallback logic can be added to handle the presence of a Load Balancer.  or CloudFront. Checked: CloudFront uses X-Forwarded-For : "82.44.159.196"
