@@ -13,6 +13,7 @@ namespace SQLab.Controllers
 #if !DEBUG
         [Authorize]
 #endif
+        [RequireHttps]
         public IActionResult Index()
         {
             return View();

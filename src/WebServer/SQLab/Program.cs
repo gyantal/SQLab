@@ -71,9 +71,14 @@ namespace SQLab
                 .UseUrls("http://*:80", "https://*:443", "http://localhost:5000")        // default only: "http://localhost:5000",  adding "http://*:80" will listen to clients from any IP4 or IP6 address, so Windows Firewall will prompt                 
                 .UseKestrel(options =>
                 {
-                    //1. SSL certificate was best obtained by Amazon Certification Manager. Currently (2016-06-03) that Cert can only be used with CloudFront. *.pfx cannot be obtained.
+                    // 0. HTTPS preferable over HTTP on main webApps.
+                    //But there are valid cases when HTTP should be allowed, and faster. When a trusted, local other server (HealthMonitor on a specific IP) asks something, there is no point of encrypting it.
+                    //Or for specific Data-urls could be faster HTTP, not HTTPS. The main pages (like https://localhost/HealthMonitor), which only asked once should be HTTPS.
+
+                    //1. SSL certificate was best obtained by Amazon Certification Manager. Currently (2016-06-03, 2018-01) that Cert can only be used with CloudFront. *.pfx cannot be obtained.
                     //Configure SSL is not necessary now as CloudFront will route all HTTPS request to the HTTP port of the EC2 instance. So, EC2 instance only supports HTTP, not HTTPS (right now).
                     //also an advantage is that Cloudfront computation is used, because the Linux EC2 instance doesn't have to use CPU for encryption. It is good for scalability.
+                    //However, there are problems with AWS CloudFrount. See later. (Converts Post message to Get, and losing Post data + after GoogleAuth it loses HTTPS and reverts back to HTTP). See later in these notes.
 
                     //2. I had to support HTTPS on the Kestrel server.
                     //Because if only HTTP is allowed, Cloudfront will transfer HTTPS to HTTP to the server.At that moment,
@@ -92,10 +97,38 @@ namespace SQLab
                     //However, I keep the HTTPS code here, because //Good side of it: the direct version direct.snifferquant.net can test both http and https. Good for debugging.
                     // Anyway. Later Amazon will support its own Certificate here (not only Comodo, DigiCert, etc.), so a temporary fix now is OK.
 
-                    // 4. trying Redirect HTTP to HTTPS instead of allowing both: /login redirection works as it is intended.
+                    // 4. trying CloudFront "Redirect HTTP to HTTPS" instead of allowing both: /login redirection works as it is intended.
                     //Kestrel redirects browser to HTTP / login, but CloudFront when receives http://*login, its response says it was https://login,
                     //so it properly Redirects. 
                     // So, final good solution: communication to Origin: HTTP Only ; Communication with Browsers: Redirect HTTP to HTTPS
+
+                    // 5. (2017-10) "Redirect HTTP to HTTPS" of CloudFront changes HTTPS POST to GET, ruining it, and even removing the data package of the POST.
+                    // see ReportHealthMonitorCurrentStateToDashboardInJSON()
+                    //Bad.So, solution is that I have to disable HTTP to HTTPS redirection and allow CloudFront both HTTP and HTTPS traffic flowing to OriginServer,
+                    //and IF I don't want HTTP traffic (e.g. HealthMonitor main page), I should redirect it locally, on the Kestrel server.
+                    //However, it is not an important development, so keep both HTTP and HTTPS for now.
+
+                    // 6. (2018-01-09): Amazon issued SSL certificates cannot be downloaded yet.
+                    // Problem: Amazon CloudFront has the trusted Amazon issued 'SSL Certificate' for https, so the Kestrel webserver doesn't have that SSL certificate. It only has its own local untrusted cert.
+                    // "I want to download SSL that means I want to download its private key so that I can deploy aws acm ssl to any server I want. I think that it's not possible to do it in anyway."
+                    // Q: Can I use certificates on Amazon EC2 instances or on my own servers?
+                    // A: No.At this time, certificates provided by ACM can only be used with specific AWS services" on Aug 28 2017
+
+                    // 7. (2018-01-09): There are 2 ways the user can login with Google Auth.
+                    //1.
+                    //AccountController.cs   Login() method as forced login/logout
+                    //http://localhost/login    this logs in Google and go to HTTP://localhost/# 
+                    //https://localhost/login  this logs in Google and go to HTTPS://localhost/#  (so, the HTTPS kind of login goes nicely to HTTPS) fine.
+                    //2.A.
+                    //RootHomepageRedirectController.cs  [Authorize] attribute will force it. However, it will not visit AccountController.cs code, but it will run Startup.cs/OnCreatingTicket code 
+                    //https://direct.snifferquant.net  // Works, Redirects back to HTTPS, after login with Google.
+                    //2.B
+                    //https://www.snifferquant.net/	//This doesn't work. After logging in by Google it goes to HTTP, not HTTPS. It may be because Amazon Cloudfront, because
+                    //So, without Cloudfront, the https://direct.snifferquant.net  HTTPS to HTTPS redirection works fine, but with Amazon CloudFront, it is not.
+                    //It will be solved in the future when we can download Amazon issued HTTPS certificate locally and use in in Kestrel. On 2018-01, it is still not available.
+
+                    // 8. [RequireHttps] attribute. After setting it up,
+                    // https://localhost/HealthMonitor works, but http://localhost/HealthMonitor redirects 'automatically' (no error page) to the https://localhost/HealthMonitor . It is perfect.
 
                     options.Listen(IPAddress.Any, 80);
                     options.Listen(IPAddress.Any, 5000);

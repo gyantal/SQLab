@@ -73,7 +73,7 @@ namespace SQLab
                 .AddCookie(o => {  // CookieAuth will be the default from the two, GoogleAuth is used only for Challenge
                     o.LoginPath = "/account/login";
                     o.LogoutPath = "/account/logout";
-                    o.ExpireTimeSpan = TimeSpan.FromDays(7);
+                    o.ExpireTimeSpan = TimeSpan.FromDays(25);
                 })
                 .AddGoogle("Google", options =>
                 {
@@ -84,6 +84,8 @@ namespace SQLab
                         OnCreatingTicket = context =>
                         {
                             string email = context.User.Value<Newtonsoft.Json.Linq.JArray>("emails")[0]["value"].ToString();
+                            Utils.Logger.Debug($"[Authorize] attribute forced Google auth. Email:'{email ?? "null"}', RedirectUri: '{context.Properties.RedirectUri ?? "null"}'");
+
                             if (!Utils.IsAuthorizedGoogleUsers(Utils.Configuration, email))
                                 throw new Exception($"Google Authorization Is Required. Your Google account: '{ email }' is not accepted. Logout this Google user and login with another one.");                                
 
