@@ -128,7 +128,10 @@ namespace SQLab
                     //It will be solved in the future when we can download Amazon issued HTTPS certificate locally and use in in Kestrel. On 2018-01, it is still not available.
 
                     // 8. [RequireHttps] attribute. After setting it up,
-                    // https://localhost/HealthMonitor works, but http://localhost/HealthMonitor redirects 'automatically' (no error page) to the https://localhost/HealthMonitor . It is perfect.
+                    // https://localhost/HealthMonitor works, but http://localhost/HealthMonitor redirects 'automatically' (no error page) to the https://localhost/HealthMonitor . It is perfect locally.
+                    // However, again, Aws CloudFront ruins it. It works with with Localhost and with https://direct.snifferquant.net/HealthMonitor , 
+                    // but with https://www.snifferquant.net/HealthMonitor which goes through AWS Cloudfront, it is 'redirected you too many times.'
+                    // So, temporary, until We can use our own HTTPS SSL certificate, we are switching off this feature.
 
                     options.Listen(IPAddress.Any, 80);
                     options.Listen(IPAddress.Any, 5000);

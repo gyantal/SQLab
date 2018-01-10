@@ -137,42 +137,7 @@ export class QuickTesterComponent {
         if (typeof $ == "undefined") { // on server side Index.cshtml is rendered without _Layout.cshtml, so no <HEAD> of HTML is processed, so global variables and even charting_library.min.js is not processed yet.
             console.log("ngAfterViewInit() called. $ is undefined");
             return;
-        }
-        //$('.mymyButton1Class').hide();
-
-        //$(".content").hover(function () {
-        //    $(this: any).children(".description").fadeIn();
-        //}, function () {
-        //    $(this).children(".description").fadeOut();
-        //});
-
-        /* Next part of code handles hovering effect and submenu appearing */
-        $('.sqMenuItemLevel0').hover(
-            function (this: any) { //appearing on hover
-                // $('.sqMenuBarLevel1', this).fadeIn();
-                //$(this: any).find('.sqMenuBarLevel1').fadeIn();   //  selector is restricted to match only descendants of a determined context 'this':
-                //$('.sqMenuBarLevel1').fadeIn();
-                $(this).find('.sqMenuBarLevel1').fadeIn();
-                // TODO: replace this jQuery fade-In/Fadeout with CSS based. http://jsfiddle.net/weissraum/uFJ4H/  ".post:hover > .post-info ", because without $this selector, it is very inefficient, and we hate jQuery dependency anyway
-            },
-            function (this: any) { //disappearing on hover
-                $(this).find('.sqMenuBarLevel1').fadeOut();
-                //$('.sqMenuBarLevel1').fadeOut();
-            }
-        );
-
-        $('.sqMenuItemLevel1').hover(
-            function (this: any) { //appearing on hover
-                //$(this).find('.sqMenuBarLevel2').fadeIn();
-                //$('.sqMenuBarLevel2').fadeIn();
-                $(this).find('.sqMenuBarLevel2').fadeIn();
-            },
-            function (this: any) { //disappearing on hover
-                //$(this).find('.sqMenuBarLevel2').fadeOut();
-                //$('.sqMenuBarLevel2').fadeOut();
-                $(this).find('.sqMenuBarLevel2').fadeOut();
-            }
-        );
+        }      
         console.log("ngAfterViewInit() START 2");
     }
 

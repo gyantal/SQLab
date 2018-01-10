@@ -69,28 +69,6 @@ namespace SQLab.Controllers
                 return @"{ ""Message"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }";
             }
         }
-
-        // it is temporary simple redirection (untir VBrokerGateway supports real-time price requests.). 
-        //It is needed in SQLab server that HTTPS webpage get code from other HTTPS services. (not HTTP)
-        private Tuple<string, string> GenerateRtpResponseBySendingToHqaCompute_Azure_Webservice()
-        {
-            try
-            {
-                var jsonDownload = string.Empty;
-                string rtpURI = @"http://hqacompute.cloudapp.net/q/rtp" + this.HttpContext.Request.QueryString;
-                if (!Utils.DownloadStringWithRetry(out jsonDownload, rtpURI, 5, TimeSpan.FromSeconds(5), false))
-                {
-                    return new Tuple<string, string>(@"{ ""Message"":  ""Error: rtp download was not succesfull: " + rtpURI + @""" }", "application/json");
-                }
-                else
-                    return new Tuple<string, string>(jsonDownload, "application/json");          
-            }
-            catch (Exception e)
-            {
-                return new Tuple<string, string>(@"{ ""Message"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }", "application/json");
-            }
-        }
-
      
     }
 }
