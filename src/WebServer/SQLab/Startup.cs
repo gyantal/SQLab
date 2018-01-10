@@ -16,32 +16,9 @@ using Microsoft.Extensions.Logging;
 
 namespace SQLab
 {
-    public interface IWebAppGlobals
-    {
-        DateTime WebAppStartTime { get; set; }
-    }
-
-    class WebAppGlobals : IWebAppGlobals
-    {
-        DateTime m_webAppStartTime = DateTime.UtcNow;
-
-        public DateTime WebAppStartTime
-        {
-            get
-            {
-                return m_webAppStartTime;
-            }
-            set
-            {
-                m_webAppStartTime = value;
-            }
-        }
-    }
-
+  
     public class Startup
     {
-        private static IWebAppGlobals WebAppGlobals { get; set; }
-
         public Startup(Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
             Configuration = configuration;
@@ -53,8 +30,11 @@ namespace SQLab
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+            //Transient objects are always different; a new instance is provided to every controller and every service.
+            //Scoped objects are the same within a request, but different across different requests
+            //Singleton objects are the same for every object and every request(regardless of whether an instance is provided in ConfigureServices)
             services.AddSingleton(_ => Utils.Configuration);      // this is the proper DependenciInjection (DI) way of pushing it as a service to Controllers. So you don't have to manage the creation or disposal of instances.
-            services.AddSingleton(_ => WebAppGlobals);
+            services.AddSingleton(_ => Program.g_webAppGlobals);
 
             if (!String.IsNullOrEmpty(Utils.Configuration["GoogleClientId"]) && !String.IsNullOrEmpty(Utils.Configuration["GoogleClientSecret"]))
             {
@@ -131,17 +111,15 @@ namespace SQLab
 
             var aspLogLevel = Configuration.GetSection("Logging:LogLevel:Microsoft");
             string aspLogLevelStr = (aspLogLevel != null) ? aspLogLevel.Value : "NotAvailable";
-            string logLevelMsg = $"ASP logLevel as appsettings.json:'Logging:LogLevel:Microsoft':'{aspLogLevelStr}'";
+            string logLevelMsg = $"ASP logLevel as appsettings.json or appsettings.Development.json:'Logging:LogLevel:Microsoft':'{aspLogLevelStr}'";
             Console.WriteLine(logLevelMsg);
             Utils.Logger.Info(logLevelMsg);
-
-
 
             if (env.IsDevelopment())
             {
                 //Now, assuming you're running in development mode, any requests for files under /dist will be intercepted and served using Webpack dev middleware.
                 //This is for development time only, not for production use (hence the env.IsDevelopment() check in the code above). 
-                app.UseDeveloperExceptionPage();
+                app.UseDeveloperExceptionPage();     // ExceptionHandlers will swallow the Exceptions. It will not be rolled further.
                 app.UseWebpackDevMiddleware(new WebpackDevMiddlewareOptions
                 {
                     HotModuleReplacement = true  //This watches for any changes you make to source files on disk (e.g., .ts/.html/.sass/etc. files), and automatically rebuilds them and pushes the result into your browser window, without even needing to reload the page.
@@ -149,12 +127,14 @@ namespace SQLab
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
+                app.UseExceptionHandler("/Home/Error");     // ExceptionHandlers will swallow the Exceptions. It will not be rolled further.
             }
+
+            app.UseMiddleware<RequestLoggingMiddleware>();  // For this to catch Exceptions, it should come after UseExceptionHadlers(), because those will swallow exceptions and generates nice ErrPage.
 
             app.UseStaticFiles();   // Call UseWebpackDevMiddleware before UseStaticFiles 
 
-            app.UseAuthentication();
+            app.UseAuthentication();    // StaticFiles are served Before the user is authenticed. This is fast, but httpContext?.User?.Claims is null in this case.
 
             app.UseMvc(routes =>
             {

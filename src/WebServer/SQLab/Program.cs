@@ -23,8 +23,27 @@ namespace SQLab
         SQLabFolder
     }
 
+    public interface IWebAppGlobals
+    {
+        DateTime WebAppStartTime { get; set; }
+
+        Queue<HttpRequestLog> HttpRequestLogs { get; set; }     // Fast Insert, limited size. Better that List
+    }
+
+    public class WebAppGlobals : IWebAppGlobals
+    {
+        DateTime m_webAppStartTime = DateTime.UtcNow;
+        DateTime IWebAppGlobals.WebAppStartTime { get => m_webAppStartTime; set => m_webAppStartTime = value; }
+
+        Queue<HttpRequestLog> m_httpRequestLogs = new Queue<HttpRequestLog>();
+        Queue<HttpRequestLog> IWebAppGlobals.HttpRequestLogs { get => m_httpRequestLogs; set => m_httpRequestLogs = value; }
+    }
+
+
     public class Program
     {
+        public static IWebAppGlobals g_webAppGlobals { get; set; }
+
         public static void Main(string[] args)
         {
             string runtimeConfig = "Unknown";
@@ -46,6 +65,7 @@ namespace SQLab
             StrongAssert.g_strongAssertEvent += StrongAssertMessageSendingEventHandler;
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException; // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
 
+            g_webAppGlobals = new WebAppGlobals();
             try
             {
                 BuildWebHost(args).Run();
@@ -171,7 +191,7 @@ namespace SQLab
             //>see: my custom code hasn't been even invoked. Kestrel returns 404 not found, and my code has no chance to do anything at all.
             //>Solution: It is inevitable that crooks tries this query-and-abort and Kestrel is written badly that it doesn't handle Abortion properly.
             //So, in UnobservedTaskException() filters these aborts and don't send it to HealthMonitor.
-            if (SQLabCommonAspLogger.IsSendableToHealthMonitorForEmailing(e.Exception))
+            if (RequestLoggingMiddleware.IsSendableToHealthMonitorForEmailing(e.Exception))
                 HealthMonitorMessage.SendException("Website.C#.TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
             e.SetObserved();        //  preventing it from triggering exception escalation policy which, by default, terminates the process.
 

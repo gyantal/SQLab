@@ -32,7 +32,7 @@ namespace SQLab.Controllers
         public ActionResult Index()
         {
             // if the query is from the HealthMonitor.exe as a heartbeat, we allow it without Gmail Authorization
-            string callerIP = ControllerCommon.GetRequestIP(this);
+            string callerIP = WsUtils.GetRequestIP(this.HttpContext);
             Utils.Logger.Info($"RealtimePrice is called from IP {callerIP}");
             // Authorized ServerIP whitelist: 
             if (!String.Equals(callerIP, ServerIp.HealthMonitorPublicIp, StringComparison.CurrentCultureIgnoreCase) &&       //  HealthMonitor for checking that real-time price works

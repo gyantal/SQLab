@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using SqCommon;
 using System.IO;
+using System.Text;
 
 namespace SQLab.Controllers
 {
@@ -31,11 +32,14 @@ namespace SQLab.Controllers
                 jsLogMessage = reader.ReadToEnd();
             }
 
-            string email, ip;
-            ControllerCommon.GetRequestUserAndIP(this, out email, out ip);
-            string jsLogMsgWithOrigin = $"User '{email}' from '{ip}': {jsLogMessage}";
+            var clientIP = WsUtils.GetRequestIP(this.HttpContext);
+            var clientUserEmail = WsUtils.GetRequestUser(this.HttpContext);
+            if (clientUserEmail == null)
+                clientUserEmail = "UnknownUser@gmail.com";
 
-            m_logger.LogInformation("JsLog arrived: " + jsLogMsgWithOrigin);
+            string jsLogMsgWithOrigin = $"Javascript Logger /JsLogController was called by '{clientUserEmail}' from '{clientIP}' and it indicates error. Received JS log: '{jsLogMessage}'";
+
+            m_logger.LogInformation(jsLogMsgWithOrigin);
             // get the control string, which is until the first ":".  e.g. "JsLog.Err:Error: Uncaught ReferenceError:..."
             int logLevelInd = jsLogMessage.IndexOf(':');
             if (logLevelInd == -1)
@@ -46,7 +50,9 @@ namespace SQLab.Controllers
             string logLevel = jsLogMessage.Substring(0, logLevelInd);
             if (logLevel == "JsLog.Err")
             {   // notify HealthMonitor to send an email
-                HealthMonitorMessage.Send("Website.JS", jsLogMsgWithOrigin, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+                //HealthMonitorMessage.Send("Website.JS", jsLogMsgWithOrigin, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+
+                HealthMonitorMessage.Send(jsLogMsgWithOrigin, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
 
             }
 

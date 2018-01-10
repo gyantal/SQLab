@@ -1,0 +1,10 @@
+
+
+
+
+1. String.Format() can handle if the string inputs are null. Replaces with empty string. Checking string == null is not necessary.
+
+
+var clientUserEmail = WsUtils.GetRequestUser(httpContext);	// it may be null
+//string.Format("Value is {0}", someValue) which will check for a null reference and replace it with an empty string. It will however throw an exception if you actually pass  null like this string.Format("Value is {0}", null)
+string msg = String.Format("email: '{0}'",  clientUserEmail);   // empty string is fine if email is null
