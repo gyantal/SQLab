@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2009
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqCommon", "Common\SqCommon\SqCommon.csproj", "{7F02AE44-EF26-4402-AFDC-EE37033F9BE9}"
 EndProject
@@ -61,6 +61,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLab", "WebServer\SQLab\SQ
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SoftwareEngineering", "SoftwareEngineering", "{FDA385FB-B77B-4785-B57A-659E0D6D0DC6}"
 	ProjectSection(SolutionItems) = preProject
+		Csharp tips.txt = Csharp tips.txt
 		..\docs\SoftwareEngineering\DotNetCore Angular sample, performance problem, 2017-10-27.txt = ..\docs\SoftwareEngineering\DotNetCore Angular sample, performance problem, 2017-10-27.txt
 	EndProjectSection
 EndProject

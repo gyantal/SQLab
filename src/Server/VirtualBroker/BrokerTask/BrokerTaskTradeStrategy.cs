@@ -188,11 +188,17 @@ namespace VirtualBroker
                     StrongAssert.True(Controller.g_gatewaysWatcher.GetMktDataSnapshot(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if portfolioUSdSize cannot be calculated. After that we cannot calculate new stock Volumes from weights.");
                     rtPrice = rtPrices[TickType.MID].Price;
 
-                    //double rtPrice = GetAssetIDRealTimePrice(BrokerTask.TaskLogFile, p_brokerAPI, pip.AssetID); 
-                    portfolioUsdSize += pip.Volume * rtPrice;  // pip.Volume is signed. For shorts, it is negative, but that is OK.
+                    //double rtPrice = GetAssetIDRealTimePrice(BrokerTask.TaskLogFile, p_brokerAPI, pip.AssetID);
+                    double positionUsdSize = pip.Volume * rtPrice;   // pip.Volume is signed. For shorts, it is negative, but that is OK.
+                    Utils.Logger.Debug($"CalcPfSize(),{contract.Symbol}: {pip.Volume}*{rtPrice:F2}={positionUsdSize:F0}");
+                    portfolioUsdSize += positionUsdSize;
                 }
             }
             p_portfolio.PortfolioUsdSize = portfolioUsdSize;
+            if (portfolioUsdSize <= 0)
+            {
+                Utils.Logger.Warn("WARNING!. PortfolioUsdSize should be positive.");
+            }
             string logMsg = $"{p_portfolio.IbGatewayUserToTrade.ToShortFriendlyString()}: PortfolioID '{p_portfolio.PortfolioID}': realtime PV: ${p_portfolio.PortfolioUsdSize:F0}";
             Utils.ConsoleWriteLine(null, false, logMsg);
             Utils.Logger.Info(logMsg);

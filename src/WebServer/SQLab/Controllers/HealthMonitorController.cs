@@ -13,6 +13,7 @@ namespace SQLab.Controllers
 #if !DEBUG
         [Authorize]
 #endif
+        //[RequireHttps]   see comments in Program.cs. AWS CloudFront kills this feature. Temporary, until We can use our own HTTPS SSL certificate, we are switching off this feature.
         public IActionResult Index()
         {
             return View();

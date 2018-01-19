@@ -21,11 +21,13 @@ namespace SQLab.Controllers
     {
         private readonly ILogger<Program> m_logger;
         private readonly SqCommon.IConfigurationRoot m_config;
+        private readonly IWebAppGlobals m_webAppGlobals;
 
-        public WebServerController(ILogger<Program> p_logger, SqCommon.IConfigurationRoot p_config)
+        public WebServerController(ILogger<Program> p_logger, SqCommon.IConfigurationRoot p_config, IWebAppGlobals p_webAppGlobals)
         {
             m_logger = p_logger;
             m_config = p_config;
+            m_webAppGlobals = p_webAppGlobals;
         }
 
         [HttpGet]   // Ping is accessed by the HealthMonitor every 9 minutes (to keep it alive), no no GoogleAuth there
@@ -34,6 +36,29 @@ namespace SQLab.Controllers
             // pinging Index.html do IO file operation. Also currently it is a Redirection. There must be a quicker way to ping our Webserver. (for keeping it alive)
             // a ping.html or better a c# code that gives back only some bytes, not reading files. E.G. it gives back UTcTime. It has to be quick.
             return Content(@"<HTML><body>Ping. Webserver UtcNow:" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture) + "</body></HTML>", "text/html");
+        }
+
+        [HttpGet]
+#if !DEBUG
+        [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
+#endif
+        public ActionResult HttpRequestAcitivityLog()
+        {
+            HttpRequestLog[] logsPointerArr = null;
+            lock (m_webAppGlobals.HttpRequestLogs)  // prepare for multiple threads
+            {
+                logsPointerArr = m_webAppGlobals.HttpRequestLogs.ToArray();     // it copies only max 50 pointers to Array. Quick.
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = logsPointerArr.Length - 1; i >= 0; i--)        // foreach loop iterates over Queue starting from the oldest item and ending with newest.
+            {
+                var requestLog = logsPointerArr[i];
+                string msg = String.Format("{0}#{1}{2} {3} '{4}' from {5} (u: {6}) ret: {7} in {8:0.00}ms", requestLog.StartTime.ToString("HH':'mm':'ss.f"), requestLog.IsError ? "ERROR in " : String.Empty, requestLog.IsHttps ? "HTTPS" : "HTTP", requestLog.Method, requestLog.Path + (String.IsNullOrEmpty(requestLog.QueryString) ? "" : requestLog.QueryString), requestLog.ClientIP, requestLog.ClientUserEmail, requestLog.StatusCode, requestLog.TotalMilliseconds);
+                sb.Append(msg + "<br />");
+            }
+
+            return Content(@"<HTML><body><h1>HttpRequests Activity Log</h1><br />" + sb.ToString() + "</body></HTML>", "text/html");
         }
 
         [HttpGet]
@@ -85,7 +110,7 @@ namespace SQLab.Controllers
             string crash = null;
             Console.WriteLine(crash.ToString());
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(); // The Code will not arrive here.
             sb.Append("<html><body>");
             sb.Append("TestHealthMonitorEmailByRaisingException: <br><br>");
             sb.Append("</body></html>");

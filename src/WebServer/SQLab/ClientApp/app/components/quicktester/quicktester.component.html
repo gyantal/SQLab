@@ -2,62 +2,62 @@
 <!--<div style="position:absolute;top: 0px; ">-->
 <div class="mainHmDiv1">
     <div class="mainHmDiv2">
-        <div class="divTitle">SQ Strategy QuickTester (<span class="spanNumber">{{m_versionShortInfo}}</span>) <span class="spanTitleSuperscript">*RealTime</span> </div>
+        <div class="divTitle">SQ Strategy QuickTester (<span class="spanTitleVersionNumber">{{m_versionShortInfo}}</span>) <span class="spanTitleSuperscript">*RealTime</span> </div>
         <div style="width: 100%; height: 2px; background: #ffffff; overflow: hidden;"></div>
         <!--//http://jsfiddle.net/rabidGadfly/f8ea6/ this was a good Angular menu, but submenus was not hovering-->
         <!--// jquery horizontal menu is from here (I gave up finding Angular one): http://runnable.com/UdQdRyHniSpKAAXx/create-a-horizontal-navigation-menu-bar-using-jquery-->
         <!-- Use this navigation div as your menu bar div -->
-        <div class="navigation">
-            <ul class="sqMenuNav">
-                <li class="sqMenuItemLevel0" id="idStartBacktestButtonLi">
-                    <span class="startBacktestButton" id="idStartBacktestButtonA" (click)="MenuItemStartBacktestClicked()">Start Backtest!</span>
+        <div class="SqMenu2">
+            <ul>
+                <li id="idStartBacktestButtonLi">
+                    <span class="startBacktestButton" (click)="MenuItemStartBacktestClicked()">Start Backtest!</span>
                 </li>
-                <li class="sqMenuItemLevel0">
+                <li>
                     <span>Tools</span>
-                    <ul class="sqMenuBarLevel1">
+                    <ul>
                         <li><span>Copy PV to clipboard</span></li>
                         <li><span (click)="MenuItemVersionInfoClicked()">Version info</span></li>
                     </ul>
                 </li>
-                <li class="sqMenuItemLevel0">
+                <li>
                     <span>Debug</span>
-                    <ul class="sqMenuBarLevel1">
+                    <ul>
                         <li><span>See debug info 1</span></li>
                         <li><span>See debug info 2</span></li>
                     </ul>
                 </li>
-                <li class="sqMenuItemLevel0">
+                <li>
                     <span>Strategies</span>
-                    <ul class="sqMenuBarLevel1">
-                        <li class="sqMenuItemLevel1">
+                    <ul>
+                        <li>
                             <span>Adaptive</span>
-                            <ul class="sqMenuBarLevel2">
+                            <ul>
                                 <li><span id="idMenuItemAdaptiveUberVxx" (click)="MenuItemStrategyClick($event)">UberVxx</span></li>
                             </ul>
                         </li>
-                        <li class="sqMenuItemLevel1">
+                        <li>
                             <span>Seasonalities</span>
-                            <ul class="sqMenuBarLevel2">
+                            <ul>
                                 <li><span id="idMenuItemTotM" (click)="MenuItemStrategyClick($event)">Turn of the Month</span></li>
                             </ul>
                         </li>
-                        <li class="sqMenuItemLevel1">
+                        <li>
                             <span>VIX</span>
-                            <ul class="sqMenuBarLevel2">
+                            <ul>
                                 <li><span id="idMenuItemVXX_SPY_Controversial" (click)="MenuItemStrategyClick($event)">XIV width VXX-SPY Cont.Day</span></li>
                             </ul>
                         </li>
-                        <li class="sqMenuItemLevel1">
+                        <li>
                             <span>L-ETF</span>
-                            <ul class="sqMenuBarLevel2">
+                            <ul>
                                 <li><span id="idMenuItemLETFDiscrRebToNeutral" (click)="MenuItemStrategyClick($event)">L-ETF Discr. Reb.ToNeutral</span></li>
                                 <li><span id="idMenuItemLETFDiscrAddToWinner" (click)="MenuItemStrategyClick($event)">L-ETF Discr. AddToWinning</span></li>
                                 <li><span id="idMenuItemLETFHarryLong" (click)="MenuItemStrategyClick($event)">Harry Long</span></li>
                             </ul>
                         </li>
-                        <li class="sqMenuItemLevel1">
+                        <li>
                             <span>Asset Allocation</span>
-                            <ul class="sqMenuBarLevel2">
+                            <ul>
                                 <li><span id="idMenuItemTAA" (click)="MenuItemStrategyClick($event)">Tactical AA (TAA)</span></li>
                             </ul>
                         </li>
@@ -214,11 +214,11 @@
                 </tr>
             </tbody>
         </table>
-        <span class="navigation" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemTotM'">
-            <ul class="sqMenuNav">
-                <li class="sqMenuItemLevel0" id="idTotMButtonLi">
-                    <span id="idTotMButtonA">Masks</span>
-                    <ul class="sqMenuBarLevel1">
+        <div class="SqMenu2" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemTotM'" align="left">
+            <ul>
+                <li>
+                    <span>Masks</span>
+                    <ul>
                         <li><span id="idMaskBuyHold" (click)="strategy_TotM.MenuItemPresetMasksClicked($event)">Buy&Hold</span></li>
                         <li><span id="idMaskUberVXXOld" (click)="strategy_TotM.MenuItemPresetMasksClicked($event)">UberVXX old</span></li>
                         <li><span id="idMaskBuyUberVXXNew" (click)="strategy_TotM.MenuItemPresetMasksClicked($event)">UberVXX new</span></li>
@@ -226,8 +226,7 @@
                     </ul>
                 </li>
             </ul>
-        </span>
-
+        </div>
 
         <!--#include virtual="/SQQuickTester/Strategies/VIX/VXX_SPY_Controversial.htm"-->
         <table id="inputTable" [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemVXX_SPY_Controversial'">
@@ -277,11 +276,11 @@
                     </tr>
                 </tbody>
             </table>
-            <span class="navigation">
-                <ul class="sqMenuNav">
-                    <li class="sqMenuItemLevel0" id="idLetfHL_MButtonLi">
-                        <span id="idLetfHL_MButtonA">ParamSets</span>
-                        <ul class="sqMenuBarLevel1">
+            <div class="SqMenu2">
+                <ul>
+                    <li>
+                        <span>ParamSets L</span>
+                        <ul>
                             <li><span id="idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy5" (click)="strategy_LEtf.MenuItemParamSetsClicked($event)">70VXX.SQ,c.MPT135%**</span></li>
                             <li><span id="idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy4" (click)="strategy_LEtf.MenuItemParamSetsClicked($event)">70VXX.SQ,c.MPT135%*</span></li>
                             <li><span id="idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy3" (click)="strategy_LEtf.MenuItemParamSetsClicked($event)">70VXX.SQ,c.MPT100%*</span></li>
@@ -307,7 +306,8 @@
                         </ul>
                     </li>
                 </ul>
-            </span>
+            </div>
+
         </div>
 
         <div [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemTAA'">
@@ -357,19 +357,19 @@
                     </tr>
                 </tbody>
             </table>
-            <span class="navigation">
-                <ul class="sqMenuNav">
-                    <li class="sqMenuItemLevel0" id="idLetfTAA_MButtonLi">
-                        <span id="idLetfTAA_MButtonA">ParamSets</span>
-                        <ul class="sqMenuBarLevel1">
+            <div class="SqMenu2">
+                <ul>
+                    <li>
+                        <span>ParamSets T</span>
+                        <ul>
                             <li><span id="idParamSetTAA_GlobVnqIbb" (click)="strategy_AssetAllocation.MenuItemParamSetsClicked($event)">Global+VNQ+BIB Live</span></li>
                             <li><span id="idParamSetTAA_Glob_Live" (click)="strategy_AssetAllocation.MenuItemParamSetsClicked($event)">GlobalAssets Live</span></li>
                             <li><span id="idParamSetTAA_GC_Live" (click)="strategy_AssetAllocation.MenuItemParamSetsClicked($event)">GameChangers Live</span></li>
                             <li><span id="idParamSetTAA_VaradiOriginal" (click)="strategy_AssetAllocation.MenuItemParamSetsClicked($event)">Varadi's original</span></li>
                         </ul>
                     </li>
-                </ul>
-            </span>
+                </ul>para
+            </div>
         </div>
 
         <!--// How to Eliminate Whitespace around Server Side Includes when Pages are UTF-8 Encoded? http://stackoverflow.com/questions/7196993/how-to-eliminate-whitespace-around-server-side-includes-when-pages-are-utf-8-enc-->
@@ -477,7 +477,8 @@
 
         Holdings List:
         <span> {{holdingsListStr}} </span>
-        <br><br>
+        <br>
+        <br>
         ErrorMessage:
         <span> {{errorMessage}} </span>
         <br>
@@ -510,4 +511,4 @@
 
 
     </div>
-</div>
+    </div>

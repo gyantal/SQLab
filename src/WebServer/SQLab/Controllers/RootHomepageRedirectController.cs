@@ -118,11 +118,14 @@ namespace SQLab.Controllers
                 {
                     case "/developerdashboard":
                     case "/userdashboard":
-                    //case "/healthmonitor":
-                    //case "/quicktester":
-                        string email, ip;
-                        ControllerCommon.GetRequestUserAndIP(this, out email, out ip);
-                        fileStr = fileStr.Replace("unknown@gmail.com", email);
+                        //case "/healthmonitor":
+                        //case "/quicktester":
+
+                        var clientUserEmail = WsUtils.GetRequestUser(this.HttpContext);
+                        if (clientUserEmail == null)
+                            clientUserEmail = "UnknownUser@gmail.com";
+
+                        fileStr = fileStr.Replace("unknown@gmail.com", clientUserEmail);
                         break;
                     default:
                         break;

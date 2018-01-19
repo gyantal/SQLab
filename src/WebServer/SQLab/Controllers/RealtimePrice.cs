@@ -32,7 +32,7 @@ namespace SQLab.Controllers
         public ActionResult Index()
         {
             // if the query is from the HealthMonitor.exe as a heartbeat, we allow it without Gmail Authorization
-            string callerIP = ControllerCommon.GetRequestIP(this);
+            string callerIP = WsUtils.GetRequestIP(this.HttpContext);
             Utils.Logger.Info($"RealtimePrice is called from IP {callerIP}");
             // Authorized ServerIP whitelist: 
             if (!String.Equals(callerIP, ServerIp.HealthMonitorPublicIp, StringComparison.CurrentCultureIgnoreCase) &&       //  HealthMonitor for checking that real-time price works
@@ -41,12 +41,12 @@ namespace SQLab.Controllers
                 var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
             }
 
-            string content = GenerateRtpResponse(this.HttpContext.Request.QueryString.ToString());
+            string content = GenerateRtpResponse(this.HttpContext.Request.QueryString.ToString()).Result;
             return Content(content, "application/json");
 
         }
 
-        public static string GenerateRtpResponse(string p_queryString)
+        public static async Task<string> GenerateRtpResponse(string p_queryString)
         {
             try
             {
@@ -54,7 +54,7 @@ namespace SQLab.Controllers
                 //string queryString = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
                 Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending '{p_queryString}'");
                 Task<string> vbMessageTask = VirtualBrokerMessage.Send(p_queryString, VirtualBrokerMessageID.GetRealtimePrice);
-                string reply = vbMessageTask.Result;
+                string reply = await vbMessageTask;
                 if (vbMessageTask.Exception != null || String.IsNullOrEmpty(reply))
                 {
                     string errorMsg = $"RealtimePrice.GenerateRtpResponse(). Received Null or Empty from VBroker. Check that the VirtualBroker is listering on IP: {VirtualBrokerMessage.TcpServerHost}:{VirtualBrokerMessage.TcpServerPort}";
@@ -69,28 +69,6 @@ namespace SQLab.Controllers
                 return @"{ ""Message"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }";
             }
         }
-
-        // it is temporary simple redirection (untir VBrokerGateway supports real-time price requests.). 
-        //It is needed in SQLab server that HTTPS webpage get code from other HTTPS services. (not HTTP)
-        private Tuple<string, string> GenerateRtpResponseBySendingToHqaCompute_Azure_Webservice()
-        {
-            try
-            {
-                var jsonDownload = string.Empty;
-                string rtpURI = @"http://hqacompute.cloudapp.net/q/rtp" + this.HttpContext.Request.QueryString;
-                if (!Utils.DownloadStringWithRetry(out jsonDownload, rtpURI, 5, TimeSpan.FromSeconds(5), false))
-                {
-                    return new Tuple<string, string>(@"{ ""Message"":  ""Error: rtp download was not succesfull: " + rtpURI + @""" }", "application/json");
-                }
-                else
-                    return new Tuple<string, string>(jsonDownload, "application/json");          
-            }
-            catch (Exception e)
-            {
-                return new Tuple<string, string>(@"{ ""Message"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }", "application/json");
-            }
-        }
-
      
     }
 }

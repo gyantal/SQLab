@@ -1,0 +1,25 @@
+
+*********************** Visual Studio 2017
+
+1. Debugging
+Press Control in debugging and arrow becomes yellow arrow, so you can "Replace next execution wherever you want"
+https://channel9.msdn.com/Events/dotnetConf/2017/T228  10:30
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**************************** VS Code
+
+
+
+
