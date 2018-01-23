@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace SQLab.Controllers
 {
-    struct VixCentralRec
+    struct VixCentralRec3
     {
         public DateTime Date;
         public int FirstMonth;
@@ -41,7 +41,7 @@ namespace SQLab.Controllers
         }
     }
 
-    struct Data2Charts
+    struct Data2Charts3
     {
         public int ExpDays;
         public double FutPrices;
@@ -50,7 +50,7 @@ namespace SQLab.Controllers
     }
 
     //--[Route("[controller]")]
-    public class VixFuturesAnalyserDataController : Controller
+    public class UberTAAGChDataController : Controller
     {
 #if !DEBUG
         [Authorize]
@@ -60,10 +60,40 @@ namespace SQLab.Controllers
             return Content(GetStr(), "text/html");
         }
 
-        
+        [HttpGet]
+        public ActionResult UberTAAGChGoogleApiGsheet1()
+        {
+            Utils.Logger.Info("UberTAAGChGoogleApiGsheet1() BEGIN");
+
+            string valuesFromGSheetStr = "Error. Make sure GoogleApiKeyKey, GoogleApiKeyKey is in SQLab.WebServer.SQLab.NoGitHub.json !";
+            if (!String.IsNullOrEmpty(Utils.Configuration["GoogleApiKeyName"]) && !String.IsNullOrEmpty(Utils.Configuration["GoogleApiKeyKey"]))
+            {
+                if (!Utils.DownloadStringWithRetry(out valuesFromGSheetStr, "https://sheets.googleapis.com/v4/spreadsheets/1AGci_xFhgcC-Q1tEZ5E-HTBWbOU-C9ZXyjLIN1bEZeE/values/A1:P10?key=" + Utils.Configuration["GoogleApiKeyKey"], 3, TimeSpan.FromSeconds(2), true))
+                    valuesFromGSheetStr = "Error in DownloadStringWithRetry().";
+            }
+
+            
+
+            Utils.Logger.Info("UberTAAGChGoogleApiGsheet1() END");
+            return Content($"<HTML><body>UberTAAGChGoogleApiGsheet1() finished OK. <br> Received data: '{valuesFromGSheetStr}'</body></HTML>", "text/html");
+        }
+
+
+        public static double Dfged()
+        {
+            DateTime endTimeUtc = DateTime.UtcNow;
+            DateTime startTimeUtc = endTimeUtc.AddDays(-100);
+            var getAllQuotesTask = SQLab.Controllers.QuickTester.Strategies.StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc, (new string[] { "VXX", "SPY" }).ToList());
+            var getAllQuotesData = getAllQuotesTask.Result;
+            var vxxQoutes = getAllQuotesData.Item1[0];
+            return vxxQoutes[0].AdjClosePrice;
+        }
         public string GetStr()
         {
-            
+            var testElek = Dfged();
+
+            var testElek2 = UberTAAGChGoogleApiGsheet1();
+
             Stopwatch stopWatchTotal = Stopwatch.StartNew();
 
             Stopwatch stopWatch1 = Stopwatch.StartNew();
@@ -73,12 +103,7 @@ namespace SQLab.Controllers
             //bool isOk3 = Utils.DownloadStringWithRetry(out webpageHistGSP, "https://sheets.googleapis.com/v4/spreadsheets/1AGci_xFhgcC-Q1tEZ5E-HTBWbOU-C9ZXyjLIN1bEZeE/values/A4:N20", 3, TimeSpan.FromSeconds(2), true);
             //if (!isOk3)
             //    return "Error in historical data";
-
-            //DateTime endTimeUtc = DateTime.UtcNow;
-            //DateTime startTimeUtc = endTimeUtc.AddDays(-100);
-            //var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc, (new string[] { "VXX", "SPY" }).ToList());
-            //var getAllQuotesData = await getAllQuotesTask;
-
+           
             //Downloading historical data from vixcentral.com.
             string webpageHist;
             bool isOk = Utils.DownloadStringWithRetry(out webpageHist, "http://vixcentral.com/historical/?days=10000", 3, TimeSpan.FromSeconds(2), true);
@@ -104,24 +129,24 @@ namespace SQLab.Controllers
             string liveFuturesNextExp = System.String.Empty;
 
             int startPosLiveDate = webpageLive.IndexOf("var time_data_var=['") + "var time_data_var=['".Length;
-            int startPosLive = webpageLive.IndexOf("var last_data_var=[",startPosLiveDate) + "var last_data_var=[".Length;
+            int startPosLive = webpageLive.IndexOf("var last_data_var=[", startPosLiveDate) + "var last_data_var=[".Length;
             int endPosLive = webpageLive.IndexOf("];for(var i=0;i<last_data_var.length;i++){if(last_data_var[i]<1)last_data_var[i]=null;}", startPosLive);
             int nextExpLiveMonth = webpageLive.IndexOf("var mx=['", endPosLive) + "var mx=['".Length;
             liveFuturesDataDT = webpageLive.Substring(startPosLiveDate, 16);
             liveFuturesNextExp = webpageLive.Substring(nextExpLiveMonth, 3);
             liveFuturesData = webpageLive.Substring(startPosLive, endPosLive - startPosLive);
-            
+
             stopWatch2.Stop();
 
-            liveFuturesDataDate = liveFuturesDataDT.Substring(0,10);
+            liveFuturesDataDate = liveFuturesDataDT.Substring(0, 10);
             liveFuturesDataTime = liveFuturesDataDT.Substring(11, 5) + " EST";
 
-            string[] liveFuturesPrices = liveFuturesData.Split(new string[] { ","}, StringSplitOptions.RemoveEmptyEntries);
+            string[] liveFuturesPrices = liveFuturesData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
             int lengthLiveFuturesPrices = liveFuturesPrices.Length;
 
-            string[] monthsNumList = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
-            int monthsNum = Array.IndexOf(monthsNumList,liveFuturesNextExp)+1;
-          
+            string[] monthsNumList = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+            int monthsNum = Array.IndexOf(monthsNumList, liveFuturesNextExp) + 1;
+
 
             DateTime liveDateTime;
             string liveDate = System.String.Empty;
@@ -137,8 +162,8 @@ namespace SQLab.Controllers
             bool isExtraDay = !string.Equals(liveDate, histStartDate);
 
             //Sorting historical data.
-            int nRec = (isExtraDay) ? nHistoricalRec + 1 :nHistoricalRec;
-            VixCentralRec[] vixCentralRec = new VixCentralRec[nRec-2];
+            int nRec = (isExtraDay) ? nHistoricalRec + 1 : nHistoricalRec;
+            VixCentralRec[] vixCentralRec = new VixCentralRec[nRec - 2];
             //--List<VixCentralRec> vixRec2 = new List<VixCentralRec>();
             //--vixRec2.Add(new VixCentralRec());
 
@@ -155,11 +180,11 @@ namespace SQLab.Controllers
                 vixCentralRec[iRec].F5 = Double.Parse(tableCells[6]);
                 vixCentralRec[iRec].F6 = Double.Parse(tableCells[7]);
                 vixCentralRec[iRec].F7 = Double.Parse(tableCells[8]);
-                vixCentralRec[iRec].F8 = (tableCells[9]=="0")? vixCentralRec[iRec].F7 : Double.Parse(tableCells[9]);
-                vixCentralRec[iRec].STCont = vixCentralRec[iRec].F2/ vixCentralRec[iRec].F1 -1;
+                vixCentralRec[iRec].F8 = (tableCells[9] == "0") ? vixCentralRec[iRec].F7 : Double.Parse(tableCells[9]);
+                vixCentralRec[iRec].STCont = vixCentralRec[iRec].F2 / vixCentralRec[iRec].F1 - 1;
                 vixCentralRec[iRec].LTCont = vixCentralRec[iRec].F7 / vixCentralRec[iRec].F4 - 1;
             }
-            
+
             if (isExtraDay)
             {
                 vixCentralRec[0].Date = DateTime.Parse(liveDate);
@@ -171,12 +196,12 @@ namespace SQLab.Controllers
                 vixCentralRec[0].F5 = Double.Parse(liveFuturesPrices[4]);
                 vixCentralRec[0].F6 = Double.Parse(liveFuturesPrices[5]);
                 vixCentralRec[0].F7 = Double.Parse(liveFuturesPrices[6]);
-                vixCentralRec[0].F8 = (lengthLiveFuturesPrices == 8 ) ? Double.Parse(liveFuturesPrices[7]) : 0;
+                vixCentralRec[0].F8 = (lengthLiveFuturesPrices == 8) ? Double.Parse(liveFuturesPrices[7]) : 0;
                 vixCentralRec[0].STCont = vixCentralRec[0].F2 / vixCentralRec[0].F1 - 1;
                 vixCentralRec[0].LTCont = vixCentralRec[0].F7 / vixCentralRec[0].F4 - 1;
 
             }
-                    
+
             //Calculating futures expiration dates.
             var firstDataDay = vixCentralRec[nRec - 3].Date;
             int firstDataYear = firstDataDay.Year;
@@ -187,29 +212,29 @@ namespace SQLab.Controllers
             string lastData = lastDataDay.ToString("yyyy-MM-dd");
 
             var lengthExps = (lastDataYear - firstDataYear + 2) * 12;
-            int[,] expDatesDat = new int[lengthExps,2];
+            int[,] expDatesDat = new int[lengthExps, 2];
             //--int[][] expDatesDat = new int[lengthExps,2];
 
-            expDatesDat[0,0] = lastDataYear + 1;
-            expDatesDat[0,1] = 12;
+            expDatesDat[0, 0] = lastDataYear + 1;
+            expDatesDat[0, 1] = 12;
 
             for (int iRows = 1; iRows < expDatesDat.GetLength(0); iRows++)
             {
                 decimal f = iRows / 12;
-             expDatesDat[iRows,0] = lastDataYear - Decimal.ToInt32(Math.Floor(f))+1;
-             expDatesDat[iRows,1] = 12 - iRows % 12;
+                expDatesDat[iRows, 0] = lastDataYear - Decimal.ToInt32(Math.Floor(f)) + 1;
+                expDatesDat[iRows, 1] = 12 - iRows % 12;
             }
 
             DateTime[] expDates = new DateTime[expDatesDat.GetLength(0)];
             for (int iRows = 0; iRows < expDates.Length; iRows++)
             {
-                DateTime thirdFriday = new DateTime(expDatesDat[iRows,0], expDatesDat[iRows,1], 15);
+                DateTime thirdFriday = new DateTime(expDatesDat[iRows, 0], expDatesDat[iRows, 1], 15);
                 while (thirdFriday.DayOfWeek != DayOfWeek.Friday)
                 {
                     thirdFriday = thirdFriday.AddDays(1);
                 }
                 expDates[iRows] = thirdFriday.AddDays(-30);
-                if (expDates[iRows]==DateTime.Parse("2014-03-19"))
+                if (expDates[iRows] == DateTime.Parse("2014-03-19"))
                 {
                     expDates[iRows] = DateTime.Parse("2014-03-18");
                 }
@@ -219,7 +244,7 @@ namespace SQLab.Controllers
             for (int iRec = 0; iRec < vixCentralRec.Length; iRec++)
             {
                 int index1 = Array.FindIndex(expDates, item => item <= vixCentralRec[iRec].Date);
-                vixCentralRec[iRec].NextExpiryDate = expDates[index1-1];
+                vixCentralRec[iRec].NextExpiryDate = expDates[index1 - 1];
                 vixCentralRec[iRec].F1expDays = (expDates[index1 - 1] - vixCentralRec[iRec].Date).Days;
                 vixCentralRec[iRec].F2expDays = (expDates[index1 - 2] - vixCentralRec[iRec].Date).Days;
                 vixCentralRec[iRec].F3expDays = (expDates[index1 - 3] - vixCentralRec[iRec].Date).Days;
@@ -227,9 +252,9 @@ namespace SQLab.Controllers
                 vixCentralRec[iRec].F5expDays = (expDates[index1 - 5] - vixCentralRec[iRec].Date).Days;
                 vixCentralRec[iRec].F6expDays = (expDates[index1 - 6] - vixCentralRec[iRec].Date).Days;
                 vixCentralRec[iRec].F7expDays = (expDates[index1 - 7] - vixCentralRec[iRec].Date).Days;
-                vixCentralRec[iRec].F8expDays = (vixCentralRec[0].F8 > 0) ? (expDates[index1 - 8] - vixCentralRec[iRec].Date).Days:0;
+                vixCentralRec[iRec].F8expDays = (vixCentralRec[0].F8 > 0) ? (expDates[index1 - 8] - vixCentralRec[iRec].Date).Days : 0;
             }
-            
+
             string ret = Processing(vixCentralRec, expDates, liveDate, liveFuturesDataTime);
 
             stopWatchTotal.Stop();
@@ -245,8 +270,8 @@ namespace SQLab.Controllers
         {
             //Calculating dates to html.           
             DateTime timeNowET = Utils.ConvertTimeFromUtcToEt(DateTime.UtcNow);
-            
-            DateTime firstDataDay = p_vixCentralRec[p_vixCentralRec.Length-1].Date;
+
+            DateTime firstDataDay = p_vixCentralRec[p_vixCentralRec.Length - 1].Date;
             string firstDataDate = firstDataDay.ToString("yyyy-MM-dd");
             DateTime lastDataDay = p_vixCentralRec[0].Date;
             string lastDataDate = lastDataDay.ToString("yyyy-MM-dd");
@@ -271,7 +296,7 @@ namespace SQLab.Controllers
             currData[13] = p_vixCentralRec[0].F5 - p_vixCentralRec[0].F4;
             currData[14] = p_vixCentralRec[0].F6 - p_vixCentralRec[0].F5;
             currData[15] = p_vixCentralRec[0].F7 - p_vixCentralRec[0].F6;
-            currData[16] = (p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[0].F8 - p_vixCentralRec[0].F7:0;
+            currData[16] = (p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[0].F8 - p_vixCentralRec[0].F7 : 0;
 
             //Creating the current days to expirations array.
             double[] currDataDays = new double[17];
@@ -282,7 +307,7 @@ namespace SQLab.Controllers
             currDataDays[4] = p_vixCentralRec[0].F5expDays;
             currDataDays[5] = p_vixCentralRec[0].F6expDays;
             currDataDays[6] = p_vixCentralRec[0].F7expDays;
-            currDataDays[7] = (p_vixCentralRec[0].F8>0)? p_vixCentralRec[0].F8expDays:0;
+            currDataDays[7] = (p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[0].F8expDays : 0;
             currDataDays[8] = p_vixCentralRec[0].F1expDays;
             currDataDays[9] = p_vixCentralRec[0].F4expDays;
             currDataDays[10] = p_vixCentralRec[0].F1expDays;
@@ -291,27 +316,27 @@ namespace SQLab.Controllers
             currDataDays[13] = p_vixCentralRec[0].F4expDays;
             currDataDays[14] = p_vixCentralRec[0].F5expDays;
             currDataDays[15] = p_vixCentralRec[0].F6expDays;
-            currDataDays[16] = (p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[0].F7expDays:0;
+            currDataDays[16] = (p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[0].F7expDays : 0;
 
             //Creating the data array of previous day (prices and spreads).
             double[] prevData = new double[17];
-            prevData[0] = (p_vixCentralRec[0].F1expDays- p_vixCentralRec[1].F1expDays <0) ?p_vixCentralRec[1].F1: p_vixCentralRec[1].F2;
+            prevData[0] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F1 : p_vixCentralRec[1].F2;
             prevData[1] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F2 : p_vixCentralRec[1].F3;
             prevData[2] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F3 : p_vixCentralRec[1].F4;
             prevData[3] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F4 : p_vixCentralRec[1].F5;
             prevData[4] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F5 : p_vixCentralRec[1].F6;
             prevData[5] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F6 : p_vixCentralRec[1].F7;
             prevData[6] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F7 : p_vixCentralRec[1].F8;
-            prevData[7] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? ((p_vixCentralRec[0].F8 > 0)? p_vixCentralRec[1].F8 :0 ): 0;
-            prevData[8] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].STCont : p_vixCentralRec[1].F3/p_vixCentralRec[1].F2-1; 
-            prevData[9] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].LTCont : p_vixCentralRec[1].F8 / p_vixCentralRec[1].F5 - 1; 
-            prevData[10] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F2 - p_vixCentralRec[1].F1 : p_vixCentralRec[1].F3 - p_vixCentralRec[1].F2; 
+            prevData[7] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? ((p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[1].F8 : 0) : 0;
+            prevData[8] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].STCont : p_vixCentralRec[1].F3 / p_vixCentralRec[1].F2 - 1;
+            prevData[9] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].LTCont : p_vixCentralRec[1].F8 / p_vixCentralRec[1].F5 - 1;
+            prevData[10] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F2 - p_vixCentralRec[1].F1 : p_vixCentralRec[1].F3 - p_vixCentralRec[1].F2;
             prevData[11] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F3 - p_vixCentralRec[1].F2 : p_vixCentralRec[1].F4 - p_vixCentralRec[1].F3;
             prevData[12] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F4 - p_vixCentralRec[1].F3 : p_vixCentralRec[1].F5 - p_vixCentralRec[1].F4;
             prevData[13] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F5 - p_vixCentralRec[1].F4 : p_vixCentralRec[1].F6 - p_vixCentralRec[1].F5;
             prevData[14] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F6 - p_vixCentralRec[1].F5 : p_vixCentralRec[1].F7 - p_vixCentralRec[1].F6;
             prevData[15] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F7 - p_vixCentralRec[1].F6 : p_vixCentralRec[1].F8 - p_vixCentralRec[1].F7;
-            prevData[16] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? ((p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[1].F8 - p_vixCentralRec[1].F7 :0) : 0;
+            prevData[16] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? ((p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[1].F8 - p_vixCentralRec[1].F7 : 0) : 0;
 
             //Creating the difference of current and previous data array (prices and spreads).
             double[] currDataDiff = new double[17];
@@ -319,11 +344,11 @@ namespace SQLab.Controllers
             {
                 currDataDiff[iRow] = currData[iRow] - prevData[iRow];
             }
-            
+
             //Calculating the number of days (total, contango, backwardation).
             int dayTot = p_vixCentralRec.Length;
             int dayCont = p_vixCentralRec.Where(x => x.STCont >= 0).Count();
-            double dayContPerc = (double)dayCont/dayTot;
+            double dayContPerc = (double)dayCont / dayTot;
             int dayBackw = p_vixCentralRec.Where(x => x.STCont < 0).Count();
             double dayBackwPerc = (double)dayBackw / dayTot;
 
@@ -457,13 +482,13 @@ namespace SQLab.Controllers
             {
                 futsCount[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).Count();
                 futsContCount[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).Count();
-                futsContCountPerc[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).Count()/futsCount[iRows];
+                futsContCountPerc[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).Count() / futsCount[iRows];
                 futsBackwCount[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).Count();
-                futsBackwCountPerc[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).Count()/futsCount[iRows];
+                futsBackwCountPerc[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).Count() / futsCount[iRows];
             }
 
             //Calculating the arithmetic means and medians of VIX futures prices, spreads by months: total, contango and backwardation days.
-            double[,] futsMeanMonth = new double[12,17];
+            double[,] futsMeanMonth = new double[12, 17];
             double[,] futsMedianMonth = new double[12, 17];
             double[,] futsMeanMonthCont = new double[12, 17];
             double[,] futsMeanMonthBackw = new double[12, 17];
@@ -488,7 +513,7 @@ namespace SQLab.Controllers
                 futsMeanMonth[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F6 - x.F5);
                 futsMeanMonth[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F7 - x.F6);
                 futsMeanMonth[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F8 - x.F7);
-           
+
                 futsMedianMonth[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F1);
                 futsMedianMonth[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F2);
                 futsMedianMonth[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F3);
@@ -506,7 +531,7 @@ namespace SQLab.Controllers
                 futsMedianMonth[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F6 - x.F5);
                 futsMedianMonth[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F7 - x.F6);
                 futsMedianMonth[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F8 - x.F7);
-           
+
                 futsMeanMonthCont[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F1);
                 futsMeanMonthCont[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F2);
                 futsMeanMonthCont[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F3);
@@ -524,7 +549,7 @@ namespace SQLab.Controllers
                 futsMeanMonthCont[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F6 - x.F5);
                 futsMeanMonthCont[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F7 - x.F6);
                 futsMeanMonthCont[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F8 - x.F7);
-            
+
                 futsMeanMonthBackw[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F1);
                 futsMeanMonthBackw[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F2);
                 futsMeanMonthBackw[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F3);
@@ -542,7 +567,7 @@ namespace SQLab.Controllers
                 futsMeanMonthBackw[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F6 - x.F5);
                 futsMeanMonthBackw[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F7 - x.F6);
                 futsMeanMonthBackw[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F8 - x.F7);
-            
+
                 futsMedianMonthCont[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F1);
                 futsMedianMonthCont[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F2);
                 futsMedianMonthCont[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F3);
@@ -560,7 +585,7 @@ namespace SQLab.Controllers
                 futsMedianMonthCont[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F6 - x.F5);
                 futsMedianMonthCont[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F7 - x.F6);
                 futsMedianMonthCont[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F8 - x.F7);
-            
+
                 futsMedianMonthBackw[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F1);
                 futsMedianMonthBackw[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F2);
                 futsMedianMonthBackw[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F3);
@@ -581,15 +606,15 @@ namespace SQLab.Controllers
             }
 
             //Calculating data for charts: prices and spreads.           
-            double[] data2ChartsF = new double[p_vixCentralRec.Length*8];
+            double[] data2ChartsF = new double[p_vixCentralRec.Length * 8];
             Array.Copy(p_vixCentralRec.Select(r => r.F1).ToArray(), 0, data2ChartsF, 0, p_vixCentralRec.Length);
             Array.Copy(p_vixCentralRec.Select(r => r.F2).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F3).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length*2, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F4).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length*3, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F5).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length*4, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F6).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length*5, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F7).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length*6, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F8).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length*7, p_vixCentralRec.Length);
+            Array.Copy(p_vixCentralRec.Select(r => r.F3).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 2, p_vixCentralRec.Length);
+            Array.Copy(p_vixCentralRec.Select(r => r.F4).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 3, p_vixCentralRec.Length);
+            Array.Copy(p_vixCentralRec.Select(r => r.F5).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 4, p_vixCentralRec.Length);
+            Array.Copy(p_vixCentralRec.Select(r => r.F6).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 5, p_vixCentralRec.Length);
+            Array.Copy(p_vixCentralRec.Select(r => r.F7).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 6, p_vixCentralRec.Length);
+            Array.Copy(p_vixCentralRec.Select(r => r.F8).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 7, p_vixCentralRec.Length);
 
             double[] data2ChartsSpr = new double[p_vixCentralRec.Length * 8];
             Array.Copy(p_vixCentralRec.Select(r => r.F2 - r.F1).ToArray(), 0, data2ChartsSpr, 0, p_vixCentralRec.Length);
@@ -614,12 +639,12 @@ namespace SQLab.Controllers
             double[] data2ChartsSTC = new double[p_vixCentralRec.Length * 8];
             for (int iRows = 0; iRows < 8; iRows++)
             {
-                Array.Copy(p_vixCentralRec.Select(r => r.STCont).ToArray(), 0, data2ChartsSTC, p_vixCentralRec.Length*iRows, p_vixCentralRec.Length);
+                Array.Copy(p_vixCentralRec.Select(r => r.STCont).ToArray(), 0, data2ChartsSTC, p_vixCentralRec.Length * iRows, p_vixCentralRec.Length);
             }
 
-            
-            
-            Data2Charts[] data2Charts = new Data2Charts[p_vixCentralRec.Length*8];
+
+
+            Data2Charts[] data2Charts = new Data2Charts[p_vixCentralRec.Length * 8];
             for (int iRows = 0; iRows < data2Charts.Length; iRows++)
             {
                 data2Charts[iRows].ExpDays = data2ChartsDays[iRows];
@@ -644,9 +669,9 @@ namespace SQLab.Controllers
                 res2ChartsFPs[iRows, 9] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Count();
             }
             int res2Length = 0;
-            for (int i = 0; i < 200 ; i++)
+            for (int i = 0; i < 200; i++)
             {
-                if (res2ChartsFPs[i,3]>9)
+                if (res2ChartsFPs[i, 3] > 9)
                 {
                     res2Length++;
                 }
@@ -661,13 +686,13 @@ namespace SQLab.Controllers
                     for (int iCols = 0; iCols < 10; iCols++)
                     {
                         res2ChartsFPsmod[lineNum, iCols] = res2ChartsFPs[iRows, iCols];
-                        
+
                     }
                     lineNum++;
                 }
             }
 
-            
+
             double[,] res2ChartsSprs = new double[200, 10];
             for (int iRows = 0; iRows < res2ChartsFPs.GetLength(0); iRows++)
             {
@@ -692,7 +717,7 @@ namespace SQLab.Controllers
                     for (int iCols = 0; iCols < 10; iCols++)
                     {
                         res2ChartsSprsmod[lineNum2, iCols] = res2ChartsSprs[iRows, iCols];
-                        
+
                     }
                     lineNum2++;
                 }
@@ -922,10 +947,10 @@ namespace SQLab.Controllers
             }
 
 
-            sb.AppendLine(@"]"""+ Environment.NewLine + @"}");
-           
+            sb.AppendLine(@"]""" + Environment.NewLine + @"}");
+
             return sb.ToString();
-                   
+
         }
     }
 }
