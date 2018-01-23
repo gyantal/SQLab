@@ -336,6 +336,14 @@ namespace SqCommon
         //}
         //}
 
+        // https://stackoverflow.com/questions/22629951/suppressing-warning-cs4014-because-this-call-is-not-awaited-execution-of-the
+        public static void FireAndForgetAndLogErrorTask(this Task task)
+        {
+            task.ContinueWith(
+                t => { Utils.Logger.Error(t.Exception.ToString()); },
+                TaskContinuationOptions.OnlyOnFaulted);
+        }
+
         // A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. 
         // http://stackoverflow.com/questions/7883052/a-tasks-exceptions-were-not-observed-either-by-waiting-on-the-task-or-accessi
         public static Task LogUnobservedTaskExceptions(this Task p_task, string p_msg)
@@ -544,7 +552,8 @@ namespace SqCommon
                     p_config["EmailCharmat2"].ToLower(),
                     p_config["EmailCharmat3"].ToLower(),
                     p_config["EmailJCharmat1"].ToLower(),
-                    p_config["EmailBrooke1"].ToLower()
+                    p_config["EmailBrooke1"].ToLower(),
+                    p_config["EmailDinah1"].ToLower()
                 };
             }
             bool isUserOK = g_authorizedGoogleUsers.Contains(p_email.ToLower());
