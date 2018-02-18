@@ -3,51 +3,78 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>VIX Futures Analyser</title>
+    <title>Advanced UberTAA Live Strategies</title>
 
-    <link rel="stylesheet" type="text/css" href="/css/VixFuturesAnalyser.css">
+    <link rel="stylesheet" type="text/css" href="/css/UberTAAGCh.css">
     <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
     <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
+    <script language="javascript" type="text/javascript" src="/js/jquery.flot.axislabels.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.min.js"></script>
     <script type="text/javascript" src="/js/UberTAAGCh.js"></script>
 
-    <script>
-        onHeadProcessing();
-    </script>
 
 </head>
 
 <body>
-    <h1> VIX Futures Analyser</h1>
-    <br>
-    &emsp;&emsp;&emsp;&emsp;<span id="idTimeNow"></span>&emsp;&emsp;
-    <span id="idLiveDataDate"></span> <span id="idLiveDataTime"></span>&emsp;&emsp;
-    <span id="idFirstDataDate"></span><span id="idLastDataDate"></span>.
-    <br><br>
-    <span id="idCurrTableMtx"></span>
-    <br><br>
-    <table class="histData">
-        <tr><td><span id="idAMeanTotalTableMtx"></span></td><td>&emsp;&emsp;&emsp;&emsp;</td><td><span id="idMedianTotalTableMtx"></span></td></tr>
-        <tr><td><br><br></td></tr>
-        <tr><td><span id="idAMeanContangoTableMtx"></span></td><td>&emsp;&emsp;&emsp;&emsp;</td><td><span id="idMedianContangoTableMtx"></span></td></tr>
-        <tr><td><br><br></td></tr>
-        <tr><td><span id="idAMeanBackwardTableMtx"></span></td><td>&emsp;&emsp;&emsp;&emsp;</td><td><span id="idMedianBackwardTableMtx"></span></td></tr>
-    </table>
-    <hr>
-    <br>
+    <h1>Advanced UberTAA Live Strategies</h1>
+    <div class="center"><button class="button" style="background: url(/images/GameChangers.png); background-size: cover;" onClick="javascript: onHeadProcessing(1)"></button>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<button class="button" style="background: url(/images/GlobalAssets.png); background-size: cover;" onClick="javascript:onHeadProcessing(2)"></button></div>
+
     <div id="inviCharts" style="visibility: hidden">
-        <h3 align="center">Arithmetic mean and median of VIX futures by calendar days until expiration</h3>
-        <div class="demo-container">
-            <div id="placeholder1" class="demo-placeholder" style="float:left; width:675px;"></div>
-            <p id="choices1" style="float:right; width:135px;"></p>
+        <br>
+        <div class="h3" id="idTitleCont"></div>
+
+        <p class="bottom-three">
+            <span id="idTimeNow"></span>&emsp;&emsp;<span id="idLiveDataTime"></span>
+        </p>
+        <p class="bottom-three">
+            <span id="idCurrentPV"></span>
+        </p>
+        <p class="bottom-three">
+            <span id="idCLMTString"></span>
+        </p>
+        <p class="bottom-three">
+            <span id="my-link1"></span>&emsp;&emsp;&emsp;&emsp;<span id="my-link2"></span>
+        </p>
+
+
+        <span id="idCurrTableMtx"></span>
+        <br>
+        <div class="centerMatrix">
+            <span id="idCurrTableMtx7"></span>
         </div>
         <br>
-        <h3 align="center">Arithmetic mean and median of VIX futures spreads by calendar days until expiration</h3>
         <div class="demo-container">
-            <div id="placeholder2" class="demo-placeholder" style="float:left; width:675px;"></div>
-            <p id="choices2" style="float:right; width:135px;"></p>
+            <strong>Percentage Changes in the Last 20 Days</strong>
+            <div id="placeholder1" class="demo-placeholder"></div>
         </div>
+        <div class="center">
+            <p class="bottom-three">
+                <span class="clmt" id="idPosLast"></span>
+            </p>
+            <span id="idCurrTableMtx3"></span>
 
+            <p class="bottom-three">
+                <span class="clmt" id="idPosFut"></span>
+            </p>
+            <span id="idCurrTableMtx5"></span>
+
+        </div>
+        <br>
+        <div class="demo-container">
+            <strong>SPX 50/200-MA Timer</strong>
+            <div id="placeholder2" class="demo-placeholder"></div>
+        </div>
+        <br>
+        <div class="demo-container">
+            <strong>XLU/VTI RSI Timer</strong>
+            <div id="placeholder3" class="demo-placeholder"></div>
+        </div>
+        
     </div>
+
+
+                
 
 </body>
 </html>

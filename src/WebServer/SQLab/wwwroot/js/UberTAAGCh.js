@@ -1,15 +1,15 @@
 ﻿"use strict";
 //As an example, in normal JavaScript, mistyping a variable name creates a new global variable. In strict mode, this will throw an error, making it impossible to accidentally create a global variable.
 
-function onHeadProcessing() {
+function onHeadProcessing(commo) {
     console.log('onHeadProcessing()');
 
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
             processData(xmlHttp.responseText);
-    }
-    xmlHttp.open("GET", "/UberTAAGChData", true); // true for asynchronous 
+    };
+    xmlHttp.open("GET", "/UberTAAGChData?commo=" + commo, true); // true for asynchronous 
     xmlHttp.send(null);
 }
 
@@ -18,17 +18,24 @@ function processData(dataStr) {
     var data = JSON.parse(dataStr);
 
     //Creating first row (dates) of webpage.
+    var divTitleCont = document.getElementById("idTitleCont");
     var divTimeNow = document.getElementById("idTimeNow");
-    var divLiveDataDate = document.getElementById("idLiveDataDate");
     var divLiveDataTime = document.getElementById("idLiveDataTime");
-    var divFirstDataDate = document.getElementById("idFirstDataDate");
-    var divLastDataDate = document.getElementById("idLastDataDate");
+    var divCurrentPV = document.getElementById("idCurrentPV");
+    var divCLMTString = document.getElementById("idCLMTString");
+    var divPosLastString = document.getElementById("idPosLast");
+    var divPosFutString = document.getElementById("idPosFut");
+    
 
-    divTimeNow.innerText = "Current time: " + data.timeNow;
-    divLiveDataDate.innerText = "Last data time: " + data.liveDataDate;
-    divLiveDataTime.innerText = data.liveDataTime;
-    divFirstDataDate.innerText = "The analyser is using data from " + data.firstDataDate + " to ";
-    divLastDataDate.innerText = data.lastDataDate;
+    divTitleCont.innerHTML = data.titleCont;
+    divTimeNow.innerHTML = data.requestTime;
+    divLiveDataTime.innerHTML = data.lastDataTime;
+    divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$ " + data.currentPV + "</span> (based on current positions updated on " + data.currentPVDate + ")";
+    divCLMTString.innerHTML = "Current Combined Leverage Market Timer signal is <span class=\"clmt\">" + data.clmtSign + "</span> (SPX 50/200-day MA: " + data.spxMASign + ", XLU/VTI: " + data.xluVtiSign + ").";
+    divPosLastString.innerHTML = "Position weights in the last 10 days:";
+    divPosFutString.innerHTML = "Future events:";
+    $('#my-link1').html('<a href="' + data.gDocRef + '" target="_blank">Study</a>');
+    $('#my-link2').html('<a href="' + data.gSheetRef + '" target="_blank">Live spreadsheet</a>');
 
     creatingTables(data);
 
@@ -37,588 +44,476 @@ function processData(dataStr) {
 }
 function creatingTables(data) {
 
-    var monthList = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    //    var monthList = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     //Creating JavaScript data arrays by splitting.
-    var currDataArray = data.currDataVec.split(",");
-    var currDataDaysArray = data.currDataDaysVec.split(",");
-    var prevDataArray = data.prevDataVec.split(",");
-    var currDataDiffArray = data.currDataDiffVec.split(",");
+    var assetNames2Array = data.assetNames2.split(", ");
+    var currPosNumArray = data.currPosNum.split(", ");
+    var currPosValArray = data.currPosVal.split(", ");
+    var nextPosNumArray = data.nextPosNum.split(", ");
+    var nextPosValArray = data.nextPosVal.split(", ");
+    var diffPosNumArray = data.posNumDiff.split(", ");
+    var diffPosValArray = data.posValDiff.split(", ");
 
-    var meanOfTotalDaysTotalArray = data.meanOfTotalDaysTotalVec.split(",");
-    var numberOfTotalDaysByMonthsArray = data.numberOfTotalDaysByMonthsVec.split(",");
-    var meanOfTotalDaysByMonthsTemp = data.meanOfTotalDaysByMonthsMtx.split("ß ");
-    var meanOfTotalDaysByMonthsTable = new Array();
-    for (var i = 0; i < 12; i++) {
-        meanOfTotalDaysByMonthsTable[i] = meanOfTotalDaysByMonthsTemp[i].split(",");
+    var prevPosMtxTemp = data.prevPositionsMtx.split("ß ");
+    var prevPosMtx = new Array();
+    for (var i = 0; i < prevPosMtxTemp.length; i++) {
+        prevPosMtx[i] = prevPosMtxTemp[i].split(",");
     }
 
-    var medianOfTotalDaysTotalArray = data.medianOfTotalDaysTotalVec.split(",");
-    var medianOfTotalDaysByMonthsTemp = data.medianOfTotalDaysByMonthsMtx.split("ß ");
-    var medianOfTotalDaysByMonthsTable = new Array();
-    for (var i = 0; i < 12; i++) {
-        medianOfTotalDaysByMonthsTable[i] = medianOfTotalDaysByMonthsTemp[i].split(",");
+    var prevAssetEventMtxTemp = data.prevAssEventMtx.split("ß ");
+    var prevAssetEventMtx = new Array();
+    for (var i = 0; i < prevAssetEventMtxTemp.length; i++) {
+        prevAssetEventMtx[i] = prevAssetEventMtxTemp[i].split(",");
     }
 
-    var meanOfContangoDaysTotalArray = data.meanOfContangoDaysTotalVec.split(",");
-    var numberOfContangoDaysByMonthsArray = data.numberOfContangoDaysByMonthsVec.split(",");
-    var percOfContangoDaysByMonthsArray = data.percOfContangoDaysByMonthsVec.split(",");
-    var meanOfContangoDaysByMonthsTemp = data.meanOfContangoDaysByMonthsMtx.split("ß ");
-    var meanOfContangoDaysByMonthsTable = new Array();
-    for (var i = 0; i < 12; i++) {
-        meanOfContangoDaysByMonthsTable[i] = meanOfContangoDaysByMonthsTemp[i].split(",");
+    var futPosMtxTemp = data.futPositionsMtx.split("ß ");
+    var futPosMtx = new Array();
+    for (var i = 0; i < futPosMtxTemp.length; i++) {
+        futPosMtx[i] = futPosMtxTemp[i].split(",");
     }
 
-    var medianOfContangoDaysTotalArray = data.medianOfContangoDaysTotalVec.split(",");
-    var medianOfContangoDaysByMonthsTemp = data.medianOfContangoDaysByMonthsMtx.split("ß ");
-    var medianOfContangoDaysByMonthsTable = new Array();
-    for (var i = 0; i < 12; i++) {
-        medianOfContangoDaysByMonthsTable[i] = medianOfContangoDaysByMonthsTemp[i].split(",");
+    var futAssetEventMtxTemp = data.futAssEventMtx.split("ß ");
+    var futAssetEventMtx = new Array();
+    for (var i = 0; i < futAssetEventMtxTemp.length; i++) {
+        futAssetEventMtx[i] = futAssetEventMtxTemp[i].split(",");
     }
 
-    var meanOfBackwardDaysTotalArray = data.meanOfBackwardDaysTotalVec.split(",");
-    var numberOfBackwardDaysByMonthsArray = data.numberOfBackwardDaysByMonthsVec.split(",");
-    var percOfBackwardDaysByMonthsArray = data.percOfBackwardDaysByMonthsVec.split(",");
-    var meanOfBackwardDaysByMonthsTemp = data.meanOfBackwardDaysByMonthsMtx.split("ß ");
-    var meanOfBackwardDaysByMonthsTable = new Array();
-    for (var i = 0; i < 12; i++) {
-        meanOfBackwardDaysByMonthsTable[i] = meanOfBackwardDaysByMonthsTemp[i].split(",");
+    var assChartMtxTemp = data.assetChangesToChartMtx.split("ß ");
+    var assChartMtx = new Array();
+    for (var i = 0; i < assChartMtxTemp.length; i++) {
+        assChartMtx[i] = assChartMtxTemp[i].split(",");
     }
 
-    var medianOfBackwardDaysTotalArray = data.medianOfBackwardDaysTotalVec.split(",");
-    var medianOfBackwardDaysByMonthsTemp = data.medianOfBackwardDaysByMonthsMtx.split("ß ");
-    var medianOfBackwardDaysByMonthsTable = new Array();
-    for (var i = 0; i < 12; i++) {
-        medianOfBackwardDaysByMonthsTable[i] = medianOfBackwardDaysByMonthsTemp[i].split(",");
+    var rsiChartMtxTemp = data.xluVtiPercToChartMtx.split("ß ");
+    var rsiChartMtx = new Array();
+    for (var i = 0; i < rsiChartMtxTemp.length; i++) {
+        rsiChartMtx[i] = rsiChartMtxTemp[i].split(",");
+    }
+
+    var spxChartMtxTemp = data.spxMAToChartMtx.split("ß ");
+    var spxChartMtx = new Array();
+    for (var i = 0; i < spxChartMtxTemp.length; i++) {
+        spxChartMtx[i] = spxChartMtxTemp[i].split(",");
     }
 
 
-    //Creating the HTML code of 1+6 tables.
-    var currTableMtx = "<table class=\"currData\"><tr align=\"center\"><td></td><td>Date</td><td>F1</td><td>F2</td><td>F3</td><td>F4</td><td>F5</td><td>F6</td><td>F7</td><td>F8</td><td>Short Term Contango</td><td>Long Term Contango</td><td>F2-F1 Spread</td><td>F3-F2 Spread</td><td>F4-F3 Spread</td><td>F5-F4 Spread</td><td>F6-F5 Spread</td><td>F7-F6 Spread</td><td>F8-F7 Spread</td></tr><tr align=\"center\"><td align=\"left\">Currently </td><td rowspan=\"2\">" + data.lastDataDate + "</td>";
-    for (var i = 0; i < 17; i++) {
-        if (currDataArray[i] == 0) {
-            currTableMtx += "<td>" + "---" + "</td>";
-        } else if ((i == 8 || i == 9)) {
-            currTableMtx += "<td>" + (currDataArray[i] * 100).toFixed(2) + " %</td>";
-        } else {
-            currTableMtx += "<td>" + currDataArray[i] + "</td>";
-        }
+    //    var currDataDaysArray = data.currDataDaysVec.split(",");
+    //    var prevDataArray = data.prevDataVec.split(",");
+    //    var currDataDiffArray = data.currDataDiffVec.split(",");
+    //    var currDataPercChArray = data.currDataPercChVec.split(",");
+    //    var spotVixArray = data.spotVixVec.split(",");
+
+
+    //Creating the HTML code of current table.
+    var currTableMtx = "<table class=\"currData\"><tr align=\"center\"><td bgcolor=\"#66CCFF\"></td>";
+    for (var i = 0; i < assetNames2Array.length - 1; i++) {
+        currTableMtx += "<td bgcolor=\"#66CCFF\"><a href=https://finance.yahoo.com/quote/" + assetNames2Array[i] + ' target="_blank">' + assetNames2Array[i] + "</a></td>";
     }
-    currTableMtx += "</tr><tr align=\"center\"><td align=\"right\">Cal. Days to Expiration</td>";
-    for (var i = 0; i < 17; i++) {
-        if (currDataArray[i] == 0) {
-            currTableMtx += "<td>" + "---" + "</td>";
-        }
-        else {
-            currTableMtx += "<td>" + currDataDaysArray[i] + "</td>";
-        }
+    currTableMtx += "<td bgcolor=\"#66CCFF\">" + assetNames2Array[assetNames2Array.length - 1] + "</td>";
+
+    currTableMtx += "</tr > <tr align=\"center\"><td align=\"center\" rowspan=\"2\" bgcolor=\"#FF6633\">" + data.nextTradingDay + "</td>";
+    for (var i = 0; i < assetNames2Array.length; i++) {
+        currTableMtx += "<td bgcolor=\"#" + prevAssetEventMtx[1][i + 1] + "\">" + nextPosValArray[i] + "</td>";
     }
-    currTableMtx += "</tr><tr align=\"center\"><td align=\"left\">Previous Close</td><td>" + data.prevDataDate + "</td>";
-    for (var i = 0; i < 17; i++) {
-        if (currDataArray[i] == 0) {
-            currTableMtx += "<td>" + "---" + "</td>";
-        } else if ((i == 8 || i == 9)) {
-            currTableMtx += "<td>" + (prevDataArray[i] * 100).toFixed(2) + " %</td>";
-        } else {
-            currTableMtx += "<td>" + prevDataArray[i] + "</td>";
-        }
+
+    currTableMtx += "</tr > <tr>";
+    for (var i = 0; i < assetNames2Array.length; i++) {
+        currTableMtx += "<td bgcolor=\"#" + prevAssetEventMtx[1][i + 1] + "\">" + nextPosNumArray[i] + "</td>";
     }
-    currTableMtx += "</tr><tr align=\"center\"><td align=\"left\" colspan=\"2\">Daily Change</td>";
-    for (var i = 0; i < 17; i++) {
-        if (currDataArray[i] == 0) {
-            currTableMtx += "<td>" + "---" + "</td>";
-        } else if ((i == 8 || i == 9)) {
-            currTableMtx += "<td>" + (currDataDiffArray[i] * 100).toFixed(2) + " %</td>";
-        } else {
-            currTableMtx += "<td>" + currDataDiffArray[i] + "</td>";
-        }
+
+    currTableMtx += "</tr > <tr align=\"center\"><td align=\"center\" rowspan=\"2\" bgcolor=\"#FF6633\">" + data.currPosDate + "</td>";
+    for (var i = 0; i < assetNames2Array.length; i++) {
+        currTableMtx += "<td bgcolor=\"#" + prevAssetEventMtx[2][i + 1] + "\">" + currPosValArray[i] + "</td>";
     }
+
+    currTableMtx += "</tr > <tr>";
+    for (var i = 0; i < assetNames2Array.length; i++) {
+        currTableMtx += "<td bgcolor=\"#" + prevAssetEventMtx[2][i + 1] + "\">" + currPosNumArray[i] + "</td>";
+    }
+
+    currTableMtx += "</tr > <tr align=\"center\"><td align=\"center\" rowspan=\"2\" bgcolor=\"#FF6633\">Change in Positions</td>";
+    for (var i = 0; i < assetNames2Array.length; i++) {
+        currTableMtx += "<td bgcolor=\"#FFFF00\">" + diffPosValArray[i] + "</td>";
+    }
+
+    currTableMtx += "</tr > <tr>";
+    for (var i = 0; i < assetNames2Array.length; i++) {
+        currTableMtx += "<td bgcolor=\"#FFFF00\">" + diffPosNumArray[i] + "</td>";
+    }
+
     currTableMtx += "</tr></table>";
 
-    var aMeanTotalTableMtx = "<table class=\"resData\"><tr align=\"center\"><td>Arithmetic Mean - Total</td><td>No. Days</td><td>F1</td><td>F2</td><td>F3</td><td>F4</td><td>F5</td><td>F6</td><td>F7</td><td>F8</td><td>Short Term Contango</td><td>Long Term Contango</td><td>F2-F1 Spread</td><td>F3-F2 Spread</td><td>F4-F3 Spread</td><td>F5-F4 Spread</td><td>F6-F5 Spread</td><td>F7-F6 Spread</td><td>F8-F7 Spread</td></tr><tr align=\"center\"><td align=\"left\">Total </td><td>" + data.numberOfTotalDays + "</td>";
-    for (var i = 0; i < 17; i++) {
-        if ((i == 8 || i == 9)) {
-            aMeanTotalTableMtx += "<td>" + (meanOfTotalDaysTotalArray[i] * 100).toFixed(2) + "%</td>";
-        } else {
-            aMeanTotalTableMtx += "<td>" + (meanOfTotalDaysTotalArray[i] * 1).toFixed(2) + "</td>";
+    var currTableMtx3 = "<table class=\"currData\"><tr align=\"center\">";
+    for (var i = 0; i < prevPosMtxTemp.length; i++) {
+        for (var j = 0; j < assetNames2Array.length + 2; j++) {
+            currTableMtx3 += "<td bgcolor=\"#" + prevAssetEventMtx[i][j] + "\">" + prevPosMtx[i][j] + "</td>";
         }
+        currTableMtx3 += "</tr>";
     }
-    aMeanTotalTableMtx += "</tr>";
-    for (var i = 0; i < 12; i++) {
-        aMeanTotalTableMtx += "<tr align=\"center\"><td>" + monthList[i] + "</td><td>" + numberOfTotalDaysByMonthsArray[i] + "</td>";
-        for (var j = 0; j < 17; j++) {
-            if ((j == 8 || j == 9)) {
-                aMeanTotalTableMtx += "<td>" + (meanOfTotalDaysByMonthsTable[i][j] * 100).toFixed(2) + "%</td>";
-            } else {
-                aMeanTotalTableMtx += "<td>" + (meanOfTotalDaysByMonthsTable[i][j] * 1).toFixed(2) + "</td>";
-            }
-        }
-        aMeanTotalTableMtx += "</tr>";
-    }
-    aMeanTotalTableMtx += "</table>";
+    currTableMtx3 += "</table>";
 
-    var aMedianTotalTableMtx = "<table class=\"resData\"><tr align=\"center\"><td>Median - Total</td><td>No. Days</td><td>F1</td><td>F2</td><td>F3</td><td>F4</td><td>F5</td><td>F6</td><td>F7</td><td>F8</td><td>Short Term Contango</td><td>Long Term Contango</td><td>F2-F1 Spread</td><td>F3-F2 Spread</td><td>F4-F3 Spread</td><td>F5-F4 Spread</td><td>F6-F5 Spread</td><td>F7-F6 Spread</td><td>F8-F7 Spread</td></tr><tr align=\"center\"><td align=\"left\">Total </td><td>" + data.numberOfTotalDays + "</td>";
-    for (var i = 0; i < 17; i++) {
-        if ((i == 8 || i == 9)) {
-            aMedianTotalTableMtx += "<td>" + (medianOfTotalDaysTotalArray[i] * 100).toFixed(2) + "%</td>";
-        } else {
-            aMedianTotalTableMtx += "<td>" + (medianOfTotalDaysTotalArray[i] * 1).toFixed(2) + "</td>";
+    var currTableMtx5 = "<table class=\"currData\"><tr align=\"center\">";
+    for (var i = 0; i < futPosMtxTemp.length; i++) {
+        for (var j = 0; j < assetNames2Array.length; j++) {
+            currTableMtx5 += "<td bgcolor=\"#" + futAssetEventMtx[i][j] + "\">" + futPosMtx[i][j] + "</td>";
         }
+        currTableMtx5 += "</tr>";
     }
-    aMedianTotalTableMtx += "</tr>";
-    for (var i = 0; i < 12; i++) {
-        aMedianTotalTableMtx += "<tr align=\"center\"><td>" + monthList[i] + "</td><td>" + numberOfTotalDaysByMonthsArray[i] + "</td>";
-        for (var j = 0; j < 17; j++) {
-            if ((j == 8 || j == 9)) {
-                aMedianTotalTableMtx += "<td>" + (medianOfTotalDaysByMonthsTable[i][j] * 100).toFixed(2) + "%</td>";
-            } else {
-                aMedianTotalTableMtx += "<td>" + (medianOfTotalDaysByMonthsTable[i][j] * 1).toFixed(2) + "</td>";
-            }
-        }
-        aMedianTotalTableMtx += "</tr>";
-    }
-    aMedianTotalTableMtx += "</table>";
+    currTableMtx5 += "</table>";
 
-    var aMeanContangoTableMtx = "<table class=\"resData\"><tr align=\"center\"><td>Arithmetic Mean - Contango</td><td>No. Days</td><td>% of Days</td><td>F1</td><td>F2</td><td>F3</td><td>F4</td><td>F5</td><td>F6</td><td>F7</td><td>F8</td><td>Short Term Contango</td><td>Long Term Contango</td><td>F2-F1 Spread</td><td>F3-F2 Spread</td><td>F4-F3 Spread</td><td>F5-F4 Spread</td><td>F6-F5 Spread</td><td>F7-F6 Spread</td><td>F8-F7 Spread</td></tr><tr align=\"center\"><td align=\"left\">Total </td><td>" + data.numberOfContangoDays + "</td><td>" + (data.percOfContangoDays * 100).toFixed(2) + "%</td>";
-    for (var i = 0; i < 17; i++) {
-        if ((i == 8 || i == 9)) {
-            aMeanContangoTableMtx += "<td>" + (meanOfContangoDaysTotalArray[i] * 100).toFixed(2) + "%</td>";
-        } else {
-            aMeanContangoTableMtx += "<td>" + (meanOfContangoDaysTotalArray[i] * 1).toFixed(2) + "</td>";
-        }
-    }
-    aMeanContangoTableMtx += "</tr>";
-    for (var i = 0; i < 12; i++) {
-        aMeanContangoTableMtx += "<tr align=\"center\"><td>" + monthList[i] + "</td><td>" + numberOfContangoDaysByMonthsArray[i] + "</td>";
-        aMeanContangoTableMtx += "<td>" + (percOfContangoDaysByMonthsArray[i] * 100).toFixed(2) + "%</td>";
-        for (var j = 0; j < 17; j++) {
-            if ((j == 8 || j == 9)) {
-                aMeanContangoTableMtx += "<td>" + (meanOfContangoDaysByMonthsTable[i][j] * 100).toFixed(2) + "%</td>";
-            } else {
-                aMeanContangoTableMtx += "<td>" + (meanOfContangoDaysByMonthsTable[i][j] * 1).toFixed(2) + "</td>";
-            }
-        }
-        aMeanContangoTableMtx += "</tr>";
-    }
-    aMeanContangoTableMtx += "</table>";
-
-    var aMedianContangoTableMtx = "<table class=\"resData\"><tr align=\"center\"><td>Median - Contango</td><td>No. Days</td><td>% of Days</td><td>F1</td><td>F2</td><td>F3</td><td>F4</td><td>F5</td><td>F6</td><td>F7</td><td>F8</td><td>Short Term Contango</td><td>Long Term Contango</td><td>F2-F1 Spread</td><td>F3-F2 Spread</td><td>F4-F3 Spread</td><td>F5-F4 Spread</td><td>F6-F5 Spread</td><td>F7-F6 Spread</td><td>F8-F7 Spread</td></tr><tr align=\"center\"><td align=\"left\">Total </td><td>" + data.numberOfContangoDays + "</td><td>" + (data.percOfContangoDays * 100).toFixed(2) + "%</td>";
-    for (var i = 0; i < 17; i++) {
-        if ((i == 8 || i == 9)) {
-            aMedianContangoTableMtx += "<td>" + (medianOfContangoDaysTotalArray[i] * 100).toFixed(2) + "%</td>";
-        } else {
-            aMedianContangoTableMtx += "<td>" + (medianOfContangoDaysTotalArray[i] * 1).toFixed(2) + "</td>";
-        }
-    }
-    aMedianContangoTableMtx += "</tr>";
-    for (var i = 0; i < 12; i++) {
-        aMedianContangoTableMtx += "<tr align=\"center\"><td>" + monthList[i] + "</td><td>" + numberOfContangoDaysByMonthsArray[i] + "</td>";
-        aMedianContangoTableMtx += "<td>" + (percOfContangoDaysByMonthsArray[i] * 100).toFixed(2) + "%</td>";
-        for (var j = 0; j < 17; j++) {
-            if ((j == 8 || j == 9)) {
-                aMedianContangoTableMtx += "<td>" + (medianOfContangoDaysByMonthsTable[i][j] * 100).toFixed(2) + "%</td>";
-            } else {
-                aMedianContangoTableMtx += "<td>" + (medianOfContangoDaysByMonthsTable[i][j] * 1).toFixed(2) + "</td>";
-            }
-        }
-        aMedianContangoTableMtx += "</tr>";
-    }
-    aMedianContangoTableMtx += "</table>";
-
-
-    var aMeanBackwardTableMtx = "<table class=\"resData\"><tr align=\"center\"><td>Arithmetic Mean - Backward</td><td>No. Days</td><td>% of Days</td><td>F1</td><td>F2</td><td>F3</td><td>F4</td><td>F5</td><td>F6</td><td>F7</td><td>F8</td><td>Short Term Contango</td><td>Long Term Contango</td><td>F2-F1 Spread</td><td>F3-F2 Spread</td><td>F4-F3 Spread</td><td>F5-F4 Spread</td><td>F6-F5 Spread</td><td>F7-F6 Spread</td><td>F8-F7 Spread</td></tr><tr align=\"center\"><td align=\"left\">Total </td><td>" + data.numberOfBackwardDays + "</td><td>" + (data.percOfBackwardDays * 100).toFixed(2) + "%</td>";
-    for (var i = 0; i < 17; i++) {
-        if (data.numberOfBackwardDays == 0) {
-            aMeanBackwardTableMtx += "<td> --- </td>";
-        }
-        else if ((i == 8 || i == 9)) {
-            aMeanBackwardTableMtx += "<td>" + (meanOfBackwardDaysTotalArray[i] * 100).toFixed(2) + "%</td>";
-        } else {
-            aMeanBackwardTableMtx += "<td>" + (meanOfBackwardDaysTotalArray[i] * 1).toFixed(2) + "</td>";
-        }
-    }
-    aMeanBackwardTableMtx += "</tr>";
-    for (var i = 0; i < 12; i++) {
-        aMeanBackwardTableMtx += "<tr align=\"center\"><td>" + monthList[i] + "</td><td>" + numberOfBackwardDaysByMonthsArray[i] + "</td>";
-        aMeanBackwardTableMtx += "<td>" + (percOfBackwardDaysByMonthsArray[i] * 100).toFixed(2) + "%</td>";
-        for (var j = 0; j < 17; j++) {
-            if (numberOfBackwardDaysByMonthsArray[i] == 0) {
-                aMeanBackwardTableMtx += "<td> --- </td>";
-            }
-            else if ((j == 8 || j == 9)) {
-                aMeanBackwardTableMtx += "<td>" + (meanOfBackwardDaysByMonthsTable[i][j] * 100).toFixed(2) + "%</td>";
-            } else {
-                aMeanBackwardTableMtx += "<td>" + (meanOfBackwardDaysByMonthsTable[i][j] * 1).toFixed(2) + "</td>";
-            }
-        }
-        aMeanBackwardTableMtx += "</tr>";
-    }
-    aMeanBackwardTableMtx += "</table>";
-
-    var aMedianBackwardTableMtx = "<table class=\"resData\"><tr align=\"center\"><td>Median - Backward</td><td>No. Days</td><td>% of Days</td><td>F1</td><td>F2</td><td>F3</td><td>F4</td><td>F5</td><td>F6</td><td>F7</td><td>F8</td><td>Short Term Contango</td><td>Long Term Contango</td><td>F2-F1 Spread</td><td>F3-F2 Spread</td><td>F4-F3 Spread</td><td>F5-F4 Spread</td><td>F6-F5 Spread</td><td>F7-F6 Spread</td><td>F8-F7 Spread</td></tr><tr align=\"center\"><td align=\"left\">Total </td><td>" + data.numberOfBackwardDays + "</td><td>" + (data.percOfBackwardDays * 100).toFixed(2) + "%</td>";
-    for (var i = 0; i < 17; i++) {
-        if (data.numberOfBackwardDays == 0) {
-            aMedianBackwardTableMtx += "<td> --- </td>";
-        }
-        else if ((i == 8 || i == 9)) {
-            aMedianBackwardTableMtx += "<td>" + (medianOfBackwardDaysTotalArray[i] * 100).toFixed(2) + "%</td>";
-        } else {
-            aMedianBackwardTableMtx += "<td>" + (medianOfBackwardDaysTotalArray[i] * 1).toFixed(2) + "</td>";
-        }
-    }
-    aMedianBackwardTableMtx += "</tr>";
-    for (var i = 0; i < 12; i++) {
-        aMedianBackwardTableMtx += "<tr align=\"center\"><td>" + monthList[i] + "</td><td>" + numberOfBackwardDaysByMonthsArray[i] + "</td>";
-        aMedianBackwardTableMtx += "<td>" + (percOfBackwardDaysByMonthsArray[i] * 100).toFixed(2) + "%</td>";
-        for (var j = 0; j < 17; j++) {
-            if (numberOfBackwardDaysByMonthsArray[i] == 0) {
-                aMedianBackwardTableMtx += "<td> --- </td>";
-            }
-            else if ((j == 8 || j == 9)) {
-                aMedianBackwardTableMtx += "<td>" + (medianOfBackwardDaysByMonthsTable[i][j] * 100).toFixed(2) + "%</td>";
-            } else {
-                aMedianBackwardTableMtx += "<td>" + (medianOfBackwardDaysByMonthsTable[i][j] * 1).toFixed(2) + "</td>";
-            }
-        }
-        aMedianBackwardTableMtx += "</tr>";
-    }
-    aMedianBackwardTableMtx += "</table>";
+    var currTableMtx7 = "<table class=\"currData2\"><tr><td bgcolor=\"#1E90FF\">Earnings Day</td><td bgcolor=\"#228B22\">FOMC Bullish Day</td><td bgcolor=\"#FF0000\">FOMC Bearish Day</td></tr><tr><td bgcolor=\"#7B68EE\">Pre-Earnings Day</td><td bgcolor=\"#7CFC00\">Holiday Bullish Day</td><td bgcolor=\"#DC143C\">Holiday Bearish Day</td></tr><tr><td bgcolor=\"#00FFFF\">CLMT Bullish Day</td><td bgcolor=\"#A9A9A9\">CLMT Neutral Day</td><td bgcolor=\"#FF8C00\">CLMT Bearish Day</td></tr></table > ";
 
     //"Sending" data to HTML file.
     var currTableMtx2 = document.getElementById("idCurrTableMtx");
     currTableMtx2.innerHTML = currTableMtx;
-    var aMeanTotalTableMtx2 = document.getElementById("idAMeanTotalTableMtx");
-    aMeanTotalTableMtx2.innerHTML = aMeanTotalTableMtx;
-    var aMeanTotalTableMtx21 = document.getElementById("idMedianTotalTableMtx");
-    aMeanTotalTableMtx21.innerHTML = aMedianTotalTableMtx;
-    var aMeanTotalTableMtx22 = document.getElementById("idAMeanContangoTableMtx");
-    aMeanTotalTableMtx22.innerHTML = aMeanContangoTableMtx;
-    var aMeanTotalTableMtx23 = document.getElementById("idMedianContangoTableMtx");
-    aMeanTotalTableMtx23.innerHTML = aMedianContangoTableMtx;
-    var aMeanTotalTableMtx24 = document.getElementById("idAMeanBackwardTableMtx");
-    aMeanTotalTableMtx24.innerHTML = aMeanBackwardTableMtx;
-    var aMeanTotalTableMtx25 = document.getElementById("idMedianBackwardTableMtx");
-    aMeanTotalTableMtx25.innerHTML = aMedianBackwardTableMtx;
-
-    //Splitting data to charts. 
-    var resultsToChartFutPricesTemp = data.resultsToChartFutPricesMtx.split("ß ");
-    var resultsToChartFutPricesTable = new Array();
-    for (var i = 0; i < resultsToChartFutPricesTemp.length; i++) {
-        resultsToChartFutPricesTable[i] = resultsToChartFutPricesTemp[i].split(",");
-    }
-
-    var resultsToChartFutSpreadsTemp = data.resultsToChartFutSpreadsMtx.split("ß ");
-    var resultsToChartFutSpreadsTable = new Array();
-    for (var i = 0; i < resultsToChartFutSpreadsTemp.length; i++) {
-        resultsToChartFutSpreadsTable[i] = resultsToChartFutSpreadsTemp[i].split(",");
-    }
-
-    var aMeanTotalPrices = new Array(resultsToChartFutPricesTable.length);
-    for (var i = 0; i < resultsToChartFutPricesTable.length; i++) {
-        var aMeanTotalPricesRows = new Array(2);
-        aMeanTotalPricesRows[0] = resultsToChartFutPricesTable[i][0];
-        aMeanTotalPricesRows[1] = resultsToChartFutPricesTable[i][1];
-        aMeanTotalPrices[i] = aMeanTotalPricesRows;
-    }
-
-    var medianTotalPrices = new Array(resultsToChartFutPricesTable.length);
-    for (var i = 0; i < resultsToChartFutPricesTable.length; i++) {
-        var medianTotalPricesRows = new Array(2);
-        medianTotalPricesRows[0] = resultsToChartFutPricesTable[i][0];
-        medianTotalPricesRows[1] = resultsToChartFutPricesTable[i][2];
-        medianTotalPrices[i] = medianTotalPricesRows;
-    }
-
-    var aMeanContPrices = new Array(resultsToChartFutPricesTable.length);
-    for (var i = 0; i < resultsToChartFutPricesTable.length; i++) {
-        var aMeanContPricesRows = new Array(2);
-        aMeanContPricesRows[0] = resultsToChartFutPricesTable[i][0];
-        aMeanContPricesRows[1] = resultsToChartFutPricesTable[i][4];
-        aMeanContPrices[i] = aMeanContPricesRows;
-    }
-
-    var medianContPrices = new Array(resultsToChartFutPricesTable.length);
-    for (var i = 0; i < resultsToChartFutPricesTable.length; i++) {
-        var medianContPricesRows = new Array(2);
-        medianContPricesRows[0] = resultsToChartFutPricesTable[i][0];
-        medianContPricesRows[1] = resultsToChartFutPricesTable[i][5];
-        medianContPrices[i] = medianContPricesRows;
-    }
-
-    var aMeanBackwardPrices = new Array(resultsToChartFutPricesTable.length);
-    for (var i = 0; i < resultsToChartFutPricesTable.length; i++) {
-        var aMeanBackwardPricesRows = new Array(2);
-        aMeanBackwardPricesRows[0] = resultsToChartFutPricesTable[i][0];
-        aMeanBackwardPricesRows[1] = resultsToChartFutPricesTable[i][7];
-        aMeanBackwardPrices[i] = aMeanBackwardPricesRows;
-    }
-
-    var medianBackwardPrices = new Array(resultsToChartFutPricesTable.length);
-    for (var i = 0; i < resultsToChartFutPricesTable.length; i++) {
-        var medianBackwardPricesRows = new Array(2);
-        medianBackwardPricesRows[0] = resultsToChartFutPricesTable[i][0];
-        medianBackwardPricesRows[1] = resultsToChartFutPricesTable[i][8];
-        medianBackwardPrices[i] = medianBackwardPricesRows;
-    }
+    var currTableMtx4 = document.getElementById("idCurrTableMtx3");
+    currTableMtx4.innerHTML = currTableMtx3;
+    var currTableMtx6 = document.getElementById("idCurrTableMtx5");
+    currTableMtx6.innerHTML = currTableMtx5;
+    var currTableMtx8 = document.getElementById("idCurrTableMtx7");
+    currTableMtx8.innerHTML = currTableMtx7;
 
 
-    var aMeanTotalSpreads = new Array(resultsToChartFutSpreadsTable.length);
-    for (var i = 0; i < resultsToChartFutSpreadsTable.length; i++) {
-        var aMeanTotalSpreadsRows = new Array(2);
-        aMeanTotalSpreadsRows[0] = resultsToChartFutSpreadsTable[i][0];
-        aMeanTotalSpreadsRows[1] = resultsToChartFutSpreadsTable[i][1];
-        aMeanTotalSpreads[i] = aMeanTotalSpreadsRows;
-    }
 
-    var medianTotalSpreads = new Array(resultsToChartFutSpreadsTable.length);
-    for (var i = 0; i < resultsToChartFutSpreadsTable.length; i++) {
-        var medianTotalSpreadsRows = new Array(2);
-        medianTotalSpreadsRows[0] = resultsToChartFutSpreadsTable[i][0];
-        medianTotalSpreadsRows[1] = resultsToChartFutSpreadsTable[i][2];
-        medianTotalSpreads[i] = medianTotalSpreadsRows;
-    }
-
-    var aMeanContSpreads = new Array(resultsToChartFutSpreadsTable.length);
-    for (var i = 0; i < resultsToChartFutSpreadsTable.length; i++) {
-        var aMeanContSpreadsRows = new Array(2);
-        aMeanContSpreadsRows[0] = resultsToChartFutSpreadsTable[i][0];
-        aMeanContSpreadsRows[1] = resultsToChartFutSpreadsTable[i][4];
-        aMeanContSpreads[i] = aMeanContSpreadsRows;
-    }
-
-    var medianContSpreads = new Array(resultsToChartFutSpreadsTable.length);
-    for (var i = 0; i < resultsToChartFutSpreadsTable.length; i++) {
-        var medianContSpreadsRows = new Array(2);
-        medianContSpreadsRows[0] = resultsToChartFutSpreadsTable[i][0];
-        medianContSpreadsRows[1] = resultsToChartFutSpreadsTable[i][5];
-        medianContSpreads[i] = medianContSpreadsRows;
-    }
-
-    var aMeanBackwardSpreads = new Array(resultsToChartFutSpreadsTable.length);
-    for (var i = 0; i < resultsToChartFutSpreadsTable.length; i++) {
-        var aMeanBackwardSpreadsRows = new Array(2);
-        aMeanBackwardSpreadsRows[0] = resultsToChartFutSpreadsTable[i][0];
-        aMeanBackwardSpreadsRows[1] = resultsToChartFutSpreadsTable[i][7];
-        aMeanBackwardSpreads[i] = aMeanBackwardSpreadsRows;
-    }
-
-    var medianBackwardSpreads = new Array(resultsToChartFutSpreadsTable.length);
-    for (var i = 0; i < resultsToChartFutSpreadsTable.length; i++) {
-        var medianBackwardSpreadsRows = new Array(2);
-        medianBackwardSpreadsRows[0] = resultsToChartFutSpreadsTable[i][0];
-        medianBackwardSpreadsRows[1] = resultsToChartFutSpreadsTable[i][8];
-        medianBackwardSpreads[i] = medianBackwardSpreadsRows;
-    }
-
-    //--var nCurrData = (currDataArray[7] > 0) ? 8 : 7;
-    var nCurrData = 7;
-    var currDataPrices = new Array(nCurrData);
-    for (var i = 0; i < nCurrData; i++) {
-        var currDataPricesRows = new Array(2);
-        currDataPricesRows[0] = currDataDaysArray[i];
-        currDataPricesRows[1] = currDataArray[i];
-        currDataPrices[i] = currDataPricesRows;
-    }
-
-    var currDataSpreads = new Array(nCurrData - 1);
-    for (var i = 0; i < nCurrData - 1; i++) {
-        var currDataSpreadsRows = new Array(2);
-        currDataSpreadsRows[0] = currDataDaysArray[i];
-        currDataSpreadsRows[1] = currDataArray[i + 10];
-        currDataSpreads[i] = currDataSpreadsRows;
-    }
 
     //Declaring data sets to charts.
-    var datasets1 = {
-        "current": {
-            label: "Current",
-            data: currDataPrices,
-            points: { show: true },
-            lines: { show: true }
-        },
-        "aMeanTotal": {
-            label: "AMean Total",
-            data: aMeanTotalPrices
-        },
-        "medianTotal": {
-            label: "Median Total",
-            data: medianTotalPrices
-        },
-        "aMeanCont": {
-            label: "AMean Contango",
-            data: aMeanContPrices
-        },
-        "medianCont": {
-            label: "Median Contango",
-            data: medianContPrices
-        },
-        "aMeanBackward": {
-            label: "AMean Backwardation",
-            data: aMeanBackwardPrices
-        },
-        "medianBackward": {
-            label: "Median Backwardation",
-            data: medianBackwardPrices
+
+    var nCurrData = parseInt(data.chartLength) + 1;
+    
+    var xTicksH = new Array(nCurrData);
+    for (var i = 0; i < nCurrData; i++) {
+        var xTicksHRows = new Array(2);
+        xTicksHRows[0] = i;
+        xTicksHRows[1] = assChartMtx[i][0];
+        xTicksH[i] = xTicksHRows;
+    }
+
+    var noAssets = assetNames2Array.length - 2;
+    var listH = [];
+    for (var j = 0; j < noAssets; j++) {
+        var assChartPerc1 = new Array(nCurrData);
+        for (var i = 0; i < nCurrData; i++) {
+            var assChartPerc1Rows = new Array(2);
+            assChartPerc1Rows[0] = i;
+            assChartPerc1Rows[1] = parseFloat(assChartMtx[i][j+1]);
+            assChartPerc1[i] = assChartPerc1Rows;
         }
-    };
+        listH.push({ label: assetNames2Array[j], data: assChartPerc1, points: { show: true }, lines: { show: true } });
+    }
+        //var listH = [];
+        //var nameElement = 0;
+        //listH.push({ label: "Current", data: assChartPerc1, points: { show: true }, lines: { show: true } } );
+        //listH.push({ label: "Last close", data: assChartPerc1, points: { show: true }, lines: { show: true } } );
+        //listH.push({ label: "Spot VIX", data: assChartPerc1, points: { show: true }, lines: { show: true } } );
+    
+    var rsiXlu = new Array(nCurrData);
+    var rsiVti = new Array(nCurrData);
+    for (var i = 0; i < nCurrData; i++) {
+        var rsiXluRows = new Array(2);
+        var rsiVtiRows = new Array(2);
+        rsiXluRows[0] = i;
+        rsiXluRows[1] = parseFloat(rsiChartMtx[i][1]);
+        rsiXlu[i] = rsiXluRows;
+        rsiVtiRows[0] = i;
+        rsiVtiRows[1] = parseFloat(rsiChartMtx[i][2]);
+        rsiVti[i] = rsiVtiRows;
+
+    }
+
+    var spxSpot = new Array(nCurrData);
+    var spx50MA = new Array(nCurrData);
+    var spx200MA = new Array(nCurrData);
+    for (var i = 0; i < nCurrData; i++) {
+        var spxSpotRows = new Array(2);
+        var spx50MARows = new Array(2);
+        var spx200MARows = new Array(2);
+        spxSpotRows[0] = i;
+        spxSpotRows[1] = parseFloat(spxChartMtx[i][1]);
+        spxSpot[i] = spxSpotRows;
+        spx50MARows[0] = i;
+        spx50MARows[1] = parseFloat(spxChartMtx[i][2]);
+        spx50MA[i] = spx50MARows;
+        spx200MARows[0] = i;
+        spx200MARows[1] = parseFloat(spxChartMtx[i][3]);
+        spx200MA[i] = spx200MARows;
+    }
+
+
+
+    //var datasets1 = {
+    //    "current": {
+    //        label: "Current",
+    //        data: assChartPerc1,
+    //        points: { show: true },
+    //        lines: { show: true }
+    //    },
+    //    "previous": {
+    //        label: "Last close",
+    //        data: assChartPerc1,
+    //        points: { show: true },
+    //        lines: { show: true }
+    //    },
+    //    "spot": {
+    //        label: "Spot VIX",
+    //        data: assChartPerc1,
+    //        //points: { show: false },
+    //        lines: { show: true, lineWidth: 1 }
+    //        //dashes: { show: true, lineWidth: 5 }
+    //    }
+    //};
+
+    var datasets1 = listH;
 
     var datasets2 = {
-        "current": {
-            label: "Current",
-            data: currDataSpreads,
+        "spotSPX": {
+            label: "SPX Spot",
+            data: spxSpot,
             points: { show: true },
             lines: { show: true }
         },
-        "aMeanTotal": {
-            label: "AMean Total",
-            data: aMeanTotalSpreads
+        "ma50SPX": {
+            label: "SPX 50-Day MA",
+            data: spx50MA,
+            points: { show: true },
+            lines: { show: true }
         },
-        "medianTotal": {
-            label: "Median Total",
-            data: medianTotalSpreads
-        },
-        "aMeanCont": {
-            label: "AMean Contango",
-            data: aMeanContSpreads
-        },
-        "medianCont": {
-            label: "Median Contango",
-            data: medianContSpreads
-        },
-        "aMeanBackward": {
-            label: "AMean Backwardation",
-            data: aMeanBackwardSpreads
-        },
-        "medianBackward": {
-            label: "Median Backwardation",
-            data: medianBackwardSpreads
+        "ma200SPX": {
+            label: "SPX 200-Day MA",
+            data: spx200MA,
+            points: { show: true },
+            lines: { show: true }
         }
     };
 
-    flotPlotMyData1(datasets1);
-    flotPlotMyData2(datasets2);
-
-
-
-}
-// Creating first chart: prices by days to expiration.
-function flotPlotMyData1(datasets1) {
-    //-- hard-code color indices to prevent them from shifting as
-    //-- countries are turned on/off
-
-    var i = 0;
-    $.each(datasets1, function (key, val) {
-        val.color = i;
-        ++i;
-    });
-
-    // insert checkboxes
-    var choiceContainer = $("#choices1");
-    $.each(datasets1, function (key, val) {
-        if (val.color < 5) {
-            choiceContainer.append("<br/><input type='checkbox' name='" + key +
-                "' checked='checked' id='id" + key + "'></input>" +
-                "<label for='id" + key + "'>"
-                + val.label + "</label>");
+    var datasets3 = {
+        "XLUdata": {
+            label: "XLU",
+            data: rsiXlu,
+            points: { show: true },
+            lines: { show: true }
+        },
+        "VTIdata": {
+            label: "VTI",
+            data: rsiVti,
+            points: { show: true },
+            lines: { show: true }
         }
-        else {
-            choiceContainer.append("<br/><input type='checkbox' name='" + key +
-                "' id='id" + key + "'></input>" +
-                "<label for='id" + key + "'>"
-                + val.label + "</label>");
-        }
-    });
+        };
 
-    choiceContainer.find("input").click(plotAccordingToChoices);
 
-    function plotAccordingToChoices() {
 
-        var data = [];
+        flotPlotMyData1(datasets1, nCurrData, xTicksH, noAssets);
+        flotPlotMyData2(datasets2, nCurrData, xTicksH);
+        flotPlotMyData3(datasets3, nCurrData, xTicksH);
 
-        choiceContainer.find("input:checked").each(function () {
-            var key = $(this).attr("name");
-            if (key && datasets1[key]) {
-                data.push(datasets1[key]);
-            }
+        
+
+    }
+    // Creating first chart: prices by days to expiration.
+    function flotPlotMyData1(datasets1, nCurrData, xTicksH, noAssets) {
+        //-- hard-code color indices to prevent them from shifting as
+        //-- countries are turned on/off
+
+        //var i = 0;
+        //$.each(datasets1, function (key, val) {
+        //    val.color = i;
+        //    ++i;
+        //});
+
+        var dataB = [];
+        $.each(datasets1, function (key) {
+            dataB.push(datasets1[key]);
         });
 
-
-        if (data.length > 0) {
-            $.plot("#placeholder1", data, {
+        $.plot("#placeholder1", dataB,
+            {
                 yaxis: {
+                    axisLabel: "Percentage Change",
+                    tickFormatter: function (v, axis) {
+                        return v.toFixed(0)+"%";
+                    }
 
                 },
                 xaxis: {
-                    tickDecimals: 0
+                    //tickDecimals: 0,
+                    min: 0,
+                    //max: nCurrData-1,
+                    ticks: xTicksH,
+                    axisLabel: "Day"
                 },
                 legend: {
-                    position: "ne"
+                    position: "nw",
+                    noColumns: noAssets,
+                    backgroundColor: "#F4F6F6"
+                },
+                //colors: ["#0022FF", "#148F77", "#CB4335"],
+                grid: {
+                    backgroundColor: "#F4F6F6",
+                    hoverable: true
+                },
+                tooltip: {
+                    show: true,
+                    //    },
+                    //    tooltipOpts: {
+                    ////    content: function (label, xval, yval) {
+                    ////        var content = "%s %x " + yval;
+                    ////        return content;
+                    ////    }
+                    content: function (label, x, y) {
+                        var xVals = [];
+                        for (var i = 0; i < nCurrData; i++) {
+                            xVals[i] = dataB[0].data[i][0];
+                        };
+                        var indi = xVals.indexOf(x);
+                       
+                        var text = "<b>" + label + "<br/></b><i>" + indi + "-Day Percentage Changes on " + xTicksH[indi][1] + "<br/></i>";
+                        dataB.forEach(function (series) {
+                            text += series.label + ' : ' + series.data[indi][1] + "%<br/>";
+                        });
+
+                        return text;
+                    }
                 }
+
             });
-        }
+
     }
+    // Creating first chart: prices by days to expiration.
+    function flotPlotMyData2(datasets2, nCurrData, xTicksH) {
 
-    plotAccordingToChoices();
+        //var i = 0;
+        //$.each(datasets2, function (key, val) {
+        //    val.color = i;
+        //    ++i;
+        //});
 
-}
+        var dataB = [];
+        $.each(datasets2, function (key) {
 
-// Creating second chart: spreads by days to expiration.
-function flotPlotMyData2(datasets2) {
-    // hard-code color indices to prevent them from shifting as
-    // countries are turned on/off
+            dataB.push(datasets2[key]);
 
-    var i = 0;
-    $.each(datasets2, function (key, val) {
-        val.color = i;
-        ++i;
-    });
-
-    // insert checkboxes
-    var choiceContainer = $("#choices2");
-    $.each(datasets2, function (key, val) {
-        if (val.color < 5) {
-            choiceContainer.append("<br/><input type='checkbox' name='" + key +
-                "' checked='checked' id='id" + key + "'></input>" +
-                "<label for='id" + key + "'>"
-                + val.label + "</label>");
-        }
-        else {
-            choiceContainer.append("<br/><input type='checkbox' name='" + key +
-                "' id='id" + key + "'></input>" +
-                "<label for='id" + key + "'>"
-                + val.label + "</label>");
-        }
-    });
-
-    choiceContainer.find("input").click(plotAccordingToChoices);
-
-    function plotAccordingToChoices() {
-
-        var data = [];
-
-        choiceContainer.find("input:checked").each(function () {
-            var key = $(this).attr("name");
-            if (key && datasets2[key]) {
-                data.push(datasets2[key]);
-            }
         });
-
-
-        if (data.length > 0) {
-            $.plot("#placeholder2", data, {
+        $.plot("#placeholder2", dataB,
+            {
                 yaxis: {
+                    axisLabel: "Index Value",
+                    tickFormatter: function (v, axis) {
+                        return v.toFixed(0);
+                    }
 
                 },
                 xaxis: {
-                    tickDecimals: 0
+                    //tickDecimals: 0,
+                    min: 0,
+                    //max: nCurrData-1,
+                    ticks: xTicksH,
+                    axisLabel: "Day"
                 },
                 legend: {
-                    position: "ne"
+                    position: "nw",
+                    noColumns: 3,
+                    backgroundColor: "#F4F6F6"
+                },
+                colors: ["#0022FF", "#148F77", "#CB4335"],
+                grid: {
+                    backgroundColor: "#F4F6F6",
+                    hoverable: true
+                },
+                tooltip: {
+                    show: true,
+                    //    },
+                    //    tooltipOpts: {
+                    ////    content: function (label, xval, yval) {
+                    ////        var content = "%s %x " + yval;
+                    ////        return content;
+                    ////    }
+                    content: function (label, x, y) {
+                        var xVals = [];
+                        for (var i = 0; i < nCurrData; i++) {
+                            xVals[i] = dataB[0].data[i][0];
+                        };
+                        var indi = xVals.indexOf(x);
+                        //var text = "<i>"+dataB[0].data[indi][0] +"day % change:<br/></i>";
+                        var text = "<b>" + label + "<br/></b><i>Index Values on " + xTicksH[indi][1] + "<br/></i>";
+                        dataB.forEach(function (series) {
+                            // series_label : value
+                            text += series.label + ' : ' + series.data[indi][1] + "<br/>";
+                        });
+
+                        return text;
+                    }
                 }
+
             });
-        }
+
     }
+  
+    function flotPlotMyData3(datasets3, nCurrData, xTicksH) {
 
-    plotAccordingToChoices();
+        //var i = 0;
+        //$.each(datasets3, function (key, val) {
+        //    val.color = i;
+        //    ++i;
+        //});
 
-}
+        var dataB = [];
+        $.each(datasets3,function (key) {
+            
+                dataB.push(datasets3[key]);
+            
+        });
+        $.plot("#placeholder3", dataB,
+            {
+                yaxis: {
+                    axisLabel: "RSI",
+                    tickFormatter: function (v, axis) {
+                        return v.toFixed(0);
+                    }
+
+                },
+                xaxis: {
+                    //tickDecimals: 0,
+                    min: 0,
+                    //max: nCurrData-1,
+                    ticks: xTicksH,
+                    axisLabel: "Day"
+                },
+                legend: {
+                    position: "nw",
+                    noColumns: 2,
+                    backgroundColor: "#F4F6F6"
+                },
+                colors: ["#0022FF", "#148F77", "#CB4335"],
+                grid: {
+                    backgroundColor: "#F4F6F6",
+                    hoverable: true
+                },
+                tooltip: {
+                    show: true,
+                //    },
+                //    tooltipOpts: {
+                ////    content: function (label, xval, yval) {
+                ////        var content = "%s %x " + yval;
+                ////        return content;
+                ////    }
+                    content: function (label, x, y) {
+                        var xVals = [];
+                        for (var i = 0; i < nCurrData; i++) {
+                            xVals[i] = dataB[0].data[i][0];
+                        };
+                        var indi = xVals.indexOf(x);
+                        //var text = "<i>"+dataB[0].data[indi][0] +"day % change:<br/></i>";
+                        var text = "<b>" + label + "<br/></b><i>Relative Strength Indexes on " + xTicksH[indi][1] + "<br/></i>";
+                        dataB.forEach(function (series) {
+                            // series_label : value
+                            text += series.label + ' : ' + series.data[indi][1] + "<br/>";
+                        });
+
+                        return text;
+                    }
+                }
+
+            });
+   
+    }

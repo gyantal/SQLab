@@ -7,950 +7,1173 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using System.Globalization;
+using SQCommon.MathNet;
+using System.Numerics;
 
 namespace SQLab.Controllers
 {
-    struct VixCentralRec3
-    {
-        public DateTime Date;
-        public int FirstMonth;
-        public double F1;
-        public double F2;
-        public double F3;
-        public double F4;
-        public double F5;
-        public double F6;
-        public double F7;
-        public double F8;
-        public double STCont;
-        public double LTCont;
-
-        public DateTime NextExpiryDate;
-        public int F1expDays;
-        public int F2expDays;
-        public int F3expDays;
-        public int F4expDays;
-        public int F5expDays;
-        public int F6expDays;
-        public int F7expDays;
-        public int F8expDays;
-
-        public override string ToString()
-        {
-            return $"{Date.ToString("yyyy-MM-dd")},{FirstMonth}, {F1:F3}, {F2:F3}, {F3:F3}, {F4:F3}, {F5:F3}, {F6:F3}, {F7:F3}, {F8:F3}, {STCont:P2}, {LTCont:P2}, {NextExpiryDate.ToString("yyyy-MM-dd")}, {F1expDays}, {F2expDays}, {F3expDays}, {F4expDays}, {F5expDays}, {F6expDays}, {F7expDays}, {F8expDays} ";
-        }
-    }
-
-    struct Data2Charts3
-    {
-        public int ExpDays;
-        public double FutPrices;
-        public double FutSpreads;
-        public double STCont;
-    }
-
-    //--[Route("[controller]")]
     public class UberTAAGChDataController : Controller
     {
 #if !DEBUG
         [Authorize]
 #endif
-        public ActionResult Index()
+        public ActionResult Index(int commo)
         {
-            return Content(GetStr(), "text/html");
+            switch (commo)
+            {
+                case 1:
+                    return Content(GetStr(1), "text/html");
+                case 2:
+                    return Content(GetStr(2), "text/html");
+            }
+            return Content(GetStr2(), "text/html");
+        }
+
+        public string GetStr2()
+        {
+            return "Error";
         }
 
         [HttpGet]
-        public ActionResult UberTAAGChGoogleApiGsheet1()
+        public ActionResult UberTAAGChGoogleApiGsheet1(string p_usedGSheetRef)
         {
             Utils.Logger.Info("UberTAAGChGoogleApiGsheet1() BEGIN");
 
             string valuesFromGSheetStr = "Error. Make sure GoogleApiKeyKey, GoogleApiKeyKey is in SQLab.WebServer.SQLab.NoGitHub.json !";
             if (!String.IsNullOrEmpty(Utils.Configuration["GoogleApiKeyName"]) && !String.IsNullOrEmpty(Utils.Configuration["GoogleApiKeyKey"]))
             {
-                if (!Utils.DownloadStringWithRetry(out valuesFromGSheetStr, "https://sheets.googleapis.com/v4/spreadsheets/1AGci_xFhgcC-Q1tEZ5E-HTBWbOU-C9ZXyjLIN1bEZeE/values/A1:P10?key=" + Utils.Configuration["GoogleApiKeyKey"], 3, TimeSpan.FromSeconds(2), true))
+                if (!Utils.DownloadStringWithRetry(out valuesFromGSheetStr, p_usedGSheetRef + Utils.Configuration["GoogleApiKeyKey"], 3, TimeSpan.FromSeconds(2), true))
                     valuesFromGSheetStr = "Error in DownloadStringWithRetry().";
             }
-
             
-
             Utils.Logger.Info("UberTAAGChGoogleApiGsheet1() END");
             return Content($"<HTML><body>UberTAAGChGoogleApiGsheet1() finished OK. <br> Received data: '{valuesFromGSheetStr}'</body></HTML>", "text/html");
         }
 
-
-        public static double Dfged()
+        public static Tuple< double[], int[,], int[], int[], string[], int[], int[]> GSheetConverter(string p_gSheetString, string[] p_allAssetList)
         {
-            DateTime endTimeUtc = DateTime.UtcNow;
-            DateTime startTimeUtc = endTimeUtc.AddDays(-100);
-            var getAllQuotesTask = SQLab.Controllers.QuickTester.Strategies.StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc, (new string[] { "VXX", "SPY" }).ToList());
-            var getAllQuotesData = getAllQuotesTask.Result;
-            var vxxQoutes = getAllQuotesData.Item1[0];
-            return vxxQoutes[0].AdjClosePrice;
+            string[] gSheetTableRows = p_gSheetString.Split(new string[] { "[" }, StringSplitOptions.RemoveEmptyEntries);
+            string currPosRaw = gSheetTableRows[3];
+            currPosRaw = currPosRaw.Replace("\n", "").Replace("]", "").Replace("\",", "BRB").Replace("\"", "").Replace(" ", "").Replace(",", "");
+            string[] currPos = currPosRaw.Split(new string[] { "BRB" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] currPosAP = new string[p_allAssetList.Length - 3];
+            Array.Copy(currPos, 2, currPosAP, 0, p_allAssetList.Length - 3);
+            int currPosDate = Int32.Parse(currPos[0]);
+            int currPosCash = Int32.Parse(currPos[currPos.Length - 3]);
+            int[] currPosDateCash = new int[] {currPosDate,currPosCash };
+            int[] currPosAssets = Array.ConvertAll(currPosAP, int.Parse);
+                        
+
+            p_gSheetString = p_gSheetString.Replace("\n", "").Replace("]", "").Replace("\"", "").Replace(" ", "").Replace(",,", ",0,");
+            gSheetTableRows = p_gSheetString.Split(new string[] { "[" }, StringSplitOptions.RemoveEmptyEntries);
+
+            string[,] gSheetCodes = new string[gSheetTableRows.Length - 4, currPos.Length];
+            string[] gSheetCodesH = new string[currPos.Length];
+            for (int iRows = 0; iRows < gSheetCodes.GetLength(0); iRows++)
+            {
+                gSheetCodesH = gSheetTableRows[iRows + 4].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                for (int jCols = 0; jCols < gSheetCodes.GetLength(1); jCols++)
+                {
+                    gSheetCodes[iRows, jCols] = gSheetCodesH[jCols];
+                }
+            }
+
+            gSheetCodes[gSheetCodes.GetLength(0) - 1, gSheetCodes.GetLength(1) - 1] = gSheetCodesH[gSheetCodesH.Length - 1].Substring(0, gSheetCodesH[gSheetCodesH.Length - 1].IndexOf('}'));
+
+            double[] gSheetDateVec = new double[gSheetCodes.GetLength(0)];
+            for (int iRows = 0; iRows < gSheetDateVec.Length; iRows++)
+            {
+                gSheetDateVec[iRows] = Double.Parse(gSheetCodes[iRows, 0]);
+            }
+
+            int[,] gSheetCodesAssets = new int[gSheetCodes.GetLength(0), p_allAssetList.Length - 3];
+            for (int iRows = 0; iRows < gSheetCodesAssets.GetLength(0); iRows++)
+            {
+                for (int jCols = 0; jCols < gSheetCodesAssets.GetLength(1); jCols++)
+                {
+                    gSheetCodesAssets[iRows, jCols] = Int32.Parse(gSheetCodes[iRows, jCols + 2]);
+                }
+            }
+
+            int[] gSheetEventCodes = new int[gSheetCodes.GetLength(0)];
+            for (int iRows = 0; iRows < gSheetEventCodes.Length; iRows++)
+            {
+                gSheetEventCodes[iRows] = Int32.Parse(gSheetCodes[iRows, gSheetCodes.GetLength(1) - 3]);
+            }
+
+            int[] gSheetEventMultipl = new int[gSheetCodes.GetLength(0)];
+            for (int iRows = 0; iRows < gSheetEventMultipl.Length; iRows++)
+            {
+                gSheetEventMultipl[iRows] = Int32.Parse(gSheetCodes[iRows, gSheetCodes.GetLength(1) - 1]);
+            }
+
+            string[] gSheetEventNames = new string[gSheetCodes.GetLength(0)];
+            for (int iRows = 0; iRows < gSheetEventNames.Length; iRows++)
+            {
+                gSheetEventNames[iRows] = gSheetCodes[iRows, gSheetCodes.GetLength(1) - 2];
+            }
+            Tuple< double[], int[,], int[], int[], string[], int[], int[]> gSheetResFinal = Tuple.Create(gSheetDateVec, gSheetCodesAssets, gSheetEventCodes, gSheetEventMultipl, gSheetEventNames, currPosDateCash, currPosAssets);
+
+            return gSheetResFinal;
         }
-        public string GetStr()
+
+
+        public static Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> DataSQDBG(string[] p_allAssetList)
         {
-            var testElek = Dfged();
+            List<string> tickersNeeded = p_allAssetList.ToList();
+            DateTime endTimeUtc = DateTime.UtcNow.AddDays(10);
+            DateTime endTimeUtc2 = endTimeUtc.AddDays(-11);
+            DateTime endTimeUtc3 = endTimeUtc.AddDays(-12);
+            DateTime startTimeUtc = endTimeUtc.AddDays(-500);
 
-            var testElek2 = UberTAAGChGoogleApiGsheet1();
+            var getAllQuotesTask = SQLab.Controllers.QuickTester.Strategies.StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc, tickersNeeded);  
+            Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, TimeSpan, TimeSpan> getAllQuotesData = getAllQuotesTask.Result;
 
-            Stopwatch stopWatchTotal = Stopwatch.StartNew();
+            int[] histLength = new int[p_allAssetList.Length];
+            for (int i = 0; i < histLength.Length; i++)
+            {
+                histLength[i] = getAllQuotesData.Item1[i].Count;
+            }
+            int allDataLength = (histLength.Min() == histLength.Max()) ? histLength.Min() : 0;
 
-            Stopwatch stopWatch1 = Stopwatch.StartNew();
+            if (allDataLength == 0)
+            {
+                getAllQuotesTask = SQLab.Controllers.QuickTester.Strategies.StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc2, tickersNeeded);
+                getAllQuotesData = getAllQuotesTask.Result;
 
-            ////Downloading historical data from vixcentral.com.
-            //string webpageHistGSP;
-            //bool isOk3 = Utils.DownloadStringWithRetry(out webpageHistGSP, "https://sheets.googleapis.com/v4/spreadsheets/1AGci_xFhgcC-Q1tEZ5E-HTBWbOU-C9ZXyjLIN1bEZeE/values/A4:N20", 3, TimeSpan.FromSeconds(2), true);
-            //if (!isOk3)
-            //    return "Error in historical data";
+                int[] histLength2 = new int[p_allAssetList.Length];
+                for (int i = 0; i < histLength2.Length; i++)
+                {
+                    histLength2[i] = getAllQuotesData.Item1[i].Count;
+                }
+                allDataLength = (histLength2.Min() == histLength2.Max()) ? histLength2.Min() : 0;
+            }
+
+            if (allDataLength == 0)
+            {
+                getAllQuotesTask = SQLab.Controllers.QuickTester.Strategies.StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc3, tickersNeeded);
+                getAllQuotesData = getAllQuotesTask.Result;
+
+                int[] histLength3 = new int[p_allAssetList.Length];
+                for (int i = 0; i < histLength3.Length; i++)
+                {
+                    histLength3[i] = getAllQuotesData.Item1[i].Count;
+                }
+                allDataLength = (histLength3.Min() == histLength3.Max()) ? histLength3.Min() : 0;
+            }
+
+            IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotes;
+            IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesForClmt;
+            List<SQLab.Controllers.QuickTester.Strategies.DailyData> cashEquivalentQuotes = null;
+
+            quotes = getAllQuotesData.Item1.ToList().GetRange(3, p_allAssetList.Length-4);
+            quotesForClmt = getAllQuotesData.Item1.ToList().GetRange(0, 3);
+            cashEquivalentQuotes = getAllQuotesData.Item1[p_allAssetList.Length-1];
+            
+            Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> dataFromSQServer = Tuple.Create(quotes, quotesForClmt, cashEquivalentQuotes);
+            
+            return dataFromSQServer;
+        }
+
+        public static Tuple<double[], double[,]> TaaWeights(IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> p_taaWeightsData, int[] p_pctChannelLookbackDays, int p_histVolLookbackDays, int p_thresholdLower)
+        {
+            var dshd = p_taaWeightsData;
+            int nAssets = p_taaWeightsData.Count;
+
+            double[] assetScores = new double[nAssets];
+            double[] assetHV = new double[nAssets];
+            double[] assetWeights = new double[nAssets];
+            double[] assetWeights2 = new double[nAssets];
+            double[,] assetPctChannelsUpper = new double[nAssets, p_pctChannelLookbackDays.Length];  // for assets and for each 
+            double[,] assetPctChannelsLower = new double[nAssets, p_pctChannelLookbackDays.Length];  // for assets and for each
+            sbyte[,] assetPctChannelsSignal = new sbyte[nAssets, p_pctChannelLookbackDays.Length];  // for assets and for each
+            int startNumDay = p_pctChannelLookbackDays.Max()-1;
+            double thresholdLower = p_thresholdLower / 100.0;
+            double thresholdUpper = 1-thresholdLower;
+
+            int nDays = p_taaWeightsData[0].Count - startNumDay;
+            double[,] dailyAssetWeights = new double[nDays,nAssets];
+            double[,] dailyAssetScores = new double[nDays, nAssets];
+            double[,] dailyAssetHv = new double[nDays, nAssets];
+            for (int iDay = 0; iDay < nDays; iDay++)
+            {
+                for (int iAsset = 0; iAsset < nAssets; iAsset++)
+                {
+                    double assetPrice = p_taaWeightsData[iAsset][startNumDay + iDay].AdjClosePrice;
+                    for (int iChannel = 0; iChannel < p_pctChannelLookbackDays.Length; iChannel++)
+                    {
+                        // A long position would be initiated if the price exceeds the 75th percentile of prices over the last “n” days.The position would be closed if the price falls below the 25th percentile of prices over the last “n” days.
+                        var usedQuotes = p_taaWeightsData[iAsset].GetRange(startNumDay + iDay - (p_pctChannelLookbackDays[iChannel] - 1), p_pctChannelLookbackDays[iChannel]).Select(r => r.AdjClosePrice);
+                        assetPctChannelsLower[iAsset, iChannel] = Statistics.Quantile(usedQuotes, thresholdLower);
+                        assetPctChannelsUpper[iAsset, iChannel] = Statistics.Quantile(usedQuotes, thresholdUpper);
+                        if (assetPrice < assetPctChannelsLower[iAsset, iChannel])
+                        assetPctChannelsSignal[iAsset, iChannel] = -1;
+                        else if (assetPrice > assetPctChannelsUpper[iAsset, iChannel])
+                        assetPctChannelsSignal[iAsset, iChannel] = 1;
+                        else if (iDay==0)
+                        assetPctChannelsSignal[iAsset, iChannel] = 1;
+                    }
+                }
+
+                // 3.1 Calculate assetWeights
+                double totalWeight = 0.0;
+                
+                for (int iAsset = 0; iAsset < nAssets; iAsset++)
+                {
+                    sbyte compositeSignal = 0;    // For every stocks, sum up the four signals every day. This sum will be -4, -2, 0, +2 or +4.
+                    for (int iChannel = 0; iChannel < p_pctChannelLookbackDays.Length; iChannel++)
+                    {
+                        compositeSignal += assetPctChannelsSignal[iAsset, iChannel];
+                    }
+                    assetScores[iAsset] = compositeSignal / 4.0;    // Divide it by 4 to get a signal between -1 and +1 (this will be the “score”).
+
+                    double[] hvPctChg = new double[p_histVolLookbackDays];
+                    for (int iHv = 0; iHv < p_histVolLookbackDays; iHv++)
+                    {
+                        hvPctChg[p_histVolLookbackDays - iHv - 1] = p_taaWeightsData[iAsset][startNumDay + iDay - iHv].AdjClosePrice / p_taaWeightsData[iAsset][startNumDay + iDay - iHv - 1].AdjClosePrice - 1;
+                    }
+                    // Balazs: uses "corrected sample standard deviation"; corrected: dividing by 19, not 20; He doesn't annualize. He uses daily StDev
+                    assetHV[iAsset] = ArrayStatistics.StandardDeviation(hvPctChg);  // Calculate the 20-day historical volatility of daily percentage changes for every stock.
+                    assetWeights[iAsset] = assetScores[iAsset] / assetHV[iAsset];   // “Score/Vol” quotients will define the weights of the stocks. They can be 0 or negative as well. 
+                                                                                    // there is an interesting observation here. Actually, it is a good behavour.
+                                                                                    // If assetScores[i]=0, assetWeights[i] becomes 0, so we don't use its weight when p_isCashAllocatedForNonActives => TLT will not fill its Cash-place; NO TLT will be invested (if this is the only stock with 0 score), the portfolio will be 100% in other stocks. We are more Brave.
+                                                                                    // However, if assetScores[i]<0 (negative), assetWeights[i] becoumes a proper negative number. It will be used in TotalWeight calculation => TLT will fill its's space. (if this is the only stock with negative score), TLT will be invested in its place; consequently the portfolio will NOT be 100% in other stocks. We are more defensive.
+                    totalWeight += Math.Abs(assetWeights[iAsset]);      // Sum up the absolute values of the “Score/Vol” quotients. TotalWeight contains even the non-active assets so have have some cash.
+                    assetWeights2[iAsset] = (assetWeights[iAsset]>=0) ?assetWeights[iAsset]:0.0;
+
+                }
+                for (int iAsset = 0; iAsset < nAssets; iAsset++)
+                {
+                    dailyAssetWeights[iDay, iAsset] = assetWeights2[iAsset]/totalWeight;
+                    dailyAssetScores[iDay, iAsset] = assetScores[iAsset];
+                    dailyAssetHv[iDay, iAsset] = assetHV[iAsset];
+                }
+
+            }
+
+            IEnumerable<DateTime> taaWeightDateVec = p_taaWeightsData[0].GetRange(p_taaWeightsData[0].Count-nDays ,nDays).Select(r => r.Date);
+            DateTime[] taaWeightDateArray = taaWeightDateVec.ToArray();
+            DateTime startMatlabDate = DateTime.ParseExact("1900/01/01", "yyyy/MM/dd", CultureInfo.InvariantCulture);
+
+            double[] taaWeightMatlabDateVec = new double[taaWeightDateVec.Count()];
+            for (int i = 0; i < taaWeightMatlabDateVec.Length; i++)
+            {
+                taaWeightMatlabDateVec[i] = (taaWeightDateArray[i] - startMatlabDate).TotalDays + 693962;
+            }
+
+            Tuple<double[],double[,]> taaWeightResults = Tuple.Create(taaWeightMatlabDateVec, dailyAssetWeights);
+            return taaWeightResults;
+        }
+        
+        public static double[][] CLMTCalc(IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> p_quotesForClmtData)
+        {
+            double[,] p_clmtData = new double[p_quotesForClmtData[0].Count,4];
+
+            IEnumerable<DateTime> clmtDateVec = p_quotesForClmtData[0].Select(r => r.Date);
+            DateTime[] clmtDateArray = clmtDateVec.ToArray();
+            DateTime startMatlabDate = DateTime.ParseExact("1900/01/01", "yyyy/MM/dd", CultureInfo.InvariantCulture);
+
+            double[] clmtMatlabDateVec = new double[clmtDateVec.Count()];
+            for (int i = 0; i < clmtMatlabDateVec.Length; i++)
+            {
+                clmtMatlabDateVec[i] = (clmtDateArray[i] - startMatlabDate).TotalDays + 693962;
+            }
+
+            for (int iRows = 0; iRows < p_clmtData.GetLength(0); iRows++)
+            {
+                p_clmtData[iRows, 0] = clmtMatlabDateVec[iRows];
+                for (int jCols = 0; jCols < p_clmtData.GetLength(1)-1; jCols++)
+                {
+                    p_clmtData[iRows,jCols+1]=p_quotesForClmtData[jCols][iRows].AdjClosePrice;
+                }
+            }
+
+
+            double[] xluRSI =new double[p_clmtData.GetLength(0)-200];
+            for (int iRows = 0; iRows < xluRSI.Length; iRows++)
+            {
+                double losses = new double();
+                double gains = new double();
+                int lossNum = 0;
+                int gainNum = 0;
+                for (int kRows = 0; kRows < 20; kRows++)
+                {
+                    if (p_clmtData[iRows + kRows + 181, 2] - p_clmtData[iRows + kRows+180, 2] >= 0)
+                    {
+                        gains = gains + p_clmtData[iRows + kRows + 181, 2] - p_clmtData[iRows + kRows+180, 2];
+                        gainNum += 1; 
+                    }
+                    else
+                    {
+                        losses = losses + p_clmtData[iRows + kRows + 181, 2] - p_clmtData[iRows + kRows+180, 2];
+                        lossNum += 1;
+                    }
+                }
+                xluRSI[iRows] = 100 - 100 * (-losses / (-losses + gains));
+
+            }
+
+            double[] vtiRSI = new double[p_clmtData.GetLength(0) - 200];
+            for (int iRows = 0; iRows < vtiRSI.Length; iRows++)
+            {
+                double losses = new double();
+                double gains = new double();
+                for (int kRows = 0; kRows < 20; kRows++)
+                {
+                    if (p_clmtData[iRows + kRows + 181, 3] - p_clmtData[iRows + kRows+180, 3] >= 0)
+                    {
+                        gains = gains + p_clmtData[iRows + kRows + 181, 3] - p_clmtData[iRows + kRows+180, 3];
+                    }
+                    else
+                    {
+                        losses = losses + p_clmtData[iRows + kRows + 181, 3] - p_clmtData[iRows + kRows+180, 3];
+                    }
+                }
+                vtiRSI[iRows] = 100 - 100 * (-losses / (-losses + gains));
+
+            }
+
+            double[] xluVtiIndi = new double[xluRSI.Length];
+            for (int iRows = 0; iRows < xluVtiIndi.Length; iRows++)
+            {
+                xluVtiIndi[iRows] = (xluRSI[iRows]>=vtiRSI[iRows]) ?2:1;
+            }
+
+            double[] spxMA50 = new double[p_clmtData.GetLength(0) - 200];
+            double[] spxPrice = new double[p_clmtData.GetLength(0) - 200];
+            for (int iRows = 0; iRows < spxMA50.Length; iRows++)
+            {
+                spxPrice[iRows] = p_clmtData[iRows+200,1];
+                double sumsSPX50 = new double();
+                
+                for (int kRows = 0; kRows < 50; kRows++)
+                {
+                    sumsSPX50 = sumsSPX50 + p_clmtData[iRows + kRows+151,1];
+                }
+                spxMA50[iRows] = sumsSPX50 / 50;
+
+            }
+
+            double[] spxMA200 = new double[p_clmtData.GetLength(0) - 200];
+            for (int iRows = 0; iRows < spxMA200.Length; iRows++)
+            {
+                double sumsSPX200 = new double();
+
+                for (int kRows = 0; kRows < 200; kRows++)
+                {
+                    sumsSPX200 = sumsSPX200 + p_clmtData[iRows + kRows+1, 1];
+                }
+                spxMA200[iRows] = sumsSPX200 / 200;
+
+            }
+
+            double[] spxMAIndi = new double[spxMA50.Length];
+            for (int iRows = 0; iRows < spxMAIndi.Length; iRows++)
+            {
+                spxMAIndi[iRows] = (spxMA50[iRows] >= spxMA200[iRows]) ? 1 : 0;
+            }
+
+            double[] clmtIndi = new double[spxMAIndi.Length];
+            for (int iRows = 0; iRows < clmtIndi.Length; iRows++)
+            {
+                if (spxMAIndi[iRows]==1 & xluVtiIndi[iRows]==1)
+                {
+                    clmtIndi[iRows] = 1;
+                }
+                else if (spxMAIndi[iRows] == 0 & xluVtiIndi[iRows] == 2)
+                {
+                    clmtIndi[iRows] = 3;
+                }
+                else
+                {
+                    clmtIndi[iRows] = 2;
+                }
+            }
+
+            double[] clmtDateVec2 = new double[clmtIndi.Length];
+            for (int iRows = 0; iRows < clmtDateVec2.Length; iRows++)
+            {
+                clmtDateVec2[iRows] = p_clmtData[iRows+200,0];
+            }
+            
+            double[][] clmtTotalResu = new double[9][];
+            clmtTotalResu[0] = clmtDateVec2;
+            clmtTotalResu[1] = xluRSI;
+            clmtTotalResu[2] = vtiRSI;
+            clmtTotalResu[3] = xluVtiIndi;
+            clmtTotalResu[4] = spxMA50;
+            clmtTotalResu[5] = spxMA200;
+            clmtTotalResu[6] = spxMAIndi;
+            clmtTotalResu[7] = clmtIndi;
+            clmtTotalResu[8] = spxPrice;
+
+            return clmtTotalResu;
+        }
+
+
+        public Tuple<double[,], double[,], double[,], string[], string[]> MultiplFinCalc(double[][] p_clmtRes, Tuple<double[], int[,], int[], int[], string[], int[], int[]>  p_gSheetResToFinCalc, string[] p_allAssetList, double p_lastDataDate, Tuple<double[], double[,]>  p_taaWeightResultsTuple)
+        {
+
+            int pastDataLength = 10;
+            int futDataLength = 10;
+            int indClmtRes = Array.IndexOf(p_clmtRes[0], p_lastDataDate);
+            int indGSheetRes = Array.IndexOf(p_gSheetResToFinCalc.Item1, p_lastDataDate);
+            int indWeightsRes = Array.IndexOf(p_taaWeightResultsTuple.Item1, p_lastDataDate);
+
+            double[,] pastCodes = new double[pastDataLength ,p_allAssetList.Length - 3];
+            double[,] futCodes = new double[futDataLength, p_allAssetList.Length - 3];
+            string[] pastEvents = new string[pastDataLength];
+            string[] futEvents = new string[futDataLength];
+
+
+            for (int iRows = 0; iRows < pastCodes.GetLength(0); iRows++)
+            {
+                pastEvents[iRows] = p_gSheetResToFinCalc.Item5[indGSheetRes - pastDataLength + iRows + 2];
+                pastCodes[iRows, 0] = p_gSheetResToFinCalc.Item1[indGSheetRes - pastDataLength + iRows + 2];
+                for (int jCols = 1; jCols < pastCodes.GetLength(1); jCols++)
+                {
+                    if (p_gSheetResToFinCalc.Item2[indGSheetRes - pastDataLength + iRows+2, jCols - 1] == 9)
+                    {
+                        pastCodes[iRows, jCols] = 7;
+                    }
+                    else if (p_gSheetResToFinCalc.Item3[indGSheetRes - pastDataLength + iRows+2] == 1)
+                    {
+                        pastCodes[iRows, jCols] = 1;
+                    }
+                    else if (p_gSheetResToFinCalc.Item2[indGSheetRes - pastDataLength + iRows+2, jCols - 1] == 3)
+                    {
+                        pastCodes[iRows, jCols] = 5;
+                    }
+                    else if (p_gSheetResToFinCalc.Item3[indGSheetRes - pastDataLength + iRows+2] == 2)
+                    {
+                        pastCodes[iRows, jCols] = 2;
+                    }
+                    else if (p_gSheetResToFinCalc.Item2[indGSheetRes - pastDataLength + iRows+2, jCols - 1] == 1)
+                    {
+                        if (p_gSheetResToFinCalc.Item3[indGSheetRes - pastDataLength + iRows+2] == 3)
+                        {
+                            pastCodes[iRows, jCols] = 3;
+                        }
+                        else
+                        {
+                            pastCodes[iRows, jCols] = 6;
+                        }
+                    }
+                    else if (p_gSheetResToFinCalc.Item3[indGSheetRes - pastDataLength + iRows+2] == 3)
+                    {
+                        pastCodes[iRows, jCols] = 3;
+                    }
+                    else if (p_gSheetResToFinCalc.Item3[indGSheetRes - pastDataLength + iRows+2] == 4)
+                    {
+                        pastCodes[iRows, jCols] = 4;
+                    }
+                    else if (p_clmtRes[7][indClmtRes - pastDataLength + iRows+1]==1)
+                    {
+                        pastCodes[iRows, jCols] = 8;
+                    }
+                    else if (p_clmtRes[7][indClmtRes - pastDataLength + iRows+1] == 2)
+                    {
+                        pastCodes[iRows, jCols] = 9;
+                    }
+                    else if (p_clmtRes[7][indClmtRes - pastDataLength + iRows+1] == 3)
+                    {
+                        pastCodes[iRows, jCols] = 10;
+                    }
+
+                }
+            }
+
+            for (int iRows = 0; iRows < futCodes.GetLength(0); iRows++)
+            {
+                futEvents[iRows] = p_gSheetResToFinCalc.Item5[indGSheetRes + iRows + 2];
+                futCodes[iRows, 0] = p_gSheetResToFinCalc.Item1[indGSheetRes + iRows + 2];
+                for (int jCols = 1; jCols < futCodes.GetLength(1); jCols++)
+                {
+                    if (p_gSheetResToFinCalc.Item2[indGSheetRes + iRows+2, jCols - 1] == 9)
+                    {
+                        futCodes[iRows, jCols] = 7;
+                    }
+                    else if (p_gSheetResToFinCalc.Item3[indGSheetRes + iRows+2] == 1)
+                    {
+                        futCodes[iRows, jCols] = 1;
+                    }
+                    else if (p_gSheetResToFinCalc.Item2[indGSheetRes + iRows+2, jCols - 1] == 3)
+                    {
+                        futCodes[iRows, jCols] = 5;
+                    }
+                    else if (p_gSheetResToFinCalc.Item3[indGSheetRes + iRows+2] == 2)
+                    {
+                        futCodes[iRows, jCols] = 2;
+                    }
+                    else if (p_gSheetResToFinCalc.Item2[indGSheetRes + iRows+2, jCols - 1] == 1)
+                    {
+                        if (p_gSheetResToFinCalc.Item3[indGSheetRes + iRows+2] == 3)
+                        {
+                            futCodes[iRows, jCols] = 3;
+                        }
+                        else
+                        {
+                            futCodes[iRows, jCols] = 6;
+                        }
+                    }
+                    else if (p_gSheetResToFinCalc.Item3[indGSheetRes + iRows+2] == 3)
+                    {
+                        futCodes[iRows, jCols] = 3;
+                    }
+                    else if (p_gSheetResToFinCalc.Item3[indGSheetRes + iRows+2] == 4)
+                    {
+                        futCodes[iRows, jCols] = 4;
+                    }
+                    else
+                    {
+                        futCodes[iRows, jCols] = 11;
+                    }
+
+                }
+            }
+
+            double[,] pastWeightsFinal = new double[pastCodes.GetLength(0), p_allAssetList.Length - 3];
+            double numAss = Convert.ToDouble(p_allAssetList.Length-4);
+            for (int iRows = 0; iRows < pastWeightsFinal.GetLength(0); iRows++)
+            {
+                pastWeightsFinal[iRows, 0] = pastCodes[iRows, 0];
+                for (int jCols = 1; jCols < pastWeightsFinal.GetLength(1); jCols++)
+                {
+                    if (pastCodes[iRows, jCols] == 7)
+                    {
+                        pastWeightsFinal[iRows, jCols] = 0;
+                    }
+                    else if (pastCodes[iRows, jCols] == 1)
+                    {
+                        pastWeightsFinal[iRows, jCols] = 1.75*p_taaWeightResultsTuple.Item2[indWeightsRes - pastDataLength + iRows + 1,jCols-1];
+                    }
+                    else if (pastCodes[iRows, jCols] == 5)
+                    {
+                        pastWeightsFinal[iRows, jCols] = Math.Max(1.5 * p_taaWeightResultsTuple.Item2[indWeightsRes - pastDataLength + iRows + 1, jCols - 1], 1 / numAss);
+                    }
+                    else if (pastCodes[iRows, jCols] == 2)
+                    {
+                        pastWeightsFinal[iRows, jCols] = 0;
+                    }
+                    else if (pastCodes[iRows, jCols] == 3)
+                    {
+                        pastWeightsFinal[iRows, jCols] = 1.5 * p_taaWeightResultsTuple.Item2[indWeightsRes - pastDataLength + iRows + 1, jCols - 1];
+                    }
+                    else if (pastCodes[iRows, jCols] == 6)
+                    {
+                        pastWeightsFinal[iRows, jCols] = Math.Max(1.25 * p_taaWeightResultsTuple.Item2[indWeightsRes - pastDataLength + iRows + 1, jCols - 1], 1 / numAss);
+                    }
+                    else if (pastCodes[iRows, jCols] == 4)
+                    {
+                        pastWeightsFinal[iRows, jCols] = 0;
+                    }
+                    else if (pastCodes[iRows, jCols] == 8)
+                    {
+                        pastWeightsFinal[iRows, jCols] = 1.2 * p_taaWeightResultsTuple.Item2[indWeightsRes - pastDataLength + iRows + 1, jCols - 1];
+                    }
+                    else if (pastCodes[iRows, jCols] == 9)
+                    {
+                        pastWeightsFinal[iRows, jCols] = 0.8 * p_taaWeightResultsTuple.Item2[indWeightsRes - pastDataLength + iRows + 1, jCols - 1];
+                    }
+                    else if (pastCodes[iRows, jCols] == 10)
+                    {
+                        pastWeightsFinal[iRows, jCols] = 0.4 * p_taaWeightResultsTuple.Item2[indWeightsRes - pastDataLength + iRows + 1, jCols - 1];
+                    }
+                }
+            }
+
+                    Tuple<double[,], double[,], double[,], string[], string[]> multiplFinResults = Tuple.Create(pastCodes, futCodes, pastWeightsFinal, pastEvents, futEvents);
+
+            return multiplFinResults;
+        }
+
+        public string GetStr(int p_basketSelector)
+        {
+
+            string[] clmtAssetList = new string[]{ "^GSPC", "XLU", "VTI" };
+            string[] gchAssetList = new string[]{ "AAPL", "AMZN", "BABA", "BIDU", "FB", "GOOGL", "JD", "NFLX", "NVDA", "PCLN", "TCEHY", "TLT"};
+            string[] gmrAssetList = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ", "TLT" };
+            string[] usedAssetList = new string[0];
+            string titleString ="0";
+            switch (p_basketSelector)
+            {
+                case 1:
+                    usedAssetList = gchAssetList;
+                    titleString = "GameChangers";
+                    break;
+                case 2:
+                    usedAssetList = gmrAssetList;
+                    titleString = "Global Assets";
+                    break;
+            }
+            
+            string[] allAssetList = new string[clmtAssetList.Length+usedAssetList.Length];
+            clmtAssetList.CopyTo(allAssetList, 0);
+            usedAssetList.CopyTo(allAssetList, clmtAssetList.Length);
+
+            string gchGSheetRef = "https://sheets.googleapis.com/v4/spreadsheets/1AGci_xFhgcC-Q1tEZ5E-HTBWbOU-C9ZXyjLIN1bEZeE/values/A1:Z2000?key=";
+            string gmrGSheetRef = "https://sheets.googleapis.com/v4/spreadsheets/1ugql_-IXXVrU7M2TtU4wPaDELH5M6NQXy82fwZgY2yU/values/A1:Z2000?key=";
+            string gchGSheet2Ref = "https://docs.google.com/spreadsheets/d/1AGci_xFhgcC-Q1tEZ5E-HTBWbOU-C9ZXyjLIN1bEZeE/edit?usp=sharing";
+            string gmrGSheet2Ref = "https://docs.google.com/spreadsheets/d/1ugql_-IXXVrU7M2TtU4wPaDELH5M6NQXy82fwZgY2yU/edit?usp=sharing";
+            string gchGDocRef = "https://docs.google.com/document/d/1JPyRJY7VrW7hQMagYLtB_ruTzEKEd8POHQy6sZ_Nnyk/edit?usp=sharing";
+            string gmrGDocRef = "https://docs.google.com/document/d/1-hDoFu1buI1XHvJZyt6Cq813Hw1TQWGl0jE7mwwS3l0/edit?usp=sharing";
+
+            string usedGSheetRef = (p_basketSelector==1) ? gchGSheetRef : gmrGSheetRef;
+            string usedGSheet2Ref = (p_basketSelector == 1) ? gchGSheet2Ref : gmrGSheet2Ref;
+            string usedGDocRef = (p_basketSelector == 1) ? gchGDocRef : gmrGDocRef;
+
+            int thresholdLower = 25;
+            int[] lookbackDays = new int[] { 60, 120, 180, 252 };
+            int volDays = 20;
+
            
-            //Downloading historical data from vixcentral.com.
-            string webpageHist;
-            bool isOk = Utils.DownloadStringWithRetry(out webpageHist, "http://vixcentral.com/historical/?days=10000", 3, TimeSpan.FromSeconds(2), true);
-            if (!isOk)
-                return "Error in historical data";
+            Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> dataListTupleFromSQServer = DataSQDBG(allAssetList);
 
-            //Downloading live data from vixcentral.com.
-            string webpageLive;
-            bool isOkLive = Utils.DownloadStringWithRetry(out webpageLive, "http://vixcentral.com", 3, TimeSpan.FromSeconds(2), true);
-            if (!isOkLive)
-                return "Error in live data";
-            stopWatch1.Stop();
+            IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesData =dataListTupleFromSQServer.Item1;
+            IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesForClmtData =dataListTupleFromSQServer.Item2;
+            List<SQLab.Controllers.QuickTester.Strategies.DailyData> cashEquivalentQuotesData = dataListTupleFromSQServer.Item3;
 
-            //Selecting data from live data string.
-            Stopwatch stopWatch2 = Stopwatch.StartNew();
-            string[] tableRows = webpageHist.Split(new string[] { "<tr>", "</tr>" }, StringSplitOptions.RemoveEmptyEntries);
-            int nHistoricalRec = tableRows.Length - 2;
+            Tuple<double[], double[,]> taaWeightResultsTuple = TaaWeights(quotesData, lookbackDays, volDays, thresholdLower);
+            
+            double[][] clmtRes = CLMTCalc(quotesForClmtData);
 
-            string liveFuturesDataDT = System.String.Empty;
-            string liveFuturesDataDate = System.String.Empty;
-            string liveFuturesDataTime = System.String.Empty;
-            string liveFuturesData = System.String.Empty;
-            string liveFuturesNextExp = System.String.Empty;
+            double lastDataDate = (clmtRes[0][clmtRes[0].Length-1] == taaWeightResultsTuple.Item1[taaWeightResultsTuple.Item1.Length-1]) ? clmtRes[0][clmtRes[0].Length-1] : 0;
+            var gSheetReadResult = UberTAAGChGoogleApiGsheet1(usedGSheetRef);
+            string gSheetString=((Microsoft.AspNetCore.Mvc.ContentResult)gSheetReadResult).Content;
 
-            int startPosLiveDate = webpageLive.IndexOf("var time_data_var=['") + "var time_data_var=['".Length;
-            int startPosLive = webpageLive.IndexOf("var last_data_var=[", startPosLiveDate) + "var last_data_var=[".Length;
-            int endPosLive = webpageLive.IndexOf("];for(var i=0;i<last_data_var.length;i++){if(last_data_var[i]<1)last_data_var[i]=null;}", startPosLive);
-            int nextExpLiveMonth = webpageLive.IndexOf("var mx=['", endPosLive) + "var mx=['".Length;
-            liveFuturesDataDT = webpageLive.Substring(startPosLiveDate, 16);
-            liveFuturesNextExp = webpageLive.Substring(nextExpLiveMonth, 3);
-            liveFuturesData = webpageLive.Substring(startPosLive, endPosLive - startPosLive);
-
-            stopWatch2.Stop();
-
-            liveFuturesDataDate = liveFuturesDataDT.Substring(0, 10);
-            liveFuturesDataTime = liveFuturesDataDT.Substring(11, 5) + " EST";
-
-            string[] liveFuturesPrices = liveFuturesData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-            int lengthLiveFuturesPrices = liveFuturesPrices.Length;
-
-            string[] monthsNumList = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-            int monthsNum = Array.IndexOf(monthsNumList, liveFuturesNextExp) + 1;
+            Tuple<double[], int[,], int[], int[], string[], int[], int[]> gSheetResToFinCalc = GSheetConverter(gSheetString, allAssetList);
 
 
-            DateTime liveDateTime;
+            Tuple<double[,], double[,], double[,], string[], string[]> weightsFinal = MultiplFinCalc(clmtRes, gSheetResToFinCalc, allAssetList, lastDataDate,taaWeightResultsTuple);
+
+
+
+            //Request time (UTC)
+            DateTime liveDateTime = DateTime.UtcNow;
             string liveDate = System.String.Empty;
-            liveDateTime = DateTime.Parse(liveFuturesDataDate);
-            liveDate = liveDateTime.ToString("yyyy-MM-dd");
+            liveDate = liveDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+            DateTime timeNowET = Utils.ConvertTimeFromUtcToEt(liveDateTime);
+            string liveDateString = "Request time (UTC): " + liveDate;
 
+            //Last data time (UTC)
+            string lastDataTime = (quotesData[0][quotesData[0].Count - 1].Date.Date == liveDateTime.Date & timeNowET.TimeOfDay<=new DateTime(2000,1,1,16,15,0).TimeOfDay) ? "Live data at " + liveDateTime.ToString("yyyy-MM-dd HH:mm:ss") : "Close price on "+ quotesData[0][quotesData[0].Count - 1].Date.ToString("yyyy-MM-dd");
+            string lastDataTimeString = "Last data time (UTC): "+lastDataTime;
 
-            string[] firstTableCells = tableRows[2].Split(new string[] { "<td>", "</td>" }, StringSplitOptions.RemoveEmptyEntries);
-            DateTime histStartDay;
-            string histStartDate = System.String.Empty;
-            histStartDay = DateTime.Parse(firstTableCells[0]);
-            histStartDate = histStartDay.ToString("yyyy-MM-dd");
-            bool isExtraDay = !string.Equals(liveDate, histStartDate);
+            //Current PV, Number of current and required shares
+            DateTime startMatlabDate = DateTime.ParseExact("1900/01/01", "yyyy/MM/dd", CultureInfo.InvariantCulture);
+            DateTime nextTradingDay = startMatlabDate.AddDays(weightsFinal.Item1[weightsFinal.Item1.GetLength(0) - 1, 0] - 693962);
+            string nextTradingDayString = System.String.Empty;
+            nextTradingDayString = nextTradingDay.ToString("yyyy-MM-dd");
+            DateTime currPosDate = startMatlabDate.AddDays(gSheetResToFinCalc.Item6[0] - 693962);
+            string currPosDateString = System.String.Empty;
+            currPosDateString = currPosDate.ToString("yyyy-MM-dd");
 
-            //Sorting historical data.
-            int nRec = (isExtraDay) ? nHistoricalRec + 1 : nHistoricalRec;
-            VixCentralRec[] vixCentralRec = new VixCentralRec[nRec - 2];
-            //--List<VixCentralRec> vixRec2 = new List<VixCentralRec>();
-            //--vixRec2.Add(new VixCentralRec());
+            double currPV;
+            int[] currPosInt = new int[usedAssetList.Length + 1];
+            
 
-            for (int iRows = 2; iRows < tableRows.Length - 2; iRows++)
+            double[] currPosValue = new double[usedAssetList.Length+1];
+            for (int jCols = 0; jCols < currPosValue.Length-2; jCols++)
             {
-                string[] tableCells = tableRows[iRows].Split(new string[] { "<td>", "</td>" }, StringSplitOptions.RemoveEmptyEntries);
-                int iRec = (isExtraDay) ? iRows - 1 : iRows - 2;
-                vixCentralRec[iRec].Date = DateTime.Parse(tableCells[0]);
-                vixCentralRec[iRec].FirstMonth = Int32.Parse(tableCells[1]);
-                vixCentralRec[iRec].F1 = Double.Parse(tableCells[2]);
-                vixCentralRec[iRec].F2 = Double.Parse(tableCells[3]);
-                vixCentralRec[iRec].F3 = Double.Parse(tableCells[4]);
-                vixCentralRec[iRec].F4 = Double.Parse(tableCells[5]);
-                vixCentralRec[iRec].F5 = Double.Parse(tableCells[6]);
-                vixCentralRec[iRec].F6 = Double.Parse(tableCells[7]);
-                vixCentralRec[iRec].F7 = Double.Parse(tableCells[8]);
-                vixCentralRec[iRec].F8 = (tableCells[9] == "0") ? vixCentralRec[iRec].F7 : Double.Parse(tableCells[9]);
-                vixCentralRec[iRec].STCont = vixCentralRec[iRec].F2 / vixCentralRec[iRec].F1 - 1;
-                vixCentralRec[iRec].LTCont = vixCentralRec[iRec].F7 / vixCentralRec[iRec].F4 - 1;
+                currPosInt[jCols] = gSheetResToFinCalc.Item7[jCols];
+                currPosValue[jCols] =quotesData[jCols][quotesData[0].Count-1].AdjClosePrice*currPosInt[jCols];
+            }
+            currPosInt[currPosInt.Length - 2] = gSheetResToFinCalc.Item7[gSheetResToFinCalc.Item7.Length - 1];
+            currPosInt[currPosInt.Length - 1] = gSheetResToFinCalc.Item6[1];
+            currPosValue[currPosValue.Length - 2] = cashEquivalentQuotesData[quotesData[0].Count - 1].AdjClosePrice * gSheetResToFinCalc.Item7[gSheetResToFinCalc.Item7.Length - 1];
+            currPosValue[currPosValue.Length - 1] = gSheetResToFinCalc.Item6[1];
+            currPV = Math.Round(currPosValue.Sum());
+
+            double[] nextPosValue = new double[usedAssetList.Length+1];
+            for (int jCols = 0; jCols < nextPosValue.Length - 2; jCols++)
+            {
+                nextPosValue[jCols] = currPV*weightsFinal.Item3[weightsFinal.Item3.GetLength(0)-1,jCols+1];
+            }
+            nextPosValue[nextPosValue.Length - 2] = Math.Max(0,currPV- nextPosValue.Take(nextPosValue.Length - 2).ToArray().Sum());
+            nextPosValue[nextPosValue.Length - 1] = currPV - nextPosValue.Take(nextPosValue.Length - 1).ToArray().Sum();
+
+            double[] nextPosInt = new double[nextPosValue.Length];
+            for (int jCols = 0; jCols < nextPosInt.Length - 2; jCols++)
+            {
+                nextPosInt[jCols] = nextPosValue[jCols]/ quotesData[jCols][quotesData[0].Count - 1].AdjClosePrice;
+            }
+            nextPosInt[nextPosInt.Length - 2] = nextPosValue[nextPosInt.Length - 2]/cashEquivalentQuotesData[quotesData[0].Count - 1].AdjClosePrice;
+            nextPosInt[nextPosInt.Length - 1] = nextPosValue[nextPosInt.Length - 1];
+
+            double[] posValueDiff = new double[usedAssetList.Length + 1];
+            for (int jCols = 0; jCols < posValueDiff.Length; jCols++)
+            {
+                posValueDiff[jCols] = nextPosValue[jCols] - currPosValue[jCols];
             }
 
-            if (isExtraDay)
+            double[] posIntDiff = new double[usedAssetList.Length + 1];
+            for (int jCols = 0; jCols < posIntDiff.Length; jCols++)
             {
-                vixCentralRec[0].Date = DateTime.Parse(liveDate);
-                vixCentralRec[0].FirstMonth = monthsNum;
-                vixCentralRec[0].F1 = Double.Parse(liveFuturesPrices[0]);
-                vixCentralRec[0].F2 = Double.Parse(liveFuturesPrices[1]);
-                vixCentralRec[0].F3 = Double.Parse(liveFuturesPrices[2]);
-                vixCentralRec[0].F4 = Double.Parse(liveFuturesPrices[3]);
-                vixCentralRec[0].F5 = Double.Parse(liveFuturesPrices[4]);
-                vixCentralRec[0].F6 = Double.Parse(liveFuturesPrices[5]);
-                vixCentralRec[0].F7 = Double.Parse(liveFuturesPrices[6]);
-                vixCentralRec[0].F8 = (lengthLiveFuturesPrices == 8) ? Double.Parse(liveFuturesPrices[7]) : 0;
-                vixCentralRec[0].STCont = vixCentralRec[0].F2 / vixCentralRec[0].F1 - 1;
-                vixCentralRec[0].LTCont = vixCentralRec[0].F7 / vixCentralRec[0].F4 - 1;
-
+                posIntDiff[jCols] = nextPosInt[jCols] - currPosInt[jCols];
             }
 
-            //Calculating futures expiration dates.
-            var firstDataDay = vixCentralRec[nRec - 3].Date;
-            int firstDataYear = firstDataDay.Year;
-            string firstData = firstDataDay.ToString("yyyy-MM-dd");
-
-            var lastDataDay = vixCentralRec[0].Date;
-            int lastDataYear = lastDataDay.Year;
-            string lastData = lastDataDay.ToString("yyyy-MM-dd");
-
-            var lengthExps = (lastDataYear - firstDataYear + 2) * 12;
-            int[,] expDatesDat = new int[lengthExps, 2];
-            //--int[][] expDatesDat = new int[lengthExps,2];
-
-            expDatesDat[0, 0] = lastDataYear + 1;
-            expDatesDat[0, 1] = 12;
-
-            for (int iRows = 1; iRows < expDatesDat.GetLength(0); iRows++)
+            //CLMT
+            string clmtSignal;
+            if (clmtRes[7][clmtRes[7].Length-1]==1)
             {
-                decimal f = iRows / 12;
-                expDatesDat[iRows, 0] = lastDataYear - Decimal.ToInt32(Math.Floor(f)) + 1;
-                expDatesDat[iRows, 1] = 12 - iRows % 12;
+                clmtSignal = "bullish";
+            }
+            else if (clmtRes[7][clmtRes[7].Length-1] == 3)
+            {
+                clmtSignal = "bearish";
+            }
+            else
+            {
+                clmtSignal = "neutral";
             }
 
-            DateTime[] expDates = new DateTime[expDatesDat.GetLength(0)];
-            for (int iRows = 0; iRows < expDates.Length; iRows++)
+            string xluVtiSignal;
+            if (clmtRes[3][clmtRes[3].Length-1] == 1)
             {
-                DateTime thirdFriday = new DateTime(expDatesDat[iRows, 0], expDatesDat[iRows, 1], 15);
-                while (thirdFriday.DayOfWeek != DayOfWeek.Friday)
+                xluVtiSignal = "bullish";
+            }
+            else 
+            {
+                xluVtiSignal = "bearish";
+            }
+
+            string spxMASignal;
+            if (clmtRes[6][clmtRes[6].Length-1] == 1)
+            {
+                spxMASignal = "bullish";
+            }
+            else
+            {
+                spxMASignal = "bearish";
+            }
+
+
+            //Position weights in the last 10 days
+            string[,] prevPosMtx = new string[weightsFinal.Item3.GetLength(0)+1,usedAssetList.Length+3];
+            for (int iRows = 0; iRows < prevPosMtx.GetLength(0) - 1; iRows++)
+            {
+                DateTime assDate = startMatlabDate.AddDays(weightsFinal.Item3[iRows, 0] - 693962);
+                string assDateString = System.String.Empty;
+                assDateString = assDate.ToString("yyyy-MM-dd");
+                prevPosMtx[iRows, 0] =assDateString;
+
+                double assetWeightSum = 0;
+                for (int jCols = 0; jCols < prevPosMtx.GetLength(1) - 4; jCols++)
                 {
-                    thirdFriday = thirdFriday.AddDays(1);
+                    assetWeightSum += weightsFinal.Item3[iRows, jCols + 1];
+                    prevPosMtx[iRows, jCols + 1] =Math.Round(weightsFinal.Item3[iRows,jCols+1]*100.0,2).ToString()+"%";
                 }
-                expDates[iRows] = thirdFriday.AddDays(-30);
-                if (expDates[iRows] == DateTime.Parse("2014-03-19"))
+                prevPosMtx[iRows, prevPosMtx.GetLength(1) - 1] = (weightsFinal.Item4[iRows]=="0")?"---":weightsFinal.Item4[iRows];
+                prevPosMtx[iRows, prevPosMtx.GetLength(1)-3] = Math.Round(Math.Max((1.0-assetWeightSum),0)* 100.0, 2).ToString() + "%";
+                prevPosMtx[iRows, prevPosMtx.GetLength(1)-2] = Math.Round((1.0 - assetWeightSum- Math.Max((1.0 - assetWeightSum), 0)) * 100.0, 2).ToString() + "%";
+            }
+            prevPosMtx[prevPosMtx.GetLength(0)-1, 0] = "";
+            for (int jCols = 0; jCols < prevPosMtx.GetLength(1) - 3; jCols++)
+            {
+                prevPosMtx[prevPosMtx.GetLength(0) - 1,jCols+1]=usedAssetList[jCols];
+            }
+            prevPosMtx[prevPosMtx.GetLength(0) - 1, prevPosMtx.GetLength(1) - 2] = "Cash";
+            prevPosMtx[prevPosMtx.GetLength(0) - 1, prevPosMtx.GetLength(1) - 1] = "Event";
+
+            for (int iRows = 0; iRows < prevPosMtx.GetLength(0) / 2; iRows++)
+            {
+                for (int jCols = 0; jCols < prevPosMtx.GetLength(1); jCols++)
                 {
-                    expDates[iRows] = DateTime.Parse("2014-03-18");
-                }
-            }
-
-            //Calculating number of calendar days until expirations.
-            for (int iRec = 0; iRec < vixCentralRec.Length; iRec++)
-            {
-                int index1 = Array.FindIndex(expDates, item => item <= vixCentralRec[iRec].Date);
-                vixCentralRec[iRec].NextExpiryDate = expDates[index1 - 1];
-                vixCentralRec[iRec].F1expDays = (expDates[index1 - 1] - vixCentralRec[iRec].Date).Days;
-                vixCentralRec[iRec].F2expDays = (expDates[index1 - 2] - vixCentralRec[iRec].Date).Days;
-                vixCentralRec[iRec].F3expDays = (expDates[index1 - 3] - vixCentralRec[iRec].Date).Days;
-                vixCentralRec[iRec].F4expDays = (expDates[index1 - 4] - vixCentralRec[iRec].Date).Days;
-                vixCentralRec[iRec].F5expDays = (expDates[index1 - 5] - vixCentralRec[iRec].Date).Days;
-                vixCentralRec[iRec].F6expDays = (expDates[index1 - 6] - vixCentralRec[iRec].Date).Days;
-                vixCentralRec[iRec].F7expDays = (expDates[index1 - 7] - vixCentralRec[iRec].Date).Days;
-                vixCentralRec[iRec].F8expDays = (vixCentralRec[0].F8 > 0) ? (expDates[index1 - 8] - vixCentralRec[iRec].Date).Days : 0;
-            }
-
-            string ret = Processing(vixCentralRec, expDates, liveDate, liveFuturesDataTime);
-
-            stopWatchTotal.Stop();
-
-            Utils.Logger.Info($"VixFuturesAnalyserDataController(): Benchmark times. VixCentral: {stopWatch1.Elapsed.TotalMilliseconds}ms, Step2: {stopWatch2.Elapsed.TotalMilliseconds}ms, Total: {stopWatchTotal.Elapsed.TotalMilliseconds}ms");
-
-            return ret;
-
-            //--return new string[] { tCells[0][0], "value2" };
-        }
-
-        private string Processing(VixCentralRec[] p_vixCentralRec, DateTime[] p_expDates, string p_liveDate, string p_liveFuturesDataTime)
-        {
-            //Calculating dates to html.           
-            DateTime timeNowET = Utils.ConvertTimeFromUtcToEt(DateTime.UtcNow);
-
-            DateTime firstDataDay = p_vixCentralRec[p_vixCentralRec.Length - 1].Date;
-            string firstDataDate = firstDataDay.ToString("yyyy-MM-dd");
-            DateTime lastDataDay = p_vixCentralRec[0].Date;
-            string lastDataDate = lastDataDay.ToString("yyyy-MM-dd");
-            DateTime prevDataDay = p_vixCentralRec[1].Date;
-            string prevDataDate = prevDataDay.ToString("yyyy-MM-dd");
-
-            //Creating the current data array (prices and spreads).
-            double[] currData = new double[17];
-            currData[0] = p_vixCentralRec[0].F1;
-            currData[1] = p_vixCentralRec[0].F2;
-            currData[2] = p_vixCentralRec[0].F3;
-            currData[3] = p_vixCentralRec[0].F4;
-            currData[4] = p_vixCentralRec[0].F5;
-            currData[5] = p_vixCentralRec[0].F6;
-            currData[6] = p_vixCentralRec[0].F7;
-            currData[7] = p_vixCentralRec[0].F8;
-            currData[8] = p_vixCentralRec[0].STCont;
-            currData[9] = p_vixCentralRec[0].LTCont;
-            currData[10] = p_vixCentralRec[0].F2 - p_vixCentralRec[0].F1;
-            currData[11] = p_vixCentralRec[0].F3 - p_vixCentralRec[0].F2;
-            currData[12] = p_vixCentralRec[0].F4 - p_vixCentralRec[0].F3;
-            currData[13] = p_vixCentralRec[0].F5 - p_vixCentralRec[0].F4;
-            currData[14] = p_vixCentralRec[0].F6 - p_vixCentralRec[0].F5;
-            currData[15] = p_vixCentralRec[0].F7 - p_vixCentralRec[0].F6;
-            currData[16] = (p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[0].F8 - p_vixCentralRec[0].F7 : 0;
-
-            //Creating the current days to expirations array.
-            double[] currDataDays = new double[17];
-            currDataDays[0] = p_vixCentralRec[0].F1expDays;
-            currDataDays[1] = p_vixCentralRec[0].F2expDays;
-            currDataDays[2] = p_vixCentralRec[0].F3expDays;
-            currDataDays[3] = p_vixCentralRec[0].F4expDays;
-            currDataDays[4] = p_vixCentralRec[0].F5expDays;
-            currDataDays[5] = p_vixCentralRec[0].F6expDays;
-            currDataDays[6] = p_vixCentralRec[0].F7expDays;
-            currDataDays[7] = (p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[0].F8expDays : 0;
-            currDataDays[8] = p_vixCentralRec[0].F1expDays;
-            currDataDays[9] = p_vixCentralRec[0].F4expDays;
-            currDataDays[10] = p_vixCentralRec[0].F1expDays;
-            currDataDays[11] = p_vixCentralRec[0].F2expDays;
-            currDataDays[12] = p_vixCentralRec[0].F3expDays;
-            currDataDays[13] = p_vixCentralRec[0].F4expDays;
-            currDataDays[14] = p_vixCentralRec[0].F5expDays;
-            currDataDays[15] = p_vixCentralRec[0].F6expDays;
-            currDataDays[16] = (p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[0].F7expDays : 0;
-
-            //Creating the data array of previous day (prices and spreads).
-            double[] prevData = new double[17];
-            prevData[0] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F1 : p_vixCentralRec[1].F2;
-            prevData[1] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F2 : p_vixCentralRec[1].F3;
-            prevData[2] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F3 : p_vixCentralRec[1].F4;
-            prevData[3] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F4 : p_vixCentralRec[1].F5;
-            prevData[4] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F5 : p_vixCentralRec[1].F6;
-            prevData[5] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F6 : p_vixCentralRec[1].F7;
-            prevData[6] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F7 : p_vixCentralRec[1].F8;
-            prevData[7] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? ((p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[1].F8 : 0) : 0;
-            prevData[8] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].STCont : p_vixCentralRec[1].F3 / p_vixCentralRec[1].F2 - 1;
-            prevData[9] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].LTCont : p_vixCentralRec[1].F8 / p_vixCentralRec[1].F5 - 1;
-            prevData[10] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F2 - p_vixCentralRec[1].F1 : p_vixCentralRec[1].F3 - p_vixCentralRec[1].F2;
-            prevData[11] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F3 - p_vixCentralRec[1].F2 : p_vixCentralRec[1].F4 - p_vixCentralRec[1].F3;
-            prevData[12] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F4 - p_vixCentralRec[1].F3 : p_vixCentralRec[1].F5 - p_vixCentralRec[1].F4;
-            prevData[13] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F5 - p_vixCentralRec[1].F4 : p_vixCentralRec[1].F6 - p_vixCentralRec[1].F5;
-            prevData[14] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F6 - p_vixCentralRec[1].F5 : p_vixCentralRec[1].F7 - p_vixCentralRec[1].F6;
-            prevData[15] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? p_vixCentralRec[1].F7 - p_vixCentralRec[1].F6 : p_vixCentralRec[1].F8 - p_vixCentralRec[1].F7;
-            prevData[16] = (p_vixCentralRec[0].F1expDays - p_vixCentralRec[1].F1expDays < 0) ? ((p_vixCentralRec[0].F8 > 0) ? p_vixCentralRec[1].F8 - p_vixCentralRec[1].F7 : 0) : 0;
-
-            //Creating the difference of current and previous data array (prices and spreads).
-            double[] currDataDiff = new double[17];
-            for (int iRow = 0; iRow < currDataDiff.Length; iRow++)
-            {
-                currDataDiff[iRow] = currData[iRow] - prevData[iRow];
-            }
-
-            //Calculating the number of days (total, contango, backwardation).
-            int dayTot = p_vixCentralRec.Length;
-            int dayCont = p_vixCentralRec.Where(x => x.STCont >= 0).Count();
-            double dayContPerc = (double)dayCont / dayTot;
-            int dayBackw = p_vixCentralRec.Where(x => x.STCont < 0).Count();
-            double dayBackwPerc = (double)dayBackw / dayTot;
-
-            //Calculating the arithmetic mean of VIX futures prices, spreads using all of the days.
-            double[] futsMeanTotal = new double[17];
-            futsMeanTotal[0] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F1);
-            futsMeanTotal[1] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F2);
-            futsMeanTotal[2] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F3);
-            futsMeanTotal[3] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F4);
-            futsMeanTotal[4] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F5);
-            futsMeanTotal[5] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F6);
-            futsMeanTotal[6] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F7);
-            futsMeanTotal[7] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F8);
-            futsMeanTotal[8] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.STCont);
-            futsMeanTotal[9] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.LTCont);
-            futsMeanTotal[10] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F2 - x.F1);
-            futsMeanTotal[11] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F3 - x.F2);
-            futsMeanTotal[12] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F4 - x.F3);
-            futsMeanTotal[13] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F5 - x.F4);
-            futsMeanTotal[14] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F6 - x.F5);
-            futsMeanTotal[15] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F7 - x.F6);
-            futsMeanTotal[16] = p_vixCentralRec.DefaultIfEmpty().Average(x => x.F8 - x.F7);
-
-            //Calculating the median of VIX futures prices, spreads using all of the days.
-            double[] futsMedianTotal = new double[17];
-            futsMedianTotal[0] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F1);
-            futsMedianTotal[1] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F2);
-            futsMedianTotal[2] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F3);
-            futsMedianTotal[3] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F4);
-            futsMedianTotal[4] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F5);
-            futsMedianTotal[5] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F6);
-            futsMedianTotal[6] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F7);
-            futsMedianTotal[7] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F8);
-            futsMedianTotal[8] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.STCont);
-            futsMedianTotal[9] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.LTCont);
-            futsMedianTotal[10] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F2 - x.F1);
-            futsMedianTotal[11] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F3 - x.F2);
-            futsMedianTotal[12] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F4 - x.F3);
-            futsMedianTotal[13] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F5 - x.F4);
-            futsMedianTotal[14] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F6 - x.F5);
-            futsMedianTotal[15] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F7 - x.F6);
-            futsMedianTotal[16] = p_vixCentralRec.DefaultIfEmpty().LowerMedian(x => x.F8 - x.F7);
-
-            //Calculating the arithmetic mean of VIX futures prices, spreads using contango days.
-            double[] futsMeanContTotal = new double[17];
-            futsMeanContTotal[0] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F1);
-            futsMeanContTotal[1] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F2);
-            futsMeanContTotal[2] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F3);
-            futsMeanContTotal[3] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F4);
-            futsMeanContTotal[4] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F5);
-            futsMeanContTotal[5] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F6);
-            futsMeanContTotal[6] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F7);
-            futsMeanContTotal[7] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F8);
-            futsMeanContTotal[8] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.STCont);
-            futsMeanContTotal[9] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.LTCont);
-            futsMeanContTotal[10] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F2 - x.F1);
-            futsMeanContTotal[11] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F3 - x.F2);
-            futsMeanContTotal[12] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F4 - x.F3);
-            futsMeanContTotal[13] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F5 - x.F4);
-            futsMeanContTotal[14] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F6 - x.F5);
-            futsMeanContTotal[15] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F7 - x.F6);
-            futsMeanContTotal[16] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().Average(x => x.F8 - x.F7);
-
-            //Calculating the median of VIX futures prices, spreads using contango days.
-            double[] futsMedianContTotal = new double[17];
-            futsMedianContTotal[0] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F1);
-            futsMedianContTotal[1] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F2);
-            futsMedianContTotal[2] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F3);
-            futsMedianContTotal[3] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F4);
-            futsMedianContTotal[4] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F5);
-            futsMedianContTotal[5] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F6);
-            futsMedianContTotal[6] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F7);
-            futsMedianContTotal[7] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F8);
-            futsMedianContTotal[8] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.STCont);
-            futsMedianContTotal[9] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.LTCont);
-            futsMedianContTotal[10] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F2 - x.F1);
-            futsMedianContTotal[11] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F3 - x.F2);
-            futsMedianContTotal[12] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F4 - x.F3);
-            futsMedianContTotal[13] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F5 - x.F4);
-            futsMedianContTotal[14] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F6 - x.F5);
-            futsMedianContTotal[15] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F7 - x.F6);
-            futsMedianContTotal[16] = p_vixCentralRec.Where(x => x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F8 - x.F7);
-
-            //Calculating the arithmetic mean of VIX futures prices, spreads using backwardation days.
-            double[] futsMeanBackwTotal = new double[17];
-            futsMeanBackwTotal[0] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F1);
-            futsMeanBackwTotal[1] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F2);
-            futsMeanBackwTotal[2] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F3);
-            futsMeanBackwTotal[3] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F4);
-            futsMeanBackwTotal[4] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F5);
-            futsMeanBackwTotal[5] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F6);
-            futsMeanBackwTotal[6] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F7);
-            futsMeanBackwTotal[7] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F8);
-            futsMeanBackwTotal[8] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.STCont);
-            futsMeanBackwTotal[9] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.LTCont);
-            futsMeanBackwTotal[10] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F2 - x.F1);
-            futsMeanBackwTotal[11] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F3 - x.F2);
-            futsMeanBackwTotal[12] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F4 - x.F3);
-            futsMeanBackwTotal[13] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F5 - x.F4);
-            futsMeanBackwTotal[14] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F6 - x.F5);
-            futsMeanBackwTotal[15] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F7 - x.F6);
-            futsMeanBackwTotal[16] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().Average(x => x.F8 - x.F7);
-
-            //Calculating the median of VIX futures prices, spreads using backwardation days.
-            double[] futsMedianBackwTotal = new double[17];
-            futsMedianBackwTotal[0] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F1);
-            futsMedianBackwTotal[1] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F2);
-            futsMedianBackwTotal[2] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F3);
-            futsMedianBackwTotal[3] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F4);
-            futsMedianBackwTotal[4] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F5);
-            futsMedianBackwTotal[5] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F6);
-            futsMedianBackwTotal[6] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F7);
-            futsMedianBackwTotal[7] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F8);
-            futsMedianBackwTotal[8] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.STCont);
-            futsMedianBackwTotal[9] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.LTCont);
-            futsMedianBackwTotal[10] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F2 - x.F1);
-            futsMedianBackwTotal[11] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F3 - x.F2);
-            futsMedianBackwTotal[12] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F4 - x.F3);
-            futsMedianBackwTotal[13] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F5 - x.F4);
-            futsMedianBackwTotal[14] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F6 - x.F5);
-            futsMedianBackwTotal[15] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F7 - x.F6);
-            futsMedianBackwTotal[16] = p_vixCentralRec.Where(x => x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F8 - x.F7);
-
-            //Calculating number of days and percentage of days by months: total, contango, backwardation.
-            double[] futsCount = new double[12];
-            double[] futsContCount = new double[12];
-            double[] futsContCountPerc = new double[12];
-            double[] futsBackwCount = new double[12];
-            double[] futsBackwCountPerc = new double[12];
-            for (int iRows = 0; iRows < 12; iRows++)
-            {
-                futsCount[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).Count();
-                futsContCount[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).Count();
-                futsContCountPerc[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).Count() / futsCount[iRows];
-                futsBackwCount[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).Count();
-                futsBackwCountPerc[iRows] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).Count() / futsCount[iRows];
-            }
-
-            //Calculating the arithmetic means and medians of VIX futures prices, spreads by months: total, contango and backwardation days.
-            double[,] futsMeanMonth = new double[12, 17];
-            double[,] futsMedianMonth = new double[12, 17];
-            double[,] futsMeanMonthCont = new double[12, 17];
-            double[,] futsMeanMonthBackw = new double[12, 17];
-            double[,] futsMedianMonthCont = new double[12, 17];
-            double[,] futsMedianMonthBackw = new double[12, 17];
-            for (int iRows = 0; iRows < 12; iRows++)
-            {
-                futsMeanMonth[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F1);
-                futsMeanMonth[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F2);
-                futsMeanMonth[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F3);
-                futsMeanMonth[iRows, 3] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F4);
-                futsMeanMonth[iRows, 4] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F5);
-                futsMeanMonth[iRows, 5] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F6);
-                futsMeanMonth[iRows, 6] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F7);
-                futsMeanMonth[iRows, 7] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F8);
-                futsMeanMonth[iRows, 8] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.STCont);
-                futsMeanMonth[iRows, 9] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.LTCont);
-                futsMeanMonth[iRows, 10] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F2 - x.F1);
-                futsMeanMonth[iRows, 11] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F3 - x.F2);
-                futsMeanMonth[iRows, 12] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F4 - x.F3);
-                futsMeanMonth[iRows, 13] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F5 - x.F4);
-                futsMeanMonth[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F6 - x.F5);
-                futsMeanMonth[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F7 - x.F6);
-                futsMeanMonth[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().Average(x => x.F8 - x.F7);
-
-                futsMedianMonth[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F1);
-                futsMedianMonth[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F2);
-                futsMedianMonth[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F3);
-                futsMedianMonth[iRows, 3] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F4);
-                futsMedianMonth[iRows, 4] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F5);
-                futsMedianMonth[iRows, 5] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F6);
-                futsMedianMonth[iRows, 6] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F7);
-                futsMedianMonth[iRows, 7] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F8);
-                futsMedianMonth[iRows, 8] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.STCont);
-                futsMedianMonth[iRows, 9] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.LTCont);
-                futsMedianMonth[iRows, 10] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F2 - x.F1);
-                futsMedianMonth[iRows, 11] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F3 - x.F2);
-                futsMedianMonth[iRows, 12] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F4 - x.F3);
-                futsMedianMonth[iRows, 13] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F5 - x.F4);
-                futsMedianMonth[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F6 - x.F5);
-                futsMedianMonth[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F7 - x.F6);
-                futsMedianMonth[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.F8 - x.F7);
-
-                futsMeanMonthCont[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F1);
-                futsMeanMonthCont[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F2);
-                futsMeanMonthCont[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F3);
-                futsMeanMonthCont[iRows, 3] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F4);
-                futsMeanMonthCont[iRows, 4] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F5);
-                futsMeanMonthCont[iRows, 5] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F6);
-                futsMeanMonthCont[iRows, 6] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F7);
-                futsMeanMonthCont[iRows, 7] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F8);
-                futsMeanMonthCont[iRows, 8] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.STCont);
-                futsMeanMonthCont[iRows, 9] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.LTCont);
-                futsMeanMonthCont[iRows, 10] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F2 - x.F1);
-                futsMeanMonthCont[iRows, 11] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F3 - x.F2);
-                futsMeanMonthCont[iRows, 12] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F4 - x.F3);
-                futsMeanMonthCont[iRows, 13] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F5 - x.F4);
-                futsMeanMonthCont[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F6 - x.F5);
-                futsMeanMonthCont[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F7 - x.F6);
-                futsMeanMonthCont[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.F8 - x.F7);
-
-                futsMeanMonthBackw[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F1);
-                futsMeanMonthBackw[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F2);
-                futsMeanMonthBackw[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F3);
-                futsMeanMonthBackw[iRows, 3] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F4);
-                futsMeanMonthBackw[iRows, 4] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F5);
-                futsMeanMonthBackw[iRows, 5] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F6);
-                futsMeanMonthBackw[iRows, 6] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F7);
-                futsMeanMonthBackw[iRows, 7] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F8);
-                futsMeanMonthBackw[iRows, 8] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.STCont);
-                futsMeanMonthBackw[iRows, 9] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.LTCont);
-                futsMeanMonthBackw[iRows, 10] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F2 - x.F1);
-                futsMeanMonthBackw[iRows, 11] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F3 - x.F2);
-                futsMeanMonthBackw[iRows, 12] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F4 - x.F3);
-                futsMeanMonthBackw[iRows, 13] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F5 - x.F4);
-                futsMeanMonthBackw[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F6 - x.F5);
-                futsMeanMonthBackw[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F7 - x.F6);
-                futsMeanMonthBackw[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.F8 - x.F7);
-
-                futsMedianMonthCont[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F1);
-                futsMedianMonthCont[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F2);
-                futsMedianMonthCont[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F3);
-                futsMedianMonthCont[iRows, 3] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F4);
-                futsMedianMonthCont[iRows, 4] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F5);
-                futsMedianMonthCont[iRows, 5] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F6);
-                futsMedianMonthCont[iRows, 6] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F7);
-                futsMedianMonthCont[iRows, 7] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F8);
-                futsMedianMonthCont[iRows, 8] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.STCont);
-                futsMedianMonthCont[iRows, 9] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.LTCont);
-                futsMedianMonthCont[iRows, 10] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F2 - x.F1);
-                futsMedianMonthCont[iRows, 11] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F3 - x.F2);
-                futsMedianMonthCont[iRows, 12] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F4 - x.F3);
-                futsMedianMonthCont[iRows, 13] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F5 - x.F4);
-                futsMedianMonthCont[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F6 - x.F5);
-                futsMedianMonthCont[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F7 - x.F6);
-                futsMedianMonthCont[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.F8 - x.F7);
-
-                futsMedianMonthBackw[iRows, 0] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F1);
-                futsMedianMonthBackw[iRows, 1] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F2);
-                futsMedianMonthBackw[iRows, 2] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F3);
-                futsMedianMonthBackw[iRows, 3] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F4);
-                futsMedianMonthBackw[iRows, 4] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F5);
-                futsMedianMonthBackw[iRows, 5] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F6);
-                futsMedianMonthBackw[iRows, 6] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F7);
-                futsMedianMonthBackw[iRows, 7] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F8);
-                futsMedianMonthBackw[iRows, 8] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.STCont);
-                futsMedianMonthBackw[iRows, 9] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.LTCont);
-                futsMedianMonthBackw[iRows, 10] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F2 - x.F1);
-                futsMedianMonthBackw[iRows, 11] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F3 - x.F2);
-                futsMedianMonthBackw[iRows, 12] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F4 - x.F3);
-                futsMedianMonthBackw[iRows, 13] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F5 - x.F4);
-                futsMedianMonthBackw[iRows, 14] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F6 - x.F5);
-                futsMedianMonthBackw[iRows, 15] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F7 - x.F6);
-                futsMedianMonthBackw[iRows, 16] = p_vixCentralRec.Where(x => x.FirstMonth == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.F8 - x.F7);
-            }
-
-            //Calculating data for charts: prices and spreads.           
-            double[] data2ChartsF = new double[p_vixCentralRec.Length * 8];
-            Array.Copy(p_vixCentralRec.Select(r => r.F1).ToArray(), 0, data2ChartsF, 0, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F2).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F3).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 2, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F4).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 3, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F5).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 4, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F6).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 5, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F7).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 6, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F8).ToArray(), 0, data2ChartsF, p_vixCentralRec.Length * 7, p_vixCentralRec.Length);
-
-            double[] data2ChartsSpr = new double[p_vixCentralRec.Length * 8];
-            Array.Copy(p_vixCentralRec.Select(r => r.F2 - r.F1).ToArray(), 0, data2ChartsSpr, 0, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F3 - r.F2).ToArray(), 0, data2ChartsSpr, p_vixCentralRec.Length, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F4 - r.F3).ToArray(), 0, data2ChartsSpr, p_vixCentralRec.Length * 2, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F5 - r.F4).ToArray(), 0, data2ChartsSpr, p_vixCentralRec.Length * 3, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F6 - r.F5).ToArray(), 0, data2ChartsSpr, p_vixCentralRec.Length * 4, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F7 - r.F6).ToArray(), 0, data2ChartsSpr, p_vixCentralRec.Length * 5, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F8 - r.F7).ToArray(), 0, data2ChartsSpr, p_vixCentralRec.Length * 6, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F8 - r.F8).ToArray(), 0, data2ChartsSpr, p_vixCentralRec.Length * 7, p_vixCentralRec.Length);
-
-            int[] data2ChartsDays = new int[p_vixCentralRec.Length * 8];
-            Array.Copy(p_vixCentralRec.Select(r => r.F1expDays).ToArray(), 0, data2ChartsDays, 0, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F2expDays).ToArray(), 0, data2ChartsDays, p_vixCentralRec.Length, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F3expDays).ToArray(), 0, data2ChartsDays, p_vixCentralRec.Length * 2, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F4expDays).ToArray(), 0, data2ChartsDays, p_vixCentralRec.Length * 3, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F5expDays).ToArray(), 0, data2ChartsDays, p_vixCentralRec.Length * 4, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F6expDays).ToArray(), 0, data2ChartsDays, p_vixCentralRec.Length * 5, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F7expDays).ToArray(), 0, data2ChartsDays, p_vixCentralRec.Length * 6, p_vixCentralRec.Length);
-            Array.Copy(p_vixCentralRec.Select(r => r.F8expDays).ToArray(), 0, data2ChartsDays, p_vixCentralRec.Length * 7, p_vixCentralRec.Length);
-
-            double[] data2ChartsSTC = new double[p_vixCentralRec.Length * 8];
-            for (int iRows = 0; iRows < 8; iRows++)
-            {
-                Array.Copy(p_vixCentralRec.Select(r => r.STCont).ToArray(), 0, data2ChartsSTC, p_vixCentralRec.Length * iRows, p_vixCentralRec.Length);
-            }
-
-
-
-            Data2Charts[] data2Charts = new Data2Charts[p_vixCentralRec.Length * 8];
-            for (int iRows = 0; iRows < data2Charts.Length; iRows++)
-            {
-                data2Charts[iRows].ExpDays = data2ChartsDays[iRows];
-                data2Charts[iRows].FutPrices = data2ChartsF[iRows];
-                data2Charts[iRows].FutSpreads = data2ChartsSpr[iRows];
-                data2Charts[iRows].STCont = data2ChartsSTC[iRows];
-
-            }
-
-            double[,] res2ChartsFPs = new double[200, 10];
-            for (int iRows = 0; iRows < res2ChartsFPs.GetLength(0); iRows++)
-            {
-                res2ChartsFPs[iRows, 0] = iRows + 1;
-                res2ChartsFPs[iRows, 1] = data2Charts.Where(x => x.ExpDays == iRows + 1).DefaultIfEmpty().Average(x => x.FutPrices);
-                res2ChartsFPs[iRows, 2] = data2Charts.Where(x => x.ExpDays == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.FutPrices);
-                res2ChartsFPs[iRows, 3] = data2Charts.Where(x => x.ExpDays == iRows + 1).DefaultIfEmpty().Count();
-                res2ChartsFPs[iRows, 4] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.FutPrices);
-                res2ChartsFPs[iRows, 5] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.FutPrices);
-                res2ChartsFPs[iRows, 6] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Count();
-                res2ChartsFPs[iRows, 7] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.FutPrices);
-                res2ChartsFPs[iRows, 8] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.FutPrices);
-                res2ChartsFPs[iRows, 9] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Count();
-            }
-            int res2Length = 0;
-            for (int i = 0; i < 200; i++)
-            {
-                if (res2ChartsFPs[i, 3] > 9)
-                {
-                    res2Length++;
+                    string tmp = prevPosMtx[iRows, jCols];
+                    prevPosMtx[iRows, jCols] = prevPosMtx[prevPosMtx.GetLength(0) - iRows - 1,jCols];
+                    prevPosMtx[prevPosMtx.GetLength(0) - iRows - 1, jCols] = tmp;
                 }
             }
 
-            double[,] res2ChartsFPsmod = new double[res2Length, 10];
-            int lineNum = 0;
-            for (int iRows = 0; iRows < res2ChartsFPs.GetLength(0); iRows++)
+            //Codes for last 10 days to coloring 
+            double[,] prevAssEventCodes = weightsFinal.Item1;
+            for (int iRows = 0; iRows < prevAssEventCodes.GetLength(0) / 2; iRows++)
             {
-                if (res2ChartsFPs[iRows, 3] > 9)
+                for (int jCols = 0; jCols < prevAssEventCodes.GetLength(1); jCols++)
                 {
-                    for (int iCols = 0; iCols < 10; iCols++)
+                    double tmp = prevAssEventCodes[iRows, jCols];
+                    prevAssEventCodes[iRows, jCols] = prevAssEventCodes[prevAssEventCodes.GetLength(0) - iRows - 1, jCols];
+                    prevAssEventCodes[prevAssEventCodes.GetLength(0) - iRows - 1, jCols] = tmp;
+                }
+            }
+
+            string[,] prevAssEventColorMtx = new string[weightsFinal.Item3.GetLength(0) + 1, usedAssetList.Length + 3];
+            for (int iRows = 0; iRows < prevAssEventColorMtx.GetLength(0)-1; iRows++)
+            {
+                prevAssEventColorMtx[0, 0] = "66CCFF";
+                prevAssEventColorMtx[0, prevAssEventColorMtx.GetLength(1) - 3] = "66CCFF";
+                prevAssEventColorMtx[0, prevAssEventColorMtx.GetLength(1) - 2] = "66CCFF";
+                prevAssEventColorMtx[0, prevAssEventColorMtx.GetLength(1) - 1] = "66CCFF";
+                prevAssEventColorMtx[iRows + 1, 0] = "FF6633";
+                prevAssEventColorMtx[iRows + 1, prevAssEventColorMtx.GetLength(1)-3] = "FFE4C4";
+                prevAssEventColorMtx[iRows + 1, prevAssEventColorMtx.GetLength(1)-2] = "FFE4C4";
+                prevAssEventColorMtx[iRows + 1, prevAssEventColorMtx.GetLength(1)-1] = "FFFF00";
+                for (int jCols = 0; jCols < prevAssEventColorMtx.GetLength(1) - 4; jCols++)
+                {
+                    prevAssEventColorMtx[0, jCols + 1] = "66CCFF";
+                    if (prevAssEventCodes[iRows, jCols+1] == 1)
                     {
-                        res2ChartsFPsmod[lineNum, iCols] = res2ChartsFPs[iRows, iCols];
-
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "228B22";
                     }
-                    lineNum++;
-                }
-            }
-
-
-            double[,] res2ChartsSprs = new double[200, 10];
-            for (int iRows = 0; iRows < res2ChartsFPs.GetLength(0); iRows++)
-            {
-                res2ChartsSprs[iRows, 0] = iRows + 1;
-                res2ChartsSprs[iRows, 1] = data2Charts.Where(x => x.ExpDays == iRows + 1).DefaultIfEmpty().Average(x => x.FutSpreads);
-                res2ChartsSprs[iRows, 2] = data2Charts.Where(x => x.ExpDays == iRows + 1).DefaultIfEmpty().LowerMedian(x => x.FutSpreads);
-                res2ChartsSprs[iRows, 3] = data2Charts.Where(x => x.ExpDays == iRows + 1).DefaultIfEmpty().Count();
-                res2ChartsSprs[iRows, 4] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Average(x => x.FutSpreads);
-                res2ChartsSprs[iRows, 5] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().LowerMedian(x => x.FutSpreads);
-                res2ChartsSprs[iRows, 6] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont >= 0).DefaultIfEmpty().Count();
-                res2ChartsSprs[iRows, 7] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Average(x => x.FutSpreads);
-                res2ChartsSprs[iRows, 8] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont < 0).DefaultIfEmpty().LowerMedian(x => x.FutSpreads);
-                res2ChartsSprs[iRows, 9] = data2Charts.Where(x => x.ExpDays == iRows + 1 && x.STCont < 0).DefaultIfEmpty().Count();
-            }
-
-            double[,] res2ChartsSprsmod = new double[res2Length, 10];
-            int lineNum2 = 0;
-            for (int iRows = 0; iRows < res2ChartsSprs.GetLength(0); iRows++)
-            {
-                if (res2ChartsFPs[iRows, 3] > 9)
-                {
-                    for (int iCols = 0; iCols < 10; iCols++)
+                    else if (prevAssEventCodes[iRows, jCols+1] == 2)
                     {
-                        res2ChartsSprsmod[lineNum2, iCols] = res2ChartsSprs[iRows, iCols];
-
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "FF0000";
                     }
-                    lineNum2++;
+                    else if (prevAssEventCodes[iRows, jCols+1] == 3)
+                    {
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "7CFC00";
+                    }
+                    else if (prevAssEventCodes[iRows, jCols+1] == 4)
+                    {
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "DC143C";
+                    }
+                    else if (prevAssEventCodes[iRows, jCols+1] == 5)
+                    {
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "1E90FF";
+                    }
+                    else if (prevAssEventCodes[iRows, jCols+1] == 6)
+                    {
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "7B68EE";
+                    }
+                    else if (prevAssEventCodes[iRows, jCols+1] == 7)
+                    {
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "FFFFFF";
+                    }
+                    else if (prevAssEventCodes[iRows, jCols+1] == 8)
+                    {
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "00FFFF";
+                    }
+                    else if (prevAssEventCodes[iRows, jCols+1] == 9)
+                    {
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "A9A9A9";
+                    }
+                    else if (prevAssEventCodes[iRows, jCols+1] == 10)
+                    {
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "FF8C00";
+                    }
+                    else if (prevAssEventCodes[iRows, jCols+1] == 11)
+                    {
+                        prevAssEventColorMtx[iRows + 1, jCols + 1] = "F0E68C";
+                    }
                 }
             }
+
+
+                //Position weights in the next 10 days
+                string[,] futPosMtx = new string[weightsFinal.Item2.GetLength(0) + 1, usedAssetList.Length + 1];
+            string[,] futAssEventCodes = new string[weightsFinal.Item2.GetLength(0) + 1, usedAssetList.Length + 1];
+            for (int iRows = 0; iRows < futPosMtx.GetLength(0) - 1; iRows++)
+            {
+                DateTime assFDate = startMatlabDate.AddDays(weightsFinal.Item2[iRows, 0] - 693962);
+                string assFDateString = System.String.Empty;
+                assFDateString = assFDate.ToString("yyyy-MM-dd");
+                futPosMtx[iRows+1, 0] = assFDateString;
+                futAssEventCodes[iRows + 1, 0] = "FF6633";
+
+                for (int jCols = 0; jCols < futPosMtx.GetLength(1) - 2; jCols++)
+                {
+                    if (weightsFinal.Item2[iRows, jCols + 1] == 1)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "FOMC Bullish Day";
+                        futAssEventCodes[iRows + 1, jCols+1] = "228B22";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 2)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "FOMC Bearish Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "FF0000";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 3)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "Holiday Bullish Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "7CFC00";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 4)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "Holiday Bearish Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "DC143C";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 5)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "Important Earnings Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "1E90FF";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 6)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "Pre-Earnings Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "7B68EE";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 7)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "Skipped Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "FFFFFF";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 8)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "CLMT Bullish Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "00FFFF";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 9)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "CLMT Neutral Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "A9A9A9";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 10)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "CLMT Bearish Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "FF8C00";
+                    }
+                    else if (weightsFinal.Item2[iRows, jCols + 1] == 11)
+                    {
+                        futPosMtx[iRows + 1, jCols + 1] = "Unknown CLMT Day";
+                        futAssEventCodes[iRows + 1, jCols + 1] = "F0E68C";
+                    }
+                }
+
+                futPosMtx[iRows + 1, futPosMtx.GetLength(1)-1] =  (weightsFinal.Item5[iRows]=="0")?"---": weightsFinal.Item5[iRows];
+                futAssEventCodes[iRows + 1, futPosMtx.GetLength(1) - 1] = "FFFF00";
+            }
+            futPosMtx[0, 0] = "";
+            futAssEventCodes[0,0] = "66CCFF";
+            for (int jCols = 0; jCols < futPosMtx.GetLength(1) - 2; jCols++)
+            {
+                futPosMtx[0, jCols + 1] = usedAssetList[jCols];
+                futAssEventCodes[0, jCols + 1] = "66CCFF";
+            }
+
+            futPosMtx[0, futPosMtx.GetLength(1) - 1] = "Event";
+            futAssEventCodes[0, futPosMtx.GetLength(1) - 1] = "66CCFF";
+
+
+            //AssetPrices to charts
+            int assetChartLength = 20;
+            string[,] assetChangesMtx = new string[assetChartLength+1,usedAssetList.Length];
+            for (int iRows = 0; iRows < assetChangesMtx.GetLength(0); iRows++)
+            {
+                assetChangesMtx[iRows, 0] = quotesData[0][quotesData[0].Count - 1 - assetChartLength + iRows].Date.ToString("yyyy-MM-dd");
+                for (int jCols = 0; jCols < assetChangesMtx.GetLength(1)-1; jCols++)
+                {
+                    assetChangesMtx[iRows, jCols+1] = Math.Round((quotesData[jCols][quotesData[jCols].Count-1-assetChartLength+iRows].AdjClosePrice/quotesData[jCols][quotesData[jCols].Count-1-assetChartLength].AdjClosePrice-1) * 100.0,2).ToString()+"%";
+                }
+            }
+
+            string[,] assetDailyChangesMtx = new string[assetChartLength + 1, usedAssetList.Length];
+            for (int iRows = 0; iRows < assetDailyChangesMtx.GetLength(0); iRows++)
+            {
+                assetDailyChangesMtx[iRows, 0] = quotesData[0][quotesData[0].Count - 1 - assetChartLength + iRows].Date.ToString("yyyy-MM-dd");
+                for (int jCols = 0; jCols < assetDailyChangesMtx.GetLength(1) - 1; jCols++)
+                {
+                    assetDailyChangesMtx[iRows, jCols + 1] = Math.Round((quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength + iRows].AdjClosePrice / quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength+iRows-1].AdjClosePrice - 1) * 100.0, 2).ToString() + "%";
+                }
+            }
+
+
+            string[,] spxToChartMtx = new string[assetChartLength + 1, 4];
+            for (int iRows = 0; iRows < spxToChartMtx.GetLength(0); iRows++)
+            {
+                spxToChartMtx[iRows, 0] = quotesData[0][quotesData[0].Count - 1 - assetChartLength + iRows].Date.ToString("yyyy-MM-dd");
+                spxToChartMtx[iRows, 1] = Math.Round(clmtRes[8][clmtRes[8].GetLength(0)-assetChartLength-1+iRows],0).ToString();
+                spxToChartMtx[iRows, 2] = Math.Round(clmtRes[4][clmtRes[4].GetLength(0)-assetChartLength-1+iRows],0).ToString();
+                spxToChartMtx[iRows, 3] = Math.Round(clmtRes[5][clmtRes[5].GetLength(0)-assetChartLength-1+iRows],0).ToString();
+            }
+
+            string[,] xluVtiToChartMtx = new string[assetChartLength + 1, 3];
+            for (int iRows = 0; iRows < spxToChartMtx.GetLength(0); iRows++)
+            {
+                xluVtiToChartMtx[iRows, 0] = quotesData[0][quotesData[0].Count - 1 - assetChartLength + iRows].Date.ToString("yyyy-MM-dd");
+                xluVtiToChartMtx[iRows, 1] = Math.Round(clmtRes[1][clmtRes[1].GetLength(0) - assetChartLength - 1 + iRows], 0).ToString();
+                xluVtiToChartMtx[iRows, 2] = Math.Round(clmtRes[2][clmtRes[2].GetLength(0) - assetChartLength - 1 + iRows], 0).ToString();
+            }
+
 
             //Creating input string for JavaScript.
             StringBuilder sb = new StringBuilder("{" + Environment.NewLine);
-            //--sb.Append(@"""vixCentralRec"": """);
-            //--for (int i = 0; i < p_vixCentralRec.Length; i++)
-            //--sb.AppendLine(p_vixCentralRec[i].ToString());
-            //--sb.Append(@"""," + Environment.NewLine + @"""timeNow"": """ + timeNow.ToString() + " EST");
-            sb.Append(@"""timeNow"": """ + timeNowET.ToString("yyyy-MM-dd HH:mm") + " EST");
+            sb.Append(@"""titleCont"": """ + titleString);
+            sb.Append(@"""," + Environment.NewLine + @"""requestTime"": """ + liveDateString);
+            sb.Append(@"""," + Environment.NewLine + @"""lastDataTime"": """ + lastDataTimeString);
+            sb.Append(@"""," + Environment.NewLine + @"""currentPV"": """ + currPV.ToString("#,##0"));
+            sb.Append(@"""," + Environment.NewLine + @"""currentPVDate"": """ + currPosDateString);
+            sb.Append(@"""," + Environment.NewLine + @"""clmtSign"": """ + clmtSignal);
+            sb.Append(@"""," + Environment.NewLine + @"""xluVtiSign"": """ + xluVtiSignal);
+            sb.Append(@"""," + Environment.NewLine + @"""spxMASign"": """ + spxMASignal);
+            sb.Append(@"""," + Environment.NewLine + @"""gDocRef"": """ + usedGDocRef);
+            sb.Append(@"""," + Environment.NewLine + @"""gSheetRef"": """ + usedGSheet2Ref);
 
-            sb.Append(@"""," + Environment.NewLine + @"""liveDataDate"": """ + p_liveDate);
+            sb.Append(@"""," + Environment.NewLine + @"""assetNames"": """);
+                for (int i=0; i<usedAssetList.Length-1; i++)
+                    sb.Append(usedAssetList[i] + ", ");
+            sb.Append(usedAssetList[usedAssetList.Length - 1]);
 
-            sb.Append(@"""," + Environment.NewLine + @"""liveDataTime"": """ + p_liveFuturesDataTime);
+            sb.Append(@"""," + Environment.NewLine + @"""assetNames2"": """);
+            for (int i = 0; i < usedAssetList.Length; i++)
+                sb.Append(usedAssetList[i] + ", ");
+            sb.Append("Cash");
 
-            sb.Append(@"""," + Environment.NewLine + @"""firstDataDate"": """ + firstDataDate);
+            sb.Append(@"""," + Environment.NewLine + @"""currPosNum"": """);
+            for (int i = 0; i < currPosInt.Length - 1; i++)
+                sb.Append(currPosInt[i].ToString() + ", ");
+            sb.Append("$"+Math.Round(currPosInt[currPosInt.Length - 1]/1000.0).ToString()+"K");
 
-            sb.Append(@"""," + Environment.NewLine + @"""lastDataDate"": """ + lastDataDate);
+            sb.Append(@"""," + Environment.NewLine + @"""currPosVal"": """);
+            for (int i = 0; i < currPosValue.Length - 1; i++)
+                sb.Append("$"+Math.Round(currPosValue[i]/1000).ToString() + "K, ");
+            sb.Append("$"+Math.Round(currPosValue[currPosValue.Length - 1]/1000).ToString()+"K");
 
-            sb.Append(@"""," + Environment.NewLine + @"""prevDataDate"": """ + prevDataDate);
+            sb.Append(@"""," + Environment.NewLine + @"""nextPosNum"": """);
+            for (int i = 0; i < nextPosInt.Length - 1; i++)
+                sb.Append(Math.Round(nextPosInt[i]).ToString() + ", ");
+            sb.Append("$"+Math.Round(nextPosInt[nextPosInt.Length - 1]/1000).ToString()+"K");
 
-            sb.Append(@"""," + Environment.NewLine + @"""currDataVec"": """);
-            for (int i = 0; i < currData.Length - 1; i++)
-                sb.Append(Math.Round(currData[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(currData[currData.Length - 1], 4).ToString());
+            sb.Append(@"""," + Environment.NewLine + @"""nextPosVal"": """);
+            for (int i = 0; i < nextPosValue.Length - 1; i++)
+                sb.Append("$"+Math.Round(nextPosValue[i]/1000).ToString() + "K, ");
+            sb.Append("$"+Math.Round(nextPosValue[nextPosValue.Length - 1]/1000).ToString()+"K");
 
-            sb.Append(@"""," + Environment.NewLine + @"""currDataDaysVec"": """);
-            for (int i = 0; i < currDataDays.Length - 1; i++)
-                sb.Append(currDataDays[i].ToString() + ", ");
-            sb.Append(currDataDays[currDataDays.Length - 1].ToString());
+            sb.Append(@"""," + Environment.NewLine + @"""posNumDiff"": """);
+            for (int i = 0; i < posIntDiff.Length - 1; i++)
+                sb.Append(Math.Round(posIntDiff[i]).ToString() + ", ");
+            sb.Append("$" + Math.Round(posIntDiff[posIntDiff.Length - 1] / 1000).ToString() + "K");
 
-            sb.Append(@"""," + Environment.NewLine + @"""prevDataVec"": """);
-            for (int i = 0; i < prevData.Length - 1; i++)
-                sb.Append(Math.Round(prevData[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(prevData[prevData.Length - 1], 4).ToString());
+            sb.Append(@"""," + Environment.NewLine + @"""posValDiff"": """);
+            for (int i = 0; i < posValueDiff.Length - 1; i++)
+                sb.Append("$" + Math.Round(posValueDiff[i] / 1000).ToString() + "K, ");
+            sb.Append("$" + Math.Round(posValueDiff[posValueDiff.Length - 1] / 1000).ToString() + "K");
 
-            sb.Append(@"""," + Environment.NewLine + @"""currDataDiffVec"": """);
-            for (int i = 0; i < currDataDiff.Length - 1; i++)
-                sb.Append(Math.Round(currDataDiff[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(currDataDiff[currDataDiff.Length - 1], 4).ToString());
+            sb.Append(@"""," + Environment.NewLine + @"""nextTradingDay"": """ + nextTradingDayString);
+            sb.Append(@"""," + Environment.NewLine + @"""currPosDate"": """ + currPosDateString);
 
-            sb.Append(@"""," + Environment.NewLine + @"""numberOfTotalDays"": """ + dayTot.ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""numberOfContangoDays"": """ + dayCont.ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""percOfContangoDays"": """ + Math.Round(dayContPerc, 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""numberOfBackwardDays"": """ + dayBackw.ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""percOfBackwardDays"": """ + Math.Round(dayBackwPerc, 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""numberOfTotalDaysByMonthsVec"": """);
-            for (int i = 0; i < futsCount.Length - 1; i++)
-                sb.Append(Math.Round(futsCount[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsCount[futsCount.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""numberOfContangoDaysByMonthsVec"": """);
-            for (int i = 0; i < futsContCount.Length - 1; i++)
-                sb.Append(Math.Round(futsContCount[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsContCount[futsContCount.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""numberOfBackwardDaysByMonthsVec"": """);
-            for (int i = 0; i < futsBackwCount.Length - 1; i++)
-                sb.Append(Math.Round(futsBackwCount[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsBackwCount[futsBackwCount.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""percOfContangoDaysByMonthsVec"": """);
-            for (int i = 0; i < futsContCountPerc.Length - 1; i++)
-                sb.Append(Math.Round(futsContCountPerc[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsContCountPerc[futsContCountPerc.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""percOfBackwardDaysByMonthsVec"": """);
-            for (int i = 0; i < futsBackwCountPerc.Length - 1; i++)
-                sb.Append(Math.Round(futsBackwCountPerc[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsBackwCountPerc[futsBackwCountPerc.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""meanOfTotalDaysTotalVec"": """);
-            for (int i = 0; i < futsMeanTotal.Length - 1; i++)
-                sb.Append(Math.Round(futsMeanTotal[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsMeanTotal[futsMeanTotal.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""medianOfTotalDaysTotalVec"": """);
-            for (int i = 0; i < futsMedianTotal.Length - 1; i++)
-                sb.Append(Math.Round(futsMedianTotal[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsMedianTotal[futsMedianTotal.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""meanOfContangoDaysTotalVec"": """);
-            for (int i = 0; i < futsMeanContTotal.Length - 1; i++)
-                sb.Append(Math.Round(futsMeanContTotal[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsMeanContTotal[futsMeanContTotal.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""medianOfContangoDaysTotalVec"": """);
-            for (int i = 0; i < futsMedianContTotal.Length - 1; i++)
-                sb.Append(Math.Round(futsMedianContTotal[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsMedianContTotal[futsMedianContTotal.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""meanOfBackwardDaysTotalVec"": """);
-            for (int i = 0; i < futsMeanBackwTotal.Length - 1; i++)
-                sb.Append(Math.Round(futsMeanBackwTotal[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsMeanBackwTotal[futsMeanBackwTotal.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""medianOfBackwardDaysTotalVec"": """);
-            for (int i = 0; i < futsMedianBackwTotal.Length - 1; i++)
-                sb.Append(Math.Round(futsMedianBackwTotal[i], 4).ToString() + ", ");
-            sb.Append(Math.Round(futsMedianBackwTotal[futsMedianBackwTotal.Length - 1], 4).ToString());
-
-            sb.Append(@"""," + Environment.NewLine + @"""meanOfTotalDaysByMonthsMtx"": """);
-            for (int i = 0; i < 12; i++)
+            sb.Append(@"""," + Environment.NewLine + @"""prevPositionsMtx"": """);
+            for (int i = 0; i < prevPosMtx.GetLength(0); i++)
             {
                 sb.Append("");
-                for (int j = 0; j < 16; j++)
+                for (int j = 0; j < prevPosMtx.GetLength(1)-1; j++)
                 {
-                    sb.Append(Math.Round(futsMeanMonth[i, j], 4).ToString() + ", ");
+                    sb.Append(prevPosMtx[i, j] + ", ");
                 }
-                sb.Append(Math.Round(futsMeanMonth[i, 16], 4).ToString());
-                if (i < 11)
+                sb.Append(prevPosMtx[i, prevPosMtx.GetLength(1)-1]);
+                if (i < prevPosMtx.GetLength(0)-1)
                 {
                     sb.Append("ß ");
                 }
             }
 
-            sb.Append(@"""," + Environment.NewLine + @"""medianOfTotalDaysByMonthsMtx"": """);
-            for (int i = 0; i < 12; i++)
+            sb.Append(@"""," + Environment.NewLine + @"""prevAssEventMtx"": """);
+            for (int i = 0; i < prevAssEventColorMtx.GetLength(0); i++)
             {
                 sb.Append("");
-                for (int j = 0; j < 16; j++)
+                for (int j = 0; j < prevAssEventColorMtx.GetLength(1) - 1; j++)
                 {
-                    sb.Append(Math.Round(futsMedianMonth[i, j], 4).ToString() + ", ");
+                    sb.Append(prevAssEventColorMtx[i, j] + ",");
                 }
-                sb.Append(Math.Round(futsMedianMonth[i, 16], 4).ToString());
-                if (i < 11)
-                {
-                    sb.Append("ß ");
-                }
-            }
-
-            sb.Append(@"""," + Environment.NewLine + @"""meanOfContangoDaysByMonthsMtx"": """);
-            for (int i = 0; i < 12; i++)
-            {
-                sb.Append("");
-                for (int j = 0; j < 16; j++)
-                {
-                    sb.Append(Math.Round(futsMeanMonthCont[i, j], 4).ToString() + ", ");
-                }
-                sb.Append(Math.Round(futsMeanMonthCont[i, 16], 4).ToString());
-                if (i < 11)
-                {
-                    sb.Append("ß ");
-                }
-            }
-
-            sb.Append(@"""," + Environment.NewLine + @"""medianOfContangoDaysByMonthsMtx"": """);
-            for (int i = 0; i < 12; i++)
-            {
-                sb.Append("");
-                for (int j = 0; j < 16; j++)
-                {
-                    sb.Append(Math.Round(futsMedianMonthCont[i, j], 4).ToString() + ", ");
-                }
-                sb.Append(Math.Round(futsMedianMonthCont[i, 16], 4).ToString());
-                if (i < 11)
-                {
-                    sb.Append("ß ");
-                }
-            }
-
-            sb.Append(@"""," + Environment.NewLine + @"""meanOfBackwardDaysByMonthsMtx"": """);
-            for (int i = 0; i < 12; i++)
-            {
-                sb.Append("");
-                for (int j = 0; j < 16; j++)
-                {
-                    sb.Append(Math.Round(futsMeanMonthBackw[i, j], 4).ToString() + ", ");
-                }
-                sb.Append(Math.Round(futsMeanMonthBackw[i, 16], 4).ToString());
-                if (i < 11)
-                {
-                    sb.Append("ß ");
-                }
-            }
-
-            sb.Append(@"""," + Environment.NewLine + @"""medianOfBackwardDaysByMonthsMtx"": """);
-            for (int i = 0; i < 12; i++)
-            {
-                sb.Append("");
-                for (int j = 0; j < 16; j++)
-                {
-                    sb.Append(Math.Round(futsMedianMonthBackw[i, j], 4).ToString() + ", ");
-                }
-                sb.Append(Math.Round(futsMedianMonthBackw[i, 16], 4).ToString());
-                if (i < 11)
-                {
-                    sb.Append("ß ");
-                }
-            }
-
-            sb.Append(@"""," + Environment.NewLine + @"""resultsToChartFutPricesMtx"": """);
-            for (int i = 0; i < lineNum; i++)
-            {
-                sb.Append("");
-                for (int j = 0; j < 9; j++)
-                {
-                    sb.Append(Math.Round(res2ChartsFPsmod[i, j], 4).ToString() + ", ");
-                }
-                sb.Append(Math.Round(res2ChartsFPsmod[i, 9], 4).ToString());
-                if (i < lineNum - 1)
-                {
-                    sb.Append("ß ");
-                }
-            }
-
-            sb.Append(@"""," + Environment.NewLine + @"""resultsToChartFutSpreadsMtx"": """);
-            for (int i = 0; i < lineNum2; i++)
-            {
-                sb.Append("");
-                for (int j = 0; j < 9; j++)
-                {
-                    sb.Append(Math.Round(res2ChartsSprsmod[i, j], 4).ToString() + ", ");
-                }
-                sb.Append(Math.Round(res2ChartsSprsmod[i, 9], 4).ToString());
-                if (i < lineNum2 - 1)
+                sb.Append(prevAssEventColorMtx[i, prevAssEventColorMtx.GetLength(1) - 1]);
+                if (i < prevAssEventColorMtx.GetLength(0) - 1)
                 {
                     sb.Append("ß ");
                 }
             }
 
 
-            sb.AppendLine(@"]""" + Environment.NewLine + @"}");
+            sb.Append(@"""," + Environment.NewLine + @"""futPositionsMtx"": """);
+            for (int i = 0; i < futPosMtx.GetLength(0); i++)
+            {
+                sb.Append("");
+                for (int j = 0; j < futPosMtx.GetLength(1) - 1; j++)
+                {
+                    sb.Append(futPosMtx[i, j] + ", ");
+                }
+                sb.Append(futPosMtx[i, futPosMtx.GetLength(1) - 1]);
+                if (i < futPosMtx.GetLength(0) - 1)
+                {
+                    sb.Append("ß ");
+                }
+            }
 
+            sb.Append(@"""," + Environment.NewLine + @"""futAssEventMtx"": """);
+            for (int i = 0; i < futAssEventCodes.GetLength(0); i++)
+            {
+                sb.Append("");
+                for (int j = 0; j < futAssEventCodes.GetLength(1) - 1; j++)
+                {
+                    sb.Append(futAssEventCodes[i, j] + ",");
+                }
+                sb.Append(futAssEventCodes[i, futAssEventCodes.GetLength(1) - 1]);
+                if (i < futAssEventCodes.GetLength(0) - 1)
+                {
+                    sb.Append("ß ");
+                }
+            }
+
+            sb.Append(@"""," + Environment.NewLine + @"""chartLength"": """ + assetChartLength); 
+
+
+            sb.Append(@"""," + Environment.NewLine + @"""assetChangesToChartMtx"": """);
+            for (int i = 0; i < assetChangesMtx.GetLength(0); i++)
+            {
+                sb.Append("");
+                for (int j = 0; j < assetChangesMtx.GetLength(1) - 1; j++)
+                {
+                    sb.Append(assetChangesMtx[i, j] + ", ");
+                }
+                sb.Append(assetChangesMtx[i, assetChangesMtx.GetLength(1) - 1]);
+                if (i < assetChangesMtx.GetLength(0) - 1)
+                {
+                    sb.Append("ß ");
+                }
+            }
+
+            sb.Append(@"""," + Environment.NewLine + @"""assetDailyChangesToChartMtx"": """);
+            for (int i = 0; i < assetDailyChangesMtx.GetLength(0); i++)
+            {
+                sb.Append("");
+                for (int j = 0; j < assetDailyChangesMtx.GetLength(1) - 1; j++)
+                {
+                    sb.Append(assetDailyChangesMtx[i, j] + ", ");
+                }
+                sb.Append(assetDailyChangesMtx[i, assetDailyChangesMtx.GetLength(1) - 1]);
+                if (i < assetDailyChangesMtx.GetLength(0) - 1)
+                {
+                    sb.Append("ß ");
+                }
+            }
+
+            sb.Append(@"""," + Environment.NewLine + @"""spxMAToChartMtx"": """);
+            for (int i = 0; i < spxToChartMtx.GetLength(0); i++)
+            {
+                sb.Append("");
+                for (int j = 0; j < spxToChartMtx.GetLength(1) - 1; j++)
+                {
+                    sb.Append(spxToChartMtx[i, j] + ", ");
+                }
+                sb.Append(spxToChartMtx[i, spxToChartMtx.GetLength(1) - 1]);
+                if (i < spxToChartMtx.GetLength(0) - 1)
+                {
+                    sb.Append("ß ");
+                }
+            }
+
+            sb.Append(@"""," + Environment.NewLine + @"""xluVtiPercToChartMtx"": """);
+            for (int i = 0; i < xluVtiToChartMtx.GetLength(0); i++)
+            {
+                sb.Append("");
+                for (int j = 0; j < xluVtiToChartMtx.GetLength(1) - 1; j++)
+                {
+                    sb.Append(xluVtiToChartMtx[i, j] + ", ");
+                }
+                sb.Append(xluVtiToChartMtx[i, xluVtiToChartMtx.GetLength(1) - 1]);
+                if (i < xluVtiToChartMtx.GetLength(0) - 1)
+                {
+                    sb.Append("ß ");
+                }
+            }
+
+
+            sb.AppendLine(@"""" + Environment.NewLine + @"}");
+
+            var asdfa = sb.ToString();
             return sb.ToString();
 
         }
+
+        
     }
 }
