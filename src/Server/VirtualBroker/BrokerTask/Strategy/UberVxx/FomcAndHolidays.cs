@@ -101,7 +101,9 @@ namespace VirtualBroker
                     if (p_offsetInd == -1 || p_offsetInd == -2)
                         return -1.0;    // VXX negative short forecast, which is bullish for the market
                     break;
-                // as of 2016, SuperBowl is not a stock market holiday, only civil holiday, 2017-02-03: it is not in our database, but I am happy to skip this, it shouldn't be significant
+                // as of 2016, SuperBowl is not a stock market holiday, only civil holiday, 
+                // 2017-02-03: it is not in our database, but I am happy to skip this, it shouldn't be significant
+                // 2018-02-05: it was not in our database, so we didn't play it. However the forecast was very good. VXX went up + 30% on that day. A pity we didn't have 
                 // Balazs's HolidayResearch Excel table should contain old dates for SuperBowl and other holidays, Future dates should be collected by a Crawler, or by a Warning email to Supervisors.
                 case DatePropertiesFlags.SuperBowl:     // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
                     if (p_offsetInd == 0)

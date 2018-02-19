@@ -195,7 +195,7 @@ namespace VirtualBroker
             g_taskSchemas.Add(uberVxxTaskSchema);
 
 
-            
+
 
 
             var harryLongTaskSchema = new BrokerTaskSchema()
@@ -211,10 +211,11 @@ namespace VirtualBroker
                             MaxTradeValueInCurrency = 15000, // For Agy: portfolio is 5K original. Set MaxValue=20K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 100,
                             Param = new PortfolioParamHarryLong() { } },
-                        new BrokerTaskPortfolio() { Name = "! Harry Long (Contango-Bond) harvester Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
-                            MaxTradeValueInCurrency = 600000, // For Mr.C.: portfolio is 200K original. Set MaxValue=400K  (assuming portfolio double in a year)
-                            MinTradeValueInCurrency = 200,  // Markowitz MPT optimal weight using 100% allocation
-                            Param = new PortfolioParamHarryLong() { Tickers = new string[] { "SVXY", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.70, -0.47, -0.04, -0.14 }  } },  
+                        // 2018-02-06: when VIX went to 50 in market panic, XIV was terminated, I thought it is better to retire this for DC. 200K portfolio ended in 130K. About -70K loss. He wouldn't like to continue that.
+                        //new BrokerTaskPortfolio() { Name = "! Harry Long (Contango-Bond) harvester Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
+                        //    MaxTradeValueInCurrency = 600000, // For Mr.C.: portfolio is 200K original. Set MaxValue=400K  (assuming portfolio double in a year)
+                        //    MinTradeValueInCurrency = 200,  // Markowitz MPT optimal weight using 100% allocation
+                        //    Param = new PortfolioParamHarryLong() { Tickers = new string[] { "SVXY", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.70, -0.47, -0.04, -0.14 }  } },
                         new BrokerTaskPortfolio() { Name = "! IB T. Risky 2 Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.TuSecondary,
                             MaxTradeValueInCurrency = 15000, // For Tu: portfolio is 5K original. Set MaxValue=15K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 200,

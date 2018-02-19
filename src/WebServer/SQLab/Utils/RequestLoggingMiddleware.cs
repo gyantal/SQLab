@@ -70,7 +70,7 @@ namespace SQLab
                 lock (Program.g_webAppGlobals.HttpRequestLogs)  // prepare for multiple threads
                 {
                     Program.g_webAppGlobals.HttpRequestLogs.Enqueue(requestLog);
-                    while (Program.g_webAppGlobals.HttpRequestLogs.Count > 50)
+                    while (Program.g_webAppGlobals.HttpRequestLogs.Count > 50*10)  // 2018-02-19: MaxHttpRequestLogs was 50, but changed to 500, because RTP (RealTimePrice) rolls 50 items out after 2 hours otherwise. 500 items will last for 20 hours.
                         Program.g_webAppGlobals.HttpRequestLogs.Dequeue();
                 }
 

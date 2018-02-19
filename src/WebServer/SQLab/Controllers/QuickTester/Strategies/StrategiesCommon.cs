@@ -82,7 +82,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //if (ticker.EndsWith(".SQ"))
             //    tickerWithoutDotSQ = ticker.Substring(0, ticker.Length - ".SQ".Length);
 
-            //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^GSPC,XIV,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction";    // even if IB doesn't support ticker ^GSPC, we implemented it in the RealTime App
+            //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^GSPC,SVXY,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction";    // even if IB doesn't support ticker ^GSPC, we implemented it in the RealTime App
             //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r => r.EndsWith(".SQ") ? r.Substring(0, r.Length - ".SQ".Length) : r) + "&f=l&jsonp=myCallbackFunction";
             //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r =>r)) + "&f=l&jsonp=myCallbackFunction";
             string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r => r.EndsWith(".SQ") ? r.Substring(0, r.Length - ".SQ".Length) : r)) + "&f=l&jsonp=myCallbackFunction";
@@ -101,7 +101,6 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     //{"Symbol":"^VIX","TimeUtc":"19:27:41","Last": 14.22},
                     //{"Symbol":"^VXV","TimeUtc":"19:24:41","Last": 15.59},
                     //{"Symbol":"^GSPC","TimeUtc":"19:27:30","Last": 1846.24},
-                    //{"Symbol":"XIV","TimeUtc":"19:28:14","Last": 31.88}])
 
                     int startBracketInd = realtimeAnswerJSON.IndexOf('[');
                     int endBracketInd = realtimeAnswerJSON.LastIndexOf(']');
@@ -154,7 +153,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //int t = await Task.Run(() => 5);
             //return rtPrices;
 
-            //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^GSPC,XIV,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction";
+            //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^GSPC,SVXY,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction";
 
 
 

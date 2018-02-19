@@ -47,7 +47,7 @@ namespace SQLab.Controllers
             string uriQuery = "";
             try
             {
-                uriQuery = this.HttpContext.Request.QueryString.ToString();    // "?s=VXX,XIV,^vix&f=ab&o=csv" from the URL http://localhost:58213/api/rtp?s=VXX,XIV,^vix&f=ab&o=csv
+                uriQuery = this.HttpContext.Request.QueryString.ToString();    // "?s=VXX,SVXY,^vix&f=ab&o=csv" from the URL http://localhost:58213/api/rtp?s=VXX,XIV,^vix&f=ab&o=csv
 
                 if (uriQuery.Length > 8192)
                 {//When you try to pass a string longer than 8192 charachters, a faultException will be thrown. There is a solution, but I don't want

@@ -86,7 +86,7 @@ namespace VirtualBroker
         }
 
         // use YahooFinance ticker terminology (^GSPC instead of SPX); uppercase is a must. Hide it here, so it is not global. threadLock is not required
-        // // VXX,^VIX,^GSPC,XIV,#^VIX201610,GOOG
+        // // VXX,^VIX,^GSPC,SVXY,#^VIX201610,GOOG
         public static Contract ParseSqTickerToContract(string p_sqTicker)    
         {
             Contract contract;
