@@ -20,14 +20,21 @@ namespace SQLab.Controllers
 #endif
         public ActionResult Index(int commo)
         {
-            switch (commo)
+            try
             {
-                case 1:
-                    return Content(GetStr(1), "text/html");
-                case 2:
-                    return Content(GetStr(2), "text/html");
+                switch (commo)
+                {
+                    case 1: //GameChanger
+                        return Content(GetStr(1), "text/html");
+                    case 2: //Global Asset
+                        return Content(GetStr(2), "text/html");
+                }
+                return Content(GetStr2(), "text/html");
             }
-            return Content(GetStr2(), "text/html");
+            catch
+            {
+                return Content(GetStr2(), "text/html");
+            }
         }
 
         public string GetStr2()
@@ -35,6 +42,7 @@ namespace SQLab.Controllers
             return "Error";
         }
 
+        //Get event, current position data from Google Spreadsheet - George
         [HttpGet]
         public ActionResult UberTAAGChGoogleApiGsheet1(string p_usedGSheetRef)
         {
@@ -51,6 +59,7 @@ namespace SQLab.Controllers
             return Content($"<HTML><body>UberTAAGChGoogleApiGsheet1() finished OK. <br> Received data: '{valuesFromGSheetStr}'</body></HTML>", "text/html");
         }
 
+        //Selecting, splitting data got from GSheet
         public static Tuple< double[], int[,], int[], int[], string[], int[], int[]> GSheetConverter(string p_gSheetString, string[] p_allAssetList)
         {
             string[] gSheetTableRows = p_gSheetString.Split(new string[] { "[" }, StringSplitOptions.RemoveEmptyEntries);
@@ -118,7 +127,7 @@ namespace SQLab.Controllers
             return gSheetResFinal;
         }
 
-
+        //Downloading price data from SQL Server
         public static Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> DataSQDBG(string[] p_allAssetList)
         {
             List<string> tickersNeeded = p_allAssetList.ToList();
@@ -176,6 +185,7 @@ namespace SQLab.Controllers
             return dataFromSQServer;
         }
 
+        //Calculating TAA weights - based on George's TAA code
         public static Tuple<double[], double[,]> TaaWeights(IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> p_taaWeightsData, int[] p_pctChannelLookbackDays, int p_histVolLookbackDays, int p_thresholdLower)
         {
             var dshd = p_taaWeightsData;
@@ -216,7 +226,7 @@ namespace SQLab.Controllers
                     }
                 }
 
-                // 3.1 Calculate assetWeights
+                // Calculate assetWeights
                 double totalWeight = 0.0;
                 
                 for (int iAsset = 0; iAsset < nAssets; iAsset++)
@@ -266,6 +276,7 @@ namespace SQLab.Controllers
             return taaWeightResults;
         }
         
+        //Calculating CLMT data
         public static double[][] CLMTCalc(IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> p_quotesForClmtData)
         {
             double[,] p_clmtData = new double[p_quotesForClmtData[0].Count,4];
@@ -411,11 +422,11 @@ namespace SQLab.Controllers
             return clmtTotalResu;
         }
 
-
+        //Calculating final weights (with event and CLMT leverages)
         public Tuple<double[,], double[,], double[,], string[], string[]> MultiplFinCalc(double[][] p_clmtRes, Tuple<double[], int[,], int[], int[], string[], int[], int[]>  p_gSheetResToFinCalc, string[] p_allAssetList, double p_lastDataDate, Tuple<double[], double[,]>  p_taaWeightResultsTuple)
         {
 
-            int pastDataLength = 10;
+            int pastDataLength = 20;
             int futDataLength = 10;
             int indClmtRes = Array.IndexOf(p_clmtRes[0], p_lastDataDate);
             int indGSheetRes = Array.IndexOf(p_gSheetResToFinCalc.Item1, p_lastDataDate);
@@ -588,12 +599,13 @@ namespace SQLab.Controllers
             return multiplFinResults;
         }
 
+
         public string GetStr(int p_basketSelector)
         {
-
+            //Defining asset lists.
             string[] clmtAssetList = new string[]{ "^GSPC", "XLU", "VTI" };
-            string[] gchAssetList = new string[]{ "AAPL", "AMZN", "BABA", "BIDU", "FB", "GOOGL", "JD", "NFLX", "NVDA", "PCLN", "TCEHY", "TLT"};
-            string[] gmrAssetList = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ", "TLT" };
+            string[] gchAssetList = new string[]{ "AAPL", "AMZN", "BABA", "BIDU", "FB", "GOOGL", "JD", "NFLX", "NVDA", "PCLN", "TCEHY", "TLT"}; //TLT is used as a cashEquivalent
+            string[] gmrAssetList = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ", "TLT" }; //TLT is used as a cashEquivalent
             string[] usedAssetList = new string[0];
             string titleString ="0";
             switch (p_basketSelector)
@@ -623,28 +635,33 @@ namespace SQLab.Controllers
             string usedGSheet2Ref = (p_basketSelector == 1) ? gchGSheet2Ref : gmrGSheet2Ref;
             string usedGDocRef = (p_basketSelector == 1) ? gchGDocRef : gmrGDocRef;
 
-            int thresholdLower = 25;
+            int thresholdLower = 25; //Upper threshold is 100-thresholdLower.
             int[] lookbackDays = new int[] { 60, 120, 180, 252 };
             int volDays = 20;
 
-           
+           //Collecting and splitting price data got from SQL Server
             Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> dataListTupleFromSQServer = DataSQDBG(allAssetList);
 
             IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesData =dataListTupleFromSQServer.Item1;
             IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesForClmtData =dataListTupleFromSQServer.Item2;
             List<SQLab.Controllers.QuickTester.Strategies.DailyData> cashEquivalentQuotesData = dataListTupleFromSQServer.Item3;
 
+            //Calculating basic weights based on percentile channels - base Varadi TAA
             Tuple<double[], double[,]> taaWeightResultsTuple = TaaWeights(quotesData, lookbackDays, volDays, thresholdLower);
             
+            //Calculating CLMT data
             double[][] clmtRes = CLMTCalc(quotesForClmtData);
 
+            //Setting last data date
             double lastDataDate = (clmtRes[0][clmtRes[0].Length-1] == taaWeightResultsTuple.Item1[taaWeightResultsTuple.Item1.Length-1]) ? clmtRes[0][clmtRes[0].Length-1] : 0;
+
+            //Get, split and convert GSheet data
             var gSheetReadResult = UberTAAGChGoogleApiGsheet1(usedGSheetRef);
             string gSheetString=((Microsoft.AspNetCore.Mvc.ContentResult)gSheetReadResult).Content;
 
             Tuple<double[], int[,], int[], int[], string[], int[], int[]> gSheetResToFinCalc = GSheetConverter(gSheetString, allAssetList);
 
-
+            //Calculating final weights - Advanced UberTAA
             Tuple<double[,], double[,], double[,], string[], string[]> weightsFinal = MultiplFinCalc(clmtRes, gSheetResToFinCalc, allAssetList, lastDataDate,taaWeightResultsTuple);
 
 
@@ -749,7 +766,7 @@ namespace SQLab.Controllers
             }
 
 
-            //Position weights in the last 10 days
+            //Position weights in the last 20 days
             string[,] prevPosMtx = new string[weightsFinal.Item3.GetLength(0)+1,usedAssetList.Length+3];
             for (int iRows = 0; iRows < prevPosMtx.GetLength(0) - 1; iRows++)
             {
@@ -786,7 +803,7 @@ namespace SQLab.Controllers
                 }
             }
 
-            //Codes for last 10 days to coloring 
+            //Codes for last 20 days to coloring 
             double[,] prevAssEventCodes = weightsFinal.Item1;
             for (int iRows = 0; iRows < prevAssEventCodes.GetLength(0) / 2; iRows++)
             {
@@ -798,6 +815,7 @@ namespace SQLab.Controllers
                 }
             }
 
+            //Color codes for last 20 days
             string[,] prevAssEventColorMtx = new string[weightsFinal.Item3.GetLength(0) + 1, usedAssetList.Length + 3];
             for (int iRows = 0; iRows < prevAssEventColorMtx.GetLength(0)-1; iRows++)
             {
@@ -860,8 +878,8 @@ namespace SQLab.Controllers
             }
 
 
-                //Position weights in the next 10 days
-                string[,] futPosMtx = new string[weightsFinal.Item2.GetLength(0) + 1, usedAssetList.Length + 1];
+            //Events in the next 10 days
+            string[,] futPosMtx = new string[weightsFinal.Item2.GetLength(0) + 1, usedAssetList.Length + 1];
             string[,] futAssEventCodes = new string[weightsFinal.Item2.GetLength(0) + 1, usedAssetList.Length + 1];
             for (int iRows = 0; iRows < futPosMtx.GetLength(0) - 1; iRows++)
             {
@@ -925,7 +943,7 @@ namespace SQLab.Controllers
                     }
                     else if (weightsFinal.Item2[iRows, jCols + 1] == 11)
                     {
-                        futPosMtx[iRows + 1, jCols + 1] = "Unknown CLMT Day";
+                        futPosMtx[iRows + 1, jCols + 1] = "---"; //Unknown CLMT Day
                         futAssEventCodes[iRows + 1, jCols + 1] = "F0E68C";
                     }
                 }
@@ -945,7 +963,7 @@ namespace SQLab.Controllers
             futAssEventCodes[0, futPosMtx.GetLength(1) - 1] = "66CCFF";
 
 
-            //AssetPrices to charts
+            //AssetPrice Changes in last 20 days to chart
             int assetChartLength = 20;
             string[,] assetChangesMtx = new string[assetChartLength+1,usedAssetList.Length];
             for (int iRows = 0; iRows < assetChangesMtx.GetLength(0); iRows++)
@@ -957,17 +975,18 @@ namespace SQLab.Controllers
                 }
             }
 
+            //Daily changes, currently does not used.
             string[,] assetDailyChangesMtx = new string[assetChartLength + 1, usedAssetList.Length];
             for (int iRows = 0; iRows < assetDailyChangesMtx.GetLength(0); iRows++)
             {
                 assetDailyChangesMtx[iRows, 0] = quotesData[0][quotesData[0].Count - 1 - assetChartLength + iRows].Date.ToString("yyyy-MM-dd");
                 for (int jCols = 0; jCols < assetDailyChangesMtx.GetLength(1) - 1; jCols++)
                 {
-                    assetDailyChangesMtx[iRows, jCols + 1] = Math.Round((quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength + iRows].AdjClosePrice / quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength+iRows-1].AdjClosePrice - 1) * 100.0, 2).ToString() + "%";
+                    assetDailyChangesMtx[iRows, jCols + 1] = Math.Round((quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength + iRows].AdjClosePrice / quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength + iRows - 1].AdjClosePrice - 1) * 100.0, 2).ToString() + "%";
                 }
             }
 
-
+            //Data for SPX MA chart
             string[,] spxToChartMtx = new string[assetChartLength + 1, 4];
             for (int iRows = 0; iRows < spxToChartMtx.GetLength(0); iRows++)
             {
@@ -977,6 +996,7 @@ namespace SQLab.Controllers
                 spxToChartMtx[iRows, 3] = Math.Round(clmtRes[5][clmtRes[5].GetLength(0)-assetChartLength-1+iRows],0).ToString();
             }
 
+            //Data for XLU-VTi RSI chart
             string[,] xluVtiToChartMtx = new string[assetChartLength + 1, 3];
             for (int iRows = 0; iRows < spxToChartMtx.GetLength(0); iRows++)
             {
@@ -1169,9 +1189,10 @@ namespace SQLab.Controllers
 
             sb.AppendLine(@"""" + Environment.NewLine + @"}");
 
-            var asdfa = sb.ToString();
-            return sb.ToString();
+            //var asdfa = sb.ToString(); //testing created string to JS
 
+            return sb.ToString();
+            
         }
 
         

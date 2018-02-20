@@ -13,16 +13,25 @@
     <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.min.js"></script>
     <script type="text/javascript" src="/js/UberTAAGCh.js"></script>
 
-
+    
 </head>
 
 <body>
+   
     <h1>Advanced UberTAA Live Strategies</h1>
-    <div class="center"><button class="button" style="background: url(/images/GameChangers.png); background-size: cover;" onClick="javascript: onHeadProcessing(1)"></button>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<button class="button" style="background: url(/images/GlobalAssets.png); background-size: cover;" onClick="javascript:onHeadProcessing(2)"></button></div>
+    <div class="center"><button class="button" style="background: url(/images/GameChangers.png); background-size: cover;" onClick="javascript: onHeadProcessing(1)"></button>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<button class="button" style="background: url(/images/GlobalAssets.png); background-size: cover;" onClick="javascript: onHeadProcessing(2)"></button></div>
+    <br>
+
+    <div id="errorMessage" style="visibility: hidden">
+        <br>
+        <br>
+        <div class="herror" id="idErrorCont"></div>
+    </div>
 
     <div id="inviCharts" style="visibility: hidden">
-        <br>
+        
         <div class="h3" id="idTitleCont"></div>
+
 
         <p class="bottom-three">
             <span id="idTimeNow"></span>&emsp;&emsp;<span id="idLiveDataTime"></span>
@@ -33,9 +42,7 @@
         <p class="bottom-three">
             <span id="idCLMTString"></span>
         </p>
-        <p class="bottom-three">
-            <span id="my-link1"></span>&emsp;&emsp;&emsp;&emsp;<span id="my-link2"></span>
-        </p>
+
 
 
         <span id="idCurrTableMtx"></span>
@@ -70,11 +77,11 @@
             <strong>XLU/VTI RSI Timer</strong>
             <div id="placeholder3" class="demo-placeholder"></div>
         </div>
-        
+
     </div>
 
 
-                
+
 
 </body>
 </html>

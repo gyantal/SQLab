@@ -18,6 +18,12 @@ h2   {
     font-size: 110%;
     text-align: center;
 }
+.herror {
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    color: red;
+    font-size: 150%;
+    text-align: center;
+}
  .wshelp li {
             margin: 10px 0;
         }

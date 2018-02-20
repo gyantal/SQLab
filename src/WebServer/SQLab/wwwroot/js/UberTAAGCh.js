@@ -14,10 +14,24 @@ function onHeadProcessing(commo) {
 }
 
 function processData(dataStr) {
+    //Printing error message from C#.  
+
+    if (dataStr == "Error")
+    {
+        var divErrorCont = document.getElementById("idErrorCont");
+        divErrorCont.innerHTML = "Error during downloading data. Please, try again later!"
+        document.getElementById("errorMessage").style.visibility="visible";
+        document.getElementById("inviCharts").style.visibility = "hidden";
+        
+        return;
+    }
+
+    document.getElementById("errorMessage").style.display = "none";
+
     //Splitting data got from C#.
     var data = JSON.parse(dataStr);
 
-    //Creating first row (dates) of webpage.
+    //Creating first rows of webpage.
     var divTitleCont = document.getElementById("idTitleCont");
     var divTimeNow = document.getElementById("idTimeNow");
     var divLiveDataTime = document.getElementById("idLiveDataTime");
@@ -27,15 +41,15 @@ function processData(dataStr) {
     var divPosFutString = document.getElementById("idPosFut");
     
 
-    divTitleCont.innerHTML = data.titleCont;
+    divTitleCont.innerHTML = data.titleCont + ' <sup><small><a href="' + data.gDocRef + '" target="_blank">(Study)</a></small></sup>';
     divTimeNow.innerHTML = data.requestTime;
     divLiveDataTime.innerHTML = data.lastDataTime;
-    divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$ " + data.currentPV + "</span> (based on current positions updated on " + data.currentPVDate + ")";
+    divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$ " + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank">these current positions</a> updated for ' + data.currentPVDate + ")";
     divCLMTString.innerHTML = "Current Combined Leverage Market Timer signal is <span class=\"clmt\">" + data.clmtSign + "</span> (SPX 50/200-day MA: " + data.spxMASign + ", XLU/VTI: " + data.xluVtiSign + ").";
-    divPosLastString.innerHTML = "Position weights in the last 10 days:";
+    divPosLastString.innerHTML = "Position weights in the last 20 days:";
     divPosFutString.innerHTML = "Future events:";
-    $('#my-link1').html('<a href="' + data.gDocRef + '" target="_blank">Study</a>');
-    $('#my-link2').html('<a href="' + data.gSheetRef + '" target="_blank">Live spreadsheet</a>');
+    //$('#my-link1').html('<a href="' + data.gDocRef + '" target="_blank">Study</a>'); - currently not used
+    //$('#my-link2').html('<a href="' + data.gSheetRef + '" target="_blank">Live spreadsheet</a>'); - currently not used
 
     creatingTables(data);
 
@@ -43,8 +57,6 @@ function processData(dataStr) {
     document.getElementById("inviCharts").style.visibility = "visible";
 }
 function creatingTables(data) {
-
-    //    var monthList = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     //Creating JavaScript data arrays by splitting.
     var assetNames2Array = data.assetNames2.split(", ");
@@ -98,14 +110,7 @@ function creatingTables(data) {
     }
 
 
-    //    var currDataDaysArray = data.currDataDaysVec.split(",");
-    //    var prevDataArray = data.prevDataVec.split(",");
-    //    var currDataDiffArray = data.currDataDiffVec.split(",");
-    //    var currDataPercChArray = data.currDataPercChVec.split(",");
-    //    var spotVixArray = data.spotVixVec.split(",");
-
-
-    //Creating the HTML code of current table.
+    //Creating the HTML code of tables.
     var currTableMtx = "<table class=\"currData\"><tr align=\"center\"><td bgcolor=\"#66CCFF\"></td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtx += "<td bgcolor=\"#66CCFF\"><a href=https://finance.yahoo.com/quote/" + assetNames2Array[i] + ' target="_blank">' + assetNames2Array[i] + "</a></td>";
@@ -174,9 +179,7 @@ function creatingTables(data) {
     var currTableMtx8 = document.getElementById("idCurrTableMtx7");
     currTableMtx8.innerHTML = currTableMtx7;
 
-
-
-
+    
     //Declaring data sets to charts.
 
     var nCurrData = parseInt(data.chartLength) + 1;
@@ -201,11 +204,7 @@ function creatingTables(data) {
         }
         listH.push({ label: assetNames2Array[j], data: assChartPerc1, points: { show: true }, lines: { show: true } });
     }
-        //var listH = [];
-        //var nameElement = 0;
-        //listH.push({ label: "Current", data: assChartPerc1, points: { show: true }, lines: { show: true } } );
-        //listH.push({ label: "Last close", data: assChartPerc1, points: { show: true }, lines: { show: true } } );
-        //listH.push({ label: "Spot VIX", data: assChartPerc1, points: { show: true }, lines: { show: true } } );
+        
     
     var rsiXlu = new Array(nCurrData);
     var rsiVti = new Array(nCurrData);
@@ -239,29 +238,6 @@ function creatingTables(data) {
         spx200MA[i] = spx200MARows;
     }
 
-
-
-    //var datasets1 = {
-    //    "current": {
-    //        label: "Current",
-    //        data: assChartPerc1,
-    //        points: { show: true },
-    //        lines: { show: true }
-    //    },
-    //    "previous": {
-    //        label: "Last close",
-    //        data: assChartPerc1,
-    //        points: { show: true },
-    //        lines: { show: true }
-    //    },
-    //    "spot": {
-    //        label: "Spot VIX",
-    //        data: assChartPerc1,
-    //        //points: { show: false },
-    //        lines: { show: true, lineWidth: 1 }
-    //        //dashes: { show: true, lineWidth: 5 }
-    //    }
-    //};
 
     var datasets1 = listH;
 
@@ -310,17 +286,9 @@ function creatingTables(data) {
         
 
     }
-    // Creating first chart: prices by days to expiration.
+    // Creating charts.
     function flotPlotMyData1(datasets1, nCurrData, xTicksH, noAssets) {
-        //-- hard-code color indices to prevent them from shifting as
-        //-- countries are turned on/off
-
-        //var i = 0;
-        //$.each(datasets1, function (key, val) {
-        //    val.color = i;
-        //    ++i;
-        //});
-
+        
         var dataB = [];
         $.each(datasets1, function (key) {
             dataB.push(datasets1[key]);
@@ -347,19 +315,12 @@ function creatingTables(data) {
                     noColumns: noAssets,
                     backgroundColor: "#F4F6F6"
                 },
-                //colors: ["#0022FF", "#148F77", "#CB4335"],
                 grid: {
                     backgroundColor: "#F4F6F6",
                     hoverable: true
                 },
                 tooltip: {
                     show: true,
-                    //    },
-                    //    tooltipOpts: {
-                    ////    content: function (label, xval, yval) {
-                    ////        var content = "%s %x " + yval;
-                    ////        return content;
-                    ////    }
                     content: function (label, x, y) {
                         var xVals = [];
                         for (var i = 0; i < nCurrData; i++) {
@@ -379,14 +340,8 @@ function creatingTables(data) {
             });
 
     }
-    // Creating first chart: prices by days to expiration.
+    
     function flotPlotMyData2(datasets2, nCurrData, xTicksH) {
-
-        //var i = 0;
-        //$.each(datasets2, function (key, val) {
-        //    val.color = i;
-        //    ++i;
-        //});
 
         var dataB = [];
         $.each(datasets2, function (key) {
@@ -422,22 +377,14 @@ function creatingTables(data) {
                 },
                 tooltip: {
                     show: true,
-                    //    },
-                    //    tooltipOpts: {
-                    ////    content: function (label, xval, yval) {
-                    ////        var content = "%s %x " + yval;
-                    ////        return content;
-                    ////    }
                     content: function (label, x, y) {
                         var xVals = [];
                         for (var i = 0; i < nCurrData; i++) {
                             xVals[i] = dataB[0].data[i][0];
                         };
                         var indi = xVals.indexOf(x);
-                        //var text = "<i>"+dataB[0].data[indi][0] +"day % change:<br/></i>";
                         var text = "<b>" + label + "<br/></b><i>Index Values on " + xTicksH[indi][1] + "<br/></i>";
                         dataB.forEach(function (series) {
-                            // series_label : value
                             text += series.label + ' : ' + series.data[indi][1] + "<br/>";
                         });
 
@@ -450,12 +397,6 @@ function creatingTables(data) {
     }
   
     function flotPlotMyData3(datasets3, nCurrData, xTicksH) {
-
-        //var i = 0;
-        //$.each(datasets3, function (key, val) {
-        //    val.color = i;
-        //    ++i;
-        //});
 
         var dataB = [];
         $.each(datasets3,function (key) {
@@ -491,23 +432,15 @@ function creatingTables(data) {
                 },
                 tooltip: {
                     show: true,
-                //    },
-                //    tooltipOpts: {
-                ////    content: function (label, xval, yval) {
-                ////        var content = "%s %x " + yval;
-                ////        return content;
-                ////    }
                     content: function (label, x, y) {
                         var xVals = [];
                         for (var i = 0; i < nCurrData; i++) {
                             xVals[i] = dataB[0].data[i][0];
                         };
                         var indi = xVals.indexOf(x);
-                        //var text = "<i>"+dataB[0].data[indi][0] +"day % change:<br/></i>";
                         var text = "<b>" + label + "<br/></b><i>Relative Strength Indexes on " + xTicksH[indi][1] + "<br/></i>";
                         dataB.forEach(function (series) {
-                            // series_label : value
-                            text += series.label + ' : ' + series.data[indi][1] + "<br/>";
+                        text += series.label + ' : ' + series.data[indi][1] + "<br/>";
                         });
 
                         return text;
