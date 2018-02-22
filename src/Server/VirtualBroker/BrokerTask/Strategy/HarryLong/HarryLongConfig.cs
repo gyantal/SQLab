@@ -36,8 +36,9 @@ namespace VirtualBroker
         //>-Also forced liquidation risk is eliminated.
         //>-Also missing trades are eliminated when there is no TVIX available for shorting.
         //>-In brief, this is the less performance, but safer trade.Let's do SVXY.
-        public string[] Tickers = new string[] { "SVXY", "TMV", "UWT", "UGAZ" };      // portfolio defaults
-
-        public double[] AssetsWeights = new double[] { 0.70, -0.71, -0.07, -0.22 }; // portfolio defaults, Markowitz MPT optimal weight using 135% allocation. With daily rebalancing it is safe.
+        //public string[] Tickers = new string[] { "SVXY", "TMV", "UWT", "UGAZ" };      // portfolio defaults until 2018-02-21
+        //public double[] AssetsWeights = new double[] { 0.70, -0.71, -0.07, -0.22 }; // portfolio defaults until 2018-02-21, Markowitz MPT optimal weight using 135% allocation. With daily rebalancing it is safe.
+        public string[] Tickers = new string[] { "SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" };      // portfolio defaults after 2018-02-21
+        public double[] AssetsWeights = new double[] { 0.15, -0.05, 0.10, 0.20, -0.85, -0.09, -0.26 }; // portfolio defaults after 2018-02-21
     }
 }

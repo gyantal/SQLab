@@ -207,8 +207,8 @@ namespace VirtualBroker
                     { BrokerTaskSetting.OrderExecution, OrderExecution.Market },
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
-                        new BrokerTaskPortfolio() { Name = "! Harry Long (Contango-Bond) harvester Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
-                            MaxTradeValueInCurrency = 15000, // For Agy: portfolio is 5K original. Set MaxValue=20K  (assuming portfolio double in a year)
+                        new BrokerTaskPortfolio() { Name = "! HarryLong2(Contango-Bond) harvester Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
+                            MaxTradeValueInCurrency = 40000, // For Agy: portfolio is 50K original. Set MaxValue=40K  (HarryLong shouldn't trade more than that, because it is only a small adjustment every day)
                             MinTradeValueInCurrency = 100,
                             Param = new PortfolioParamHarryLong() { } },
                         // 2018-02-06: when VIX went to 50 in market panic, XIV was terminated, I thought it is better to retire this for DC. 200K portfolio ended in 130K. About -70K loss. He wouldn't like to continue that.
@@ -248,7 +248,7 @@ namespace VirtualBroker
                 StartTimeOffset = TimeSpan.FromSeconds(-11),    // Give UberVXX priority (executing at -15sec). That is more important because that can change from full 100% long to -200% short. This Harry Long strategy just slowly modifies weights, so if one trade is missed, it is not a problem.
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, false } }
             });
-            g_taskSchemas.Add(harryLongTaskSchema);
+            //g_taskSchemas.Add(harryLongTaskSchema);
 
         }
 

@@ -22,7 +22,7 @@ export class LEtf extends Strategy {
         if ((p_subStrategyId == "idMenuItemLETFDiscrRebToNeutral") || (p_subStrategyId == "idMenuItemLETFDiscrAddToWinner"))
             this.SetParams("idParamSetHL_-50URE_-50SRS");
         else if (p_subStrategyId == "idMenuItemLETFHarryLong")
-            this.SetParams("idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy5");
+            this.SetParams("idParamSetHL_-50Comb.SQ_-120H_coctailAgy6");
         return true;
     }
 
@@ -178,9 +178,21 @@ export class LEtf extends Strategy {
                 this.assetsConstantWeightPct = "-70,171,-17,-52,0,0,0,0";   // %, negative is Short
                 break;
             case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy5":   // Markowitz MPT optimal weight using 135% allocation
-            default:
                 this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "-70,213,-21,-66,0,0,0,0";   // %, negative is Short
+                break;
+            case "idParamSetHL_-50Comb.SQ_-80H_coctailAgy6":   // shortVol is 50%, Hedge: 80%
+                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "15,-5, 10, 20, 171,-15,-54,0,0,0,0";   // %, negative is Short
+                break;
+            case "idParamSetHL_-50Comb.SQ_-100H_coctailAgy6":   // shortVol is 50%, Hedge: 100%
+                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "15,-5, 10, 20, 213,-21,-66,0,0,0,0";   // %, negative is Short
+                break;
+            case "idParamSetHL_-50Comb.SQ_-120H_coctailAgy6":   // shortVol is 50%, Hedge: 120%
+            default:
+                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "15,-5, 10, 20, 255,-27,-78,0,0,0,0";   // %, negative is Short
                 break;
         }
     }
