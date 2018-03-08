@@ -107,7 +107,7 @@ namespace VirtualBroker
 
 
 
-                // 1. if there are tickers without data, subribe to them, wait for them, get the data
+                // 1. if there are tickers without data, subscribe to them, wait for them, get the data
                 if (nTempTickers > 0)   // try to enter the Critical section ONLY if it is necessary. Try to not LOCK threads unnecessarily
                 {
                     lock (BrokerWrapper)  // RequestMarketData will use gBrokerApi; so Synch it as a Critical section
@@ -123,7 +123,8 @@ namespace VirtualBroker
                                 {
                                     int mktDataId = BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract(tickerList[i].Item1), true,
                                         (cb_mktDataId, cb_mktDataSubscr, cb_tickType, cb_price) => {
-                                            Console.WriteLine($"{cb_mktDataSubscr.Contract.Symbol} : {cb_tickType}: {cb_price}");
+                                            Utils.Logger.Trace($"{cb_mktDataSubscr.Contract.Symbol} : {cb_tickType}: {cb_price}");
+                                            //Console.WriteLine($"{cb_mktDataSubscr.Contract.Symbol} : {cb_tickType}: {cb_price}");  // better not clutter the console
                                             if ((cb_tickType == TickType.LAST) || 
                                                 (((cb_tickType == TickType.ASK) || (cb_tickType == TickType.BID)) && (cb_mktDataSubscr.Contract.SecType != "IND"))) // for stocks or for Futures
                                             priceTickARE.Set();
@@ -189,8 +190,8 @@ namespace VirtualBroker
                                     iTimeoutCount++;
                             }
 
-                            Console.WriteLine($"Waiting for RT prices: {(DateTime.UtcNow - waitStartTime).TotalMilliseconds} ms.");
-                            
+                            //Console.WriteLine($"Waiting for RT prices: {(DateTime.UtcNow - waitStartTime).TotalMilliseconds} ms.");  // don't clutter Console
+                            Utils.Logger.Trace($"Waiting for RT prices: {(DateTime.UtcNow - waitStartTime).TotalMilliseconds} ms.");
 
 
                         }

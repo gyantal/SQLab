@@ -547,7 +547,8 @@ namespace VirtualBroker
 
             if (!mktDataSubscription.IsAnyPriceArrived)
             {
-                Console.WriteLine($"Firstprice: {mktDataSubscription.Contract.Symbol}, {TickType.getField(field)}, {price}");
+                //Console.WriteLine($"Firstprice: {mktDataSubscription.Contract.Symbol}, {TickType.getField(field)}, {price}");  // don't clutter Console
+                Utils.Logger.Trace($"Firstprice: {mktDataSubscription.Contract.Symbol}, {TickType.getField(field)}, {price}");
                 mktDataSubscription.IsAnyPriceArrived = true;
             }
 

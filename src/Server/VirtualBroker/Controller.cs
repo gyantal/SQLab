@@ -210,7 +210,10 @@ namespace VirtualBroker
                         new BrokerTaskPortfolio() { Name = "! HarryLong2(Contango-Bond) harvester Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
                             MaxTradeValueInCurrency = 40000, // For Agy: portfolio is 50K original. Set MaxValue=40K  (HarryLong shouldn't trade more than that, because it is only a small adjustment every day)
                             MinTradeValueInCurrency = 100,
-                            Param = new PortfolioParamHarryLong() { } },
+                            Param = new PortfolioParamHarryLong() {
+                                // The default short UWT is changed to long DWT until UWT becomes shortable... 2018-02-23:  UWT becomes shortable, so this section is commented and reverting to default params
+                                //Tickers = new string[] { "SVXY", "VXX", "ZIV", "TQQQ", "TMV", "DWT", "UGAZ" }, AssetsWeights = new double[] {  0.15, -0.05, 0.10, 0.20, -0.85, 0.09, -0.26 }
+                            } },
                         // 2018-02-06: when VIX went to 50 in market panic, XIV was terminated, I thought it is better to retire this for DC. 200K portfolio ended in 130K. About -70K loss. He wouldn't like to continue that.
                         //new BrokerTaskPortfolio() { Name = "! Harry Long (Contango-Bond) harvester Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
                         //    MaxTradeValueInCurrency = 600000, // For Mr.C.: portfolio is 200K original. Set MaxValue=400K  (assuming portfolio double in a year)
@@ -219,7 +222,10 @@ namespace VirtualBroker
                         new BrokerTaskPortfolio() { Name = "! IB T. Risky 2 Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.TuSecondary,
                             MaxTradeValueInCurrency = 15000, // For Tu: portfolio is 5K original. Set MaxValue=15K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 200,
-                            Param = new PortfolioParamHarryLong() {  } }
+                            Param = new PortfolioParamHarryLong() {
+                                // UWT short is changed to long DWT until UWT becomes shortable...
+                                Tickers = new string[] { "SVXY", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] {  0.20, 0.10, 0.25, -0.85, -0.09, -0.26 } // for T. It is safer if we don't have to login and check the shortVXX position. On the top of it, VXX $pos would be under $200, not traded by VBroker.
+                            } }
                         }
                     }
                 }
@@ -248,7 +254,7 @@ namespace VirtualBroker
                 StartTimeOffset = TimeSpan.FromSeconds(-11),    // Give UberVXX priority (executing at -15sec). That is more important because that can change from full 100% long to -200% short. This Harry Long strategy just slowly modifies weights, so if one trade is missed, it is not a problem.
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, false } }
             });
-            //g_taskSchemas.Add(harryLongTaskSchema);
+            g_taskSchemas.Add(harryLongTaskSchema);
 
         }
 

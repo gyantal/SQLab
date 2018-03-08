@@ -22,7 +22,7 @@ namespace VirtualBroker
             {
                 BinaryReader br = new BinaryReader(p_tcpClient.GetStream());
                 message = (new VirtualBrokerMessage()).DeserializeFrom(br);
-                Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg.ID:{message.ID}, Param:{message.ParamStr}");  // user can quickly check from Console the messages
+                //Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg.ID:{message.ID}, Param:{message.ParamStr}");  // user can quickly check from Console the messages. It is good in HealthMonitor, but in VBroker we don't want to clutter the Console.
                 Utils.Logger.Info($"Controller.ProcessTcpClient(): Message ID:\"{ message.ID}\", ParamStr: \"{ message.ParamStr}\", ResponseFormat: \"{message.ResponseFormat}\"");
                 if (message.ResponseFormat == VirtualBrokerMessageResponseFormat.None)
                 {
@@ -61,7 +61,8 @@ namespace VirtualBroker
             BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
             bw.Write(reply);
 
-            Console.WriteLine($"<TEMP Until DEV>GetRealtimePrice(). Query:'{p_message.ParamStr}', Reply:'{reply}'.");
+            //Console.WriteLine($"<TEMP Until DEV>GetRealtimePrice(). Query:'{p_message.ParamStr}', Reply:'{reply}'.");  // don't clutter Console
+            Utils.Logger.Trace($"TcpListener.GetRealtimePrice(). Query:'{p_message.ParamStr}', Reply:'{reply}'.");
         }
     }
 }

@@ -57,7 +57,7 @@ namespace SqCommon
                 {
                     var tcpListenerCurrentClientTask = m_tcpListener.AcceptTcpClientAsync();
                     var tcpClient = tcpListenerCurrentClientTask.Result;        // Task.Result is blocking. OK.
-                    Console.WriteLine($"TcpListenerLoop.NextClientAccepted.");
+                    //Console.WriteLine($"TcpListenerLoop.NextClientAccepted.");
                     Utils.Logger.Info($"TcpListenerLoop.NextClientAccepted.");
                     if (Utils.MainThreadIsExiting.IsSet)
                         return; // if App is exiting gracefully, don't start new thread
