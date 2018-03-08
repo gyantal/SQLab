@@ -36,61 +36,27 @@ namespace SqCommon
 
         public const int DefaultHealthMonitorServerPort = 52100;    // largest port number: 65535, HealthMonitor listens on 52100, VBroker on 52101
 
+        static DateTime gLastMessageTime = DateTime.MinValue;   // be warned, this is global for the whole App; better to not use it, because messages can be swallowed silently. HealthMonitor itself should decide if it swallows it or not, and not the SenderApp.
+
+
         public static void InitGlobals(string p_host, int p_port)
         {
             TcpServerHost = p_host;
             TcpServerPort = p_port;
         }
 
-        // all the exceptions are sent, because they are important Even if many happens in a 30 minutes period
-        public static void SendException(string p_locationMsg, Exception p_e, HealthMonitorMessageID p_healthMonId)
+        // In general try to send All the exceptions and messages to HealthMonitor, even though it is CPU busy. It will be network busy anyway. It is the responsibility of HealthMonitor to decide their fate.
+        // VBroker or SQLab website don't use p_globalMinTimeBetweenMessages, but maybe other crawler Apps will use it in the future. So keep the functionality, but without strong reason don't use it.
+        public static async Task SendAsync(string p_fullMsg, HealthMonitorMessageID p_healthMonId, TimeSpan? p_globalMinTimeBetweenMessages = null)
         {
-            //Utils.Logger.Warn($"HealthMonitorMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
-            Utils.Logger.Warn($"HealthMonitorMessage.SendException(): Exception occured in {p_locationMsg}. Exception: '{ p_e.ToString()}'");
-            if (!(new HealthMonitorMessage()
-            {
-                ID = p_healthMonId,
-                ParamStr = $"Exception in {p_locationMsg}. Exception: '{ p_e.ToStringWithShortenedStackTrace(400)}'",
-                ResponseFormat = HealthMonitorMessageResponseFormat.None
-            }.SendMessage().Result))
-            {
-                Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
-            }
-        }
-
-        // all the exceptions are sent, because they are important Even if many happens in a 30 minutes period
-        public static void Send(string p_fullMsg, HealthMonitorMessageID p_healthMonId)
-        {
-            Utils.Logger.Info($"HealthMonitorMessage.Send(): '{p_fullMsg }' ");
-            if (!(new HealthMonitorMessage()
-            {
-                ID = p_healthMonId,
-                ParamStr = p_fullMsg,
-                ResponseFormat = HealthMonitorMessageResponseFormat.None
-            }.SendMessage().Result))
-            {
-                Utils.Logger.Error("Error in sending HealthMonitorMessage to Server.");
-            }
-        }
-
-
-        public static void SendStrongAssert(string p_locationMsg, StrongAssertMessage p_msg, HealthMonitorMessageID p_healthMonId)
-        {
-            Send(p_locationMsg, $"StrongAssert Warning (if Severity is NoException, it is just a mild Warning. If Severity is ThrowException, that exception triggers a separate message to HealthMonitor as an Error). Severity: {p_msg.Severity}, Message: { p_msg.Message}, StackTrace: { p_msg.StackTrace}", p_healthMonId);
-        }
-
-        static DateTime gLastMessageTime = DateTime.MinValue;
-
-        public static async void Send(string p_locationMsg, string p_msg, HealthMonitorMessageID p_healthMonId)
-        {
-            //Utils.Logger.Warn($"HealthMonitorMessage.SendException(). Crash in { p_locationMsg}. Exception Message: '{ e.Message}', StackTrace: { e.StackTrace}");
-            Utils.Logger.Warn($"HealthMonitorMessage.Send(): Msg from {p_locationMsg}. Message: '{ p_msg}'");
-            if ((DateTime.UtcNow - gLastMessageTime).TotalMinutes > 30)   // don't send it in every minute, just after 30 minutes
+            Utils.Logger.Warn($"HealthMonitorMessage.SendAsync(): Message: '{ p_fullMsg}'");
+            TimeSpan globalMinTimeBetweenMessages = p_globalMinTimeBetweenMessages ?? TimeSpan.MinValue;
+            if ((DateTime.UtcNow - gLastMessageTime) > globalMinTimeBetweenMessages)   // don't send it in every minute, just after e.g. 30 minutes
             {
                 var t = (new HealthMonitorMessage()
                 {
                     ID = p_healthMonId,
-                    ParamStr = $"Msg from {p_locationMsg}. {p_msg}",
+                    ParamStr = p_fullMsg,
                     ResponseFormat = HealthMonitorMessageResponseFormat.None
                 }.SendMessage());
 
@@ -120,25 +86,44 @@ namespace SqCommon
 
         public async Task<bool> SendMessage()
         {
+            bool reply = false;
             try {
                 TcpClient client = new TcpClient();
-                Task task = client.ConnectAsync(TcpServerHost, TcpServerPort);
-                if (await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10))) != task)
+                Task connectTask = client.ConnectAsync(TcpServerHost, TcpServerPort);
+                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10)));
+                if (completedTask == connectTask)
                 {
-                    Utils.Logger.Error("Error:HealthMonitor server: client.Connect() timeout.");
-                    return false;
+                    // Task completed within timeout.
+                    // Consider that the task may have faulted or been canceled.
+                    // We re-await the task so that any exceptions/cancellation is rethrown.
+                    Utils.Logger.Debug("HealthMonitorMessage.SendMessage(). client.ConnectAsync() completed without timeout.");
+                    //delayTaskCancellationTokenSource.Cancel();  // Task.Delay task is backed by a system timer. Release those resources instead of waiting for 30sec; Was done in VirtualBrokerMessag.cs, but it is not important here.
+                    await connectTask;  // Very important in order to propagate exceptions
+                                        // sometimes task ConnectAsync() returns instantly (no timeout), but there is an error in it. Which results an hour later: "TaskScheduler_UnobservedTaskException. Exception. A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. "
+                    if (connectTask.Exception != null)
+                    {
+                        Utils.Logger.Error(connectTask.Exception, "Error:HealthMonitorMessage.SendMessage(). Exception in ConnectAsync() task.");
+                    }
+                    else
+                    {
+                        BinaryWriter bw = new BinaryWriter(client.GetStream());
+                        SerializeTo(bw);
+                        reply = true;
+                    }
                 }
-
-                BinaryWriter bw = new BinaryWriter(client.GetStream());
-                SerializeTo(bw);
+                else  // timeout/cancellation logic
+                {
+                    //throw new TimeoutException("The operation has timed out.");
+                    Utils.Logger.Error("Error:HealthMonitorMessage.SendMessage(). client.ConnectAsync() timeout.");
+                    connectTask.Dispose();  // try to Cancel the long running ConnectAsync() task, so it does'nt raise exception 2 days later.
+                }
                 Utils.TcpClientDispose(client);
-                return true;
             }
             catch (Exception e)
             {
                 Utils.Logger.Error(e, "Error:HealthMonitorMessage.SendMessage exception.");
-                return false;
             }
+            return reply;
         }
     }
 

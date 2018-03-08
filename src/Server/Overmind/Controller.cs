@@ -467,7 +467,7 @@ namespace Overmind
             //if (Math.Abs(todayPercentChange) >= 0.04)
             if (Math.Abs(todayPercentChange) >= 0.00)
             {
-                new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: BIDU price % move", Body = "BIDU price % move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.SendAsync().FireAndForgetAndLogErrorTask();
+                new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: BIDU price % move", Body = "BIDU price % move. In percentage: " + (todayPercentChange * 100).ToString("0.00") + @"%", IsBodyHtml = false }.SendAsync().FireParallelAndForgetAndLogErrorTask();
 
                 Console.WriteLine("Email was sent.");
                 Utils.Logger.Info("Email was sent.");
@@ -502,7 +502,7 @@ namespace Overmind
                 Subject = "OvermindServer: Amazon price warning: Time to buy Sennheiser GAME ZERO now",
                 Body = $"Time to buy Sennheiser GAME ZERO now. Amazon price dropped from 199.99 to {priceStr}. Go to https://www.amazon.co.uk/Electronics-Sennheiser-Professional-blocking-gaming-headset-Black/dp/B00JQDOANK/ and buy headset now. See '2016-05, Sennheiser buying.txt'. ",
                 IsBodyHtml = false
-            }.SendAsync().FireAndForgetAndLogErrorTask();
+            }.SendAsync().FireParallelAndForgetAndLogErrorTask();
 
         }
     }

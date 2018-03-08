@@ -157,7 +157,7 @@ namespace VirtualBroker
             catch (Exception e)
             {
                 Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() in catching exception.");
-                HealthMonitorMessage.SendException("ReConnectToGateways Thread", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+                HealthMonitorMessage.SendAsync($"Exception in ReConnectToGatewaysThread(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
             }
             Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() END");
         }

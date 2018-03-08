@@ -45,8 +45,8 @@ namespace VirtualBroker
                 brokerTask.Run();
             }
             catch (Exception e)
-            {
-                HealthMonitorMessage.SendException("BrokerTaskExecutionThreadRun Exception: ", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker); // don't send Email here. HealthMonitor will decide what to do
+            {                
+                HealthMonitorMessage.SendAsync($"Exception in BrokerTaskExecutionThreadRun(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
             }
         }
     }

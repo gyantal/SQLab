@@ -164,8 +164,8 @@ namespace VirtualBroker
             // Otherwise, maybe a trading Error, exception.
             // Maybe IBGateways were shut down. In which case, we cannot continue this VBroker App, because we should restart IBGateways, and reconnect to them by restarting VBroker.
             // Try to send HealthMonitor message and shut down the VBroker.
-            Utils.Logger.Error("Unexpected BrokerWrapperIb.error(). Exception thrown: " + e);
-            HealthMonitorMessage.SendException($"Unexpected  BrokerWrapperIb.error()", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+            Utils.Logger.Error("Unexpected BrokerWrapperIb.error(). Exception thrown: " + e);           
+            HealthMonitorMessage.SendAsync($"Exception in Unexpected  BrokerWrapperIb.error(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
             throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
         }
 
@@ -174,7 +174,7 @@ namespace VirtualBroker
             string errMsg = "BrokerWrapper.error(). " + p_str;
             Console.WriteLine(errMsg);
             Utils.Logger.Error(errMsg);
-            HealthMonitorMessage.Send($"BrokerWrapperIb.error()", errMsg, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+            HealthMonitorMessage.SendAsync($"Msg from BrokerWrapperIb.error(). {errMsg}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).FireParallelAndForgetAndLogErrorTask();
             //If there is a single trading error, we may want to continue, so don't terminate the thread or the App, just inform HealthMonitor.
             //throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
         }

@@ -337,8 +337,9 @@ namespace SqCommon
         //}
 
         // https://stackoverflow.com/questions/22629951/suppressing-warning-cs4014-because-this-call-is-not-awaited-execution-of-the
-        public static void FireAndForgetAndLogErrorTask(this Task task)
+        public static void FireParallelAndForgetAndLogErrorTask(this Task task)
         {
+            // task is called without await, so it doesn't wait; it will run parallel. "await task.ContinueWith()" would wait the task
             task.ContinueWith(
                 t => { Utils.Logger.Error(t.Exception.ToString()); },
                 TaskContinuationOptions.OnlyOnFaulted);
@@ -364,11 +365,11 @@ namespace SqCommon
         {
             if (p_tcpClient == null)
                 return;
-#if DNX451 || NET451
-            p_tcpClient.Close();
-#else
+//#if DNX451 || NET451
+//            p_tcpClient.Close();
+//#else
             p_tcpClient.Dispose();
-#endif
+//#endif
         }
 
         public static bool InitDefaultLogger(string p_filenameWithoutExt)

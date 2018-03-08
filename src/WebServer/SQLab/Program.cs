@@ -72,7 +72,7 @@ namespace SQLab
             }
             catch (Exception e)
             {
-                HealthMonitorMessage.SendException("Website.C#.MainThread", e, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+                HealthMonitorMessage.SendAsync($"Exception in Website.C#.MainThread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).RunSynchronously();
             }
         }
 
@@ -192,7 +192,7 @@ namespace SQLab
             //>Solution: It is inevitable that crooks tries this query-and-abort and Kestrel is written badly that it doesn't handle Abortion properly.
             //So, in UnobservedTaskException() filters these aborts and don't send it to HealthMonitor.
             if (RequestLoggingMiddleware.IsSendableToHealthMonitorForEmailing(e.Exception))
-                HealthMonitorMessage.SendException("Website.C#.TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+                HealthMonitorMessage.SendAsync($"Exception in Website.C#.TaskScheduler_UnobservedTaskException. Exception: '{ e.Exception.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).RunSynchronously();
             e.SetObserved();        //  preventing it from triggering exception escalation policy which, by default, terminates the process.
 
             Task senderTask = (Task)sender;
@@ -211,7 +211,7 @@ namespace SQLab
         internal static void StrongAssertMessageSendingEventHandler(StrongAssertMessage p_msg)
         {
             Utils.Logger.Info("StrongAssertEmailSendingEventHandler()");
-            HealthMonitorMessage.SendStrongAssert("Website.C#.StrongAssert", p_msg, HealthMonitorMessageID.ReportErrorFromSQLabWebsite);
+            HealthMonitorMessage.SendAsync($"Msg from Website.C#.StrongAssert. StrongAssert Warning (if Severity is NoException, it is just a mild Warning. If Severity is ThrowException, that exception triggers a separate message to HealthMonitor as an Error). Severity: {p_msg.Severity}, Message: { p_msg.Message}, StackTrace: { p_msg.StackTrace}", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).FireParallelAndForgetAndLogErrorTask();
         }
 
 

@@ -291,7 +291,9 @@ namespace VirtualBroker
             Task taskGood2 = Task.Factory.StartNew(x =>
             {
                 try { throw new Exception("Test Exception in a Task"); }
-                catch (Exception e) { HealthMonitorMessage.SendException("Task1 Thread", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker); }
+                catch (Exception e) {
+                    HealthMonitorMessage.SendAsync($"Exception in Task1 Thread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
+                }
             }, TaskCreationOptions.LongRunning);
         }
 

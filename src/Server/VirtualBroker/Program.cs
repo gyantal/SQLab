@@ -100,7 +100,7 @@ namespace VirtualBroker
             }
             catch (Exception e)
             {
-                HealthMonitorMessage.SendException("VBroker Main Thread", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+                HealthMonitorMessage.SendAsync($"Exception in VBroker Main Thread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
             }
 
         }
@@ -108,7 +108,7 @@ namespace VirtualBroker
         // Occurs when a faulted task's unobserved exception is about to trigger exception which, by default, would terminate the process.
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
-            HealthMonitorMessage.SendException("VBroker TaskScheduler_UnobservedTaskException", e.Exception, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+            HealthMonitorMessage.SendAsync($"Exception in VBroker TaskScheduler_UnobservedTaskException. Exception: '{ e.Exception.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
             e.SetObserved();        //  preventing it from triggering exception escalation policy which, by default, terminates the process.
 
             Task senderTask = (Task)sender;
@@ -130,7 +130,8 @@ namespace VirtualBroker
         internal static void StrongAssertMessageSendingEventHandler(StrongAssertMessage p_msg)
         {
             Utils.Logger.Info("StrongAssertEmailSendingEventHandler()");
-            HealthMonitorMessage.SendStrongAssert("VirtualBroker", p_msg, (p_msg.Severity == Severity.NoException) ? HealthMonitorMessageID.ReportWarningFromVirtualBroker: HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+            HealthMonitorMessage.SendAsync($"Msg from VirtualBroker. StrongAssert Warning (if Severity is NoException, it is just a mild Warning. If Severity is ThrowException, that exception triggers a separate message to HealthMonitor as an Error). Severity: {p_msg.Severity}, Message: { p_msg.Message}, StackTrace: { p_msg.StackTrace}",
+                (p_msg.Severity == Severity.NoException) ? HealthMonitorMessageID.ReportWarningFromVirtualBroker : HealthMonitorMessageID.ReportErrorFromVirtualBroker).FireParallelAndForgetAndLogErrorTask();
         }
 
 

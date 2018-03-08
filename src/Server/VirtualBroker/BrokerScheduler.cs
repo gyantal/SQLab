@@ -53,8 +53,8 @@ namespace VirtualBroker
             }
             catch (Exception e)
             {
-                //  Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.
-                HealthMonitorMessage.SendException("BrokerScheduler.RecreateTasksAndLoop Thread", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);
+                //  Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.               
+                HealthMonitorMessage.SendAsync($"Exception in BrokerScheduler.RecreateTasksAndLoopThread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
             }
         }
 
