@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
+// A common base used both in VBroker and SQLab website. (E.g. for realtime price communication)
 namespace SqCommon
 {
     public enum VirtualBrokerMessageID      // messages To VirtualBroker (from other programs: e.g. website for realtime price)
