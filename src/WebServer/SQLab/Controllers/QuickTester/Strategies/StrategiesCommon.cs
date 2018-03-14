@@ -85,8 +85,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^GSPC,SVXY,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction";    // even if IB doesn't support ticker ^GSPC, we implemented it in the RealTime App
             //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r => r.EndsWith(".SQ") ? r.Substring(0, r.Length - ".SQ".Length) : r) + "&f=l&jsonp=myCallbackFunction";
             //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r =>r)) + "&f=l&jsonp=myCallbackFunction";
-            string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r => r.EndsWith(".SQ") ? r.Substring(0, r.Length - ".SQ".Length) : r)) + "&f=l&jsonp=myCallbackFunction";
-            string realtimeQuoteUriQuery = "?s=" + String.Join(",", p_tickers.Select(r => r.EndsWith(".SQ") ? r.Substring(0, r.Length - ".SQ".Length) : r)) + "&f=l&jsonp=myCallbackFunction";
+            //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r => r.EndsWith(".SQ") ? r.Substring(0, r.Length - ".SQ".Length) : r)) + "&f=l&jsonp=myCallbackFunction";
+            string realtimeQuoteUriQuery = "?s=" + String.Join(",", p_tickers.Select(r => SqlTools.GetBaseTicker(r,r))) + "&f=l&jsonp=myCallbackFunction";
 
             try
             {
@@ -117,15 +117,16 @@ namespace SQLab.Controllers.QuickTester.Strategies
                             string lastPriceStr;
                             if (!dict.TryGetValue("Last", out lastPriceStr))
                                 return;
-
-                            int tickerInd = p_tickers.IndexOf(symbol);
-                            if (tickerInd == -1)
-                                tickerInd = p_tickers.IndexOf(symbol + ".SQ");
-                            if (tickerInd != -1)
+                            double lastPrice = 0.0;
+                            if (Double.TryParse(lastPriceStr, out lastPrice))
                             {
-                                double lastPrice = 0.0;
-                                if (Double.TryParse(lastPriceStr, out lastPrice))
-                                    rtPrices[tickerInd] = lastPrice;
+                                for (int i = 0; i < p_tickers.Count; i++)       // "SVXY!Light0.5x.SQ", "SVXY.SQ", "SVXY" all require the same realtime price coming from "SVXY"
+                                {
+                                    if (SqlTools.GetBaseTicker(p_tickers[i], p_tickers[i]) == symbol)
+                                    {
+                                        rtPrices[i] = lastPrice;
+                                    }
+                                }
                             }
                         }); //realtimeAnswerObj.ForEach
 
@@ -209,10 +210,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             returnQuotes = p_tickers.Select(ticker =>
             {
-                string tickerWithoutDotSQ = "";
-                if (ticker.EndsWith(".SQ"))
-                    tickerWithoutDotSQ = ticker.Substring(0, ticker.Length - ".SQ".Length);
-                return sqlReturn.Where(row => (string)row[0] == ticker || (string)row[0] == tickerWithoutDotSQ).Select(
+                IEnumerable<object[]> mergedRows = SqlTools.GetTickerAndBaseTickerRows(sqlReturn, ticker);
+                return mergedRows.Select(
                     row => new DailyData()
                     {
                         Date = ((DateTime)row[1]),

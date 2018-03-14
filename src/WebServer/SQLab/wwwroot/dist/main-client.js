@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "c4281384467fbc8005ec"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "6590abcd1140e7d7d6ba"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -769,6 +769,7 @@ var Strategy = (function () {
         console.log("StartBacktest() 2");
         //var url = "http://localhost/qt?StartDate=&EndDate=&strategy=AdaptiveUberVxx&BullishTradingInstrument=Long%20SPY&param=UseKellyLeverage=false;MaxLeverage=1.0&Name=Fomc&Priority=3&Combination=Avg&StartDate=&EndDate=&TradingStartAt=2y&Param=&Name=Holiday&Priority=&Combination=&StartDate=&EndDate=&TradingStartAt=&Param=&Name=TotM&Priority=2&Combination=Avg&StartDate=&EndDate=&TradingStartAt=2y&Param=TrainingTicker=SPY&Name=Connor&Priority=1&Combination=Avg&StartDate=&EndDate=&TradingStartAt=100td&Param=LookbackWindowDays=100;ProbDailyFTThreshold=47
         var url = "/qt?" + p_generalInputParameters + "&strategy=" + this.GetWebApiName(p_subStrategyId) + this.GetStrategyParams(p_subStrategyId);
+        console.log("StartBacktest() 2, url: " + url);
         p_http.get(url)
             .map(function (res) { return res.json(); }) // Call map on the response observable to get the parsed people object
             .subscribe(function (data) {
@@ -2363,6 +2364,7 @@ var LEtf = (function (_super) {
         }
     };
     LEtf.prototype.GetStrategyParams = function (p_subStrategyId) {
+        console.log("LEtf.ts.GetStrategyParams() this.assets: " + this.assets);
         return "&Assets=" + this.assets + "&AssetsConstantWeightPct=" + this.assetsConstantWeightPct
             + "&RebalancingFrequency=" + this.rebalancingFrequency;
     };
@@ -2473,10 +2475,10 @@ var LEtf = (function (_super) {
                 this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "15,-5, 10, 20, 213,-21,-66,0,0,0,0"; // %, negative is Short
                 break;
-            case "idParamSetHL_-50Comb.SQ_-120H_coctailAgy6": // shortVol is 50%, Hedge: 120%
+            case "idParamSetHL_-50Comb.SQ_-120H_coctailAgy6": // shortVol is 55%, Hedge: 120%, introducing SVXY!Light0.5x.SQ
             default:
-                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
-                this.assetsConstantWeightPct = "15,-5, 10, 20, 255,-27,-78,0,0,0,0"; // %, negative is Short
+                this.assets = "SVXY!Light0.5x.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "15,-5, 10, 25, 255,-27,-78,0,0,0,0"; // %, negative is Short
                 break;
         }
     };

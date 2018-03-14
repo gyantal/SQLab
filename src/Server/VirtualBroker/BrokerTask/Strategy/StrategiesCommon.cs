@@ -39,10 +39,8 @@ namespace VirtualBroker
             // this sub-optimal data sorting takes 10msec for the 8 assets of TAA Global, with 12 years of data. So, don't optimize this. SQL query took 1200msec=1.2 sec or more.
             allQuotes = p_tickers.Select(ticker =>
             {
-                string tickerWithoutDotSQ = "";
-                if (ticker.EndsWith(".SQ"))
-                    tickerWithoutDotSQ = ticker.Substring(0, ticker.Length - ".SQ".Length);
-                return sqlReturn.Where(row => (string)row[0] == ticker || (string)row[0] == tickerWithoutDotSQ).Select(
+                IEnumerable<object[]> mergedRows = SqlTools.GetTickerAndBaseTickerRows(sqlReturn, ticker);
+                return mergedRows.Select(
                     row => new DailyData()
                     {
                         Date = ((DateTime)row[1]),

@@ -189,10 +189,10 @@ export class LEtf extends Strategy {
                 this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "15,-5, 10, 20, 213,-21,-66,0,0,0,0";   // %, negative is Short
                 break;
-            case "idParamSetHL_-50Comb.SQ_-120H_coctailAgy6":   // shortVol is 50%, Hedge: 120%
+            case "idParamSetHL_-50Comb.SQ_-120H_coctailAgy6":   // shortVol is 55%, Hedge: 120%, introducing SVXY!Light0.5x.SQ
             default:
-                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
-                this.assetsConstantWeightPct = "15,-5, 10, 20, 255,-27,-78,0,0,0,0";   // %, negative is Short
+                this.assets = "SVXY!Light0.5x.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "15,-5, 10, 25, 255,-27,-78,0,0,0,0";   // %, negative is Short
                 break;
         }
     }

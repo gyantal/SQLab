@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ExportHistoricalQuotesFromDB": {
+      "commandName": "Project",
+      "commandLineArgs": "- g:\\temp"
+    }
+  }
+}

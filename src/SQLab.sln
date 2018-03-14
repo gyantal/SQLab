@@ -67,6 +67,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SoftwareEngineering", "Soft
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B29FE86D-3E1D-4160-B5A4-18E6D46250A3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExportHistoricalQuotesFromDB", "Tools\ExportHistoricalQuotesFromDB\ExportHistoricalQuotesFromDB.csproj", "{5D52AA35-D5E0-49A8-BDB3-C1E3ABEB5322}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,10 @@ Global
 		{2A400819-8887-4432-9780-C04B0FBCED76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A400819-8887-4432-9780-C04B0FBCED76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A400819-8887-4432-9780-C04B0FBCED76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D52AA35-D5E0-49A8-BDB3-C1E3ABEB5322}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D52AA35-D5E0-49A8-BDB3-C1E3ABEB5322}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D52AA35-D5E0-49A8-BDB3-C1E3ABEB5322}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D52AA35-D5E0-49A8-BDB3-C1E3ABEB5322}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -144,6 +150,7 @@ Global
 		{DC204CAD-CC4E-426E-9CC0-F323D54F8C8F} = {7817B271-9B8B-40BE-BEF9-BA58816B8000}
 		{2A400819-8887-4432-9780-C04B0FBCED76} = {05727A52-ACAC-4B61-B892-316A58A2FD39}
 		{FDA385FB-B77B-4785-B57A-659E0D6D0DC6} = {7817B271-9B8B-40BE-BEF9-BA58816B8000}
+		{5D52AA35-D5E0-49A8-BDB3-C1E3ABEB5322} = {D949E6AE-0910-48FF-BFDF-6868234DD443}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {925DC6C5-9605-496B-B35C-0B0A1F4F0EBF}

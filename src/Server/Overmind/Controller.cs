@@ -368,10 +368,8 @@ namespace Overmind
 
             returnQuotes = tickers.Select(ticker =>
             {
-                string tickerWithoutDotSQ = "";
-                if (ticker.EndsWith(".SQ"))
-                    tickerWithoutDotSQ = ticker.Substring(0, ticker.Length - ".SQ".Length);
-                return sqlReturn.Where(row => (string)row[0] == ticker || (string)row[0] == tickerWithoutDotSQ).Select(
+                IEnumerable<object[]> mergedRows = SqlTools.GetTickerAndBaseTickerRows(sqlReturn, ticker);
+                return mergedRows.Select(
                     row => new DailyData()
                     {
                         Date = ((DateTime)row[1]),
