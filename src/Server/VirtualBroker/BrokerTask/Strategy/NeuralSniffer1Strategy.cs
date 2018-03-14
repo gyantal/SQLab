@@ -144,7 +144,7 @@ namespace VirtualBroker
                 Utils.Logger.Info("NeuralSniffer1Strategy.GeneratePositionSpecs() SqlTools.LoadHistoricalQuotesAsync().");
                 List<QuoteData> rutQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "^RUT", nQuotes =  lookbackWindowSize - 1 }}, DbCommon.AssetType.BenchmarkIndex).Result.
-                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)(float)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
+                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)Convert.ToDecimal(row[2]) }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
 
                 m_rut = rutQuotesFromSqlDB.Select(item => new QuoteData() { Date = item.Date, AdjClosePrice = item.AdjClosePrice }).ToList(); // Clone the SQL version, not YF
 

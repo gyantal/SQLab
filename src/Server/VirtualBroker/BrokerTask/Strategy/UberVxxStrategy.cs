@@ -139,7 +139,7 @@ namespace VirtualBroker
             int vxxLookbackWindowSize = 102;
             m_vxxQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "VXX", nQuotes = vxxLookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
-                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
+                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)Convert.ToDecimal(row[2]) }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
 
             // check that the last date in the CSV is what we expect: the previous market Open day
             //DateTime expectedUtcLastDateTime = DBUtils.GetPreviousMarketOpenDay(utcNow, StockExchangeID.NASDAQ, VBroker.g_dbManager); // it needs UTC input, result.TimeOfDay == local 00:00 converted to UTC; so it is <Date>:4:00 (UTC), so we should convert it back to Local
@@ -199,7 +199,7 @@ namespace VirtualBroker
             int lookbackWindowSize = (nYearsInTrainingSet + 1) * 260;  // we ask about 21 years, and we will cut it manually properly, to have exactly the same (20) January as February, as March, etc.
             m_spyQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = uberVxxConfig.TotM_TrainingSetTicker, nQuotes = lookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
-                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)row[2] }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
+                    Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)Convert.ToDecimal(row[2]) }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
 
             // log the last 3 values (for later debugging)
             Utils.Logger.Trace($"{m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_spyQuotesFromSqlDB[m_spyQuotesFromSqlDB.Count - 3].AdjClosePrice}");
