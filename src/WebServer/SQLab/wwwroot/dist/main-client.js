@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "6590abcd1140e7d7d6ba"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "4ea21e5437df4c0ecbb2"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -2364,7 +2364,6 @@ var LEtf = (function (_super) {
         }
     };
     LEtf.prototype.GetStrategyParams = function (p_subStrategyId) {
-        console.log("LEtf.ts.GetStrategyParams() this.assets: " + this.assets);
         return "&Assets=" + this.assets + "&AssetsConstantWeightPct=" + this.assetsConstantWeightPct
             + "&RebalancingFrequency=" + this.rebalancingFrequency;
     };

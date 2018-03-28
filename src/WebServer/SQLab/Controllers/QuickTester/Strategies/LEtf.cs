@@ -14,6 +14,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
         public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
         {
+            string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
+
             if (p_strategyName != "LETFDiscrRebToNeutral" && p_strategyName != "LETFDiscrAddToWinner" && p_strategyName != "LETFHarryLong")
                 return null;
             Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
@@ -89,15 +91,25 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 }
                 else
                 {
+
                     int indNeeded = tickersNeeded.IndexOf(tickers[i]);
+                    if (quotesNeeded[indNeeded].Count == 0)
+                    {
+                        errorToUser += $"No price quotes found for ticker '{tickers[i]}'. Consider UPPERCASE."; // Don't want to auto-convert tickers to Uppercase, because 'SVXY!Light0.5x.SQ' is a perfectly good ticker with lowercase letter. User should learn that SPY is different to 'spy'.
+                    }
                     quotes.Add(quotesNeeded[indNeeded]);
 
                 }
             }
 
-          
+          if (!String.IsNullOrEmpty(errorToUser))
+            {
+                StrategyResult stratResult1 = new StrategyResult() { errorMessage = errorToUser };
+                return JsonConvert.SerializeObject(stratResult1);
+            }
 
-            string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
+  
+
             StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(quotes, tickers, ref warningToUser, out DateTime commonAssetStartDate, out DateTime commonAssetEndDate);
 
             List<DailyData> pv = new List<DailyData>();
