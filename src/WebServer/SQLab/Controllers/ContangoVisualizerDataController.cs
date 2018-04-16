@@ -207,15 +207,16 @@ namespace SQLab.Controllers
 
             //Downloading live data from cmegroup.com.
             string webpageLive;
-            bool isOkLive = Utils.DownloadStringWithRetry(out webpageLive, "http://www.cmegroup.com/trading/energy/crude-oil/light-sweet-crude.html", 3, TimeSpan.FromSeconds(2), true);
+            //bool isOkLive = Utils.DownloadStringWithRetry(out webpageLive, "http://www.cmegroup.com/trading/energy/crude-oil/light-sweet-crude.html", 3, TimeSpan.FromSeconds(2), true);
+            bool isOkLive = Utils.DownloadStringWithRetry(out webpageLive, "http://www.cmegroup.com/CmeWS/mvc/Quotes/Future/425/G", 3, TimeSpan.FromSeconds(2), true);
             if (!isOkLive)
                 return "Error in live data";
 
             //Selecting data from live data string.
             string[] liveFuturesDataVec = new string[8];
             int[] liveFuturesDataVecInd = new int[8];
-            int startPosLiveB0 = webpageLive.IndexOf("last\"><strong>", 0) + "last\"><strong>".Length;
-            int endPosLiveB0 = webpageLive.IndexOf("</strong></td>", startPosLiveB0);
+            int startPosLiveB0 = webpageLive.IndexOf("\"last\":\"", 0) + "\"last\":\"".Length;
+            int endPosLiveB0 = webpageLive.IndexOf("\",\"change\":", startPosLiveB0);
             string liveFuturesDataB0 = webpageLive.Substring(startPosLiveB0, endPosLiveB0 - startPosLiveB0);
 
             liveFuturesDataVec[0] = liveFuturesDataB0;
@@ -223,8 +224,8 @@ namespace SQLab.Controllers
 
             for (int iRows = 1; iRows < 8; iRows++)
             {
-                int startPosLiveB = webpageLive.IndexOf("last\"><strong>", liveFuturesDataVecInd[iRows-1]) + "last\"><strong>".Length;
-                int endPosLiveB = webpageLive.IndexOf("</strong></td>", startPosLiveB);
+                int startPosLiveB = webpageLive.IndexOf("\"last\":\"", liveFuturesDataVecInd[iRows-1]) + "\"last\":\"".Length;
+                int endPosLiveB = webpageLive.IndexOf("\",\"change\":", startPosLiveB);
                 string liveFuturesDataB = webpageLive.Substring(startPosLiveB, endPosLiveB - startPosLiveB);
 
                 liveFuturesDataVec[iRows] = liveFuturesDataB;
@@ -232,16 +233,16 @@ namespace SQLab.Controllers
             }
 
             string[] prevFuturesDataVec = new string[8];
-            int startPosPrevB0 = webpageLive.IndexOf("priorSettle\">", liveFuturesDataVecInd[0]) + "priorSettle\">".Length;
-            int endPosPrevB0 = webpageLive.IndexOf("</td>", startPosPrevB0);
+            int startPosPrevB0 = webpageLive.IndexOf("\"priorSettle\":\"", liveFuturesDataVecInd[0]) + "\"priorSettle\":\"".Length;
+            int endPosPrevB0 = webpageLive.IndexOf("\",\"open\":\"", startPosPrevB0);
             string prevFuturesDataB0 = webpageLive.Substring(startPosPrevB0, endPosPrevB0 - startPosPrevB0);
 
             prevFuturesDataVec[0] = prevFuturesDataB0;
             
             for (int iRows = 1; iRows < 8; iRows++)
             {
-                int startPosPrevB = webpageLive.IndexOf("priorSettle\">", liveFuturesDataVecInd[iRows]) + "priorSettle\">".Length;
-                int endPosPrevB = webpageLive.IndexOf("</td>", startPosPrevB);
+                int startPosPrevB = webpageLive.IndexOf("\"priorSettle\":\"", liveFuturesDataVecInd[iRows]) + "\"priorSettle\":\"".Length;
+                int endPosPrevB = webpageLive.IndexOf("\",\"open\":\"", startPosPrevB);
                 string prevFuturesDataB = webpageLive.Substring(startPosPrevB, endPosPrevB - startPosPrevB);
 
                 prevFuturesDataVec[iRows] = prevFuturesDataB;
@@ -256,29 +257,29 @@ namespace SQLab.Controllers
             string titleOIL = "OIL Futures Term Structure";
             string dataSourceOIL = "http://www.cmegroup.com/trading/energy/crude-oil/light-sweet-crude.html";
 
-            int startPosLiveDate = webpageLive.IndexOf("class=\"cmeUpdatedField\">",liveFuturesDataVecInd[0]) + "class=\"cmeUpdatedField\">".Length;
+            int startPosLiveDate = webpageLive.IndexOf("\"updated\":\"",liveFuturesDataVecInd[0]) + "\"updated\":\"".Length;
             liveFuturesDataDT = webpageLive.Substring(startPosLiveDate, 29);
             liveFuturesDataDate = liveFuturesDataDT.Substring(18, 11);
             liveFuturesDataTime = liveFuturesDataDT.Substring(0, 8) + " CT";
 
-            int nextExpLiveMonth = webpageLive.IndexOf("<span class=\"cmeNoWrap\">", 0) + "<span class=\"cmeNoWrap\">".Length;
+            int nextExpLiveMonth = webpageLive.IndexOf("\"expirationMonth\":\"", 0) + "\"expirationMonth\":\"".Length;
             liveFuturesNextExp = webpageLive.Substring(nextExpLiveMonth, 3);
 
-            int futCodeInd = webpageLive.IndexOf("<td id=\"quotesFuturesProductTable1_", nextExpLiveMonth) + "<td id=\"quotesFuturesProductTable1_".Length;
+            int futCodeInd = webpageLive.IndexOf("\"escapedQuoteCode\":\"", endPosPrevB0) + "\"escapedQuoteCode\":\"".Length;
             futCodeNext = webpageLive.Substring(futCodeInd, 3);
 
             //Downloading expiration dates from cmegroup.com.
             string webpageLiveExp;
-            bool isOkLiveExp = Utils.DownloadStringWithRetry(out webpageLiveExp, "http://www.cmegroup.com/trading/energy/crude-oil/light-sweet-crude_product_calendar_futures.html", 3, TimeSpan.FromSeconds(2), true);
+            bool isOkLiveExp = Utils.DownloadStringWithRetry(out webpageLiveExp, "http://www.cmegroup.com/CmeWS/mvc/ProductCalendar/Future/425", 3, TimeSpan.FromSeconds(2), true);
             if (!isOkLiveExp)
                 return "Error in live data";
 
             string[] liveFuturesDataExpVec = new string[8];
             int[] liveFuturesDataExpVecInd = new int[8];
             int startPosLiveExpB0Ass= webpageLiveExp.IndexOf(futCodeNext, 0);
-            int startPosLiveExpB0 = webpageLiveExp.IndexOf("<br/>", startPosLiveExpB0Ass) + "<br/>".Length;
-            int endPosLiveExpB0 = webpageLiveExp.IndexOf("</td>", startPosLiveExpB0);
-            string liveFuturesDataExpB0 = webpageLiveExp.Substring(startPosLiveExpB0, endPosLiveExpB0 - startPosLiveExpB0);
+            int startPosLiveExpB0 = webpageLiveExp.IndexOf("\"lastTrade\":\"", startPosLiveExpB0Ass) + "\"lastTrade\":\"".Length;
+            int endPosLiveExpB0 = webpageLiveExp.IndexOf(",\"settlement", startPosLiveExpB0);
+            string liveFuturesDataExpB0 = webpageLiveExp.Substring(startPosLiveExpB0, endPosLiveExpB0 - startPosLiveExpB0-1);
 
             liveFuturesDataExpVec[0] = liveFuturesDataExpB0;
             liveFuturesDataExpVecInd[0] = endPosLiveExpB0;
@@ -286,9 +287,9 @@ namespace SQLab.Controllers
             for (int iRows = 1; iRows < 8; iRows++)
             {
                 int startPosLiveExpBAss = webpageLiveExp.IndexOf("CL", liveFuturesDataExpVecInd[iRows - 1]);
-                int startPosLiveExpB = webpageLiveExp.IndexOf("<br/>", startPosLiveExpBAss) + "<br/>".Length;
-                int endPosLiveExpB = webpageLiveExp.IndexOf("</td>", startPosLiveExpB);
-                string liveFuturesDataExpB = webpageLiveExp.Substring(startPosLiveExpB, endPosLiveExpB - startPosLiveExpB);
+                int startPosLiveExpB = webpageLiveExp.IndexOf("\"lastTrade\":\"", startPosLiveExpBAss) + "\"lastTrade\":\"".Length;
+                int endPosLiveExpB = webpageLiveExp.IndexOf(",\"settlement", startPosLiveExpB);
+                string liveFuturesDataExpB = webpageLiveExp.Substring(startPosLiveExpB, endPosLiveExpB - startPosLiveExpB-1);
 
                 liveFuturesDataExpVec[iRows] = liveFuturesDataExpB;
                 liveFuturesDataExpVecInd[iRows] = endPosLiveExpB;
@@ -381,15 +382,16 @@ namespace SQLab.Controllers
 
             //Downloading live data from cmegroup.com.
             string webpageLive;
-            bool isOkLive = Utils.DownloadStringWithRetry(out webpageLive, "http://www.cmegroup.com/trading/energy/natural-gas/natural-gas.html", 3, TimeSpan.FromSeconds(2), true);
+            //bool isOkLive = Utils.DownloadStringWithRetry(out webpageLive, "http://www.cmegroup.com/trading/energy/natural-gas/natural-gas.html", 3, TimeSpan.FromSeconds(2), true);
+            bool isOkLive = Utils.DownloadStringWithRetry(out webpageLive, "http://www.cmegroup.com/CmeWS/mvc/Quotes/Future/444/G", 3, TimeSpan.FromSeconds(2), true);
             if (!isOkLive)
                 return "Error in live data";
 
             //Selecting data from live data string.
             string[] liveFuturesDataVec = new string[8];
             int[] liveFuturesDataVecInd = new int[8];
-            int startPosLiveB0 = webpageLive.IndexOf("last\"><strong>", 0) + "last\"><strong>".Length;
-            int endPosLiveB0 = webpageLive.IndexOf("</strong></td>", startPosLiveB0);
+            int startPosLiveB0 = webpageLive.IndexOf("\"last\":\"", 0) + "\"last\":\"".Length;
+            int endPosLiveB0 = webpageLive.IndexOf("\",\"change\":", startPosLiveB0);
             string liveFuturesDataB0 = webpageLive.Substring(startPosLiveB0, endPosLiveB0 - startPosLiveB0);
 
             liveFuturesDataVec[0] = liveFuturesDataB0;
@@ -397,8 +399,8 @@ namespace SQLab.Controllers
 
             for (int iRows = 1; iRows < 8; iRows++)
             {
-                int startPosLiveB = webpageLive.IndexOf("last\"><strong>", liveFuturesDataVecInd[iRows - 1]) + "last\"><strong>".Length;
-                int endPosLiveB = webpageLive.IndexOf("</strong></td>", startPosLiveB);
+                int startPosLiveB = webpageLive.IndexOf("\"last\":\"", liveFuturesDataVecInd[iRows - 1]) + "\"last\":\"".Length;
+                int endPosLiveB = webpageLive.IndexOf("\",\"change\":", startPosLiveB);
                 string liveFuturesDataB = webpageLive.Substring(startPosLiveB, endPosLiveB - startPosLiveB);
 
                 liveFuturesDataVec[iRows] = liveFuturesDataB;
@@ -406,16 +408,16 @@ namespace SQLab.Controllers
             }
 
             string[] prevFuturesDataVec = new string[8];
-            int startPosPrevB0 = webpageLive.IndexOf("priorSettle\">", liveFuturesDataVecInd[0]) + "priorSettle\">".Length;
-            int endPosPrevB0 = webpageLive.IndexOf("</td>", startPosPrevB0);
+            int startPosPrevB0 = webpageLive.IndexOf("\"priorSettle\":\"", liveFuturesDataVecInd[0]) + "\"priorSettle\":\"".Length;
+            int endPosPrevB0 = webpageLive.IndexOf("\",\"open\":\"", startPosPrevB0);
             string prevFuturesDataB0 = webpageLive.Substring(startPosPrevB0, endPosPrevB0 - startPosPrevB0);
 
             prevFuturesDataVec[0] = prevFuturesDataB0;
 
             for (int iRows = 1; iRows < 8; iRows++)
             {
-                int startPosPrevB = webpageLive.IndexOf("priorSettle\">", liveFuturesDataVecInd[iRows]) + "priorSettle\">".Length;
-                int endPosPrevB = webpageLive.IndexOf("</td>", startPosPrevB);
+                int startPosPrevB = webpageLive.IndexOf("\"priorSettle\":\"", liveFuturesDataVecInd[iRows]) + "\"priorSettle\":\"".Length;
+                int endPosPrevB = webpageLive.IndexOf("\",\"open\":\"", startPosPrevB);
                 string prevFuturesDataB = webpageLive.Substring(startPosPrevB, endPosPrevB - startPosPrevB);
 
                 prevFuturesDataVec[iRows] = prevFuturesDataB;
@@ -426,33 +428,33 @@ namespace SQLab.Controllers
             string liveFuturesDataTime = System.String.Empty;
             string liveFuturesNextExp = System.String.Empty;
             string futCodeNext = System.String.Empty;
-            string spotVixData = System.String.Empty;
+            string spotVixData = System.String.Empty;                
             string titleGAS = "GAS Futures Term Structure";
             string dataSourceGAS = "http://www.cmegroup.com/trading/energy/natural-gas/natural-gas.html";
 
-            int startPosLiveDate = webpageLive.IndexOf("class=\"cmeUpdatedField\">", liveFuturesDataVecInd[0]) + "class=\"cmeUpdatedField\">".Length;
+            int startPosLiveDate = webpageLive.IndexOf("\"updated\":\"", liveFuturesDataVecInd[0]) + "\"updated\":\"".Length;
             liveFuturesDataDT = webpageLive.Substring(startPosLiveDate, 29);
             liveFuturesDataDate = liveFuturesDataDT.Substring(18, 11);
             liveFuturesDataTime = liveFuturesDataDT.Substring(0, 8) + " CT";
 
-            int nextExpLiveMonth = webpageLive.IndexOf("<span class=\"cmeNoWrap\">", 0) + "<span class=\"cmeNoWrap\">".Length;
+            int nextExpLiveMonth = webpageLive.IndexOf("\"expirationMonth\":\"", 0) + "\"expirationMonth\":\"".Length;
             liveFuturesNextExp = webpageLive.Substring(nextExpLiveMonth, 3);
 
-            int futCodeInd = webpageLive.IndexOf("<td id=\"quotesFuturesProductTable1_", nextExpLiveMonth) + "<td id=\"quotesFuturesProductTable1_".Length;
+            int futCodeInd = webpageLive.IndexOf("\"escapedQuoteCode\":\"", endPosPrevB0) + "\"escapedQuoteCode\":\"".Length;
             futCodeNext = webpageLive.Substring(futCodeInd, 3);
 
             //Downloading expiration dates from cmegroup.com.
             string webpageLiveExp;
-            bool isOkLiveExp = Utils.DownloadStringWithRetry(out webpageLiveExp, "http://www.cmegroup.com/trading/energy/natural-gas/natural-gas_product_calendar_futures.html", 3, TimeSpan.FromSeconds(2), true);
+            bool isOkLiveExp = Utils.DownloadStringWithRetry(out webpageLiveExp, "http://www.cmegroup.com/CmeWS/mvc/ProductCalendar/Future/444", 3, TimeSpan.FromSeconds(2), true);
             if (!isOkLiveExp)
                 return "Error in live data";
 
             string[] liveFuturesDataExpVec = new string[8];
             int[] liveFuturesDataExpVecInd = new int[8];
             int startPosLiveExpB0Ass = webpageLiveExp.IndexOf(futCodeNext, 0);
-            int startPosLiveExpB0 = webpageLiveExp.IndexOf("<br/>", startPosLiveExpB0Ass) + "<br/>".Length;
-            int endPosLiveExpB0 = webpageLiveExp.IndexOf("</td>", startPosLiveExpB0);
-            string liveFuturesDataExpB0 = webpageLiveExp.Substring(startPosLiveExpB0, endPosLiveExpB0 - startPosLiveExpB0);
+            int startPosLiveExpB0 = webpageLiveExp.IndexOf("\"lastTrade\":\"", startPosLiveExpB0Ass) + "\"lastTrade\":\"".Length;
+            int endPosLiveExpB0 = webpageLiveExp.IndexOf(",\"settlement", startPosLiveExpB0);
+            string liveFuturesDataExpB0 = webpageLiveExp.Substring(startPosLiveExpB0, endPosLiveExpB0 - startPosLiveExpB0 - 1);
 
             liveFuturesDataExpVec[0] = liveFuturesDataExpB0;
             liveFuturesDataExpVecInd[0] = endPosLiveExpB0;
@@ -460,14 +462,13 @@ namespace SQLab.Controllers
             for (int iRows = 1; iRows < 8; iRows++)
             {
                 int startPosLiveExpBAss = webpageLiveExp.IndexOf("NG", liveFuturesDataExpVecInd[iRows - 1]);
-                int startPosLiveExpB = webpageLiveExp.IndexOf("<br/>", startPosLiveExpBAss) + "<br/>".Length;
-                int endPosLiveExpB = webpageLiveExp.IndexOf("</td>", startPosLiveExpB);
-                string liveFuturesDataExpB = webpageLiveExp.Substring(startPosLiveExpB, endPosLiveExpB - startPosLiveExpB);
+                int startPosLiveExpB = webpageLiveExp.IndexOf("\"lastTrade\":\"", startPosLiveExpBAss) + "\"lastTrade\":\"".Length;
+                int endPosLiveExpB = webpageLiveExp.IndexOf(",\"settlement", startPosLiveExpB);
+                string liveFuturesDataExpB = webpageLiveExp.Substring(startPosLiveExpB, endPosLiveExpB - startPosLiveExpB - 1);
 
                 liveFuturesDataExpVec[iRows] = liveFuturesDataExpB;
                 liveFuturesDataExpVecInd[iRows] = endPosLiveExpB;
             }
-
 
             string[] monthsNumList = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
             int monthsNum = Array.IndexOf(monthsNumList, liveFuturesNextExp) + 1;

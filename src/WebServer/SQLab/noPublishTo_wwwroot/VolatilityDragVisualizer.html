@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html>
+<html style="background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%); background-attachment: fixed; /*background-repeat: repeat overflow: visible; /*avoid scrollbars  min-height: 200% min-width: 200%*/">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Volatility Drag Visualizer</title>
+
+    <link rel="stylesheet" type="text/css" href="/css/VolDragVisualizer.css">
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
+    <script language="javascript" type="text/javascript" src="/js/jquery.flot.axislabels.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.min.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.navigate.js"></script>
+    <script type="text/javascript" src="/js/VolDragVisualizer.js"></script>
+
+    <script>
+        onHeadProcessing();
+    </script>
+
+</head>
+
+<body>
+    <h1>Volatility Drag Visualizer</h1>
+    
+    <div id="errorMessage" style="visibility: hidden">
+        <div class="herror" id="idErrorCont"></div>
+    </div>
+
+    <div id="inviCharts" style="visibility: hidden">
+
+        <p>
+            <span id="idTimeNow"></span>&emsp;&emsp;<span id="idLiveDataTime"></span>
+        </p>
+        <span id="idChBxs"></span>
+        <br>
+        <div class="demo-container">
+            <strong>Monthly Volatility Drag</strong>
+            <div id="placeholder2" class="demo-placeholder"></div>
+        </div>
+        
+        <br>
+        <span id="idCurrTableMtx"></span>
+        <br>
+        <span id="idCurrTableMtx3"></span>
+        <br>
+        <span id="idCurrTableMtx5"></span>
+        <br>
+        <div class="demo-container">
+            <span id="idChartLength"></span>
+
+            <div id="placeholder1" class="demo-placeholder"></div>
+        </div>
+
+
+        <br>
+        <span id="idCurrTableMtx7"></span>
+
+        <br>
+
+
+       
+
+    </div>
+
+
+</body>
+</html>

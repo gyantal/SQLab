@@ -24,6 +24,7 @@ namespace SQLab.Controllers
     [Route("~/VixFuturesAnalyser", Name = "VixFuturesAnalyser")]
     [Route("~/ContangoVisualizer", Name = "ContangoVisualizer")]
     [Route("~/AdvancedUberTAA", Name = "AdvancedUberTAA")]
+    [Route("~/VolatilityDragVisualizer", Name = "VolatilityDragVisualizer")]
     [Route("~/SQStudies", Name = "SQStudies")]
 #if !DEBUG
     [Authorize]     // we can live without it, because ControllerCommon.CheckAuthorizedGoogleEmail() will redirect to /login anyway, but it is quicker that this automatically redirects without clicking another URL link.
@@ -88,6 +89,9 @@ namespace SQLab.Controllers
                     break;
                 case "/advancedubertaa":
                     fileName = "AdvancedUberTAA.html";
+                    break;
+                case "/volatilitydragvisualizer":
+                    fileName = "VolatilityDragVisualizer.html";
                     break;
                 case "/sqstudies":
                     fileName = "SQStudiesList.html";
