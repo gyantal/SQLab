@@ -71,6 +71,7 @@ function processData(dataStr) {
     //Printing error message from C#.  
 
     if (dataStr == "Error") {
+        document.getElementById("waitingMessage").style.display = "none";
         var divErrorCont = document.getElementById("idErrorCont");
         divErrorCont.innerHTML = "Error during downloading data. Please, try again later!"
         document.getElementById("errorMessage").style.visibility = "visible";
@@ -102,25 +103,24 @@ function processData(dataStr) {
 
 
 
-    var chBxs = "<p class=\"left\"><input id='check_all' type=\"button\" value=\"Volatility ETPs\" onclick=\"choseall('volA')\"/>&emsp;&emsp;";
+    var chBxs = "<p class=\"left\"><button class=\"button2\" style=\"background: url(/images/vix.jpg); background-size: cover;\" title=\"Volatility ETPs\" onclick=\"choseall('volA')\"/></button>&emsp;&emsp;";
     for (var iAssets = 0; iAssets < volAssetNamesArray.length; iAssets++) {
-        chBxs += "<input class= \"szpari\" type=\"checkbox\" name=\"volA\" id=\"" + volAssetNamesArray[iAssets] + "\"/>" + volAssetNamesArray[iAssets] + " &emsp;"
+        chBxs += "<input class= \"szpari\" type=\"checkbox\" name=\"volA\" id=\"" + volAssetNamesArray[iAssets] + "\"/><a target=\"_blank\" href=\"https://finance.yahoo.com/quote/" + volAssetNamesArray[iAssets].split("_")[0] + "\">" + volAssetNamesArray[iAssets] + "</a> &emsp;";
     }
-    chBxs += "<br><input id='check_all' type=\"button\" value=\"Important ETPs\" onclick=\"choseall('etpA')\"/>&emsp;&emsp;";
+    chBxs += "<br><button class=\"button2\" style=\"background: url(/images/ImportantEtps.png); background-size: cover;\" title=\"Important ETPs\" onclick=\"choseall('etpA')\"></button>&emsp;&emsp;";
     for (var iAssets = 0; iAssets < etpAssetNamesArray.length; iAssets++) {
-        chBxs += "<input class= \"szpari\" type=\"checkbox\" name=\"etpA\" id=\"" + etpAssetNamesArray[iAssets] + "\"/>" + etpAssetNamesArray[iAssets] + " &emsp;"
+        chBxs += "<input class= \"szpari\" type=\"checkbox\" name=\"etpA\" id=\"" + etpAssetNamesArray[iAssets] + "\"/><a target=\"_blank\" href=\"https://finance.yahoo.com/quote/" + etpAssetNamesArray[iAssets].split("_")[0] + "\">" + etpAssetNamesArray[iAssets] + "</a> &emsp;";
     }
-    chBxs += "<br><input id='check_all' type=\"button\" value=\"GameChanger Stocks\" onclick=\"choseall('gchA')\"/>&emsp;&emsp;";
+    chBxs += "<br><button class=\"button2\" style=\"background: url(/images/GameChangers.png); background-size: cover;\" title=\"GameChanger Stocks\" onclick=\"choseall('gchA')\"></button>&emsp;&emsp;";
     for (var iAssets = 0; iAssets < gchAssetNamesArray.length; iAssets++) {
-        chBxs += "<input class= \"szpari\" type=\"checkbox\" name=\"gchA\" id=\"" + gchAssetNamesArray[iAssets] + "\"/>" + gchAssetNamesArray[iAssets] + " &emsp;"
+        chBxs += "<input class= \"szpari\" type=\"checkbox\" name=\"gchA\" id=\"" + gchAssetNamesArray[iAssets] + "\"/><a target=\"_blank\" href=\"https://finance.yahoo.com/quote/" + gchAssetNamesArray[iAssets].split("_")[0] + "\">" + gchAssetNamesArray[iAssets] + "</a> &emsp;";
     }
-    chBxs += "<br><input id='check_all' type=\"button\" value=\"Global Assets\" onclick=\"choseall('gmA')\"/>&emsp;&emsp;";
+    chBxs += "<br><button class=\"button2\" style=\"background: url(/images/GlobalAssets.png); background-size: cover;\" title=\"Global Assets\" onclick=\"choseall('gmA')\"></button>&emsp;&emsp;";
     for (var iAssets = 0; iAssets < gmAssetNamesArray.length; iAssets++) {
-        chBxs += "<input class= \"szpari\" type=\"checkbox\" name=\"gmA\" id=\"" + gmAssetNamesArray[iAssets] + "\" />" + gmAssetNamesArray[iAssets] + " &emsp;"
+        chBxs += "<input class= \"szpari\" type=\"checkbox\" name=\"gmA\" id=\"" + gmAssetNamesArray[iAssets] + "\" /><a target=\"_blank\" href=\"https://finance.yahoo.com/quote/" + gmAssetNamesArray[iAssets].split("_")[0] + "\">" + gmAssetNamesArray[iAssets] + "</a> &emsp;";
     }
-    chBxs += "</p ><p class=\"left\"><input id='check_all' type=\"button\" value=\"Select/Deselect All\" onclick=\"checkAll(this)\"/> ";
-    chBxs += "</p ><p class=\"left\"><input id='update_all' type=\"button\" value=\"Update Choices\" onclick=\"updateAll()\"/></p> ";
-
+    chBxs += "</p ><p class=\"center\"><button class=\"button3\" style=\"background: url(/images/selectall.png); background-size: cover;\" title=\"Select/Deselect All\" onclick=\"checkAll(this)\"/></button>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<button class=\"button3\" style=\"background: url(/images/updateall.png); background-size: cover;\" title=\"Update Charts and Tables\" id='update_all'></button></p> ";
+    
 
 
     var checkBoxes = document.getElementById("idChBxs");
@@ -195,6 +195,7 @@ function processData(dataStr) {
 
 
     //Setting charts visible after getting data.
+    document.getElementById("waitingMessage").style.display = "none";
     document.getElementById("inviCharts").style.visibility = "visible";
 }
 function creatingTables(data) {
@@ -277,7 +278,7 @@ function creatingTables(data) {
 
     //Creating the HTML code of tables.
 
-    var currTableMtx = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + (noColumns - 1) + "\" bgcolor=\"#66CCFF\">Current Monthly Volatility Drag</td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\">Date</td><td class=\"first_name\" bgcolor=\"#66CCFF\">VIX MA(" + volLBPeriod + ")</td>";
+    var currTableMtx = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + (noColumns - 1) + "\" bgcolor=\"#66CCFF\"><b>Current Monthly Volatility Drag</b></td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\">Date</td><td class=\"first_name\" bgcolor=\"#66CCFF\">VIX MA(" + volLBPeriod + ")</td>";
     for (var i = 0; i < assetNamesArray.length - 1; i++) {
         currTableMtx += "<td class=\"" + assetNamesArray[i] + "\" bgcolor=\"#66CCFF\">" + assetNamesArray[i] + "</td>";
     }
@@ -290,7 +291,7 @@ function creatingTables(data) {
     currTableMtx += "</tr></table>";
 
 
-    var currTableMtx3 = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\">Monthly Volatility Drag by Years and Months</td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\"><span class=\"years\">Only Years</span> / <span class=\"years\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Days</td><td bgcolor=\"#66CCFF\">VIX MA(" + volLBPeriod + ")</td>";
+    var currTableMtx3 = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Monthly Volatility Drag by Years and Months</b></td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\"><span class=\"years\">Only Years</span> / <span class=\"years\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Days</td><td bgcolor=\"#66CCFF\">VIX MA(" + volLBPeriod + ")</td>";
     for (var i = 0; i < assetNamesArray.length - 1; i++) {
         currTableMtx3 += "<td class=\"" + assetNamesArray[i] + "\" bgcolor=\"#66CCFF\">" + assetNamesArray[i] + "</td>";
     }
@@ -336,7 +337,7 @@ function creatingTables(data) {
     }
     currTableMtx3 += "</tr></tbody></table>";
 
-    var currTableMtx5 = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + (noColumns - 2) + "\" bgcolor=\"#66CCFF\">Recent Performance of Stocks - Percent Changes of Prices</td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\"></td>";
+    var currTableMtx5 = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + (noColumns - 2) + "\" bgcolor=\"#66CCFF\"><b>Recent Performance of Stocks - Percent Changes of Prices</b></td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\"></td>";
     for (var i = 0; i < assetNamesArray.length - 1; i++) {
         currTableMtx5 += "<td class=\"" + assetNamesArray[i] + "\" bgcolor=\"#66CCFF\">" + assetNamesArray[i] + "</td>";
     }
@@ -351,7 +352,7 @@ function creatingTables(data) {
     currTableMtx5 += "</table>";
 
 
-    var currTableMtx7 = "<table id=\"mytable\" class=\"currDataB2\"><thead><tr align=\"center\"><td colspan=\"" + (noColumns - 1) + "\" bgcolor=\"#66CCFF\">Monthly Volatility Drag History</td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\"><select id=\"limit\"><option value=\"5\">1-Week</option><option value=\"21\" selected>1-Month</option><option value=\"63\">3-Month</option><option value=\"126\">6-Month</option><option value=\"252\">1-Year</option><option value=\"" + dailyDatesArray.length + "\">All</option></select ></td><td bgcolor=\"#66CCFF\">VIX MA(" + volLBPeriod + ")</td>";
+    var currTableMtx7 = "<table id=\"mytable\" class=\"currDataB2\"><thead><tr align=\"center\"><td colspan=\"" + (noColumns - 1) + "\" bgcolor=\"#66CCFF\"><b>Monthly Volatility Drag History</b></td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\"><select id=\"limit\"><option value=\"5\">1-Week</option><option value=\"21\" selected>1-Month</option><option value=\"63\">3-Month</option><option value=\"126\">6-Month</option><option value=\"252\">1-Year</option><option value=\"" + dailyDatesArray.length + "\">All</option></select ></td><td bgcolor=\"#66CCFF\">VIX MA(" + volLBPeriod + ")</td>";
     for (var i = 0; i < assetNamesArray.length - 1; i++) {
         currTableMtx7 += "<td class=\"" + assetNamesArray[i] + "\" bgcolor=\"#66CCFF\">" + assetNamesArray[i] + "</td>";
     }
@@ -493,8 +494,7 @@ function flotPlotMyData1(datasets1, nCurrData, xTicksH, noAssets, assetNamesArra
                         axisLabel: "Percentage Change",
                         tickFormatter: function (v, axis) {
                             return v.toFixed(0) + "%";
-                        }
-                   
+                        }      
                     },
                     xaxis: {
                         //tickDecimals: 0,
@@ -552,15 +552,22 @@ function flotPlotMyData2(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNames
             }
         });
 
-        $.plot("#placeholder2", dataBVD,
+        var placeholder = $("#placeholder2");
+        var data = dataBVD
+        var options =
             {
                 yaxis: {
                     axisLabel: "Volatility Drag",
                     tickFormatter: function (v, axis) {
                         return v.toFixed(0) + "%";
-                    },
-                    zoomRange: [1, 10],
-                    panRange: [0, 1]
+                        //},
+                        //transform: function (v) {
+                        //    return Math.log(v + 0.0001);
+                    }
+                    //},
+                    //tickDecimals: 3
+                    //zoomRange: [0, 10],
+                    //panRange: false
 
                 },
                 xaxis: {
@@ -568,9 +575,9 @@ function flotPlotMyData2(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNames
                     min: 0,
                     //max: nCurrData-1,
                     ticks: xTicksHVD,
-                    axisLabel: "Date",
-                    zoomRange: [1, 10],
-                    panRange: [0, nCurrDataVD]
+                    axisLabel: "Date"
+                    //zoomRange: [1, 10],
+                    //panRange: [0, nCurrDataVD]
                 },
                 legend: {
                     position: "nw",
@@ -581,12 +588,14 @@ function flotPlotMyData2(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNames
                 //    interactive: true
                 //},
                 //pan: {
-                //    interactive: true
+                //    interactive: true,
+                //    cursor: "move"
                 //},
-                grid: {
-                    backgroundColor: "#F4F6F6",
-                    hoverable: true
-                },
+                //grid: {
+                //    backgroundColor: "#F4F6F6",
+                //    clickable: true,
+                //    hoverable: true
+                //},
                 tooltip: {
                     show: true,
                     content: function (label, x, y) {
@@ -603,9 +612,68 @@ function flotPlotMyData2(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNames
 
                         return textVD;
                     }
+                },
+                selection: {
+                    mode: "x"
                 }
 
-            });
+            };
+
+        
+
+        placeholder.bind("plotselected", function (event, ranges) {
+
+            $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
+                        
+                $.each(plot.getXAxes(), function (_, axis) {
+                    var opts = axis.options;
+                    opts.min = ranges.xaxis.from;
+                    opts.max = ranges.xaxis.to;
+                    var xMin = Math.round(ranges.xaxis.from);
+                    var xMax = Math.round(ranges.xaxis.to);
+                    var yMax = 0;
+                    var noLines = data.length;
+                    for (var i = xMin; i < xMax + 1; i++)
+                    {
+                        for (var j = 0; j < noLines; j++) {
+                            let v = data[j].data[i][1];
+                            yMax = (v > yMax) ? v : yMax;
+                           
+                        }
+                    }
+                    plot.getAxes().yaxis.options.max = yMax*1.2;
+                });
+                var sdsd = plot.getAxes().yaxis.options.max;
+                
+                plot.setupGrid();
+                plot.draw();
+                plot.clearSelection();
+         });
+
+        placeholder.bind("plotunselected", function (event) {
+            $("#selection").text("");
+        });
+
+        var plot = $.plot(placeholder, data, options);
+
+        $("#clearSelection").click(plotAccordingToChoicesVD);
+
+        
+        //$("#placeholder2").bind("plotpan", function (event, plot) {
+        //    var axes = plot.getAxes();
+        //    $(".message").html("Panning to x: " + axes.xaxis.min.toFixed(2)
+        //        + " &ndash; " + axes.xaxis.max.toFixed(2)
+        //        + " and y: " + axes.yaxis.min.toFixed(2)
+        //        + " &ndash; " + axes.yaxis.max.toFixed(2));
+        //});
+
+        //$("#placeholder2").bind("plotzoom", function (event, plot) {
+        //    var axes = plot.getAxes();
+        //    $(".message").html("Zooming to x: " + axes.xaxis.min.toFixed(2)
+        //        + " &ndash; " + axes.xaxis.max.toFixed(2)
+        //        + " and y: " + axes.yaxis.min.toFixed(2)
+        //        + " &ndash; " + axes.yaxis.max.toFixed(2));
+        //});
         //// add zoom out button 
 
         //$("<div class='button' style='right:20px;top:20px'>zoom out</div>")

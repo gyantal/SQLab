@@ -12,6 +12,7 @@
     <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.js"></script>
     <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.min.js"></script>
     <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.navigate.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.selection.js"></script>
     <script type="text/javascript" src="/js/VolDragVisualizer.js"></script>
 
     <script>
@@ -21,8 +22,13 @@
 </head>
 
 <body>
-    <h1>Volatility Drag Visualizer</h1>
+    <h1>Volatility Drag Visualizer <button class="buttonHelp" onclick="window.open('/VolatilityDragVisualizerHelp')" target=""></button></h1>
     
+    <div id="waitingMessage" style="visibility: visible">
+        <IMG SRC="/images/szuriopt3b.gif" width="600">
+        <!--<div class="waitingM" id="idWaitMess"> </div>-->
+    </div>
+
     <div id="errorMessage" style="visibility: hidden">
         <div class="herror" id="idErrorCont"></div>
     </div>
@@ -37,8 +43,11 @@
         <div class="demo-container">
             <strong>Monthly Volatility Drag</strong>
             <div id="placeholder2" class="demo-placeholder"></div>
+            
         </div>
-        
+        <button class="button4" style="background: url(/images/zoomout.png); background-size: cover;" title="Zoom Out" id="clearSelection"></button>
+
+        <br>
         <br>
         <span id="idCurrTableMtx"></span>
         <br>
@@ -59,7 +68,7 @@
         <br>
 
 
-       
+
 
     </div>
 
