@@ -176,6 +176,7 @@ function processData(dataStr) {
             });
         });
     });
+    $("#lastYearT").click();
 
 
     function show(min, max) {
@@ -320,7 +321,7 @@ function creatingTables(data) {
             currTableMtx3 += "</tr>";
         }
     }
-    currTableMtx3 += "<tr class=\"parent\"><td><span class=\"years\">" + yearListArray[yearListArray.length - 1] + "</span></td><td>" + yearlyCountsArray[yearListArray.length - 1] + "</td><td>" + yearlyVIXAvgsArray[yearListArray.length - 1] + "</td>";
+    currTableMtx3 += "<tr class=\"parent\" id=\"lastYearT\"><td><span class=\"years\">" + yearListArray[yearListArray.length - 1] + "</span></td><td>" + yearlyCountsArray[yearListArray.length - 1] + "</td><td>" + yearlyVIXAvgsArray[yearListArray.length - 1] + "</td>";
     for (var i = 0; i < assetNamesArray.length; i++) {
         currTableMtx3 += "<td class=\"" + assetNamesArray[i] + "\">" + yearlyAvgsMtx[yearListArray.length - 1][i] + "</td>";
     }
@@ -488,7 +489,7 @@ function flotPlotMyData1(datasets1, nCurrData, xTicksH, noAssets, assetNamesArra
                 }
             });
 
-            $.plot("#placeholder1", dataB,
+            var plot = $.plot("#placeholder1", dataB,
                 {
                     yaxis: {
                         axisLabel: "Percentage Change",
@@ -531,9 +532,39 @@ function flotPlotMyData1(datasets1, nCurrData, xTicksH, noAssets, assetNamesArra
                     }
 
                 });
+
+            var myDivChart1Element = $("#placeholder1")[0];
+
+            var flotXaxisObj = myDivChart1Element.getElementsByClassName('flot-text')[0].getElementsByClassName('flot-x-axis flot-x1-axis xAxis x1Axis')[0];
+            var xWidth = flotXaxisObj.clientWidth;
+            //var xWidthObj = $('div.flot-x-axis');
+            //var xWidth = $('div.flot-x-axis').width();
+
+            //var flotTickLabelObj = $('div.flot-x-axis .flot-tick-label');
+            var flotTickLabelObj = flotXaxisObj.childNodes;
+
+            var xTicks = flotTickLabelObj.length;
+            var limiter = Math.floor(xWidth / xTicks);
+            var xConst = 30;
+            if (limiter < xConst) {
+
+                for (var i = 0; i < xTicks; i++) {
+                    if (i % Math.floor(xConst / limiter) > 0) {
+                        //$(flotTickLabelObj.childNodes[i]).css("display", "none");
+                        flotTickLabelObj[i].style.display = "none";
+                    }
+                }
+
+                //flotTickLabelObj.each(function (index) {
+                //    if (index % Math.floor(xConst / limiter) > 0) {
+                //        $(this).css("display", "none");
+                //    }
+                //})
+            }
         }
         plotAccordingToChoices();
-        formatXTicks();
+        
+        //formatXTicks();
 }
 
 function flotPlotMyData2(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNamesArray) {
@@ -642,9 +673,10 @@ function flotPlotMyData2(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNames
                         }
                     }
                     plot.getAxes().yaxis.options.max = yMax*1.2;
-                });
-                var sdsd = plot.getAxes().yaxis.options.max;
+                 });
                 
+                var sdsd = plot.getAxes().yaxis.options.max;
+                //plot.getOptions().tooltip.content = "hghg";
                 plot.setupGrid();
                 plot.draw();
                 plot.clearSelection();
@@ -704,6 +736,7 @@ function flotPlotMyData2(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNames
 
     }
     plotAccordingToChoicesVD();
+
     //formatXTicks();
 }
 
