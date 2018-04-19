@@ -241,6 +241,10 @@ namespace SQLab.Controllers
             IList<List<double>> assVolDrags = new List<List<double>>();
             List<double> vixQuotes = new List<double>();
             double[] vixLevel = new double[noBtDays];
+            if (quotesData2.Count < noBtDays)
+            {
+                quotesData2.Add(quotesData2[quotesData2.Count - 1]);
+            }
 
             for (int iRows = 0; iRows < noBtDays; iRows++)
             {

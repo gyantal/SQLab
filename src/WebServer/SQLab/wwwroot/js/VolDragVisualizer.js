@@ -468,7 +468,7 @@ function creatingTables(data) {
         
         var datasets2 = listHVD;
 
-        flotPlotMyData2(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNamesArray);
+        flotPlotMyData3(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNamesArray);
         
     }
 }
@@ -489,58 +489,57 @@ function flotPlotMyData1(datasets1, nCurrData, xTicksH, noAssets, assetNamesArra
                 }
             });
 
-            var plot = $.plot("#placeholder1", dataB,
-                {
-                    yaxis: {
-                        axisLabel: "Percentage Change",
-                        tickFormatter: function (v, axis) {
-                            return v.toFixed(0) + "%";
-                        }      
-                    },
-                    xaxis: {
-                        //tickDecimals: 0,
-                        min: 0,
-                        //max: nCurrData-1,
-                        ticks: xTicksH,
-                        axisLabel: "Date"
-                    },
-                    legend: {
-                        position: "nw",
-                        noColumns: Math.min(noAssets, 10),
-                        backgroundColor: "#F4F6F6"
-                    },
-                    grid: {
-                        backgroundColor: "#F4F6F6",
-                        hoverable: true
-                    },
-                    tooltip: {
-                        show: true,
-                        content: function (label, x, y) {
-                            var xVals = [];
-                            for (var i = 0; i < nCurrData; i++) {
-                                xVals[i] = dataB[0].data[i][0];
-                            };
-                            var indi = xVals.indexOf(x);
-
-                            var text = "<b>" + label + "<br/></b><i>" + indi + "-Day Percentage Changes on " + xTicksH[indi][1] + "<br/></i>";
-                            dataB.forEach(function (series) {
-                                text += series.label + ' : ' + series.data[indi][1] + "%<br/>";
-                            });
-
-                            return text;
-                        }
+            var placeholder1 = $("#placeholder1");
+            var data1 = dataB;
+            var options1 = {
+                yaxis: {
+                    axisLabel: "Percentage Change",
+                    tickFormatter: function (v, axis) {
+                        return v.toFixed(2) + "%";
                     }
+                },
+                xaxis: {
+                    //tickDecimals: 0,
+                    min: 0,
+                    //max: nCurrData-1,
+                    ticks: xTicksH,
+                    axisLabel: "Date"
+                },
+                legend: {
+                    position: "nw",
+                    noColumns: Math.min(noAssets, 10),
+                    backgroundColor: "#F4F6F6"
+                },
+                grid: {
+                    backgroundColor: "#F4F6F6",
+                    hoverable: true
+                },
+                tooltip: {
+                    show: true,
+                    content: function (label, x, y) {
+                        var xVals = [];
+                        for (var i = 0; i < nCurrData; i++) {
+                            xVals[i] = dataB[0].data[i][0];
+                        };
+                        var indi = xVals.indexOf(x);
 
-                });
+                        var text = "<b>" + label + "<br/></b><i>" + indi + "-Day Percentage Changes on " + xTicksH[indi][1] + "<br/></i>";
+                        dataB.forEach(function (series) {
+                            text += series.label + ' : ' + series.data[indi][1] + "%<br/>";
+                        });
 
-            var myDivChart1Element = $("#placeholder1")[0];
+                        return text;
+                    }
+                }
+
+            };
+
+            var plot1 = $.plot(placeholder1, data1, options1);
+
+            var myDivChart1Element = placeholder1[0];
 
             var flotXaxisObj = myDivChart1Element.getElementsByClassName('flot-text')[0].getElementsByClassName('flot-x-axis flot-x1-axis xAxis x1Axis')[0];
             var xWidth = flotXaxisObj.clientWidth;
-            //var xWidthObj = $('div.flot-x-axis');
-            //var xWidth = $('div.flot-x-axis').width();
-
-            //var flotTickLabelObj = $('div.flot-x-axis .flot-tick-label');
             var flotTickLabelObj = flotXaxisObj.childNodes;
 
             var xTicks = flotTickLabelObj.length;
@@ -550,209 +549,146 @@ function flotPlotMyData1(datasets1, nCurrData, xTicksH, noAssets, assetNamesArra
 
                 for (var i = 0; i < xTicks; i++) {
                     if (i % Math.floor(xConst / limiter) > 0) {
-                        //$(flotTickLabelObj.childNodes[i]).css("display", "none");
                         flotTickLabelObj[i].style.display = "none";
                     }
                 }
 
-                //flotTickLabelObj.each(function (index) {
-                //    if (index % Math.floor(xConst / limiter) > 0) {
-                //        $(this).css("display", "none");
-                //    }
-                //})
+               
             }
         }
         plotAccordingToChoices();
         
-        //formatXTicks();
+       
 }
 
-function flotPlotMyData2(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNamesArray) {
-    $("#update_all").click(plotAccordingToChoicesVD);
-    function plotAccordingToChoicesVD() {
-        var dataBVD = [];
+function flotPlotMyData3(datasets2, nCurrData2, xTicksH2, noAssets, assetNamesArray) {
+    $("#update_all").click(plotAccordingToChoices2);
+    function plotAccordingToChoices2() {
+        var dataB2 = [];
         //$.each(datasets1, function (key) {
         //    dataB.push(datasets1[key]);
         //});
 
         $("input:checkbox:checked").each(function () {
-            var keyVD = $(this).attr("id");
-            var aaaVD = assetNamesArray.indexOf(keyVD);
-            if (keyVD && datasets2[aaaVD]) {
-                dataBVD.push(datasets2[aaaVD]);
+            var key = $(this).attr("id");
+            var aaa = assetNamesArray.indexOf(key);
+            if (key && datasets2[aaa]) {
+                dataB2.push(datasets2[aaa]);
             }
         });
 
-        var placeholder = $("#placeholder2");
-        var data = dataBVD
-        var options =
-            {
-                yaxis: {
-                    axisLabel: "Volatility Drag",
-                    tickFormatter: function (v, axis) {
-                        return v.toFixed(0) + "%";
-                        //},
-                        //transform: function (v) {
-                        //    return Math.log(v + 0.0001);
-                    }
-                    //},
-                    //tickDecimals: 3
-                    //zoomRange: [0, 10],
-                    //panRange: false
-
-                },
-                xaxis: {
-                    //tickDecimals: 0,
-                    min: 0,
-                    //max: nCurrData-1,
-                    ticks: xTicksHVD,
-                    axisLabel: "Date"
-                    //zoomRange: [1, 10],
-                    //panRange: [0, nCurrDataVD]
-                },
-                legend: {
-                    position: "nw",
-                    noColumns: Math.min(noAssets, 10),
-                    backgroundColor: "#F4F6F6"
-                },
-                //zoom: {
-                //    interactive: true
-                //},
-                //pan: {
-                //    interactive: true,
-                //    cursor: "move"
-                //},
-                //grid: {
-                //    backgroundColor: "#F4F6F6",
-                //    clickable: true,
-                //    hoverable: true
-                //},
-                tooltip: {
-                    show: true,
-                    content: function (label, x, y) {
-                        var xValsVD = [];
-                        for (var i = 0; i < nCurrDataVD; i++) {
-                            xValsVD[i] = dataBVD[0].data[i][0];
-                        };
-                        var indiVD = xValsVD.indexOf(x);
-
-                        var textVD = "<b>" + label + "<br/></b><i>Volatility Drag on " + xTicksHVD[indiVD][1] + "<br/></i>";
-                        dataBVD.forEach(function (series) {
-                            textVD += series.label + ' : ' + series.data[indiVD][1] + "%<br/>";
-                        });
-
-                        return textVD;
-                    }
-                },
-                selection: {
-                    mode: "x"
+        var placeholder2 = $("#placeholder2");
+        var data2 = dataB2;
+        var options2 = {
+            yaxis: {
+                axisLabel: "Percentage Change",
+                tickFormatter: function (v, axis) {
+                    return v.toFixed(2) + "%";
                 }
+            },
+            xaxis: {
+                //tickDecimals: 0,
+                min: 0,
+                //max: nCurrData-1,
+                ticks: xTicksH2,
+                axisLabel: "Date"
+            },
+            legend: {
+                position: "nw",
+                noColumns: Math.min(noAssets, 10),
+                backgroundColor: "#F4F6F6"
+            },
+            grid: {
+                backgroundColor: "#F4F6F6",
+                hoverable: true
+            },
+            tooltip: {
+                show: true,
+                content: function (label, x, y) {
+                    var xVals = [];
+                    for (var i = 0; i < nCurrData2; i++) {
+                        xVals[i] = dataB2[0].data[i][0];
+                    };
+                    var indi = xVals.indexOf(x);
 
-            };
+                    var text = "<b>" + label + "<br/></b><i>Volatility Drag on " + xTicksH2[indi][1] + "<br/></i>";
+                    dataB2.forEach(function (series) {
+                        text += series.label + ' : ' + series.data[indi][1] + "%<br/>";
+                    });
 
-        
+                    return text;
+                }
+            },
+            selection: {
+                mode: "x"
+            }
 
-        placeholder.bind("plotselected", function (event, ranges) {
+        };
+
+        placeholder2.bind("plotselected", function (event, ranges) {
 
             $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
-                        
-                $.each(plot.getXAxes(), function (_, axis) {
+
+                $.each(plot2.getXAxes(), function (_, axis) {
                     var opts = axis.options;
                     opts.min = ranges.xaxis.from;
                     opts.max = ranges.xaxis.to;
                     var xMin = Math.round(ranges.xaxis.from);
                     var xMax = Math.round(ranges.xaxis.to);
                     var yMax = 0;
-                    var noLines = data.length;
+                    var noLines = data2.length;
                     for (var i = xMin; i < xMax + 1; i++)
                     {
                         for (var j = 0; j < noLines; j++) {
-                            let v = data[j].data[i][1];
+                            let v = data2[j].data[i][1];
                             yMax = (v > yMax) ? v : yMax;
-                           
+
                         }
                     }
-                    plot.getAxes().yaxis.options.max = yMax*1.2;
+                    plot2.getAxes().yaxis.options.max = yMax*1.2;
                  });
-                
-                var sdsd = plot.getAxes().yaxis.options.max;
-                //plot.getOptions().tooltip.content = "hghg";
-                plot.setupGrid();
-                plot.draw();
-                plot.clearSelection();
+
+                var sdsd = plot2.getAxes().yaxis.options.max;
+                var ssdfs = plot2.getOptions().tooltip.content;
+                plot2.setupGrid();
+                plot2.draw();
+                plot2.clearSelection();
+                xTickReDraw();
+
          });
 
-        placeholder.bind("plotunselected", function (event) {
+        placeholder2.bind("plotunselected", function (event) {
             $("#selection").text("");
         });
 
-        var plot = $.plot(placeholder, data, options);
+        var plot2 = $.plot(placeholder2, data2, options2);
 
-        $("#clearSelection").click(plotAccordingToChoicesVD);
+        xTickReDraw();
 
-        
-        //$("#placeholder2").bind("plotpan", function (event, plot) {
-        //    var axes = plot.getAxes();
-        //    $(".message").html("Panning to x: " + axes.xaxis.min.toFixed(2)
-        //        + " &ndash; " + axes.xaxis.max.toFixed(2)
-        //        + " and y: " + axes.yaxis.min.toFixed(2)
-        //        + " &ndash; " + axes.yaxis.max.toFixed(2));
-        //});
-
-        //$("#placeholder2").bind("plotzoom", function (event, plot) {
-        //    var axes = plot.getAxes();
-        //    $(".message").html("Zooming to x: " + axes.xaxis.min.toFixed(2)
-        //        + " &ndash; " + axes.xaxis.max.toFixed(2)
-        //        + " and y: " + axes.yaxis.min.toFixed(2)
-        //        + " &ndash; " + axes.yaxis.max.toFixed(2));
-        //});
-        //// add zoom out button 
-
-        //$("<div class='button' style='right:20px;top:20px'>zoom out</div>")
-        //    .appendTo(placeholder2)
-        //    .click(function (event) {
-        //        event.preventDefault();
-        //        plot.zoomOut();
-        //    });
-
-        //// and add panning buttons
-
-        //// little helper for taking the repetitive work out of placing
-        //// panning arrows
-
-        //function addArrow(dir, right, top, offset) {
-        //    $("<img class='button' src='arrow-" + dir + ".gif' style='right:" + right + "px;top:" + top + "px'>")
-        //        .appendTo(placeholder2)
-        //        .click(function (e) {
-        //            e.preventDefault();
-        //            plot.pan(offset);
-        //        });
-        //}
-
-        //addArrow("left", 55, 60, { left: -100 });
-        //addArrow("right", 25, 60, { left: 100 });
-        //addArrow("up", 40, 45, { top: -100 });
-        //addArrow("down", 40, 75, { top: 100 });
-
+        $("#clearSelection").click(plotAccordingToChoices2);
     }
-    plotAccordingToChoicesVD();
+    plotAccordingToChoices2();
 
-    //formatXTicks();
+
 }
 
-function formatXTicks() {
-    var xWidth = $('.flot-x-axis').width();
-    var xTicks = $('.flot-x-axis .flot-tick-label').length;
-    var limiter = Math.floor(xWidth / xTicks);
-    var xConst = 30;
-    if (limiter < xConst) {
-        $('.flot-x-axis .flot-tick-label').each(function (index) {
-            if (index % Math.floor(xConst / limiter) > 0) {
-                $(this).css("display", "none");
+function xTickReDraw() {
+    var myDivChart2Element = $("#placeholder2")[0];
+
+    var flotXaxisObj2 = myDivChart2Element.getElementsByClassName('flot-text')[0].getElementsByClassName('flot-x-axis flot-x1-axis xAxis x1Axis')[0];
+    var xWidth2 = flotXaxisObj2.clientWidth;
+    var flotTickLabelObj2 = flotXaxisObj2.childNodes;
+
+    var xTicks2 = flotTickLabelObj2.length;
+    var limiter2 = Math.max(Math.floor(xWidth2 / xTicks2), 0.5);
+    var xConst2 = 60;
+    if (limiter2 < xConst2) {
+
+        for (var i = 0; i < xTicks2; i++) {
+            if (i % Math.floor(xConst2 / limiter2) > 0) {
+                flotTickLabelObj2[i].style.display = "none";
             }
-        })
+        }
+
     }
 }
-
-
-  
