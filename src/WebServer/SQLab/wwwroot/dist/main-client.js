@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "4ea21e5437df4c0ecbb2"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "d0ce7464a617349caf59"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -2439,45 +2439,46 @@ var LEtf = (function (_super) {
                 this.assetsConstantWeightPct = "-35,-65"; // %, negative is Short
                 break;
             case "idParamSetHL_-35TVIX_-25TMV_-28UNG_-8USO_-4JJC":
-                this.assets = "TVIX,TMV,UNG,USO,JJC";
+                this.assets = "TVIX,TMV,UNG,USO,JJCTF";
                 this.assetsConstantWeightPct = "-35,-25,-28,-8,-4"; // %, negative is Short
                 break;
             case "idParamSetHL_-70VXX.SQ_-75TLT_coctailDC":
-                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assets = "VXX.SQ,TLT,USO,UNG,JJCTF,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "-70,75,-8,-13,-4,10,5,0"; // %, negative is Short
                 break;
             case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy":
-                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assets = "VXX.SQ,TLT,USO,UNG,JJCTF,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "-70,75,-8,-28,-4,0,0,0"; // %, negative is Short
                 break;
             case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy2":
-                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assets = "VXX.SQ,TLT,USO,UNG,JJCTF,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "-70,105,-10,-30,-5,0,0,0"; // %, negative is Short
                 break;
             case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy3":// Markowitz MPT optimal weight using 100% allocation
-                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assets = "VXX.SQ,TLT,USO,UNG,JJCTF,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "-70,111,-11,-34,0,0,0,0"; // %, negative is Short
                 break;
             case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy4":// Markowitz MPT optimal weight using 135% allocation
-                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assets = "VXX.SQ,TLT,USO,UNG,JJCTF,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "-70,171,-17,-52,0,0,0,0"; // %, negative is Short
                 break;
             case "idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy5":// Markowitz MPT optimal weight using 135% allocation
-                this.assets = "VXX.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
+                this.assets = "VXX.SQ,TLT,USO,UNG,CPER,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "-70,213,-21,-66,0,0,0,0"; // %, negative is Short
                 break;
             case "idParamSetHL_-50Comb.SQ_-80H_coctailAgy6":// shortVol is 50%, Hedge: 80%
-                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
-                this.assetsConstantWeightPct = "15,-5, 10, 20, 171,-15,-54,0,0,0,0"; // %, negative is Short
+                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "15,-5, 10, 20, 171,-15,-54,0,0,0"; // %, negative is Short
                 break;
             case "idParamSetHL_-50Comb.SQ_-100H_coctailAgy6":// shortVol is 50%, Hedge: 100%
-                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
-                this.assetsConstantWeightPct = "15,-5, 10, 20, 213,-21,-66,0,0,0,0"; // %, negative is Short
+                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "15,-5, 10, 20, 213,-21,-66,0,0,0"; // %, negative is Short
                 break;
             case "idParamSetHL_-50Comb.SQ_-120H_coctailAgy6": // shortVol is 55%, Hedge: 120%, introducing SVXY!Light0.5x.SQ
+            // 2018-04: JJC went to JJCTF and went to OTC. Because it is OTC, IB doesn't give realtime price, so chart will go until yesterday only. CPER has realtime price, but its history from 2011, instead of 2007. As JJCTF weight is 0, delete it from here. Backtest will be faster anyway.
             default:
-                this.assets = "SVXY!Light0.5x.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,JJC,GLD,UUP,EEM";
-                this.assetsConstantWeightPct = "15,-5, 10, 25, 255,-27,-78,0,0,0,0"; // %, negative is Short
+                this.assets = "SVXY!Light0.5x.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,GLD,UUP,EEM";
+                this.assetsConstantWeightPct = "15,-5, 10, 25, 255,-27,-78,0,0,0"; // %, negative is Short
                 break;
         }
     };
