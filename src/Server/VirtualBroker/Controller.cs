@@ -208,11 +208,11 @@ namespace VirtualBroker
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
                         new BrokerTaskPortfolio() { Name = "! HarryLong2(Contango-Bond) harvester Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
-                            MaxTradeValueInCurrency = 40000, // For Agy: portfolio is 50K original. Set MaxValue=40K  (HarryLong shouldn't trade more than that, because it is only a small adjustment every day)
+                            MaxTradeValueInCurrency = 70000, // For Agy: portfolio is 50K original. Set MaxValue=40K  (HarryLong shouldn't trade more than that, because it is only a small adjustment every day)
                             MinTradeValueInCurrency = 100,
-                            Param = new PortfolioParamHarryLong() {
-                                // The default short UWT is changed to long DWT until UWT becomes shortable... 2018-02-23:  UWT becomes shortable, so this section is commented and reverting to default params
-                                //Tickers = new string[] { "SVXY", "VXX", "ZIV", "TQQQ", "TMV", "DWT", "UGAZ" }, AssetsWeights = new double[] {  0.15, -0.05, 0.10, 0.20, -0.85, 0.09, -0.26 }
+                            Param = new PortfolioParamHarryLong() {                                
+                                // 2018-03-29: for tax reasons, change TMV to TMF, and ZIV to VXZ for 30 days. Then change it back.
+                                Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.15, -0.05, -0.10, 0.25, 0.85, -0.09, -0.26 }
                             } },
                         // 2018-02-06: when VIX went to 50 in market panic, XIV was terminated, I thought it is better to retire this for DC. 200K portfolio ended in 130K. About -70K loss. He wouldn't like to continue that.
                         // 2018-03-28: we restarted HL. PV was 135K, but restarted with 150K. However, HL made safer, because we halved all weights. CAGR: 60% to 31%; maxDD: -53% to -30%. Sharpe: 1.17 to 1.20. Good.
