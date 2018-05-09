@@ -25,6 +25,7 @@ namespace HealthMonitor
         // Message ID:"ReportOkFromVirtualBroker", ParamStr: "<BriefReport>BrokerTask HarryLong was OK.</BriefReport><DetailedReport>11-09T20:59:49: 'HarryLong'<br><font color="#10ff10">Target: TVIX:-35%, TMV:-65%</font><br/>Real SellAsset  6 UVXY ($82)<br/>Real BuyAsset  29 TMV ($626)<br/>Real BuyAsset  46 UVXY ($626)<br/>Real BuyAsset  581 TMV ($12541)<br/></DetailedReport>", ResponseFormat: "None"
         private void MessageFromVirtualBroker(TcpClient p_tcpClient, HealthMonitorMessage p_message)
         {
+            Utils.Logger.Info($"MessageFromVirtualBroker() START");
             if (p_message.ResponseFormat == HealthMonitorMessageResponseFormat.String)
             {
                 BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
@@ -75,6 +76,8 @@ namespace HealthMonitor
                 InformSupervisors(InformSuperVisorsUrgency.UrgentInfoSendEmail, "SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { ((briefReport != null) ? briefReport : p_message.ParamStr) }", 
                     "There is an Error in Virtual Broker. ... I repeat: Error in Virtual Broker.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
             }
+
+            Utils.Logger.Info($"MessageFromVirtualBroker() END");
         }
 
         public void CheckOKMessageArrived(DateTime p_utcStart, string p_triggeredTaskSchemaName) // p_triggeredTaskSchemaName = "UberVXX" or "HarryLong"

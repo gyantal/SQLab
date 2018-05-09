@@ -17,24 +17,43 @@ namespace HealthMonitor
 
         void ProcessTcpClient(TcpClient p_tcpClient)
         {
+            Utils.Logger.Info($"ProcessTcpClient() START");
             HealthMonitorMessage message = null;
             try
             {
                 BinaryReader br = new BinaryReader(p_tcpClient.GetStream());
                 message = (new HealthMonitorMessage()).DeserializeFrom(br);
                 Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg.ID:{message.ID}, Param:{message.ParamStr}");  // user can quickly check from Console the messages
-                Utils.Logger.Info($"ProcessTcpClient: Message ID:\"{ message.ID}\", ParamStr: \"{ message.ParamStr}\", ResponseFormat: \"{message.ResponseFormat}\"");
-                if (message.ResponseFormat == HealthMonitorMessageResponseFormat.None)
-                {
-                    Utils.TcpClientDispose(p_tcpClient);
-                }
+                Utils.Logger.Info($"<Tcp:>ProcessTcpClient: Message ID:\"{ message.ID}\", ParamStr: \"{ message.ParamStr}\", ResponseFormat: \"{message.ResponseFormat}\"");
             }
             catch (Exception e) // Background thread can crash application. A background thread does not keep the managed execution environment running.
             {
-                Console.WriteLine($"Expected Exception. We don't rethrow it. Occurs daily when client VBroker VM server reboots. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
-                Utils.Logger.Info($"Expected Exception. We don't rethrow it. Occurs daily when client VBroker VM server reboots. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
+                Console.WriteLine($"<Tcp:>Expected Exception. We don't rethrow it. Occurs daily when client VBroker VM server reboots or it is a second message when VBroker crashes dead. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
+                Utils.Logger.Info($"<Tcp:>Expected Exception. We don't rethrow it. Occurs daily when client VBroker VM server reboots or it is a second message when VBroker crashes dead. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
+
+                if (e is System.IO.EndOfStreamException)        // in this case, there is no message data.
+                {
+                    // If VBroker crashes totally, it sends a proper Message ID:"ReportErrorFromVirtualBroker" msg. once, 
+                    // but next it may initiate a second message, but it cannot pump the data through, because it is already crashed and all its threads are stopped.
+                    // However, don't worry, because the first VBroker message is already under processing. So, second message can be ignored.
+                    // the BinaryReader couldn't read the stream, so there is no message, so we dont'n know whether message.ID = VBroker or not. It is unknown. In that case, swallow the error and return, but don't crash HealthMonitor.
+                    Utils.Logger.Info($"ProcessTcpClient: System.IO.EndOfStreamException was detected. Return without crashing HealthMonitor thread.");
+                    return; // there is no point processing as we don't know the data. However, we still don't want to Crash Healthmonitor. So, just swallow the error.
+                }
+                else
+                {
+                    // we may have message.ID and data and we may process it.
+                }
             }
 
+            if (message.ResponseFormat == HealthMonitorMessageResponseFormat.None)
+            {
+                Utils.Logger.Info($"ProcessTcpClient: TcpClientDispose() START");
+                Utils.TcpClientDispose(p_tcpClient);
+                Utils.Logger.Info($"ProcessTcpClient: TcpClientDispose() END");
+            }
+
+            Utils.Logger.Info($"ProcessTcpClient, Step 2");
             switch (message.ID)
             {
                 case HealthMonitorMessageID.TestHardCash:
@@ -42,7 +61,9 @@ namespace HealthMonitor
                 case HealthMonitorMessageID.ReportErrorFromVirtualBroker:
                 case HealthMonitorMessageID.ReportWarningFromVirtualBroker:
                 case HealthMonitorMessageID.ReportOkFromVirtualBroker:
+                    Utils.Logger.Info($"ProcessTcpClient, Step 3");
                     MessageFromVirtualBroker(p_tcpClient, message);
+                    Utils.Logger.Info($"ProcessTcpClient, Step 4");
                     break;
                 case HealthMonitorMessageID.GetHealthMonitorCurrentStateToHealthMonitorWebsite:
                     CurrentStateToHealthMonitorWebsite(p_tcpClient, message);
@@ -57,6 +78,8 @@ namespace HealthMonitor
             {
                 Utils.TcpClientDispose(p_tcpClient);
             }
+
+            Utils.Logger.Info($"ProcessTcpClient() END");
         }
 
         //TcpListener m_tcpListener;
