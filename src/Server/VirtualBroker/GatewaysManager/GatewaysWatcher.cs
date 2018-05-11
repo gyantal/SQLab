@@ -159,7 +159,15 @@ namespace VirtualBroker
             catch (Exception e)
             {
                 Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() in catching exception.");
-                HealthMonitorMessage.SendAsync($"Exception in ReConnectToGatewaysThread(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
+                // .RunSynchronously(); only works if it is a delegate (or event). In an async task this is raised: "System.InvalidOperationException: RunSynchronously may not be called on a task not bound to a delegate"
+                // https://medium.com/bynder-tech/c-why-you-should-use-configureawait-false-in-your-library-code-d7837dce3d7f
+                // https://stackoverflow.com/questions/14485115/synchronously-waiting-for-an-async-operation-and-why-does-wait-freeze-the-pro
+                // "Use ConfigureAwait(continueOnCapturedContext: false) as much as possible. This enables your async methods to continue executing without having to re-enter the context.
+                // Use async all the way.Use await instead of Result or Wait"
+                await HealthMonitorMessage.SendAsync($"Exception in ReConnectToGatewaysThread(), but we try to not intentionally crash the whole VBroker app. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).ConfigureAwait(continueOnCapturedContext: false);
+                //HealthMonitorMessage.SendAsync($"Exception in ReConnectToGatewaysThread(), but we try to not intentionally crash the whole VBroker app. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
+                Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() in catching exception and HealthMonitorMessage was sent.");
+                Thread.Sleep(2000);  // TEMP: just wait 1 sec to leave time for loggers to log everything.
             }
             Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() END");
         }

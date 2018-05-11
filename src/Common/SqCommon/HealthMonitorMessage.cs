@@ -53,12 +53,14 @@ namespace SqCommon
             TimeSpan globalMinTimeBetweenMessages = p_globalMinTimeBetweenMessages ?? TimeSpan.MinValue;
             if ((DateTime.UtcNow - gLastMessageTime) > globalMinTimeBetweenMessages)   // don't send it in every minute, just after e.g. 30 minutes
             {
+                Utils.Logger.Info($"HealthMonitorMessage.SendAsync(), step 1.");
                 var t = (new HealthMonitorMessage()
                 {
                     ID = p_healthMonId,
                     ParamStr = p_fullMsg,
                     ResponseFormat = HealthMonitorMessageResponseFormat.None
                 }.SendMessage());
+                Utils.Logger.Info($"HealthMonitorMessage.SendAsync(), step 2.");
 
                 if (!(await t))
                 {
@@ -66,6 +68,7 @@ namespace SqCommon
                 }
                 gLastMessageTime = DateTime.UtcNow;
             }
+            Utils.Logger.Info($"HealthMonitorMessage.SendAsync() END");
         }
         
 
