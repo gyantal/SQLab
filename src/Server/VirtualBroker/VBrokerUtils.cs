@@ -137,6 +137,9 @@ namespace VirtualBroker
                         // So, in this case we have to specify ARCA, but we don't want to specify for All USA stocks, because other stocks are on NYSE.
                         contract.PrimaryExch = "ARCA";
                         break;
+                    case "MSFT":     // ErrCode: 200, Msg: The contract description specified for MSFT is ambiguous.
+                         contract.PrimaryExch = "NASDAQ";
+                        break;
                 }
             }
 
