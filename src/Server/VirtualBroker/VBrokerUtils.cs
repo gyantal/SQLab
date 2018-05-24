@@ -130,12 +130,14 @@ namespace VirtualBroker
             else
             {
                 contract = new Contract() { Symbol = p_sqTicker, SecType = "STK", Currency = "USD", Exchange = "SMART" };
-
                 switch (p_sqTicker.ToUpper())
                 {
                     case "GLD":     // ErrCode: 200, Msg: The contract description specified for GLD is ambiguous.  Because there is a UK stock with the same name, Symbol:GLD,Underlying:GLD,Currency:USD,Exchange:SMART,PrimaryExchange:LSE,IssuerCountry:IE. 
                         // So, in this case we have to specify ARCA, but we don't want to specify for All USA stocks, because other stocks are on NYSE.
                         contract.PrimaryExch = "ARCA";
+                        break;
+                    case "MSFT":     // ErrCode: 200, Msg: The contract description specified for MSFT is ambiguous.
+                         contract.PrimaryExch = "NASDAQ";
                         break;
                 }
             }

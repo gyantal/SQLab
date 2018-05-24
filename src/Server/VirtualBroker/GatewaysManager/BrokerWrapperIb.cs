@@ -171,7 +171,7 @@ namespace VirtualBroker
 
         public virtual void error(string p_str)
         {
-            string errMsg = "BrokerWrapper.error(). " + p_str;
+            string errMsg = "BrokerWrapper.error(str). " + p_str;
             Console.WriteLine(errMsg);
             Utils.Logger.Error(errMsg);
             HealthMonitorMessage.SendAsync($"Msg from BrokerWrapperIb.error(). {errMsg}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).FireParallelAndForgetAndLogErrorTask();
@@ -182,7 +182,7 @@ namespace VirtualBroker
         public virtual void error(int id, int errorCode, string errorMsg)
         {
             string errMsg = "Id: " + id + ", ErrCode: " + errorCode + ", Msg: " + errorMsg;
-            Utils.Logger.Debug("BrokerWrapper.error(). " + errMsg); // even if we return and continue, Log it, so it is conserved in the log file.
+            Utils.Logger.Debug("BrokerWrapper.error(id,errCode,errMsg). " + errMsg); // even if we return and continue, Log it, so it is conserved in the log file.
             bool isAddOrderInfoToErrMsg = false;
 
             if (id == -1)       // -1 probably means there is no ID of the error. It is a special notation.
@@ -236,6 +236,12 @@ namespace VirtualBroker
             // It occurs after alwayl all CannceMktData(). We should ignore it.
             // BrokerWrapper.error(). Id: 1010, Code: 300, Msg: Can't find EId with tickerId:1010
             if (errorCode == 300)
+                return; // skip processing the error further. Don't send it to HealthMonitor.
+
+            // ErrId: 34, ErrCode: 2137, Msg: The closing order quantity is greater than your current position.
+            // Treat it only as a warning. It happens when HarryLong has -100 VXX and then UberVXX buys 150 VXX, which results +50 VXX.
+            // The warning is correct, however we expect this to happen. So, don't raise error.
+            if (errorCode == 2137)
                 return; // skip processing the error further. Don't send it to HealthMonitor.
 
             if (errorCode == 354)
