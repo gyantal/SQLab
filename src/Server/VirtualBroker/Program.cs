@@ -130,9 +130,11 @@ namespace VirtualBroker
         internal static void StrongAssertMessageSendingEventHandler(StrongAssertMessage p_msg)
         {
             Utils.Logger.Info("StrongAssertEmailSendingEventHandler()");
-            // HealthMonitorMessage.SendAsync()..FireParallelAndForgetAndLogErrorTask() is not safe. Don't do it. If mean thread asserts and crashes the whole app instantenously, the background thread may not be able to finish sending the message to HealthMonitor. Use. *.RunSynchronously(); instead.
+            // HealthMonitorMessage.SendAsync()..FireParallelAndForgetAndLogErrorTask() is not safe. Don't do it. If mean thread asserts and crashes the whole app instantenously, the background thread may not be able to finish sending the message to HealthMonitor. Use. *.RunSynchronously(); instead. 
+            // but RunSynchronously may not be called on a task not bound to a delegate, such as the task returned from an asynchronous method.
+            // So for asynch Methods, use Wait(), or use ConfigureAwait() + GetResult() which is Explicit wait too.
             HealthMonitorMessage.SendAsync($"Msg from VirtualBroker. StrongAssert Warning (if Severity is NoException, it is just a mild Warning. If Severity is ThrowException, that exception triggers a separate message to HealthMonitor as an Error). Severity: {p_msg.Severity}, Message: { p_msg.Message}, StackTrace: { p_msg.StackTrace}",
-                (p_msg.Severity == Severity.NoException) ? HealthMonitorMessageID.ReportWarningFromVirtualBroker : HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
+                  (p_msg.Severity == Severity.NoException) ? HealthMonitorMessageID.ReportWarningFromVirtualBroker : HealthMonitorMessageID.ReportErrorFromVirtualBroker).ConfigureAwait(continueOnCapturedContext: false).GetAwaiter().GetResult();
         }
 
 
