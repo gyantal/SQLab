@@ -139,11 +139,17 @@ namespace SQLab.Controllers
             var getAllQuotesTask = SQLab.Controllers.QuickTester.Strategies.StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc, tickersNeeded);  
             Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, TimeSpan, TimeSpan> getAllQuotesData = getAllQuotesTask.Result;
 
+            if (p_allAssetList.Contains("TCEHY") && getAllQuotesData.Item1[0].Count - getAllQuotesData.Item1[p_allAssetList.Length - 2].Count == 1)
+            {
+                getAllQuotesData.Item1[p_allAssetList.Length - 2].Add(getAllQuotesData.Item1[p_allAssetList.Length - 2][getAllQuotesData.Item1[p_allAssetList.Length - 2].Count - 1]);
+            }
+
             int[] histLength = new int[p_allAssetList.Length];
             for (int i = 0; i < histLength.Length; i++)
             {
                 histLength[i] = getAllQuotesData.Item1[i].Count;
             }
+            
             int allDataLength = (histLength.Min() == histLength.Max()) ? histLength.Min() : 0;
 
             if (allDataLength == 0)
