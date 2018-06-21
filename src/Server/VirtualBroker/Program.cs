@@ -78,16 +78,16 @@ namespace VirtualBroker
                             Console.WriteLine(Controller.g_controller.GetNextScheduleTimes(false).ToString());
                             break;
                         case "7":
-                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(0);
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation("NeuralSniffer1");
                             break;
                         case "8":
-                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(1);
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation("TAA");
                             break;
                         case "9":
-                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(2);
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation("UberVXX");
                             break;
                         case "10":
-                            Controller.g_controller.TestElapseFirstTriggerWithSimulation(3);
+                            Controller.g_controller.TestElapseFirstTriggerWithSimulation("HarryLong");
                             break;
                     }
 

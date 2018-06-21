@@ -52,15 +52,18 @@ namespace HealthMonitor
                         Utils.Logger.Info("Hello. I am not crashed yet! :)");
                         break;
                     case "2":
-                        TestPhoneCall();
+                        TestIntentionalCrash();
                         break;
                     case "3":
-                        HealthMonitor.g_healthMonitor.CheckAmazonAwsInstances_Elapsed("ConsoleMenu");
+                        TestPhoneCall();
                         break;
                     case "4":
-                        Console.WriteLine(HealthMonitor.g_healthMonitor.DailySummaryReport(false).ToString());
+                        HealthMonitor.g_healthMonitor.CheckAmazonAwsInstances_Elapsed("ConsoleMenu");
                         break;
                     case "5":
+                        Console.WriteLine(HealthMonitor.g_healthMonitor.DailySummaryReport(false).ToString());
+                        break;
+                    case "6":
                         HealthMonitor.g_healthMonitor.DailyReportTimer_Elapsed(null);
                         Console.WriteLine("DailyReport email was sent.");
                         break;
@@ -106,11 +109,12 @@ namespace HealthMonitor
 
             Utils.ConsoleWriteLine(ConsoleColor.Magenta, "----HealthMonitor Server    (type and press Enter)----");      
             Console.WriteLine("1. Say Hello. Don't do anything. Check responsivenes.");
-            Console.WriteLine("2. Test Twilio phone call service.");
-            Console.WriteLine("3. Test AmazonAWS API:DescribeInstances()");
-            Console.WriteLine("4. VirtualBroker Report: show on Console.");
-            Console.WriteLine("5. VirtualBroker Report: send Html email.");
-            Console.WriteLine("6. Exit gracefully (Avoid Ctrl-^C).");
+            Console.WriteLine("2. Crash App intentionaly (for simulation purposes).");
+            Console.WriteLine("3. Test Twilio phone call service.");
+            Console.WriteLine("4. Test AmazonAWS API:DescribeInstances()");
+            Console.WriteLine("5. VirtualBroker Report: show on Console.");
+            Console.WriteLine("6. VirtualBroker Report: send Html email.");
+            Console.WriteLine("7. Exit gracefully (Avoid Ctrl-^C).");
             string result = null;
             try
             {
@@ -152,5 +156,33 @@ namespace HealthMonitor
                 Utils.Logger.Error(e, "Exception in TestPhoneCall().");
             }
         }
+
+        static public void TestIntentionalCrash()
+        {
+            Console.Write("Test Intentional Crash. Are you sure (y/n)? ");
+            Utils.Logger.Info("Test Intentional Crash. Are you sure (y/n)?");
+
+            string result = null;
+            try
+            {
+                result = Console.ReadLine();
+            }
+            catch (System.IO.IOException e) // on Linux, of somebody closes the Terminal Window, Console.Readline() will throw an Exception with Message "Input/output error"
+            {
+                Utils.Logger.Info($"Console.ReadLine() exception. Somebody closes the Terminal Window: {e.Message}");
+            }
+
+            if (result.ToLower() != "y")
+                return;
+
+            // https://stackoverflow.com/questions/17996738/how-to-make-c-sharp-application-crash
+            // All the others can be handled by the top level ApplicationDomain.OnUnhandledException and the like.
+            ThreadPool.QueueUserWorkItem(new WaitCallback(ignored =>
+            {
+                throw new Exception();
+            }));
+
+        }
+
     }
 }

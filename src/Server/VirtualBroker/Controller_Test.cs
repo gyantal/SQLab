@@ -240,15 +240,16 @@ namespace VirtualBroker
             return sb;
         }
 
-        internal void TestElapseFirstTriggerWithSimulation(int p_taskSchemaInd)
+        internal void TestElapseFirstTriggerWithSimulation(string p_taskSchemaName)
         {
-            if (g_taskSchemas.Count <= p_taskSchemaInd)
+            var taskSchema = g_taskSchemas.Find(r => r.Name == p_taskSchemaName);
+            if (taskSchema == null)
             {
                 Console.WriteLine("No such taskschema.");
                 return;
             }
 
-            foreach (var trigger in g_taskSchemas[p_taskSchemaInd].Triggers)
+            foreach (var trigger in taskSchema.Triggers)
             {
                 if (trigger.TriggerSettings.TryGetValue(BrokerTaskSetting.IsSimulatedTrades, out object isSimulationObj))
                 {
