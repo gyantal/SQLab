@@ -49,6 +49,9 @@ namespace Overmind
 </style></head>
 <body class=""sqNormalText"">";
 
+        static string g_htmlEmailEnd =
+@"</body></html>";
+
         internal void Start()
         {
             gMainThreadExitsResetEvent = new ManualResetEventSlim(false);
@@ -196,6 +199,7 @@ namespace Overmind
                     return;
                 }
 
+                CheckIfTomorrowIsMonthlyOptionExpirationDay();
                 CheckIntradayStockPctChanges();
                 CheckLastClosePrices();
 
@@ -410,7 +414,7 @@ namespace Overmind
                 sb.Append("Intraday price was not used for this trigger. You need to act with a delay anyway.<br/><br/>");
                 sb.Append("<strong>Action: </strong><br/> This is a Mean Reversion (MR) opportunity.<br/> Trading 'fading the VIX spike' can be considered.<br/>");
                 sb.Append("Maybe risking 1/10th of the portfolio.<br/> Doubling down in another chunk maximum 3 times.<br/>");
-                sb.Append("</body></html>");
+                sb.Append(g_htmlEmailEnd);
 
                 string emailHtmlBody = sb.ToString();
                 new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "Overmind: " + subjectPart, Body = emailHtmlBody, IsBodyHtml = true }.Send();
@@ -420,7 +424,40 @@ namespace Overmind
 
         }
 
+        private static void CheckIfTomorrowIsMonthlyOptionExpirationDay()
+        {
+            // Expiration date: USA: 3rd Friday of the month. When that Friday falls on a holiday, the expiration date is on the Thursday immediately before.
+            DateTime tomorrowDateUtc = DateTime.UtcNow.AddDays(1);
+            if (tomorrowDateUtc.DayOfWeek != DayOfWeek.Friday)
+                return;
+            // method 1: if it is Friday, subtract 7 days backwards 2 times and check if that is a positive number. However, subtracting another 7 days should be a negative number
+            // method 2: think about possible day of the months.
+            //          > If 1st day of the month is Friday, then the 3rd Friday is: 1+7+7=15th  (it happened in 2018-06), that is the earliest possible date.
+            //          > if 1st day of the month Saturday, then the 1rd Friday is 7th. The 3rd Friday is 7+7+7=21th, that is the largest day possible for the 3rd Friday
+            if (tomorrowDateUtc.Day < 15 || tomorrowDateUtc.Day > 21)
+                return;
+            // if we are here, it is Friday and dayOfMonth in [15,21], which is the 3rd Friday
+            string subjectPart = "Monthly Option expiration. Trade HarryLong 2 manually!";
+            StringBuilder sb = new StringBuilder(g_htmlEmailStart);
+            sb.Append(
+                @"<small>Because of the EU PRIIPs (KID) Regulation, IB UK doesn't allow US domiciled ETFs like SPY, QQQ, VXX to buy until the account is worth less than 500K EUR. Workaround is options.<br/>
+- for shorting VXX stock, we buy VXX Put option (cheap, very close to expiration, when time value is tiny), then we let it expire or force-exercise. The result is 100 short VXX stock immediately. It WORKED !, because it is technically not a stock shorting/buying, and EU regulation protect Funds (ETF) only, and when you trade options you are assumed to be sophisticated investor already.<br/>
+- only 100 stocks in batches can be obtained, but we can even go more granular by exercising 1 option for 100 shares, then liquidating 2/3rd of it instantly. Liquidation is allowed.<br/>
+- Don't fret if it is rebalanced only after 2 months. Actually it (SR) is better.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;Daily,1d: CAGR: 58.24%, SR 1.14<br/>&nbsp;&nbsp;&nbsp;&nbsp;Daily,20d: CAGR: 59.09%, SR 1.16<br/>&nbsp;&nbsp;&nbsp;&nbsp;Daily,40d: CAGR: 59.53%, SR 1.19 
+</small><br/> 
+<h2>ToDo:</h2>
+<ul>
+<li>VBroker: uncomment HarryLong scheduling, run HarryLong simulation locally, that calculates the proposed number of shares to trade. Comment out HarryLong scheduling again (so that it is not sent to the server later).</li>
+<li>Round the number of stocks up to the nearest 100 or just ignore them if tiny. Buy options and force exercise them. Liquidate the unnecessary stock parts.</li>
+<li>Register trades as stocks into SQDeskop.</li>
+</ul>");
+            sb.Append(g_htmlEmailEnd);
 
+            string emailHtmlBody = sb.ToString();
+            new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "Overmind: " + subjectPart, Body = emailHtmlBody, IsBodyHtml = true }.Send();
+
+        }
 
         // Amazon UK price history can be checked in uk.camelcamelcamel.com, for example: http://uk.camelcamelcamel.com/Sennheiser-Professional-blocking-gaming-headset-Black/product/B00JQDOANK
         private static double? GetAmazonProductPrice(string p_amazonProductUrl)
