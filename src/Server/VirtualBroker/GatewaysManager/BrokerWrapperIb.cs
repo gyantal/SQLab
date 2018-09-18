@@ -37,6 +37,7 @@ namespace VirtualBroker
 
         public string IbAccountsList { get; set; }
         public ConcurrentDictionary<int, MktDataSubscription> MktDataSubscriptions { get; set; } = new ConcurrentDictionary<int, MktDataSubscription>();
+        public ConcurrentDictionary<int, MktDataSubscription> OldMktDataSubscriptions { get; set; } = new ConcurrentDictionary<int, MktDataSubscription>(); // we keep it as a log, however we remove the price parts to not consume memory
         public ConcurrentDictionary<int, HistDataSubscription> HistDataSubscriptions { get; set; } = new ConcurrentDictionary<int, HistDataSubscription>();
         public ConcurrentDictionary<int, OrderSubscription> OrderSubscriptions { get; set; } = new ConcurrentDictionary<int, OrderSubscription>();
 
@@ -250,6 +251,16 @@ namespace VirtualBroker
                 // ErrId: 1049, ErrCode: 354, Msg: Requested market data is not subscribed.
                 if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
                     return; // skip processing the error further. Don't send it to HealthMonitor.
+                if (!MktDataSubscriptions.TryGetValue(id, out MktDataSubscription mktDataSubscription))
+                    OldMktDataSubscriptions.TryGetValue(id, out mktDataSubscription);
+                if (mktDataSubscription != null)
+                {
+                    errMsg += $". Id {id} cannot be found in MktDataSubscriptions or OldMktDataSubscriptions.";
+                }
+                else
+                {
+                    errMsg += $". Id {id} is found in MktDataSubscriptions or OldMktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
+                }
             }
 
             if (errorCode == 404)
@@ -354,6 +365,7 @@ namespace VirtualBroker
             // 2. Only after informing IBGateway delete the record from our memory DB
             MktDataSubscription mktDataSubscription;
             MktDataSubscriptions.TryRemove(p_marketDataId, out mktDataSubscription);
+            OldMktDataSubscriptions.TryAdd(p_marketDataId, mktDataSubscription);        // store it for logging purposes. For error message "Requested market data is not subscribed."
             Utils.Logger.Debug($"CancelMktData() { p_marketDataId} END");
         }
 
