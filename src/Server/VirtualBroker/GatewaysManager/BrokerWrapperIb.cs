@@ -251,15 +251,16 @@ namespace VirtualBroker
                 // ErrId: 1049, ErrCode: 354, Msg: Requested market data is not subscribed.
                 if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
                     return; // skip processing the error further. Don't send it to HealthMonitor.
-                if (!MktDataSubscriptions.TryGetValue(id, out MktDataSubscription mktDataSubscription))
-                    OldMktDataSubscriptions.TryGetValue(id, out mktDataSubscription);
-                if (mktDataSubscription != null)
+                if (MktDataSubscriptions.TryGetValue(id, out MktDataSubscription mktDataSubscription))
                 {
-                    errMsg += $". Id {id} cannot be found in MktDataSubscriptions or OldMktDataSubscriptions.";
+                    errMsg += $". Id {id} is found in MktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
+                } else if (OldMktDataSubscriptions.TryGetValue(id, out mktDataSubscription))
+                {
+                    errMsg += $". Id {id} is found in OldMktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
                 }
                 else
                 {
-                    errMsg += $". Id {id} is found in MktDataSubscriptions or OldMktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
+                    errMsg += $". Id {id} cannot be found in MktDataSubscriptions or OldMktDataSubscriptions.";
                 }
             }
 
