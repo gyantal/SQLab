@@ -43,7 +43,7 @@ namespace HealthMonitor
         Timer m_dailyMarketOpenTimer = null;   // called at 9:30 ET, may be late or early by 1 hour, if there is a DayLightSaving day
         Timer m_dailyReportTimer = null;   // called at the market close, because this is set by the MarketOpen Timer, it always use the current day proper DayLightSaving settings. Will be correct.
 
-        const int cRtpsTimerFrequencyMinutes = 10;
+        const int cRtpsTimerFrequencyMinutes = 15;  // changed from 10min to 15, to decrease strain on VBroker and to get less 'Requested market data is not subscribed' emails.
         const int cHeartbeatTimerFrequencyMinutes = 5;
 
         Object m_lastHealthMonInformSupervisorLock = new Object();   // null value cannot be locked, so we have to create an object

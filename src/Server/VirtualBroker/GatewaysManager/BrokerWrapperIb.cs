@@ -297,7 +297,7 @@ namespace VirtualBroker
         }
 
         // there are some weird IB errors that happen usually when IB server is down. 99% of the time it is at the weekend, or when pre or aftermarket. In this exceptional times, ignore errors.
-        public bool IsApproximatelyMarketTradingTimeForIgnoringIBErrors()
+        public static bool IsApproximatelyMarketTradingTimeForIgnoringIBErrors()
         {
             DateTime utcNow = DateTime.UtcNow;
             DateTime etNow = Utils.ConvertTimeFromUtcToEt(utcNow);
@@ -305,11 +305,13 @@ namespace VirtualBroker
                 return false;
 
             // The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET.
-            if (etNow.Hour <= 8 || etNow.Hour >= 17)   // if it is not Approximately around market hours => no Error
-                return false;
+            TimeSpan timeTodayEt = etNow - etNow.Date;
+            if (timeTodayEt.TotalMinutes < 9 * 60 + 29)
+                return false;   // if it is not Approximately around market hours => no Error
+            if (timeTodayEt.TotalMinutes > 17 * 60)
+                return false;   // if it is not Approximately around market hours => no Error
 
             // you can skip holiday days too later
-
             return true;
         }
 

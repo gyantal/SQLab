@@ -45,7 +45,7 @@ namespace HealthMonitor
 
                 //string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,SVXY&f=l";
                 //string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^GSPC,SVXY&f=l";  // 2017-10-25: VXV: IB error: "No security definition has been found for the request", and not even in TWS. So, cancel it.
-                string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^GSPC,SVXY&f=l"; // 2018-02-06: XIV will be terminated on 20th February, 2018. Check SVXY instead.
+                string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^GSPC,SVXY&f=l"; // 2018-10-10: thinking about removing ^VIX,^GSPC so less strain on VBroker. But the point of HealthMonitor is to see if there is a problem (no index data subscription). So, keep them.
                 string rtpsReply = String.Empty;
                 if (Utils.DownloadStringWithRetry(out rtpsReply, url, 5, TimeSpan.FromSeconds(5), false))
                     Utils.Logger.Info(url + " returned: " + (rtpsReply.Substring(0, (rtpsReply.Length > 45) ? 45 : rtpsReply.Length)).Replace("\r\n", "").Replace("\n", ""));   // it is better to see it as one line in the log file
