@@ -37,7 +37,7 @@ namespace VirtualBroker
 
         public string IbAccountsList { get; set; }
         public ConcurrentDictionary<int, MktDataSubscription> MktDataSubscriptions { get; set; } = new ConcurrentDictionary<int, MktDataSubscription>();
-        public ConcurrentDictionary<int, MktDataSubscription> OldMktDataSubscriptions { get; set; } = new ConcurrentDictionary<int, MktDataSubscription>(); // we keep it as a log, however we remove the price parts to not consume memory
+        public ConcurrentDictionary<int, MktDataSubscription> CancelledMktDataSubscriptions { get; set; } = new ConcurrentDictionary<int, MktDataSubscription>(); // we keep it as a log, however we remove the price parts to not consume memory
         public ConcurrentDictionary<int, HistDataSubscription> HistDataSubscriptions { get; set; } = new ConcurrentDictionary<int, HistDataSubscription>();
         public ConcurrentDictionary<int, OrderSubscription> OrderSubscriptions { get; set; } = new ConcurrentDictionary<int, OrderSubscription>();
 
@@ -234,7 +234,7 @@ namespace VirtualBroker
 
             // after subscribing to Market Snapshot data for a ticker, and we call ClientSocket.cancelMktData(p_marketDataId); that is executed properly
             // however IBGateway receives prices for the same ticker, and gives back the Error message here.
-            // It occurs after alwayl all CannceMktData(). We should ignore it.
+            // It occurs after always all CannceMktData(). We should ignore it.
             // BrokerWrapper.error(). Id: 1010, Code: 300, Msg: Can't find EId with tickerId:1010
             if (errorCode == 300)
                 return; // skip processing the error further. Don't send it to HealthMonitor.
@@ -254,13 +254,19 @@ namespace VirtualBroker
                 if (MktDataSubscriptions.TryGetValue(id, out MktDataSubscription mktDataSubscription))
                 {
                     errMsg += $". Id {id} is found in MktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
-                } else if (OldMktDataSubscriptions.TryGetValue(id, out mktDataSubscription))
+                } else if (CancelledMktDataSubscriptions.TryGetValue(id, out mktDataSubscription))
                 {
-                    errMsg += $". Id {id} is found in OldMktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
+                    errMsg += $". Id {id} is found in CancelledMktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
+
+                    if (!mktDataSubscription.IsAnyPriceArrived)
+                    {
+                        Utils.Logger.Info(errMsg + " Expected error for failed IB reaction. If mktData that was cancelled already AND IsAnyPriceArrived=false, then ignore this error. Don't send HealthMonitor message.");
+                        return; // If mktData that was cancelled already AND IsAnyPriceArrived=false, then ignore this error. This happens rarely when IB doesn't give any price for a ticker, then 2 seconds later we Cancel that MktData subscription. Then this error comes. It is expected.
+                    }
                 }
                 else
                 {
-                    errMsg += $". Id {id} cannot be found in MktDataSubscriptions or OldMktDataSubscriptions.";
+                    errMsg += $". Id {id} cannot be found in MktDataSubscriptions or CancelledMktDataSubscriptions.";
                 }
             }
 
@@ -356,6 +362,8 @@ namespace VirtualBroker
             // RUT index data comes once ever 5 seconds
             if (!p_snapshot)    // only if it is a continous streaming
                 mktDataSubscr.CheckDataIsAliveTimer = new System.Threading.Timer(new TimerCallback(MktDataIsAliveTimer_Elapsed), mktDataSubscr, TimeSpan.FromSeconds(15), TimeSpan.FromMilliseconds(-1.0));
+
+            Utils.Logger.Debug($"ReqMktDataStream() {p_contract.Symbol}: { marketDataId} END");
             return marketDataId;
         }
 
@@ -368,11 +376,15 @@ namespace VirtualBroker
             // 2. Only after informing IBGateway delete the record from our memory DB
             MktDataSubscription mktDataSubscription;
             MktDataSubscriptions.TryRemove(p_marketDataId, out mktDataSubscription);
-            OldMktDataSubscriptions.TryAdd(p_marketDataId, mktDataSubscription);        // store it for logging purposes. For error message "Requested market data is not subscribed."
+
+            if (mktDataSubscription.CheckDataIsAliveTimer != null)
+                mktDataSubscription.CheckDataIsAliveTimer.Dispose();
+
+            CancelledMktDataSubscriptions.TryAdd(p_marketDataId, mktDataSubscription);        // store it for logging purposes. For error message "Requested market data is not subscribed."
             Utils.Logger.Debug($"CancelMktData() { p_marketDataId} END");
         }
 
-        //- When streaming realtime price of Data for RUT, the very first time of the day, TWS gives price, but IBGateway does'nt give any price. 
+        //- When streaming realtime price of Data for RUT, the very first time of the day, TWS gives price, but IBGateway doesn't give any price. 
         // I have to restart VBroker, so second VBroker run, there is a RUT price.
         //>Solution1: If real time price is not given in 5 minutes, cancel and ask realtime mktData again in the morning
         //	>this would work intraday too.After 20 seconds, we Subscribe to market data.
@@ -390,8 +402,8 @@ namespace VirtualBroker
                 if (mktDataSubscr.IsAnyPriceArrived)  // we had at least 1 price, so everything seems ok.
                     return;
 
-                Console.WriteLine($"DataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
-                Utils.Logger.Info($"DataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
+                Console.WriteLine($"MktDataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
+                Utils.Logger.Info($"MktDataIsAliveTimer_Elapsed(): No price found for {mktDataSubscr.Contract.Symbol}. Cancel and re-subscribe with the same marketDataId.");
                 ClientSocket.cancelMktData(mktDataSubscr.MarketDataId);
                 ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
                 ClientSocket.reqMktData(mktDataSubscr.MarketDataId, mktDataSubscr.Contract, null, false, null);     // use the same MarketDataId, so we don't have to update the MktDataSubscriptions dictionary.
@@ -603,10 +615,10 @@ namespace VirtualBroker
 
         public virtual void tickString(int tickerId, int tickType, string p_value)
         {
-            Utils.Logger.Info("Tick string. Tick Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + p_value);
-            // lastTimestamp example: "1303329585"
             if (tickType == TickType.LAST_TIMESTAMP)
             {
+                // lastTimestamp example: "1303329585"
+                Utils.Logger.Info("Tick string. Tick Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + p_value);
                 MktDataSubscription mktDataSubscription = null;
                 if (!MktDataSubscriptions.TryGetValue(tickerId, out mktDataSubscription))
                 {
@@ -617,15 +629,20 @@ namespace VirtualBroker
             }
             else if (tickType == TickType.ASK_EXCH || tickType == TickType.BID_EXCH || tickType == TickType.LAST_EXCH)
             {
+                // !!! It comes every second for every price data. Don't log to file and don't write to console. The log file is 150MB every day.
+
                 //https://www.interactivebrokers.com/en/index.php?f=5061&ns=T&nhf=T
                 //Show Quote Exchange
                 //A single data request from the API can receive aggregate quotes from multiple exchanges.With API versions 9.72.18 and TWS 9.62 and higher, the tick types 'bidExch'(tick type 32), 'askExch'(tick type 33), 'lastExch'(tick type 84) are used to identify the source of a quote.To preserve bandwidth, the data returned to these tick types consists of a sequence of capital letters rather than a long list of exchange names for every returned exchange name field.To find the full exchange name corresponding to a single letter code returned in tick types 32, 33, or 84, and API function IBApi::EClient::reqSmartComponents is available.
                 //The code for "ARCA" may be "P".In that case if "P" is returned to the exchange tick types, that would indicate the quote was provided by ARCA.
                 //Tick string.Tick Id: 1010, Type: askExch, Value: QT
                 //Tick string.Tick Id: 1003, Type: askExch, Value: CBQWTMJ
-                // it comes ever second. Don't log to file and don't write to console.
-            } else
+            }
+            else
+            {
+                Utils.Logger.Info("Tick string. Tick Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + p_value);
                 Console.WriteLine("Tick string. Tick Id:" + tickerId + ", Type: " + TickType.getField(tickType) + ", Value: " + p_value);
+            }
         }
 
         public virtual void tickGeneric(int tickerId, int field, double value)
