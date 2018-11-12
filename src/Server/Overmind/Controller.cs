@@ -221,10 +221,9 @@ namespace Overmind
 
         private static void CheckHealthMonitorAlive()
         {
-            bool isHealthMonitorAlive = false;
+            string receivedTcpMsg = "";
             try
             {
-                string receivedTcpMsg = null;
                 using (var client = new TcpClient())
                 {
                     Task task = client.ConnectAsync(ServerIp.HealthMonitorPublicIp, HealthMonitorMessage.DefaultHealthMonitorServerPort);
@@ -240,9 +239,6 @@ namespace Overmind
 
                     BinaryReader br = new BinaryReader(client.GetStream());
                     receivedTcpMsg = br.ReadString();
-                    Utils.Logger.Debug("CheckHealthMonitorAlive() returned answer: " + receivedTcpMsg);
-                    if (receivedTcpMsg.StartsWith("Ping. Healthmonitor UtcNow: "))
-                        isHealthMonitorAlive = true;
                 }
 
                 Utils.Logger.Debug("ReportHealthMonitorCurrentStateToDashboardInJSON() after WaitMessageFromWebJob()");
@@ -252,6 +248,10 @@ namespace Overmind
                 Utils.Logger.Error("Error:HealthMonitor SendMessage exception:  " + e);       
             }
 
+            Utils.Logger.Debug("CheckHealthMonitorAlive() returned answer: " + receivedTcpMsg);
+            Console.WriteLine($"HealthMonitor Ping return: '{receivedTcpMsg}'");
+
+            bool isHealthMonitorAlive = receivedTcpMsg.StartsWith("Ping. Healthmonitor UtcNow: ");
             if (isHealthMonitorAlive)
                 return;
 
@@ -317,7 +317,7 @@ namespace Overmind
                     Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + gyantalPhoneCallInnerStr + " ... I repeat " + gyantalPhoneCallInnerStr,
                     NRepeatAll = 2
                 };
-                Console.WriteLine(call.MakeTheCall());
+                Console.WriteLine("call.MakeTheCall() return: " + call.MakeTheCall());
             }
 
             if (!String.IsNullOrEmpty(charmatEmailInnerlStr))
@@ -330,7 +330,7 @@ namespace Overmind
                     Message = "This is a warning notification from SnifferQuant. There's a large up or down movement in " + charmatPhoneCallInnerStr + " ... I repeat " + charmatPhoneCallInnerStr,
                     NRepeatAll = 2
                 };
-                Console.WriteLine(call.MakeTheCall());
+                Console.WriteLine("call.MakeTheCall() return: " + call.MakeTheCall());
             }
         }
 
