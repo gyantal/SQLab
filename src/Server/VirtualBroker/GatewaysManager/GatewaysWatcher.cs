@@ -169,6 +169,17 @@ namespace VirtualBroker
                 Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() in catching exception and HealthMonitorMessage was sent.");
                 Thread.Sleep(2000);  // TEMP: just wait 1 sec to leave time for loggers to log everything.
             }
+
+            if (!m_isReady)
+            {
+                // Without all the IB connections (isAllConnected), we can choose to crash the App, but we do NOT do that, because we may be able to recover them later. 
+                // It is a strategic (safety vs. conveniency) decision: in that case if not all IBGW is connected, (it can be an 'expected error'), VBroker runs further and try connecting every 10 min.
+
+                // 2018-11-12: current state is: after failed IBGW connections, VBroker sends 1 HealthMonitor message and runs further (m_isReady = false), and it never tries to reconnect IBs. Reprogram that functionality later.
+                // TODO: start a timer here to call ReconnectToGateways() 10 minutes later.   
+                Utils.Logger.Warn("GatewaysWatcher:ReconnectToGateways(): m_isReady is FALSE. 'TODO: start a timer here to call ReconnectToGateways() 10 minutes later.'");
+            }
+
             Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() END");
         }
 
@@ -222,9 +233,9 @@ namespace VirtualBroker
                     Utils.Logger.Info(e, $"Exception in ReconnectToGateway()-user:{gateway.GatewayUser}: nRetry:{nConnectionRetry} : Msg:{e.Message}");
                     if (nConnectionRetry >= nMaxRetry)
                     {
-                        Utils.Logger.Info("GatewaysWatcher:ReconnectToGateway(). This gateway failed after many retries. We can send HealthMonitor message here, but better at a higher level if the second Gateway fails too.");
+                        Utils.Logger.Info("GatewaysWatcher:ReconnectToGateway(). This gateway failed after many retries. We could send HealthMonitor message here, but better at a higher level if the second Gateway fails too.");
                         //HealthMonitorMessage.SendException($"ReConnectToGateway Thread: nMaxRetry: {nMaxRetry}", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);  // the higher level ReconnectToGateways() will send the Error to HealthMonitor
-                        throw; // without IB connection, we can crash the App. No point to continue. we cannot recover.
+                        throw;
                     }
                     else
                     {
