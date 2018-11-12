@@ -10,6 +10,7 @@ namespace SqCommon
     public enum HealthMonitorMessageID
     {
         Undefined = 0,
+        Ping,
         TestHardCash,
         TestSendingEmail,
         TestMakingPhoneCall,

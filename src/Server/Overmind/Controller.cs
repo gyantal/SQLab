@@ -3,8 +3,10 @@ using SqCommon;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;     // this is the only timer available under DotNetCore
 using System.Threading.Tasks;
@@ -134,7 +136,8 @@ namespace Overmind
                     m_dailyMorningTimer.Change(ts, TimeSpan.FromMilliseconds(-1.0));
                     Utils.Logger.Info("m_dailyMorningTimer is scheduled at " + (DateTime.UtcNow + ts).ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture));
                 }
-                    
+
+                CheckHealthMonitorAlive();
 
                 DateTime utcToday = DateTime.UtcNow.Date;
                 string todayDateStr = DateTime.UtcNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -192,6 +195,8 @@ namespace Overmind
                     Utils.Logger.Info("m_dailyMarketWatcherTimer is scheduled at " + (DateTime.UtcNow + ts).ToString("MM'-'dd H:mm:ss", CultureInfo.InvariantCulture));
                 }
 
+                CheckHealthMonitorAlive();
+
                 // TODO: if market holiday: it shouldn't process anything either
                 if (DateTime.UtcNow.DayOfWeek == DayOfWeek.Saturday || DateTime.UtcNow.DayOfWeek == DayOfWeek.Sunday)
                 {
@@ -212,6 +217,51 @@ namespace Overmind
                 new Email { ToAddresses = Utils.Configuration["EmailGyantal"], Subject = "OvermindServer: Crash", Body = "Crash. Exception: " + e.Message + ", StackTrace " + e.StackTrace + ", ToString(): " + e.ToString(), IsBodyHtml = false }.Send();
             }
             Utils.Logger.Info("DailyMiddayTimer_Elapsed() END");
+        }
+
+        private static void CheckHealthMonitorAlive()
+        {
+            bool isHealthMonitorAlive = false;
+            try
+            {
+                string receivedTcpMsg = null;
+                using (var client = new TcpClient())
+                {
+                    Task task = client.ConnectAsync(ServerIp.HealthMonitorPublicIp, HealthMonitorMessage.DefaultHealthMonitorServerPort);
+                    if (Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(10))).Result != task)
+                    {
+                        Utils.Logger.Error("CheckHealthMonitorAlive(): Error:HealthMonitor server: client.Connect() timeout.");
+                    }
+
+                    BinaryWriter bw = new BinaryWriter(client.GetStream());
+                    bw.Write((Int32)HealthMonitorMessageID.Ping);
+                    bw.Write("");
+                    bw.Write((Int32)HealthMonitorMessageResponseFormat.String);
+
+                    BinaryReader br = new BinaryReader(client.GetStream());
+                    receivedTcpMsg = br.ReadString();
+                    Utils.Logger.Debug("CheckHealthMonitorAlive() returned answer: " + receivedTcpMsg);
+                    if (receivedTcpMsg.StartsWith("Ping. Healthmonitor UtcNow: "))
+                        isHealthMonitorAlive = true;
+                }
+
+                Utils.Logger.Debug("ReportHealthMonitorCurrentStateToDashboardInJSON() after WaitMessageFromWebJob()");
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error("Error:HealthMonitor SendMessage exception:  " + e);       
+            }
+
+            if (isHealthMonitorAlive)
+                return;
+
+            new Email
+            {
+                ToAddresses = Utils.Configuration["EmailGyantal"],
+                Subject = "OvermindServer Warning! : HealthMonitor is NOT Alive.",
+                Body = $"OvermindServer Warning! : HealthMonitor is NOT Alive.",
+                IsBodyHtml = false
+            }.SendAsync().FireParallelAndForgetAndLogErrorTask();
         }
 
         private static void CheckIntradayStockPctChanges()

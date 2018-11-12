@@ -145,7 +145,7 @@ namespace SQLab.Controllers
 
                 try
                 {
-                    string messageFromWebJob = null;
+                    string receivedTcpMsg = null;
                     using (var client = new TcpClient())
                     {
                         Task task = client.ConnectAsync(ServerIp.HealthMonitorPublicIp, HealthMonitorMessage.DefaultHealthMonitorServerPort);
@@ -161,12 +161,12 @@ namespace SQLab.Controllers
                         bw.Write((Int32)HealthMonitorMessageResponseFormat.JSON);
 
                         BinaryReader br = new BinaryReader(client.GetStream());
-                        messageFromWebJob = br.ReadString();
-                        m_logger.LogDebug("ReportHealthMonitorCurrentStateToDashboardInJSON() returned answer: " + messageFromWebJob);
+                        receivedTcpMsg = br.ReadString();
+                        m_logger.LogDebug("ReportHealthMonitorCurrentStateToDashboardInJSON() returned answer: " + receivedTcpMsg);
                     }
 
                     m_logger.LogDebug("ReportHealthMonitorCurrentStateToDashboardInJSON() after WaitMessageFromWebJob()");
-                    return Content(messageFromWebJob, "application/json");
+                    return Content(receivedTcpMsg, "application/json");
                 }
                 catch (Exception e)
                 {

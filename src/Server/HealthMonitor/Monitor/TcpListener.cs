@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -56,6 +57,9 @@ namespace HealthMonitor
             Utils.Logger.Info($"ProcessTcpClient, Step 2");
             switch (message.ID)
             {
+                case HealthMonitorMessageID.Ping:
+                    ServePingRequest(p_tcpClient, message);
+                    break;
                 case HealthMonitorMessageID.TestHardCash:
                     throw new Exception("Testing Hard Crash by Throwing this Exception");
                 case HealthMonitorMessageID.ReportErrorFromVirtualBroker:
@@ -81,6 +85,18 @@ namespace HealthMonitor
 
             Utils.Logger.Info($"ProcessTcpClient() END");
         }
+
+
+        internal void ServePingRequest(TcpClient p_tcpClient, HealthMonitorMessage p_message)
+        {
+            if (p_message.ResponseFormat == HealthMonitorMessageResponseFormat.String)
+            {
+                string responseStr = "Ping. Healthmonitor UtcNow: " + DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
+                bw.Write(responseStr);                
+            }
+        }
+
 
         //TcpListener m_tcpListener;
         //Task<TcpClient> m_tcpListenerCurrentClientTask;
