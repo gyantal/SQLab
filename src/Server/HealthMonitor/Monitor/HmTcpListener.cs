@@ -75,6 +75,9 @@ namespace HealthMonitor
                 case HealthMonitorMessageID.ReportErrorFromSQLabWebsite:
                     ErrorFromSqLabWebsite(p_tcpClient, message);
                     break;
+                default:
+                    StrongAssert.Fail(Severity.NoException, $"<Tcp:>ProcessTcpClient: Message ID:'{ message.ID}' is unexpected, unhandled. This probably means a serious error.");
+                    break;
 
             }
 

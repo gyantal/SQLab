@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SqCommon
 {
-    public enum HealthMonitorMessageID
+    public enum HealthMonitorMessageID  // ! if this enum is changed by inserting a new value in the middle, redeploy all apps that uses it, otherwise they interpret the number differently
     {
         Undefined = 0,
         Ping,
