@@ -89,6 +89,10 @@ namespace VirtualBroker
         void Disconnect();
         bool IsConnected();
 
+        int ReqAccountSummary();
+        void CancelAccountSummary(int p_reqId);
+        void ReqPositions();
+
         int ReqMktDataStream(Contract p_contract, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null);
         void CancelMktData(int p_marketDataId);
         bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes);

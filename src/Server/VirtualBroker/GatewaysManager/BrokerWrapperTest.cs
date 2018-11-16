@@ -153,6 +153,21 @@ namespace VirtualBroker
             throw new NotImplementedException();
         }
 
+        public virtual int ReqAccountSummary()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void CancelAccountSummary(int p_reqId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void ReqPositions()
+        {
+            throw new NotImplementedException();
+        }
+
         public bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
         {
             switch (p_contract.Symbol)

@@ -66,32 +66,34 @@ namespace VirtualBroker
                             Controller.g_controller.TestHealthMonitorListenerBySendingErrorFromVirtualBroker();
                             break;
                         case "4":
-                            //Controller.g_controller.TestHardCrash();
                             Controller.g_controller.TestRealtimePriceService();
                             break;
                         case "5":
+                            Controller.g_controller.TestGetAccountsSummaryOrPositions();
+                            break;
+                        case "6":
                             //Controller.g_controller.TestHardCrash();
                             //Controller.g_controller.EncogXORHelloWorld();
                             Controller.g_controller.TestSqlDb();
                             break;
-                        case "6":
+                        case "7":
                             Console.WriteLine(Controller.g_controller.GetNextScheduleTimes(false).ToString());
                             break;
-                        case "7":
+                        case "8":
                             Controller.g_controller.TestElapseFirstTriggerWithSimulation("NeuralSniffer1");
                             break;
-                        case "8":
+                        case "9":
                             Controller.g_controller.TestElapseFirstTriggerWithSimulation("TAA");
                             break;
-                        case "9":
+                        case "10":
                             Controller.g_controller.TestElapseFirstTriggerWithSimulation("UberVXX");
                             break;
-                        case "10":
+                        case "11":
                             Controller.g_controller.TestElapseFirstTriggerWithSimulation("HarryLong");
                             break;
                     }
 
-                } while (userInput != "11" && userInput != "ConsoleIsForcedToShutDown");
+                } while (userInput != "12" && userInput != "ConsoleIsForcedToShutDown");
 
                 Utils.Logger.Info("****** Main() END");
                 Utils.MainThreadIsExiting.Set();
@@ -152,14 +154,15 @@ namespace VirtualBroker
             Console.WriteLine($"2.  Test IbGateway Connection on port={(int)GatewayUserPort.GyantalMain} (Gyantal user) with clientID=0");
             Console.WriteLine("3.  Test HealthMonitor by sending ErrorFromVirtualBroker");
             Console.WriteLine("4.  Test Realtime price service");
-            Console.WriteLine("5.  Test SQL DB or Encog");
+            Console.WriteLine("5.  Test GetAccountsSummaryOrPositions");
+            Console.WriteLine("6.  Test SQL DB or Encog");
             //Console.WriteLine("5.  Test Encog");
-            Console.WriteLine("6.  Show next schedule times");
-            Console.WriteLine("7.  Elapse TaskShema (NeuralSniffer1) First Simulation Trigger");
-            Console.WriteLine("8.  Elapse TaskShema (TAA) First Simulation Trigger");
-            Console.WriteLine("9.  Elapse TaskShema (UberVxx) First Simulation Trigger");
-            Console.WriteLine("10. Elapse TaskShema (HarryLong) First Simulation Trigger");
-            Console.WriteLine("11. Exit gracefully (Avoid Ctrl-^C).");
+            Console.WriteLine("7.  Show next schedule times");
+            Console.WriteLine("8. <disabled now> Elapse TaskShema (NeuralSniffer1) First Simulation Trigger");
+            Console.WriteLine("9. <disabled now> Elapse TaskShema (TAA) First Simulation Trigger");
+            Console.WriteLine("10.  Elapse TaskShema (UberVxx) First Simulation Trigger");
+            Console.WriteLine("11. Elapse TaskShema (HarryLong) First Simulation Trigger");
+            Console.WriteLine("12. Exit gracefully (Avoid Ctrl-^C).");
             string result = null;
             try
             {

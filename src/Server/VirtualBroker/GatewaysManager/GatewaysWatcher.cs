@@ -332,5 +332,67 @@ namespace VirtualBroker
                 return null;
             return m_mainGateway.GetRealtimePriceService(p_query);
         }
+
+        class AccSumPos
+        {
+            public string BrAccStr { get; set; } = String.Empty;
+            public Gateway Gateway { get; set; }
+            // AccSummary
+
+            // Positions
+        }
+
+        public string GetAccountsSummaryOrPositions(string p_input)     // p_input = @"?bAcc=Gyantal,Charmat,DeBlanzac&type=AccSum,Pos,MktVal";
+        {
+            if (!m_isReady || m_mainGateway == null)
+                return null;
+
+            // Problem is: GetPosition gives back the Position: 218, Avg cost: $51.16, but that is not enough, because we would like to see the MktValue, DelivValue. 
+            // So we need the LastPrice too. Even for options. And it is better to get it in here, than having a separate function call later.
+            // 1. Let's collect all the AccountSum + positions for all the ibGateways
+            // 2. If client wants RT MktValue too, use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
+            // 3. Calculate the MktValue, DelivValue too for all ibGateways.
+
+            string input = Uri.UnescapeDataString(p_input.Substring(1));    // change %20 to ' ', and %5E to '^', skip the first '?' in p_input
+            string[] inputParams = input.Split(new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
+            if (!inputParams[0].StartsWith("bAcc=", StringComparison.CurrentCultureIgnoreCase))
+                return null;
+            var allAccSumPos = new List<AccSumPos>();
+            string[] bAccArr = inputParams[0].Substring("bAcc=".Length).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var bAcc in bAccArr)
+            {
+                AccSumPos accSumPos = new AccSumPos { BrAccStr = bAcc };
+                switch (bAcc.ToUpper())
+                {
+                    case "GYANTAL":
+                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.GyantalMain, GatewayUser.GyantalSecondary }, accSumPos);
+                        break;
+                    case "CHARMAT":
+                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.CharmatSecondary }, accSumPos);
+                        break;
+                    case "DEBLANZAC":
+                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.DeBlanzacSecondary }, accSumPos);
+                        break;
+                }
+
+                allAccSumPos.Add(accSumPos);
+            }
+
+            return m_mainGateway.GetAccountSumOrPos(p_input);
+            //return "";
+        }
+
+        private void FindGatewayAndAdd(GatewayUser[] p_possibleGwUsers, AccSumPos p_accSumPos)
+        {
+            foreach (var gwUser in p_possibleGwUsers)
+            {
+                Gateway gw = m_gateways.Find(r => r.GatewayUser == gwUser);
+                if (gw != null)
+                {
+                    p_accSumPos.Gateway = gw;
+                    return;
+                }
+            }
+        }
     }
 }

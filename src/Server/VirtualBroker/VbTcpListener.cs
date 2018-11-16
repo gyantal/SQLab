@@ -23,7 +23,7 @@ namespace VirtualBroker
                 BinaryReader br = new BinaryReader(p_tcpClient.GetStream());
                 message = (new VirtualBrokerMessage()).DeserializeFrom(br);
                 //Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg.ID:{message.ID}, Param:{message.ParamStr}");  // user can quickly check from Console the messages. It is good in HealthMonitor, but in VBroker we don't want to clutter the Console.
-                Utils.Logger.Info($"Controller.ProcessTcpClient(): Message ID:\"{ message.ID}\", ParamStr: \"{ message.ParamStr}\", ResponseFormat: \"{message.ResponseFormat}\"");
+                Utils.Logger.Info($"Controller.ProcessTcpClient(): Message ID:'{ message.ID}', ParamStr: '{ message.ParamStr}', ResponseFormat: '{message.ResponseFormat}'");
                 if (message.ResponseFormat == VirtualBrokerMessageResponseFormat.None)
                 {
                     Utils.TcpClientDispose(p_tcpClient);
@@ -35,34 +35,37 @@ namespace VirtualBroker
                 Utils.Logger.Info($"Expected Exception. We don't rethrow it. Occurs daily when client VBroker VM server reboots. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
             }
 
+            string reply = null;
             switch (message.ID)
             {
                 case VirtualBrokerMessageID.GetRealtimePrice:
-                    GetRealtimePrice(p_tcpClient, message);
+                    reply = Controller.g_gatewaysWatcher.GetRealtimePriceService(message.ParamStr);
+                    break;
+                //case VirtualBrokerMessageID.GetAccountsSummary:
+                //case VirtualBrokerMessageID.GetAccountsPositions:
+                case VirtualBrokerMessageID.GetAccountsSummaryOrPositions:
+                    reply = Controller.g_gatewaysWatcher.GetAccountsSummaryOrPositions(message.ParamStr);
+                    break;
+                default:
+                    StrongAssert.Fail(Severity.NoException, $"<Tcp:> ProcessTcpClient: Message ID:'{ message.ID}' is unexpected, unhandled. This probably means a serious error.");
                     break;
 
             }
 
-            if (message.ResponseFormat != VirtualBrokerMessageResponseFormat.None)    // if Processing needed Response to Client, we dispose here. otherwise, it was disposed before putting into processing queue
+            if (message.ResponseFormat != VirtualBrokerMessageResponseFormat.None)
             {
-                Utils.TcpClientDispose(p_tcpClient);
-            }
-        }
+                if (String.IsNullOrEmpty(reply))
+                {
+                    Utils.Logger.Warn("<Tcp:> Warning. Controller.g_gatewaysWatcher.SomeService() returned IsNullOrEmpty. We return empty string to the caller. Better to send this error instantly than letting the caller timeout.");
+                    if (reply == null)
+                        reply = String.Empty;
+                }
+                BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
+                bw.Write(reply);
+                Utils.Logger.Trace($"<Tcp:> TcpListener.SomeService(). Message ID:'{ message.ID}', Query:'{message.ParamStr}', Reply:'{reply}'.");
 
-        private void GetRealtimePrice(TcpClient p_tcpClient, VirtualBrokerMessage p_message)
-        {
-            string reply = Controller.g_gatewaysWatcher.GetRealtimePriceService(p_message.ParamStr);
-            if (reply == null)
-                reply = String.Empty;
-            if (String.IsNullOrEmpty(reply))
-            {
-                Utils.Logger.Warn("Warning. Controller.g_gatewaysWatcher.GetRealtimePriceService() returned IsNullOrEmpty. We return empty string to the caller. Better to send this error instantly than letting the caller timeout."); 
+                Utils.TcpClientDispose(p_tcpClient); // if Processing needed Response to Client, we dispose here. otherwise, it was disposed before putting into processing queue
             }
-            BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
-            bw.Write(reply);
-
-            //Console.WriteLine($"<TEMP Until DEV>GetRealtimePrice(). Query:'{p_message.ParamStr}', Reply:'{reply}'.");  // don't clutter Console
-            Utils.Logger.Trace($"TcpListener.GetRealtimePrice(). Query:'{p_message.ParamStr}', Reply:'{reply}'.");
         }
     }
 }

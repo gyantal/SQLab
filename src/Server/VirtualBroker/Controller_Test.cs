@@ -267,16 +267,25 @@ namespace VirtualBroker
         {
             // for futures, we picked: ^^, because other characters are not really allowed in URLs
 
-            string s = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
+            string msg = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
             //string s = @"?s=VXX,SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l"; // without JsonP, AAPL and GOOGL is not streamed
             //string s = @"?s=VXX,^VIX,^GSPC,SVXY&f=l"; // without JsonP, this was the old test 1
             //string s = @"?s=VXX,^VIX,^GSPC,SVXY,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction"; // with JsonP, this was the old test 2
             //string s = @"?s=^VIX,^^^VIX201610,^^^VIX201611,^^^VIX201701,VXX,^^^VIX201704&f=l";     // VixTimer asks this http://www.snifferquant.com/dac/VixTimer
             //string s = @"?s=^^^VIX201610,^^^VIX201611&f=l";     // VixTimer asks this http://www.snifferquant.com/dac/VixTimer
             VirtualBrokerMessage.TcpServerHost = VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener;      // it is a Test inside VBroker server, so use Private IP, not public IP
-            string reply = VirtualBrokerMessage.Send(s, VirtualBrokerMessageID.GetRealtimePrice).Result;
+            string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetRealtimePrice).Result;
 
             Console.WriteLine($"Rtps returned: {reply}");
+        }
+
+        internal void TestGetAccountsSummaryOrPositions()
+        {
+            string msg = @"?bAcc=Gyantal,Charmat,DeBlanzac&type=AccSum,Pos,MktVal";
+            VirtualBrokerMessage.TcpServerHost = VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener;      // it is a Test inside VBroker server, so use Private IP, not public IP
+            string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetAccountsSummaryOrPositions).Result;
+
+            Console.WriteLine($"GetAccountsSummaryOrPositions returned: {reply}");
         }
 
         internal void TestHardCrash()

@@ -65,7 +65,7 @@ namespace VirtualBroker
                 {
                     if (inputParam.StartsWith("S=", StringComparison.CurrentCultureIgnoreCase))    // symbols
                     {
-                        string[] tickerArray = inputParam.Substring(2).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        string[] tickerArray = inputParam.Substring("S=".Length).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                         foreach (var symbol in tickerArray)
                         {
                             string sqTicker = symbol.ToUpper().Replace("^^", "#");  // Robert's suggestion all Futures tickers #+Underlying, therefore #^VIX, because the underlying is ^VIX
@@ -319,7 +319,7 @@ namespace VirtualBroker
             catch (Exception e)
             {
                 Utils.Logger.Error("GetRealtimePriceService ended with exception: " + e.Message);
-                return resultPrefix + @"{ ""Message"":  ""Exception in WebVBroker app Execute(). Exception: " + e.Message + @""" }" + resultPostfix;
+                return resultPrefix + @"{ ""Message"":  ""Exception in VBroker app GetRealtimePriceService(). Exception: " + e.Message + @""" }" + resultPostfix;
             }
         }
     }

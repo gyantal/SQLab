@@ -35,6 +35,12 @@ namespace VirtualBroker
             get { return Interlocked.Increment(ref m_reqHistoricalDataIDseed); }  // Increment gives back the incremented value, not the old value
         }
 
+        int m_reqAccountSumIDseed = 1000;
+        protected int GetUniqueReqAccountSumID
+        {
+            get { return Interlocked.Increment(ref m_reqAccountSumIDseed); }  // Increment gives back the incremented value, not the old value
+        }
+
         public string IbAccountsList { get; set; }
         public ConcurrentDictionary<int, MktDataSubscription> MktDataSubscriptions { get; set; } = new ConcurrentDictionary<int, MktDataSubscription>();
         public ConcurrentDictionary<int, MktDataSubscription> CancelledMktDataSubscriptions { get; set; } = new ConcurrentDictionary<int, MktDataSubscription>(); // we keep it as a log, however we remove the price parts to not consume memory
@@ -326,17 +332,35 @@ namespace VirtualBroker
             Utils.Logger.Info("Connection closed.");
         }
 
+        public virtual int ReqAccountSummary()
+        {
+            int reqId = GetUniqueReqAccountSumID;
+            ClientSocket.reqAccountSummary(reqId, "All", AccountSummaryTags.GetAllTags());      /*** Subscribing to an account's information. Only one at a time! ***/
+
+            return reqId;
+        }
+
+        public virtual void CancelAccountSummary(int p_reqId)
+        {
+            ClientSocket.cancelAccountSummary(p_reqId);
+        }
+
+        public virtual void ReqPositions()
+        {
+            ClientSocket.reqPositions();
+        }
+
         // https://www.interactivebrokers.co.uk/en/software/tws/usersguidebook/thetradingwindow/price-based.htm
         // MARK_PRICE: can be calculated. So, don't store it.
         //The mark price is equal to the LAST price unless:
         //Ask<Last - the mark price is equal to the ASK price.
         //Bid> Last - the mark price is equal to the BID price.
         //Mid price: can be calculated, don't store it. The midpoint between the current bid and ask.
-        public bool GetPrice(Contract p_contract, int p_tickType, out double p_value)
-        {
-            p_value = Double.NaN;
-            return false;
-        }
+        //public bool GetPrice(Contract p_contract, int p_tickType, out double p_value)
+        //{
+        //    p_value = Double.NaN;
+        //    return false;
+        //}
 
         public virtual void currentTime(long time)
         {
@@ -978,6 +1002,8 @@ namespace VirtualBroker
         public virtual void position(string account, Contract contract, double pos, double avgCost)
         {
             Console.WriteLine("Position. " + account + " - Symbol: " + contract.Symbol + ", SecType: " + contract.SecType + ", Currency: " + contract.Currency + ", Position: " + pos + ", Avg cost: " + avgCost);
+            if (contract.SecType == "OPT")
+                Console.WriteLine($"  Option. LastTradeDate: {contract.LastTradeDateOrContractMonth}, Right: {contract.Right}, Strike: {contract.Strike}, Multiplier: {contract.Multiplier}, LocalSymbol:'{contract.LocalSymbol}'");
         }
 
         public virtual void positionEnd()
