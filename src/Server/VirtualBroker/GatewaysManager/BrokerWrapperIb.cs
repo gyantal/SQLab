@@ -47,6 +47,11 @@ namespace VirtualBroker
         public ConcurrentDictionary<int, HistDataSubscription> HistDataSubscriptions { get; set; } = new ConcurrentDictionary<int, HistDataSubscription>();
         public ConcurrentDictionary<int, OrderSubscription> OrderSubscriptions { get; set; } = new ConcurrentDictionary<int, OrderSubscription>();
 
+        public delegate void AccSumArrivedFunc(int p_reqId, string p_tag, string p_value, string p_currency);
+        public AccSumArrivedFunc m_accSumArrCb;
+        public delegate void AccSumEndFunc(int p_reqId);
+        public AccSumEndFunc m_accSumEndCb;
+
         public EClientSocket ClientSocket
         {
             get { return clientSocket; }
@@ -63,6 +68,12 @@ namespace VirtualBroker
         public BrokerWrapperIb()
         {
             clientSocket = new EClientSocket(this, Signal);
+        }
+
+        public BrokerWrapperIb(AccSumArrivedFunc p_accSumArrCb, AccSumEndFunc p_accSumEndCb) : this()
+        {
+            m_accSumArrCb = p_accSumArrCb;
+            m_accSumEndCb = p_accSumEndCb;
         }
 
 
@@ -332,10 +343,19 @@ namespace VirtualBroker
             Utils.Logger.Info("Connection closed.");
         }
 
+        static string GetUsefulAccountSummaryTags()
+        {
+            // Others can be calculated from these. E.g.
+            // AccountSummaryTags.AvailableFunds = NetLiquidation - InitMarginReq
+            // Leverage: GrossPositionValue / NetLiquidation
+            return AccountSummaryTags.NetLiquidation + "," + AccountSummaryTags.GrossPositionValue + "," + AccountSummaryTags.InitMarginReq + "," + AccountSummaryTags.MaintMarginReq + "," + AccountSummaryTags.TotalCashValue;
+        }
+
         public virtual int ReqAccountSummary()
         {
             int reqId = GetUniqueReqAccountSumID;
-            ClientSocket.reqAccountSummary(reqId, "All", AccountSummaryTags.GetAllTags());      /*** Subscribing to an account's information. Only one at a time! ***/
+            //ClientSocket.reqAccountSummary(reqId, "All", AccountSummaryTags.GetAllTags());      /***Subscribing to an account's information. Only one at a time! ***/
+            ClientSocket.reqAccountSummary(reqId, "All", GetUsefulAccountSummaryTags());        /*** Subscribing to an account's information. Only one at a time! ***/
 
             return reqId;
         }
@@ -723,11 +743,13 @@ namespace VirtualBroker
         public virtual void accountSummary(int reqId, string account, string tag, string value, string currency)
         {
             Console.WriteLine("Acct Summary. ReqId: " + reqId + ", Acct: " + account + ", Tag: " + tag + ", Value: " + value + ", Currency: " + currency);
+            m_accSumArrCb?.Invoke(reqId, tag, value, currency);
         }
 
         public virtual void accountSummaryEnd(int reqId)
         {
             Console.WriteLine("AccountSummaryEnd. Req Id: " + reqId);
+            m_accSumEndCb?.Invoke(reqId);
         }
 
         public virtual void updateAccountValue(string key, string value, string currency, string accountName)

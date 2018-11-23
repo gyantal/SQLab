@@ -14,7 +14,7 @@ namespace SqCommon
         Undefined = 0,      // for security reasons, better to give random numbers in the Tcp Communication. Fake clienst generally try to send: '0', or '1', '2', treat those as Unexpected
         GetVirtualBrokerCurrentState = 1640,   // not used at the moment. HealthMonitor may do active polling to query if VBroker is alive or not.
         GetRealtimePrice = 1641,
-        GetAccountsSummaryOrPositions = 1642, // the previous two in one query (for speed). The client might start with this, but later only asks for positions. Handle this with an inside param.
+        GetAccountsInfo = 1642, // AccountSummary and Positions and MarketValues info
     };
 
     public enum VirtualBrokerMessageResponseFormat { None = 0, String, JSON };

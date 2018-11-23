@@ -43,8 +43,8 @@ namespace VirtualBroker
                     break;
                 //case VirtualBrokerMessageID.GetAccountsSummary:
                 //case VirtualBrokerMessageID.GetAccountsPositions:
-                case VirtualBrokerMessageID.GetAccountsSummaryOrPositions:
-                    reply = Controller.g_gatewaysWatcher.GetAccountsSummaryOrPositions(message.ParamStr);
+                case VirtualBrokerMessageID.GetAccountsInfo:
+                    reply = Controller.g_gatewaysWatcher.GetAccountsInfo(message.ParamStr);
                     break;
                 default:
                     StrongAssert.Fail(Severity.NoException, $"<Tcp:> ProcessTcpClient: Message ID:'{ message.ID}' is unexpected, unhandled. This probably means a serious error.");

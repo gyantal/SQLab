@@ -32,7 +32,10 @@ namespace RxCommon
             //Console.WriteLine($"ThId-{Thread.CurrentThread.ManagedThreadId}: CallThId-{p_logItem.CallerThreadId}_{p_logItem.Timestamp}_{p_logItem.LogLevel}: {p_logItem.Message}");
 
             //WriteToFileVerbatim($"ThId-{Thread.CurrentThread.ManagedThreadId}: CallThId-{p_logItem.CallerThreadId}_{p_logItem.Timestamp}_{p_logItem.LogLevel}: {p_logItem.Message}");
-            WriteToFileVerbatim($"{p_logItem.Timestamp.ToString("MMdd'T'HH':'mm':'ss.fff")}#{p_logItem.CallerThreadId}#{Thread.CurrentThread.ManagedThreadId}#{p_logItem.LogLevel}: {p_logItem.Message}");
+
+            string log = $"{p_logItem.Timestamp.ToString("MMdd'T'HH':'mm':'ss.fff")}#{p_logItem.CallerThreadId}#{Thread.CurrentThread.ManagedThreadId}#{p_logItem.LogLevel}: {p_logItem.Message}";
+            Debug.WriteLine(log);       // in DEBUG only: it sends logs to VS Output window too
+            WriteToFileVerbatim(log);
         }
 
         private void WriteToFileVerbatim(string p_formattedMessage)

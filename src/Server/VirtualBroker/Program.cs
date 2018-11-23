@@ -69,7 +69,7 @@ namespace VirtualBroker
                             Controller.g_controller.TestRealtimePriceService();
                             break;
                         case "5":
-                            Controller.g_controller.TestGetAccountsSummaryOrPositions();
+                            Controller.g_controller.TestGetAccountsInfo();
                             break;
                         case "6":
                             //Controller.g_controller.TestHardCrash();
@@ -154,7 +154,7 @@ namespace VirtualBroker
             Console.WriteLine($"2.  Test IbGateway Connection on port={(int)GatewayUserPort.GyantalMain} (Gyantal user) with clientID=0");
             Console.WriteLine("3.  Test HealthMonitor by sending ErrorFromVirtualBroker");
             Console.WriteLine("4.  Test Realtime price service");
-            Console.WriteLine("5.  Test GetAccountsSummaryOrPositions");
+            Console.WriteLine("5.  Test GetAccountsInfo");
             Console.WriteLine("6.  Test SQL DB or Encog");
             //Console.WriteLine("5.  Test Encog");
             Console.WriteLine("7.  Show next schedule times");
