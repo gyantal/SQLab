@@ -30,6 +30,10 @@ namespace VirtualBroker
         {
             if (m_getAccountSummaryMres != null)
                 m_getAccountSummaryMres.Set();  // Sets the state of the event to signaled, which allows one or more threads waiting on the event to proceed.
+
+            // if you don't cancel it, all the data update come every 1 minute, which might be good, because we can give it to user instantenously....
+            // However, it would be an unnecessary traffic all the time... So, better to Cancel the data streaming.
+            BrokerWrapper.CancelAccountSummary(p_reqId);
         }
 
 
@@ -81,7 +85,7 @@ namespace VirtualBroker
                 });
 
                 Stopwatch sw = Stopwatch.StartNew();
-                Task.WaitAll(task1, task2);
+                Task.WaitAll(task1, task2);     // AccountSummary() task takes 308msec in local development.
                 sw.Stop();
                 Console.WriteLine($"GetAccountInfo() ends in {sw.ElapsedMilliseconds}ms, GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
 
