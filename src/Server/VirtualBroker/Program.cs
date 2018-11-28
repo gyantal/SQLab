@@ -38,7 +38,14 @@ namespace VirtualBroker
                 //}
             }
 
-            Utils.Configuration = Utils.InitConfigurationAndInitUtils((Utils.RunningPlatform() == Platform.Windows) ? "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.VirtualBroker.NoGitHub.json" : "/home/ubuntu/SQ/Server/VirtualBroker/SQLab.VirtualBroker.NoGitHub.json");
+            string configFullPath = null;
+            if (Utils.RunningPlatform() == Platform.Windows)
+                configFullPath = "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.VirtualBroker.NoGitHub.json";
+            else  // BaseDirectory = "/home/<LinuxUser>/SQ/Server/VirtualBroker/src/Server/VirtualBroker/bin/Release/netcoreapp2.1/"
+                configFullPath = AppDomain.CurrentDomain.BaseDirectory + "../../../../../../SQLab.VirtualBroker.NoGitHub.json";
+
+            Utils.Configuration = Utils.InitConfigurationAndInitUtils(configFullPath);
+
             Utils.MainThreadIsExiting = new ManualResetEventSlim(false);
             HealthMonitorMessage.InitGlobals(ServerIp.HealthMonitorPublicIp, HealthMonitorMessage.DefaultHealthMonitorServerPort);       // until HealthMonitor runs on the same Server, "localhost" is OK
             StrongAssert.g_strongAssertEvent += StrongAssertMessageSendingEventHandler;

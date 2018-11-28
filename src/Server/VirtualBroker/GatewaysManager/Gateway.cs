@@ -13,7 +13,7 @@ using System.Text;
 namespace VirtualBroker
 {
     public enum GatewayUser { None, Demo, GyantalMain, GyantalSecondary, GyantalPaper, CharmatMain, CharmatSecondary, CharmatPaper, CharmatWifeMain, CharmatWifeSecondary, CharmatWifePaper, DeBlanzacMain, DeBlanzacSecondary, TuMain, TuSecondary, }
-    public enum GatewayUserPort : int { None, Demo, GyantalMain = 7301, GyantalSecondary = 7301, GyantalPaper, CharmatMain = 7303, CharmatSecondary = 7303, CharmatPaper, CharmatWifeMain, CharmatWifeSecondary, CharmatWifePaper, DeBlanzacMain, DeBlanzacSecondary, TuMain = 7304, TuSecondary = 7304, }
+    public enum GatewayUserPort : int { None, Demo, GyantalMain = 7301, GyantalSecondary = 7301, GyantalPaper, CharmatMain = 7303, CharmatSecondary = 7303, CharmatPaper, CharmatWifeMain, CharmatWifeSecondary, CharmatWifePaper, DeBlanzacMain = 7308, DeBlanzacSecondary, TuMain = 7304, TuSecondary = 7304, }
 
     public static class GatewayExtensions
     {

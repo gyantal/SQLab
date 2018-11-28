@@ -50,9 +50,10 @@ namespace SqCommon
         {
             try
             {
+                //Console.WriteLine($"*TcpListener is starting on port {m_privateIP}:{m_port}.");
+                Utils.Logger.Info($"*TcpListener is starting on port {m_privateIP}:{m_port}.");
                 m_tcpListener = new System.Net.Sockets.TcpListener(IPAddress.Parse(m_privateIP), m_port);  
                 m_tcpListener.Start();
-                Console.WriteLine($"*TcpListener is listening on port {m_privateIP}:{m_port}.");
                 while (true)
                 {
                     var tcpListenerCurrentClientTask = m_tcpListener.AcceptTcpClientAsync();
@@ -70,8 +71,8 @@ namespace SqCommon
             {
                 if (Utils.MainThreadIsExiting.IsSet)
                     return; // when App is exiting gracefully, this Exception is not a problem
-                Utils.Logger.Error("Not expected Exception. We send email by StrongAssert and rethrow exception, which will crash App. TcpListenerLoop. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
-                StrongAssert.Fail(Severity.ThrowException, "Not expected Exception. We send email by StrongAssert and rethrow exception, which will crash App. TcpListenerLoop. VirtualBroker: manual restart is needed.");
+                Utils.Logger.Error("TcpListenerLoop(): Not expected Exception. We send email by StrongAssert and rethrow exception, which will crash App. TcpListenerLoop. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
+                StrongAssert.Fail(Severity.ThrowException, "TcpListenerLoop(): Not expected Exception. We send email by StrongAssert and rethrow exception, which will crash App. TcpListenerLoop. VirtualBroker: manual restart is needed.");
                 throw;  // if we don't listen to TcpListener any more, there is no point to continue. Crash the App.
             }
         }

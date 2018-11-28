@@ -85,10 +85,10 @@ namespace VirtualBroker
                         FindGatewayAndAdd(new GatewayUser[] { GatewayUser.GyantalMain, GatewayUser.GyantalSecondary }, accSumPos);
                         break;
                     case "CHARMAT":
-                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.CharmatSecondary }, accSumPos);
+                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.CharmatMain }, accSumPos);
                         break;
                     case "DEBLANZAC":
-                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.DeBlanzacSecondary }, accSumPos);
+                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.DeBlanzacMain }, accSumPos);
                         break;
                     default:
                         Utils.Logger.Error($"GetAccountsInfo() error. Unrecognized brokeraccount '{bAcc.ToUpper()}'");

@@ -6,16 +6,26 @@ import paramiko  # for sftp
 import colorama  # for colourful print
 from stat import S_ISDIR
 from colorama import Fore, Back, Style
-
 # Parameters to change:
+
+#vbServerEnvironment = "AutoTradingServer"
+vbServerEnvironment = "ManualTradingServer"
+
 rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
-rootRemoteDir = "/home/ubuntu/SQ/Server/VirtualBroker/src"
 acceptedSubTreeRoots = ["Server\\VirtualBroker", "Common\\SqCommon", "Common\\DbCommon", "Common\\RxCommon", "ThirdParty\\Reactive\\System.Reactive.Interfaces", "ThirdParty\\Reactive\\System.Reactive.Core", "ThirdParty\\Reactive\\System.Reactive.Linq", "ThirdParty\\Reactive\\System.Reactive.PlatformServices", "ThirdParty\\IbApiSocketClient"]        # everything under these relPaths is traversed: files or folders too
 
-serverHost = "ec2-52-203-240-30.compute-1.amazonaws.com"
-serverPort = 22
-serverUser = "ubuntu"
-serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerAgentKeyPairName.pem"
+if vbServerEnvironment == "AutoTradingServer":
+    serverHost = "ec2-52-203-240-30.compute-1.amazonaws.com"
+    serverPort = 22
+    serverUser = "ubuntu"
+    serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerAgentKeyPairName.pem"
+    rootRemoteDir = "/home/ubuntu/SQ/Server/VirtualBroker/src"
+else:
+    serverHost = "ec2-34-251-1-119.eu-west-1.compute.amazonaws.com"
+    serverPort = 22
+    serverUser = "sq-vnc-client"
+    serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\AwsMTrader\AwsMTrader,sq-vnc-client.pem"
+    rootRemoteDir = "/home/sq-vnc-client/SQ/Server/VirtualBroker/src"
 
 excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties"])
 excludeFileExts = set(["sln", "xproj", "log", "sqlog", "ps1", "py", "sh", "user", "md"])

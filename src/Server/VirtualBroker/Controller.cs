@@ -55,6 +55,13 @@ namespace VirtualBroker
 
         public void BuildTasks()
         {
+            var isSupportBrokerTasksStr = Utils.Configuration["SupportBrokerTasks"];
+            Console.WriteLine($"SupportBrokerTasks: {isSupportBrokerTasksStr ?? "False"}");
+            if (isSupportBrokerTasksStr == null)
+                return;
+            if (isSupportBrokerTasksStr.ToUpper() != "TRUE")
+                return;
+
             // IB MOC orders: https://www.interactivebrokers.com/en/index.php?f=599  (NYSE, NYSE MKT, NYSE Arca: 15:45 ET, Nasdaq: 15:50 ET)
             // EU PRIIPs Regulation (2018-06-19) : EU based investors cannot trade SPY, QQQ, VXX, etc. ETFs, only the UCITS equivalents in EU, but they are scarce. Reverting to manual trading for a while.
             //var neuralSniffer1TaskSchema = new BrokerTaskSchema()
