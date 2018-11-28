@@ -285,7 +285,7 @@ namespace VirtualBroker
             VirtualBrokerMessage.TcpServerHost = VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener;      // it is a Test inside VBroker server, so use Private IP, not public IP
             string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetAccountsInfo).Result;
 
-            Console.WriteLine($"GetAccountsSummaryOrPositions returned: {reply}");
+            Console.WriteLine($"GetAccountsSummaryOrPositions returned: '{reply}'");
         }
 
         internal void TestHardCrash()

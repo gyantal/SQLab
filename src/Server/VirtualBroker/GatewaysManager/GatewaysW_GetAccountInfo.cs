@@ -4,6 +4,7 @@ using SqCommon;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -22,7 +23,8 @@ namespace VirtualBroker
     public class AccPos
     {
         public Contract Contract { get; set; }
-        public int Position { get; set; }
+        public double Position { get; set; }    // in theory, position is Int (whole number) for all the examples I seen. However, IB gives back as double, just in case of a complex contract. Be prepared.
+        public double AvgCost { get; set; }
         public double LastPrice { get; set; }   // MktValue can be calculated
         public double LastUnderlyingPrice { get; set; }   // In case of options DeliveryValue can be calculated
     }
@@ -31,14 +33,8 @@ namespace VirtualBroker
     {
         public string BrAccStr { get; set; } = String.Empty;
         public Gateway Gateway { get; set; }
-        // AccSummary
-        public List<AccSum> AccSums = new List<AccSum>();
-
-        public delegate void AccSumArrivedFunc(int p_reqId, AccInfo p_accInfo, string p_tag, string p_value, string p_currency);
-        public AccSumArrivedFunc AccSumArrived;
-
-        // Positions
-        public List<AccPos> AccPoss = new List<AccPos>();
+        public List<AccSum> AccSums = new List<AccSum>();   // AccSummary
+        public List<AccPos> AccPoss = new List<AccPos>();   // Positions
     }
 
     public partial class GatewaysWatcher
@@ -55,9 +51,11 @@ namespace VirtualBroker
 
             // Problem is: GetPosition only gives back the Position: 218, Avg cost: $51.16, but that is not enough, because we would like to see the MktValue, DelivValue. 
             // So we need the LastPrice too. Even for options. And it is better to get it in here, than having a separate function call later.
-            // 1. Let's collect all the AccountSum + positions for all the ibGateways
-            // 2. If client wants RT MktValue too, collect needed RT prices (stocks, options, underlying of options, futures). Use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
-            // 3. Calculate the MktValue, DelivValue too for all ibGateways.
+            // 1. Let's collect all the AccountSum for all the ibGateways in a separate threads. This takes about 280msec
+            // 2. Let's collect all the AccountPos positions for all the ibGateways in a separate threads. This takes about 28msec to 60msec. Much faster than AccountSum.
+            // AccountPos (50msec) should NOT wait for finishing the AccountSum (300msec), but continue quickly processing and getting realtime prices if needed.
+            // 3. If client wants RT MktValue too, collect needed RT prices (stocks, options, underlying of options, futures). Use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
+            // 4. Fill LastPrice, LastUnderlyingPrice in all AccPos for all ibGateways. (Alternatively Calculate the MktValue, DelivValue, but better to just pass the raw data to client)
 
             string input = Uri.UnescapeDataString(p_input.Substring(1));    // change %20 to ' ', and %5E to '^', skip the first '?' in p_input
             string[] inputParams = input.Split(new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
@@ -100,23 +98,102 @@ namespace VirtualBroker
                 allAccInfos.Add(accSumPos);
             }
 
-            Parallel.ForEach(allAccInfos, accInfo =>        // execute in parallel, so it is faster if DcMain and DeBlanzac are both queried at the same time.
+            Task task1 = Task.Run(() =>
             {
-                //Console.WriteLine($"Acc '{accInfo.BrAccStr}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
-                if (accInfo.Gateway == null)
-                    return;
-                accInfo.Gateway.GetAccountInfo(isNeedAccSum, isNeedPos, accInfo);
+                try
+                {
+                    Stopwatch sw1 = Stopwatch.StartNew();
+                    Parallel.ForEach(allAccInfos, accInfo =>        // execute in parallel, so it is faster if DcMain and DeBlanzac are both queried at the same time.
+                    {
+                        if (accInfo.Gateway == null)
+                            return;
+                        accInfo.Gateway.GetAccountSums(accInfo.AccSums);        // takes 300msec each
+                    });
+                    sw1.Stop();
+                    Console.WriteLine($"GetAccountsInfo()-AccSum ends in {sw1.ElapsedMilliseconds}ms, Thread Id= {Thread.CurrentThread.ManagedThreadId}");
+                }
+                catch (Exception e)
+                {
+                    Utils.Logger.Error("GetAccountsInfo()-AccSum ended with exception: " + e.Message);
+                }
             });
 
+            Task task2 = Task.Run(() =>
+            {
+                try
+                {
+                    Stopwatch sw2 = Stopwatch.StartNew();
+                    Parallel.ForEach(allAccInfos, accInfo =>        // execute in parallel, so it is faster if DcMain and DeBlanzac are both queried at the same time.
+                    {
+                        if (accInfo.Gateway == null)
+                            return;
+                        accInfo.Gateway.GetAccountPoss(accInfo.AccPoss);    // takes 50msec each
+                    });
+                    //If client wants RT MktValue too, collect needed RT prices (stocks, options, underlying of options, futures). Use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
+                    if (isNeedMktVal)
+                    {
+                        
+                    }
+
+                    sw2.Stop();
+                    Console.WriteLine($"GetAccountsInfo()-AccPos ends in {sw2.ElapsedMilliseconds}ms, Thread Id= {Thread.CurrentThread.ManagedThreadId}");
+                }
+                catch (Exception e)
+                {
+                    Utils.Logger.Error("GetAccountsInfo()-AccPos ended with exception: " + e.Message);
+                }
+            });
+
+
+            Stopwatch sw = Stopwatch.StartNew();
+            Task.WaitAll(task1, task2);     // AccountSummary() task takes 280msec in local development. (ReqAccountSummary(): 280msec, ReqPositions(): 50msec)
+            sw.Stop();
+            Console.WriteLine($"GetAccountsInfo() ends in {sw.ElapsedMilliseconds}ms, Thread Id= {Thread.CurrentThread.ManagedThreadId}");
+
+
+
+
+          
 
 
 
             string resultPrefix = "", resultPostfix = "";
             StringBuilder jsonResultBuilder = new StringBuilder(resultPrefix + "[");
-            // ...
+            for (int i = 0; i < allAccInfos.Count; i++)
+            {
+                AccInfo accInfo = allAccInfos[i];
+                if (i != 0)
+                    jsonResultBuilder.AppendFormat(",");
+                jsonResultBuilder.Append($"{{\"BrAcc\":\"{accInfo.BrAccStr}\"");
+                jsonResultBuilder.Append($",\"AccSums\":[");
+                for (int j = 0; j < accInfo.AccSums.Count; j++)
+                {
+                    AccSum accSum = accInfo.AccSums[j];
+                    if (j != 0)
+                        jsonResultBuilder.AppendFormat(",");
+                    jsonResultBuilder.Append($"{{\"Tag\":\"{accSum.Tag}\",\"Value\":\"{accSum.Value}\",\"Currency\":\"{accSum.Currency}\"}}");
+                }
+                jsonResultBuilder.Append($"]");
+                jsonResultBuilder.Append($",\"AccPoss\":[");
+                for (int j = 0; j < accInfo.AccPoss.Count; j++)
+                {
+                    AccPos accPos = accInfo.AccPoss[j];
+                    if (j != 0)
+                        jsonResultBuilder.AppendFormat(",");
+                    jsonResultBuilder.Append($"{{\"Symbol\":\"{accPos.Contract.Symbol}\",\"SecType\":\"{accPos.Contract.SecType}\",\"Currency\":\"{accPos.Contract.Currency}\",\"Pos\":\"{accPos.Position}\",\"AvgCost\":\"{accPos.AvgCost:0.00}\"");
+                    if (accPos.Contract.SecType == "OPT")
+                        jsonResultBuilder.Append($",\"LastTradeDate\":\"{accPos.Contract.LastTradeDateOrContractMonth}\",\"Right\":\"{accPos.Contract.Right}\",\"Strike\":\"{accPos.Contract.Strike}\",\"Multiplier\":\"{accPos.Contract.Multiplier}\",\"LocalSymbol\":\"{accPos.Contract.LocalSymbol}\"");
+                    jsonResultBuilder.Append($"}}");
+                }
+                jsonResultBuilder.Append($"]");
+
+                jsonResultBuilder.Append($"}}");
+            }
+
             jsonResultBuilder.Append(@"]" + resultPostfix);
             string result = jsonResultBuilder.ToString();
             Utils.Logger.Info($"GetAccountsInfo() END with result '{result}'");
+            //Console.WriteLine($"GetAccountsInfo() END with result '{result}'");
             return result;
         }
 

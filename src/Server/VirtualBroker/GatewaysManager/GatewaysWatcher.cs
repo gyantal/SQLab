@@ -195,13 +195,13 @@ namespace VirtualBroker
                     IBrokerWrapper ibWrapper = null;
                     if (!Controller.IsRunningAsLocalDevelopment())
                     {
-                        ibWrapper = new BrokerWrapperIb(gateway.AccSumArrived, gateway.AccSumEnd);      // recreate IB wrapper at every Connection try. It is good this way.
+                        ibWrapper = new BrokerWrapperIb(gateway.AccSumArrived, gateway.AccSumEnd, gateway.AccPosArrived, gateway.AccPosEnd);      // recreate IB wrapper at every Connection try. It is good this way.
                     }
                     else
                     {
                         bool isPreferIbAlltime = true;  // isPreferIbAlltime is used in general for functionality (RT price) development, but !isPreferIbAlltime is better for strategy developing (maybe)
                         if (isPreferIbAlltime || Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
-                            ibWrapper = new BrokerWrapperIb(gateway.AccSumArrived, gateway.AccSumEnd);    // when isPreferIbAlltime or when !isPreferIbAlltime, but USA market is open
+                            ibWrapper = new BrokerWrapperIb(gateway.AccSumArrived, gateway.AccSumEnd, gateway.AccPosArrived, gateway.AccPosEnd);    // when isPreferIbAlltime or when !isPreferIbAlltime, but USA market is open
                         else
                             ibWrapper = new BrokerWrapperYF();     // Before market open, or After market close. Simulated real time price is needed to determine current portfolio $size.
                     }

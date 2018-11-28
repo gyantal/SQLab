@@ -56,7 +56,7 @@ namespace SqCommon
                 while (true)
                 {
                     var tcpListenerCurrentClientTask = m_tcpListener.AcceptTcpClientAsync();
-                    var tcpClient = tcpListenerCurrentClientTask.Result;        // Task.Result is blocking. OK.
+                    var tcpClient = tcpListenerCurrentClientTask.Result;        // Task.Result is blocking. OK. When App is exiting gracefully, there is an Exception: no problem. Let VS swallow it.
                     //Console.WriteLine($"TcpListenerLoop.NextClientAccepted.");
                     Utils.Logger.Info($"TcpListenerLoop.NextClientAccepted.");
                     if (Utils.MainThreadIsExiting.IsSet)
@@ -69,7 +69,7 @@ namespace SqCommon
             catch (Exception e) // Background thread can crash application. A background thread does not keep the managed execution environment running.
             {
                 if (Utils.MainThreadIsExiting.IsSet)
-                    return; // if App is exiting gracefully, this Exception is not a problem
+                    return; // when App is exiting gracefully, this Exception is not a problem
                 Utils.Logger.Error("Not expected Exception. We send email by StrongAssert and rethrow exception, which will crash App. TcpListenerLoop. " + e.Message + " ,InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : ""));
                 StrongAssert.Fail(Severity.ThrowException, "Not expected Exception. We send email by StrongAssert and rethrow exception, which will crash App. TcpListenerLoop. VirtualBroker: manual restart is needed.");
                 throw;  // if we don't listen to TcpListener any more, there is no point to continue. Crash the App.

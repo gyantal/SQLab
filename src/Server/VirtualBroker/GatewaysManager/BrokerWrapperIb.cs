@@ -52,6 +52,11 @@ namespace VirtualBroker
         public delegate void AccSumEndFunc(int p_reqId);
         public AccSumEndFunc m_accSumEndCb;
 
+        public delegate void AccPosArrivedFunc(string p_account, Contract p_contract, double p_pos, double p_avgCost);
+        public AccPosArrivedFunc m_accPosArrCb;
+        public delegate void AccPosEndFunc();
+        public AccPosEndFunc m_accPosEndCb;
+
         public EClientSocket ClientSocket
         {
             get { return clientSocket; }
@@ -70,10 +75,12 @@ namespace VirtualBroker
             clientSocket = new EClientSocket(this, Signal);
         }
 
-        public BrokerWrapperIb(AccSumArrivedFunc p_accSumArrCb, AccSumEndFunc p_accSumEndCb) : this()
+        public BrokerWrapperIb(AccSumArrivedFunc p_accSumArrCb, AccSumEndFunc p_accSumEndCb, AccPosArrivedFunc p_accPosArrCb, AccPosEndFunc p_accPosEndCb) : this()
         {
             m_accSumArrCb = p_accSumArrCb;
             m_accSumEndCb = p_accSumEndCb;
+            m_accPosArrCb = p_accPosArrCb;
+            m_accPosEndCb = p_accPosEndCb;
         }
 
 
@@ -1026,11 +1033,13 @@ namespace VirtualBroker
             Console.WriteLine("Position. " + account + " - Symbol: " + contract.Symbol + ", SecType: " + contract.SecType + ", Currency: " + contract.Currency + ", Position: " + pos + ", Avg cost: " + avgCost);
             if (contract.SecType == "OPT")
                 Console.WriteLine($"  Option. LastTradeDate: {contract.LastTradeDateOrContractMonth}, Right: {contract.Right}, Strike: {contract.Strike}, Multiplier: {contract.Multiplier}, LocalSymbol:'{contract.LocalSymbol}'");
+            m_accPosArrCb?.Invoke(account, contract, pos, avgCost);
         }
 
         public virtual void positionEnd()
         {
             Console.WriteLine("PositionEnd \n");
+            m_accPosEndCb?.Invoke();
         }
 
         public virtual void realtimeBar(int reqId, long time, double open, double high, double low, double close, long volume, double WAP, int count)

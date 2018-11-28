@@ -17,12 +17,13 @@ namespace VirtualBroker
 
     public partial class Gateway
     {
-        AccInfo m_accInfo;
-        private readonly object m_getAccountSummaryLock = new object();
+        List<AccSum> m_accSums;
+        List<AccPos> m_accPoss;
+        private readonly object m_getAccountSummaryLock = new object();        
 
         public void AccSumArrived(int p_reqId, string p_tag, string p_value, string p_currency)
         {
-            m_accInfo.AccSums.Add(new AccSum() { Tag = p_tag, Value = p_value, Currency = p_currency });
+            m_accSums.Add(new AccSum() { Tag = p_tag, Value = p_value, Currency = p_currency });
         }
 
         ManualResetEventSlim m_getAccountSummaryMres;
@@ -36,64 +37,47 @@ namespace VirtualBroker
             BrokerWrapper.CancelAccountSummary(p_reqId);
         }
 
-
-        public bool GetAccountInfo(bool p_isNeedAccSum, bool p_isNeedPos, AccInfo p_accInfo)
+        private readonly object m_getAccountPositionsLock = new object();
+        public void AccPosArrived(string p_account, Contract p_contract, double p_pos, double p_avgCost)
         {
-            Console.WriteLine($"GetAccountInfo(), GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
-            m_accInfo = p_accInfo;
+            m_accPoss.Add(new AccPos() { Contract = p_contract, Position = p_pos, AvgCost = p_avgCost });
+        }
+
+        ManualResetEventSlim m_getAccountPosMres;
+        public void AccPosEnd()
+        {
+            if (m_getAccountPosMres != null)
+                m_getAccountPosMres.Set();  // Sets the state of the event to signaled, which allows one or more threads waiting on the event to proceed.
+        }
+
+        public bool GetAccountSums(List<AccSum> p_accSums)
+        {
+            m_accSums = p_accSums;
+
             int accReqId = -1;
             try
             {
-                Task task1 = Task.Run(() =>
+                Stopwatch sw1 = Stopwatch.StartNew();
+                lock (m_getAccountSummaryLock)          // IB only allows one query at a time, so next client has to wait
                 {
-                    try
-                    {
-                        Stopwatch sw1 = Stopwatch.StartNew();
-                        Console.WriteLine($"GetAccountSummary()-1, GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
-                        lock (m_getAccountSummaryLock)          // IB only allows one query at a time, so next client has to wait
-                        {
-                            if (m_getAccountSummaryMres == null)
-                                m_getAccountSummaryMres = new ManualResetEventSlim(false);  // initialize as unsignaled
-                            else
-                                m_getAccountSummaryMres.Reset();        // set to unsignaled, which makes thread to block
+                    if (m_getAccountSummaryMres == null)
+                        m_getAccountSummaryMres = new ManualResetEventSlim(false);  // initialize as unsignaled
+                    else
+                        m_getAccountSummaryMres.Reset();        // set to unsignaled, which makes thread to block
 
-                            accReqId = BrokerWrapper.ReqAccountSummary();
+                    accReqId = BrokerWrapper.ReqAccountSummary();
 
-                            bool wasLightSet = m_getAccountSummaryMres.Wait(5000);     // timeout at 5sec
-                            if (!wasLightSet)
-                                Utils.Logger.Error("ReqAccountSummary() ended with timeout error.");
-                            //m_getAccountSummaryMres.Dispose();    // not necessary. We keep it for the next sessions for faster execution.
-                        }
-                        sw1.Stop();
-                        Console.WriteLine($"GetAccountSummary()-2 ends in {sw1.ElapsedMilliseconds}ms GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
-                    }
-                    catch (Exception e)
-                    {
-                        Utils.Logger.Error("GetAccountSummary() ended with exception: " + e.Message);
-                    }
-                });
-
-                Task task2 = Task.Run(() =>
-                {
-                    try
-                    {
-                        Console.WriteLine($"ReqPositions(), GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
-                        //Thread.Sleep(2000);
-                        // BrokerWrapper.ReqPositions();
-                    }
-                    catch { }
-                });
-
-                Stopwatch sw = Stopwatch.StartNew();
-                Task.WaitAll(task1, task2);     // AccountSummary() task takes 308msec in local development.
-                sw.Stop();
-                Console.WriteLine($"GetAccountInfo() ends in {sw.ElapsedMilliseconds}ms, GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
-
-                return true;
+                    bool wasLightSet = m_getAccountSummaryMres.Wait(5000);     // timeout at 5sec
+                    if (!wasLightSet)
+                        Utils.Logger.Error("ReqAccountSummary() ended with timeout error.");
+                    //m_getAccountSummaryMres.Dispose();    // not necessary. We keep it for the next sessions for faster execution.
+                }
+                sw1.Stop();
+                Console.WriteLine($"GetAccountSummary() ends in {sw1.ElapsedMilliseconds}ms GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
             }
             catch (Exception e)
             {
-                Utils.Logger.Error("GetAccountInfo() ended with exception: " + e.Message);
+                Utils.Logger.Error("GetAccountSummary() ended with exception: " + e.Message);
                 return false;
             }
             finally
@@ -101,7 +85,38 @@ namespace VirtualBroker
                 if (accReqId != -1)
                     BrokerWrapper.CancelAccountSummary(accReqId);
             }
+            return true;
         }
+
+        public bool GetAccountPoss(List<AccPos> p_accPos)
+        {
+            m_accPoss = p_accPos;
+            try
+            {
+                Stopwatch sw2 = Stopwatch.StartNew();
+                lock (m_getAccountPositionsLock)          //ReqPositions() doesn't have a reqID, so if we allow multiple threads to do it at the same time, we cannot sort out the output
+                {
+                    if (m_getAccountPosMres == null)
+                        m_getAccountPosMres = new ManualResetEventSlim(false);  // initialize as unsignaled
+                    else
+                        m_getAccountPosMres.Reset();        // set to unsignaled, which makes thread to block
+
+                    BrokerWrapper.ReqPositions();
+                    bool wasLightSet = m_getAccountPosMres.Wait(5000);     // timeout at 5sec
+                    if (!wasLightSet)
+                        Utils.Logger.Error("ReqPositions() ended with timeout error.");
+                }
+                sw2.Stop();
+                Console.WriteLine($"ReqPositions() ends in {sw2.ElapsedMilliseconds}ms GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error("GetAccountPositions() ended with exception: " + e.Message);
+            }
+            return true;
+        }
+
+        
     }
 
     }
