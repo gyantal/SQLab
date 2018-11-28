@@ -16,6 +16,6 @@ print('dotnet build --configuration Release')         # the default is the Debug
 call(['dotnet', 'build', '--configuration', 'Release'])
 #print('dotnet bin/Release/netcoreapp1.0/ubuntu.14.04-x64/HealthMonitor.dll')
 #call(['dotnet', 'bin/Release/netcoreapp1.0/ubuntu.14.04-x64/HealthMonitor.dll'])
-print('dotnet bin/Release/netcoreapp2.0/HealthMonitor.dll')
-call(['dotnet', 'bin/Release/netcoreapp2.0/HealthMonitor.dll'])
+print('dotnet bin/Release/netcoreapp2.1/HealthMonitor.dll')
+call(['dotnet', 'bin/Release/netcoreapp2.1/HealthMonitor.dll'])
 k = input("Press ENTER...")       # raw_input is built but waiting for Enter key 

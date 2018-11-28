@@ -19,6 +19,6 @@ print('dotnet build --configuration Release')         # the default is the Debug
 call(['dotnet', 'build', '--configuration', 'Release'])
 #print('dotnet bin/Release/netcoreapp1.0/ubuntu.14.04-x64/VirtualBroker.dll')
 #call(['dotnet', 'bin/Release/netcoreapp1.0/ubuntu.14.04-x64/VirtualBroker.dll'])
-print('dotnet bin/Release/netcoreapp2.0/VirtualBroker.dll')
-call(['dotnet', 'bin/Release/netcoreapp2.0/VirtualBroker.dll'])
+print('dotnet bin/Release/netcoreapp2.1/VirtualBroker.dll')
+call(['dotnet', 'bin/Release/netcoreapp2.1/VirtualBroker.dll'])
 k = input("Press ENTER...")       # raw_input is built but waiting for Enter key 

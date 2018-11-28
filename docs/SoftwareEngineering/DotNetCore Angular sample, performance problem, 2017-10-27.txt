@@ -102,7 +102,7 @@ After that:
 - After Publishing a Production to a local Folder, then Ctrl-F5 in VS is still good: minified.
 - changing "ASPNETCORE_ENVIRONMENT": "Development" ruins it.
 - changing back "ASPNETCORE_ENVIRONMENT": "Production" again doesn't fix it. Even though we restart Chrome and the VS.
-Although all the files in g:\tem2\SQLab\src\WebServer\SQLab\bin\Release\netcoreapp2.0\.. is unchanged.
+Although all the files in g:\tem2\SQLab\src\WebServer\SQLab\bin\Release\netcoreapp2.1\.. is unchanged.
 >So, something is not right, but it seems:
 	- starting from VS, it always prefers to be Hot module (Debuggable, and instant changes are traversed to Browser).  (no matter that  only  enableProdMode(); is valid, all other lines are commented out in boot.browser.ts).
 	So, the JS Browser client code is in ProdMode(), but the server is not. It still sends 2.7MB main-client.js
@@ -234,7 +234,7 @@ https://github.com/asadsahi/AspNetCoreSpa
 
 https://damienbod.com/2017/09/12/getting-started-with-signalr-using-asp-net-core-and-angular/
 
-  <TargetFramework>netcoreapp2.0</TargetFramework>
+  <TargetFramework>netcoreapp2.1</TargetFramework>
 
   
 https://github.com/emonney/QuickApp

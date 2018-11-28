@@ -107,7 +107,7 @@ namespace VirtualBroker
                     {
                         if (accInfo.Gateway == null)
                             return;
-                        accInfo.Gateway.GetAccountSums(accInfo.AccSums);        // takes 300msec each
+                        accInfo.Gateway.GetAccountSums(accInfo.AccSums);        // takes 300msec in local development, and 30-50msec on AWS server
                     });
                     sw1.Stop();
                     Console.WriteLine($"GetAccountsInfo()-AccSum ends in {sw1.ElapsedMilliseconds}ms, Thread Id= {Thread.CurrentThread.ManagedThreadId}");
@@ -127,7 +127,7 @@ namespace VirtualBroker
                     {
                         if (accInfo.Gateway == null)
                             return;
-                        accInfo.Gateway.GetAccountPoss(accInfo.AccPoss);    // takes 50msec each
+                        accInfo.Gateway.GetAccountPoss(accInfo.AccPoss);    // takes 50msec each in local development, and 90-100msec on 1-CPU (no parallelism, so not relevant) AWS server
                     });
                     //If client wants RT MktValue too, collect needed RT prices (stocks, options, underlying of options, futures). Use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
                     if (isNeedMktVal)

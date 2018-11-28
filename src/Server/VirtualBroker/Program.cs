@@ -18,7 +18,7 @@ namespace VirtualBroker
 # elif DEBUG
             runtimeConfig = "DEBUG";
 #endif
-            Console.WriteLine($"Hello VirtualBroker, v1.0.14 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+            Console.WriteLine($"Hello VirtualBroker, v1.0.14 ({runtimeConfig}, dotnet {Utils.GetNetCoreVersion()},  ThId-{Thread.CurrentThread.ManagedThreadId})");
             Console.Title = "VirtualBroker v1.0.14";
             if (!RxUtils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app

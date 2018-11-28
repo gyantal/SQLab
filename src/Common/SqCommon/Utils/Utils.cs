@@ -120,6 +120,18 @@ namespace SqCommon
 
         public static bool IsShowingDatePart { get; set; } = true;
 
+        public static string GetNetCoreVersion()
+        {
+            // https://stackoverflow.com/questions/49309108/programatically-get-current-running-version-of-dotnet-core-runtime
+            // work out what version it is by looking at it's filesystem location and relying on the convention that microsoft put it in a 2.0.6 folder? Horrible, but I guess effective
+            var assembly = typeof(System.Runtime.GCSettings).Assembly;
+            var assemblyPath = assembly.CodeBase.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+            int netCoreAppIndex = Array.IndexOf(assemblyPath, "Microsoft.NETCore.App");
+            if (netCoreAppIndex > 0 && netCoreAppIndex < assemblyPath.Length - 2)
+                return assemblyPath[netCoreAppIndex + 1];
+            return null;
+        }
+
         // see discussion here in CoreCLR (they are not ready) https://github.com/dotnet/corefx/issues/1017
         public static Platform RunningPlatform()
         {
@@ -378,9 +390,9 @@ namespace SqCommon
             {
                 //  where the project.json is
                 // in VS 15.5: G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor
-                // in VS 15.6.1: G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor\bin\Debug\netcoreapp2.0
+                // in VS 15.6.1: G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor\bin\Debug\netcoreapp2.1
                 string csprojDir = Directory.GetCurrentDirectory(); 
-                if (String.Equals(Path.GetFileName(csprojDir), "netcoreapp2.0", StringComparison.InvariantCultureIgnoreCase))
+                if (String.Equals(Path.GetFileName(csprojDir), "netcoreapp2.1", StringComparison.InvariantCultureIgnoreCase))
                 {
                     csprojDir = Path.Combine(csprojDir, "..", "..", "..");
                 }

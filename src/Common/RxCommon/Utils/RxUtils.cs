@@ -18,9 +18,9 @@ namespace RxCommon
             {
                 //  where the project.json is
                 // in VS 15.5: G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor
-                // in VS 15.6.1: G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor\bin\Debug\netcoreapp2.0
+                // in VS 15.6.1: G:\work\Archi-data\GitHubRepos\SQLab\src\Server\HealthMonitor\bin\Debug\netcoreapp2.1
                 string csprojDir = Directory.GetCurrentDirectory();
-                if (String.Equals(Path.GetFileName(csprojDir), "netcoreapp2.0", StringComparison.InvariantCultureIgnoreCase))
+                if (String.Equals(Path.GetFileName(csprojDir), "netcoreapp2.1", StringComparison.InvariantCultureIgnoreCase))
                 {
                     csprojDir = Path.Combine(csprojDir, "..", "..", "..");
                 }

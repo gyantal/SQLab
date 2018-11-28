@@ -28,7 +28,7 @@ namespace HealthMonitor
 # elif DEBUG
             runtimeConfig = "DEBUG";
 #endif
-            Console.WriteLine($"Hello HealthMonitor, v1.0.13 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+            Console.WriteLine($"Hello HealthMonitor, v1.0.13 ({runtimeConfig}, dotnet {Utils.GetNetCoreVersion()},  ThId-{Thread.CurrentThread.ManagedThreadId})");
             Console.Title = "HealthMonitor v1.0.13";
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))
                 return; // if we cannot create logger, terminate app

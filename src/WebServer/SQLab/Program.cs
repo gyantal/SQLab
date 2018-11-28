@@ -52,7 +52,7 @@ namespace SQLab
 # elif DEBUG
             runtimeConfig = "DEBUG";
 #endif
-            Console.WriteLine($"Hello SQLab WebServer, v1.0.12 ({runtimeConfig}, ThId-{Thread.CurrentThread.ManagedThreadId})");
+            Console.WriteLine($"Hello SQLab WebServer, v1.0.12 ({runtimeConfig}, dotnet {Utils.GetNetCoreVersion()},  ThId-{Thread.CurrentThread.ManagedThreadId})");
             Console.Title = "SQLab WebServer v1.0.12";
             if (!Utils.InitDefaultLogger(typeof(Program).Namespace))    // will be "Client.SQLab.log"
                 return; // if we cannot create logger, terminate app
