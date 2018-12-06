@@ -53,7 +53,7 @@ namespace VirtualBroker
             for (int iTicker = 0; iTicker < p_tickers.Count; iTicker++)
             {
                 Contract contract = VBrokerUtils.ParseSqTickerToContract(p_tickers[iTicker]);
-                StrongAssert.True(Controller.g_gatewaysWatcher.GetMktDataSnapshot(contract, ref rtPrices), Severity.ThrowException, $"There is no point continuing if rtPrice cannot be obtained for ticker '{p_tickers[iTicker]}'.");
+                StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, $"There is no point continuing if rtPrice cannot be obtained for ticker '{p_tickers[iTicker]}'.");
                 double rtPrice = rtPrices[TickType.MID].Price;
 
                 var quotes = allQuotes[iTicker];

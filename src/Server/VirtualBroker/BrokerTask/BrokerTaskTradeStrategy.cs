@@ -185,7 +185,7 @@ namespace VirtualBroker
                     // TODO: we need a tickerProvider here
                     Contract contract = new Contract() { Symbol = Strategy.StockIdToTicker(stockID), SecType = "STK", Currency = "USD", Exchange = "SMART" };
                     double rtPrice = 0.0;
-                    StrongAssert.True(Controller.g_gatewaysWatcher.GetMktDataSnapshot(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if portfolioUSdSize cannot be calculated. After that we cannot calculate new stock Volumes from weights.");
+                    StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if portfolioUSdSize cannot be calculated. After that we cannot calculate new stock Volumes from weights.");
                     rtPrice = rtPrices[TickType.MID].Price;
 
                     //double rtPrice = GetAssetIDRealTimePrice(BrokerTask.TaskLogFile, p_brokerAPI, pip.AssetID);
@@ -219,7 +219,7 @@ namespace VirtualBroker
                 {
                     Contract contract = new Contract() { Symbol = r.Ticker, SecType = "STK", Currency = "USD", Exchange = "SMART" };
                     double rtPrice = 0.0;
-                    StrongAssert.True(Controller.g_gatewaysWatcher.GetMktDataSnapshot(contract, ref rtPrices), Severity.ThrowException, $"Warning. Realtime price for {r.Ticker} is misssing. For safety reasons, we can use volume=0 as targetVolume, but it means we would sell the current positions. Better to not continue.");
+                    StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, $"Warning. Realtime price for {r.Ticker} is misssing. For safety reasons, we can use volume=0 as targetVolume, but it means we would sell the current positions. Better to not continue.");
                     rtPrice = rtPrices[TickType.MID].Price;
                     volume = (int)((r.Size as WeightedSize).Weight * totalRiskedCapital / rtPrice) * (r.IsShort ? -1 : 1);
                 }

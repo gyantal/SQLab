@@ -174,7 +174,7 @@ namespace VirtualBroker
 
         // 2017-11-03: YF discontinued the service. It only works with V7 API with crumbs (in YFForwarder of the website), however, we want a simpler solution here, which may be not accurate
         // copy the code from Overmind. GetTodayPctChange(), where CNBC.com query is implemented
-        public bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
+        public bool GetAlreadyStreamedPrice(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
         {
             if (p_contract.SecType == "FUT")
                 return false;       // there is no way YF can give Futures prices
@@ -358,7 +358,7 @@ namespace VirtualBroker
                 //if (Utils.IsInRegularTradingHoursNow(TimeSpan.FromDays(3))) // in regular trading hours, IB gateway adds today lastPrice as a ClosePrice of this historical. Attach to it.
                 //{
                     var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };    // MID is the most honest price. LAST may happened 1 hours ago
-                if (!GetMktDataSnapshot(p_contract, ref rtPrices))
+                if (!GetAlreadyStreamedPrice(p_contract, ref rtPrices))
                         return false;
                     p_quotes.Add(new QuoteData() { Date = rtPrices[TickType.MID].Time, AdjClosePrice = rtPrices[TickType.MID].Price });
                 //}
@@ -368,7 +368,7 @@ namespace VirtualBroker
             return true;
         }
 
-        public int ReqMktDataStream(Contract p_contract, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null)
+        public int ReqMktDataStream(Contract p_contract, string p_genericTickList = null, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null, MktDataSubscription.MktDataErrorFunc p_mktDataErrorFunc = null, MktDataSubscription.MktDataTickGenericFunc p_mktDataTickGenericFunc = null, MktDataSubscription.MktDataTypeFunc p_mktDataTypeFunc = null)
         {
             switch (p_contract.Symbol)
             {

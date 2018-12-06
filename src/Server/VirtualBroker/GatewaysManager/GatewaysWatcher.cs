@@ -85,97 +85,91 @@ namespace VirtualBroker
                     }
                     else
                         StrongAssert.Fail(Severity.Halt, "Configuration['VbServerEnvironment'] is not recognized. It is safer to terminate.");
+                }
 
-                    m_gateways = new List<Gateway>() { gateway1 };   // delete previous Gateway connections
-                    if (gateway2 != null)   // sometimes (for development), 1 gateway is used only
-                        m_gateways.Add(gateway2);
-                    if (gateway3 != null)   // sometimes (for development), 1 gateway is used only
-                        m_gateways.Add(gateway3);
+                m_gateways = new List<Gateway>() { gateway1 };   // delete previous Gateway connections
+                if (gateway2 != null)   // sometimes (for development), 1 gateway is used only
+                    m_gateways.Add(gateway2);
+                if (gateway3 != null)   // sometimes (for development), 1 gateway is used only
+                    m_gateways.Add(gateway3);
 
-                    //Task connectTask1 = Task.Factory.StartNew(ReconnectToGateway, gateway1, TaskCreationOptions.LongRunning);
-                    //Task connectTask2 = Task.Factory.StartNew(ReconnectToGateway, gateway2, TaskCreationOptions.LongRunning);
-                    var reconnectTasks = m_gateways.Select(r => Task.Factory.StartNew(ReconnectToGateway, r, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("GatewaysWatcher.reconnectTasks"));
+                //Task connectTask1 = Task.Factory.StartNew(ReconnectToGateway, gateway1, TaskCreationOptions.LongRunning);
+                //Task connectTask2 = Task.Factory.StartNew(ReconnectToGateway, gateway2, TaskCreationOptions.LongRunning);
+                var reconnectTasks = m_gateways.Select(r => Task.Factory.StartNew(ReconnectToGateway, r, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("GatewaysWatcher.reconnectTasks"));
 
-                    Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways()  reconnectTasks BEGIN");
-                    // At the beginning: Linux had a problem to Connect sequentially on 2 separate threads. Maybe Linux DotNetCore 'Beta' implementation synchronization problem. Temporary connect sequentally. maybe doing Connection sequentially, not parallel would help
-                    foreach (var task in reconnectTasks)
+                Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways()  reconnectTasks BEGIN");
+                // At the beginning: Linux had a problem to Connect sequentially on 2 separate threads. Maybe Linux DotNetCore 'Beta' implementation synchronization problem. Temporary connect sequentally. maybe doing Connection sequentially, not parallel would help
+                foreach (var task in reconnectTasks)
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(1));  // just for synch safety. However, if Linux has synch problem, we can have problems at order execution...!!
+                                                            //task.Wait();  // this gives Compiler Warning that the method is async, but there is no await in it
+                    await task; // this doesn't give Compiler Warning.
+                }
+                //await Task.WhenAll(reconnectTasks); // async. This threadpool thread will return to the threadpool for temporary reuse, and when tasks are ready, it will be recallade
+                ////Task.WaitAll(connectTask1, connectTask2);     // blocking wait. This thread will wait forever if needed, but we don't want to starve the threadpool
+                Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways()  reconnectTasks END");
+
+                bool isAllConnected = true;
+                foreach (var gateway in m_gateways)
+                {
+                    if (!gateway.IsConnected)
+                        isAllConnected = false;
+                    if (gateway.GatewayUser == m_mainGatewayUser)
                     {
-                        Thread.Sleep(TimeSpan.FromSeconds(1));  // just for synch safety. However, if Linux has synch problem, we can have problems at order execution...!!
-                                                                //task.Wait();  // this gives Compiler Warning that the method is async, but there is no await in it
-                        await task; // this doesn't give Compiler Warning.
+                        m_mainGateway = gateway;
                     }
-                    //await Task.WhenAll(reconnectTasks); // async. This threadpool thread will return to the threadpool for temporary reuse, and when tasks are ready, it will be recallade
-                    ////Task.WaitAll(connectTask1, connectTask2);     // blocking wait. This thread will wait forever if needed, but we don't want to starve the threadpool
-                    Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways()  reconnectTasks END");
 
-                    bool isAllConnected = true;
-                    foreach (var gateway in m_gateways)
-                    {
-                        if (!gateway.IsConnected)
-                            isAllConnected = false;
-                        if (gateway.GatewayUser == m_mainGatewayUser)
-                        {
-                            m_mainGateway = gateway;
-                        }
+                }
+                StrongAssert.True(isAllConnected, Severity.ThrowException, $"Some Gateways are not connected.");
+                StrongAssert.True(m_mainGateway != null, Severity.ThrowException, $"Gateway for main user { m_mainGatewayUser} is not found.");
 
-                    }
-                    StrongAssert.True(isAllConnected, Severity.ThrowException, $"Some Gateways are not connected.");
-                    StrongAssert.True(m_mainGateway != null, Severity.ThrowException, $"Gateway for main user { m_mainGatewayUser} is not found.");
+                Utils.Logger.Info("GatewaysWatcher is ready. Connections were successful.");
+                m_isReady = true;   // GatewaysWatcher is ready
 
-                    Utils.Logger.Info("GatewaysWatcher is ready. Connections were successful.");
-                    m_isReady = true;   // GatewaysWatcher is ready
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("ONVO"));      // TODO: Temp here
 
-                    var isSupportPreStreamRealtimePricesStr = Utils.Configuration["SupportPreStreamRealtimePrices"];
-                    Console.WriteLine($"SupportPreStreamRealtimePrices: {isSupportPreStreamRealtimePricesStr ?? "False"}");
-                    if (isSupportPreStreamRealtimePricesStr != null && isSupportPreStreamRealtimePricesStr.ToUpper() == "TRUE")
-                    {
+                var isSupportPreStreamRealtimePricesStr = Utils.Configuration["SupportPreStreamRealtimePrices"];
+                Console.WriteLine($"SupportPreStreamRealtimePrices: {isSupportPreStreamRealtimePricesStr ?? "False"}");
+                if (isSupportPreStreamRealtimePricesStr != null && isSupportPreStreamRealtimePricesStr.ToUpper() == "TRUE")
+                {
 
-                        // getting prices of SPY (has dividend, but liquid) or VXX (no dividend, but less liquids) is always a must. An Agent would always look that price. So, subscribe to that on the MainGateway
+                    // getting prices of SPY (has dividend, but liquid) or VXX (no dividend, but less liquids) is always a must. An Agent would always look that price. So, subscribe to that on the MainGateway
+                    // see what is possible to call: "g:\temp\_programmingTemp\TWS API_972.12(2016-02-26)\samples\CSharp\IBSamples\IBSamples.sln" 
 
-                        // see what is possible to call: 
-                        // "g:\temp\_programmingTemp\TWS API_972.12(2016-02-26)\samples\CSharp\IBSamples\IBSamples.sln" 
-                        //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" });
-                        //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SVXY", SecType = "STK", Currency = "USD", Exchange = "SMART" });
-                        ////m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SPY", SecType = "STK", Currency = "USD", Exchange = "SMART" }); // for TotM forecast, but it is not needed just yet
-                        //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL", LocalSymbol="RUT" });
-                        //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "UWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
-                        //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "TWM", SecType = "STK", Currency = "USD", Exchange = "SMART" });
+                    // for NeuralSniffer
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("^RUT"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UWM"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TWM"));
 
-                        // for NeuralSniffer
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("^RUT"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UWM"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TWM"));
+                    // for UberVXX
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("VXX"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("SVXY"));
+                    //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SPY", SecType = "STK", Currency = "USD", Exchange = "SMART" }); // for TotM forecast, but it is not needed just yet
 
-                        // for UberVXX
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("VXX"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("SVXY"));
-                        //m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "SPY", SecType = "STK", Currency = "USD", Exchange = "SMART" }); // for TotM forecast, but it is not needed just yet
+                    // for HarryLong
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TQQQ"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("ZIV"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("VXZ"));  // needed until 2018-05-01, when this will be change back to ZIV for Agy
 
-                        // for HarryLong
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TQQQ"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("ZIV"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("VXZ"));  // needed until 2018-05-01, when this will be change back to ZIV for Agy
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TMV"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TMF")); // needed until 2018-05-01, when this will be change back to TMV for Agy
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UGAZ")); // instead of UNG, BOIL(2x)
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UWT"));  // insteod of USO
+                                                                                                                //m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("DWT"));  // temporary. Until short UWT is not available
 
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TMV"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TMF")); // needed until 2018-05-01, when this will be change back to TMV for Agy
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UGAZ")); // instead of UNG, BOIL(2x)
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UWT"));  // insteod of USO
-                                                                                                                    //m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("DWT"));  // temporary. Until short UWT is not available
-
-                        // for TAA, but it is only temporary. We will not stream this unnecessary data all day long, as TAA can take its time. It only trades MOC. Extra 2-3 seconds doesn't matter.
-                        // "TLT"+ "MDY","ILF","FEZ","EEM","EPP","VNQ","IBB"  +  "MVV", "URE", "BIB"
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TLT"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("MDY"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("ILF"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("FEZ"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("EEM"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("EPP"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("VNQ"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("IBB"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("MVV"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("URE"));
-                        m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("BIB"));
-                    }
+                    // for TAA, but it is only temporary. We will not stream this unnecessary data all day long, as TAA can take its time. It only trades MOC. Extra 2-3 seconds doesn't matter.
+                    // "TLT"+ "MDY","ILF","FEZ","EEM","EPP","VNQ","IBB"  +  "MVV", "URE", "BIB"
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TLT"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("MDY"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("ILF"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("FEZ"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("EEM"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("EPP"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("VNQ"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("IBB"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("MVV"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("URE"));
+                    m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("BIB"));
                 }
             }
             catch (Exception e)
@@ -291,11 +285,11 @@ namespace VirtualBroker
         }
 
 
-        internal bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
+        internal bool GetAlreadyStreamedPrice(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
         {
             if (!m_isReady)
                 return false;
-            return m_mainGateway.BrokerWrapper.GetMktDataSnapshot(p_contract, ref p_quotes);
+            return m_mainGateway.BrokerWrapper.GetAlreadyStreamedPrice(p_contract, ref p_quotes);
         }
 
         internal bool ReqHistoricalData(DateTime p_endDateTime, int p_lookbackWindowSize, string p_whatToShow, Contract p_contract, out List<QuoteData> p_quotes)
@@ -320,7 +314,7 @@ namespace VirtualBroker
             }
 
             var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };   // MID is the most honest price. LAST may happened 1 hours ago
-            m_mainGateway.BrokerWrapper.GetMktDataSnapshot(p_contract, ref rtPrices);
+            m_mainGateway.BrokerWrapper.GetAlreadyStreamedPrice(p_contract, ref rtPrices);
             int virtualOrderId = userGateway.PlaceOrder(p_portfolioMaxTradeValueInCurrency, p_portfolioMinTradeValueInCurrency, p_contract, p_transactionType, p_volume, p_orderExecution, p_orderTif, p_limitPrice, p_stopPrice, rtPrices[TickType.MID].Price, p_isSimulatedTrades, p_detailedReportSb);
             return virtualOrderId;
         }

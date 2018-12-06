@@ -281,7 +281,7 @@ namespace VirtualBroker
 
         internal void TestGetAccountsInfo()
         {
-            string msg = @"?bAcc=Gyantal,Charmat,DeBlanzac&type=AccSum,Pos,MktVal";
+            string msg = @"?bAcc=Gyantal,Charmat,DeBlanzac&type=AccSum,Pos,EstPr";
             VirtualBrokerMessage.TcpServerHost = VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener;      // it is a Test inside VBroker server, so use Private IP, not public IP
             string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetAccountsInfo).Result;
 

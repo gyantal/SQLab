@@ -14,7 +14,7 @@ namespace SqCommon
         TestHardCash,
         TestSendingEmail,
         TestMakingPhoneCall,
-        ReportErrorFromVirtualBroker,
+        ReportErrorFromVirtualBroker,       // later we need ReportWarningFromVirtualBroker too which will send only emails, but not Phonecalls
         ReportOkFromVirtualBroker,
         ReportWarningFromVirtualBroker,
         SendDailySummaryReportEmail,

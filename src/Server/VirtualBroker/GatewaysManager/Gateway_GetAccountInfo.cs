@@ -40,6 +40,9 @@ namespace VirtualBroker
         private readonly object m_getAccountPositionsLock = new object();
         public void AccPosArrived(string p_account, Contract p_contract, double p_pos, double p_avgCost)
         {
+            // 2018-11: EUR cash is coming ONLY on DeBlanzac account, not Main account, neither Agy, which also has many other currencies. Maybe it is only a 'virtual' cash FX position. Assume it is virtual, so ignore it.
+            if (p_contract.SecType == "CASH")
+                return;
             m_accPoss.Add(new AccPos() { Contract = p_contract, Position = p_pos, AvgCost = p_avgCost });
         }
 
@@ -73,11 +76,11 @@ namespace VirtualBroker
                     //m_getAccountSummaryMres.Dispose();    // not necessary. We keep it for the next sessions for faster execution.
                 }
                 sw1.Stop();
-                Console.WriteLine($"GetAccountSummary() ends in {sw1.ElapsedMilliseconds}ms GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
+                Console.WriteLine($"ReqAccountSummary() ends in {sw1.ElapsedMilliseconds}ms GW user: '{this.GatewayUser}', Thread Id= {Thread.CurrentThread.ManagedThreadId}");
             }
             catch (Exception e)
             {
-                Utils.Logger.Error("GetAccountSummary() ended with exception: " + e.Message);
+                Utils.Logger.Error("ReqAccountSummary() ended with exception: " + e.Message);
                 return false;
             }
             finally
@@ -111,7 +114,7 @@ namespace VirtualBroker
             }
             catch (Exception e)
             {
-                Utils.Logger.Error("GetAccountPositions() ended with exception: " + e.Message);
+                Utils.Logger.Error("ReqPositions() ended with exception: " + e.Message);
             }
             return true;
         }

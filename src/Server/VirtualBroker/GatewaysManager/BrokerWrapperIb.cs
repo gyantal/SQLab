@@ -11,6 +11,7 @@ using System.Threading;
 using System.Globalization;
 using DbCommon;
 using Utils = SqCommon.Utils;
+using System.Diagnostics;
 
 namespace VirtualBroker
 {
@@ -142,7 +143,8 @@ namespace VirtualBroker
         {
             foreach (var item in MktDataSubscriptions)
             {
-                ClientSocket.cancelMktData(item.Key);
+                if (!item.Value.IsSnapshot)
+                    ClientSocket.cancelMktData(item.Key);
             }
             m_eReader.Stop();
             ClientSocket.eDisconnect();
@@ -189,8 +191,9 @@ namespace VirtualBroker
             // Otherwise, maybe a trading Error, exception.
             // Maybe IBGateways were shut down. In which case, we cannot continue this VBroker App, because we should restart IBGateways, and reconnect to them by restarting VBroker.
             // Try to send HealthMonitor message and shut down the VBroker.
-            Utils.Logger.Error("Unexpected BrokerWrapperIb.error(). Exception thrown: " + e);           
-            HealthMonitorMessage.SendAsync($"Exception in Unexpected  BrokerWrapperIb.error(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
+            Utils.Logger.Error("Unexpected BrokerWrapperIb.error(). Exception thrown: " + e);
+            if (!Controller.IsRunningAsLocalDevelopment())
+                HealthMonitorMessage.SendAsync($"Exception in Unexpected  BrokerWrapperIb.error(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
             throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
         }
 
@@ -199,7 +202,8 @@ namespace VirtualBroker
             string errMsg = "BrokerWrapper.error(str). " + p_str;
             Console.WriteLine(errMsg);
             Utils.Logger.Error(errMsg);
-            HealthMonitorMessage.SendAsync($"Msg from BrokerWrapperIb.error(). {errMsg}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).FireParallelAndForgetAndLogErrorTask();
+            if (!Controller.IsRunningAsLocalDevelopment())
+                HealthMonitorMessage.SendAsync($"Msg from BrokerWrapperIb.error(). {errMsg}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).FireParallelAndForgetAndLogErrorTask();
             //If there is a single trading error, we may want to continue, so don't terminate the thread or the App, just inform HealthMonitor.
             //throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
         }
@@ -211,7 +215,20 @@ namespace VirtualBroker
             bool isAddOrderInfoToErrMsg = false;
 
             if (id == -1)       // -1 probably means there is no ID of the error. It is a special notation.
-            {
+            {                
+                if (errorCode == 0)
+                {
+                    // Id: -1, ErrCode: 0, Msg: Warning: Approaching max rate of 50 messages per second (45)
+                    // later we need HealthMonitorMessageID.ReportWarningFromVirtualBroker too which will send only emails, but not Phonecalls
+                    // for the moment, just swallow this, because it is more than a Warning, not an error yet.
+                    // When it becomes an error, another message will be called, which should be handled then.
+                    // Id: 1, ErrCode: 100, Msg: Max rate of messages per second has been exceeded:max=50 rec=651 (1)
+                    // If that error happens, we have to investigate logs (are messages lost?), and if necessary write code to slow the query down.
+                    // 2018-12: GetAccountInfoPos(): we query 113 RT prices, even without options underlyings. "Waiting for RT prices: 1297.74 ms. Queried: 113, ReceivedOk: 113, ReceivedErr: 0, Missing: 0"
+                    Utils.Logger.Warn("Strong Warning. BrokerWrapper.error(id,errCode,errMsg). " + errMsg);
+                    Console.WriteLine("Strong Warning. BrokerWrapper.error(id,errCode,errMsg). " + errMsg);
+                    return; // skip processing the error further. Don't send it to HealthMonitor.
+                }
                 if (errorCode == 2104 || errorCode == 2106 || errorCode == 2107 || errorCode == 2108 || errorCode == 2119)
                 {
                     // This is not an error. It is the messages at Connection: 
@@ -236,7 +253,30 @@ namespace VirtualBroker
                 }
             }
 
-            
+
+            if (errorCode == 100)
+            {
+                // IB pacing restriction. TWS:  50 requests / sec, IB gateway: ~120 requests / sec
+                // ErrId: 1, ErrCode: 100, Msg: Max rate of messages per second has been exceeded:max=50 rec=651 (1)
+                // ErrId: 2, ErrCode: 100, Msg: Max rate of messages per second has been exceeded:max=50 rec=182 (1)
+                // "Max rate of messages per second has been exceeded.	The client application has exceeded the rate of 50 messages/second. 
+                // The TWS will likely disconnect the client application after this message. "
+                // <2018-12: it didn't disconnect TWS, but later I might not have RT prices for PINK stocks>
+                // think about what to do here, but in general, Admins should be informed about it by email or phonecall, and we have to program a workaround, so this doesn't happen, so IB doesn't disconnect
+
+                // https://groups.io/g/twsapi/topic/4047779
+                //Instead of 50msgs per second, if you connect via IB Gateway instead of TWS, you will be able to make about 120 requests / sec(don't have the exact number right now).
+                // "Util.sleep( 11); // try to avoid pacing violation at TWS", the above lousy "sleep" is in milliseconds, which means it wont allow to send more than 90 requests per second
+                // "I have found that even if you honor the 50/sec limit TWS pacing errors will occur.  TWS may queue the messages and at a later time send them to the server.  "
+                // "The 50/sec limit applies to the interactions with the server, not TWS.  If the data farm connection is broken and you cancel or initiate new data subscriptions, 
+                // "TWS will queue these.  When the data farm connection is restored they are sent generating a pacing violation.  Vagaries in TWS internal operations can also 
+                // "cause pacing errors.  You can reduce the occurrence, but I don't think there is a way to absolutely prevent pacing errors assuming you are pushing the limit.  
+                // "You should be prepared to reconnect if the three pacing error limit is hit."
+
+                // 2018-12: GetAccountInfoPos(): we query 113 RT prices, even without options underlyings. "Waiting for RT prices: 1297.74 ms. Queried: 113, ReceivedOk: 113, ReceivedErr: 0, Missing: 0"
+                // Now, we have a Callback of BrokerWrapperIb clients can throttle  GetAccountInfoPos() RT price queries.
+
+            }
 
 
             if (errorCode == 200)
@@ -246,6 +286,15 @@ namespace VirtualBroker
                 // ErrId: 2116, ErrCode: 200, Msg: No security definition has been found for the request
                 // ErrId: 2144, ErrCode: 200, Msg: No security definition has been found for the request
                 // Id: 1611, ErrCode: 200, Msg: The contract description specified for GLD is ambiguous.  // GLD can be USA or London stock or Futures, Options, etc.
+                // Warrants, like "EDMC.WAR." give this. However, we don't care about warrants now.
+                if (MktDataSubscriptions.TryGetValue(id, out MktDataSubscription mktDataSubscription))
+                {
+                    errMsg += $". Id {id} is found in MktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
+                    Utils.Logger.Info(errMsg);
+                    mktDataSubscription.MarketDataError?.Invoke(id, mktDataSubscription, errorCode, errorMsg);
+                    // it is expected that for some stocks, there is no market data, but error message. Fine. Prepare for it and don't wait in that case.
+                    return;
+                }
                 if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
@@ -272,13 +321,17 @@ namespace VirtualBroker
             if (errorCode == 354)
             {
                 // real-time price is queried. And Market data was subscribed, but at the weekend, it returns an error. Swallow it at the weekends.
-                // ErrId: 1049, ErrCode: 354, Msg: Requested market data is not subscribed.
-                if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
-                    return; // skip processing the error further. Don't send it to HealthMonitor.
+                // Id: 1049, ErrCode: 354, Msg: Requested market data is not subscribed.
+                // Id: 1018, ErrCode: 354, Msg: Requested market data is not subscribed.Delayed market data is not available.NOKIA HEX/TOP/ALL.
                 if (MktDataSubscriptions.TryGetValue(id, out MktDataSubscription mktDataSubscription))
                 {
                     errMsg += $". Id {id} is found in MktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
-                } else if (CancelledMktDataSubscriptions.TryGetValue(id, out mktDataSubscription))
+                    Utils.Logger.Info(errMsg);
+                    mktDataSubscription.MarketDataError?.Invoke(id, mktDataSubscription, errorCode, errorMsg);
+                    // it is expected that for some stocks, there is no market data, but error message. Fine. Prepare for it and don't wait in that case.
+                    return;
+                }
+                else if (CancelledMktDataSubscriptions.TryGetValue(id, out mktDataSubscription))
                 {
                     errMsg += $". Id {id} is found in CancelledMktDataSubscriptions. Ticker: '{mktDataSubscription.Contract.Symbol}', IsAnyPriceArrived: {mktDataSubscription.IsAnyPriceArrived} on GatewayUser {m_gatewayUser}.";
 
@@ -292,6 +345,9 @@ namespace VirtualBroker
                 {
                     errMsg += $". Id {id} cannot be found in MktDataSubscriptions or CancelledMktDataSubscriptions.";
                 }
+
+                if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
+                    return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
             if (errorCode == 404)
@@ -307,6 +363,12 @@ namespace VirtualBroker
                 // ErrId: 42=the ClientID, ErrCode: 506, Msg: Unsupported version
                 // id == 41, or 42, which is the BrokerConnectionClientID
                 return; // skip processing the error further. Don't send it to HealthMonitor.
+            }
+
+            if (errorCode == 2129)
+            {
+                //"Id: -1, ErrCode: 2129, Msg: The product INNL.CVR is provided on an indicative and informational basis only. IB does not represent that the valuation for this instrument is accurate. The basis for the calculation may change at any time. Traders are responsible for understanding the contract details and details of deliverable instruments independently of IB sources, which are provided on a best efforts basis only."
+                return;
             }
 
             // SERIOUS ERRORS AFTER THIS LINE. Notify HealthMonitor.
@@ -378,7 +440,7 @@ namespace VirtualBroker
         }
 
         // https://www.interactivebrokers.co.uk/en/software/tws/usersguidebook/thetradingwindow/price-based.htm
-        // MARK_PRICE: can be calculated. So, don't store it.
+        // MARK_PRICE (Mark Price (used in TWS P&L computations)): can be calculated. Maybe don't store it.
         //The mark price is equal to the LAST price unless:
         //Ask<Last - the mark price is equal to the ASK price.
         //Bid> Last - the mark price is equal to the BID price.
@@ -394,25 +456,30 @@ namespace VirtualBroker
             Console.WriteLine("Current Time: " + time);
         }
 
-        public virtual int ReqMktDataStream(Contract p_contract, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null)
+        // 1. IB do not provide tick data. For U.S. Equities, you get one price update (not a tick!) per 250ms. Assuming that the exchanges step at 1ms, TTBOMK, this is some kind of volume-weighted average of these 250 data points.
+        public virtual int ReqMktDataStream(Contract p_contract, string p_genericTickList = null, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null, MktDataSubscription.MktDataErrorFunc p_mktDataErrorFunc = null, MktDataSubscription.MktDataTickGenericFunc p_mktDataTickGenericFunc = null, MktDataSubscription.MktDataTypeFunc p_mktDataTypeFunc = null)
         {
             int marketDataId = GetUniqueReqMktDataID;
-            Utils.Logger.Debug($"ReqMktDataStream() {p_contract.Symbol}: { marketDataId} START");
-            ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
-            //mainClient.reqMktData(marketDataId, contractSPY, "221", false, null);
-            ClientSocket.reqMktData(marketDataId, p_contract, null, p_snapshot, null);
+            Utils.Logger.Debug($"ReqMktDataStream() {p_contract.Symbol}{((p_contract.LocalSymbol != null)? ("(" + p_contract.LocalSymbol + ")"):"")}: { marketDataId} START");
 
             var mktDataSubscr = new MktDataSubscription()
             {
                 Contract = p_contract,
                 MarketDataId = marketDataId,
-                MarketDataArrived = p_mktDataArrivedFunc
+                IsSnapshot = p_snapshot,
+                MarketDataArrived = p_mktDataArrivedFunc,
+                MarketDataError = p_mktDataErrorFunc,
+                MarketDataTickGeneric = p_mktDataTickGenericFunc,
+                MarketDataType = p_mktDataTypeFunc
             };
-            MktDataSubscriptions.TryAdd(marketDataId, mktDataSubscr);
-
             // RUT index data comes once ever 5 seconds
             if (!p_snapshot)    // only if it is a continous streaming
                 mktDataSubscr.CheckDataIsAliveTimer = new System.Threading.Timer(new TimerCallback(MktDataIsAliveTimer_Elapsed), mktDataSubscr, TimeSpan.FromSeconds(15), TimeSpan.FromMilliseconds(-1.0));
+            MktDataSubscriptions.TryAdd(marketDataId, mktDataSubscr);
+
+            ClientSocket.reqMarketDataType(2);    // 2: streaming data (for realtime), 1: frozen (for historical prices)
+            //ClientSocket.reqMktData(marketDataId, p_contract, "221", false, null);    // p_snapshot = false, stream is needed for IbMarkPrice. Otherwise: Id: 1002, ErrCode: 321, Msg: Error validating request:-'bR' : cause - Snapshot market data subscription is not applicable to generic ticks; 
+            ClientSocket.reqMktData(marketDataId, p_contract, p_genericTickList, p_snapshot, null);
 
             Utils.Logger.Debug($"ReqMktDataStream() {p_contract.Symbol}: { marketDataId} END");
             return marketDataId;
@@ -421,18 +488,19 @@ namespace VirtualBroker
         public virtual void CancelMktData(int p_marketDataId)
         {
             Utils.Logger.Debug($"CancelMktData() { p_marketDataId} START");
+            MktDataSubscriptions.TryGetValue(p_marketDataId, out MktDataSubscription mktDataSubscription);
+
             // 1. at first, inform IBGateway to not send data
-            ClientSocket.cancelMktData(p_marketDataId); // if p_snapshot = true, it is not necessarily to Cancel. However, it doesn't hurt.
+            if (!mktDataSubscription.IsSnapshot)
+                ClientSocket.cancelMktData(p_marketDataId); // if p_snapshot = true, it is not necessarily to Cancel. However, it doesn't hurt.
 
             // 2. Only after informing IBGateway delete the record from our memory DB
-            MktDataSubscription mktDataSubscription;
+            CancelledMktDataSubscriptions.TryAdd(p_marketDataId, mktDataSubscription);        // store it for logging purposes. For error message "Requested market data is not subscribed."
             MktDataSubscriptions.TryRemove(p_marketDataId, out mktDataSubscription);
-
             if (mktDataSubscription.CheckDataIsAliveTimer != null)
                 mktDataSubscription.CheckDataIsAliveTimer.Dispose();
 
-            CancelledMktDataSubscriptions.TryAdd(p_marketDataId, mktDataSubscription);        // store it for logging purposes. For error message "Requested market data is not subscribed."
-            Utils.Logger.Debug($"CancelMktData() { p_marketDataId} END");
+            //Utils.Logger.Debug($"CancelMktData() { p_marketDataId} END");
         }
 
         //- When streaming realtime price of Data for RUT, the very first time of the day, TWS gives price, but IBGateway doesn't give any price. 
@@ -466,13 +534,13 @@ namespace VirtualBroker
             }
         }
 
-        public virtual bool GetMktDataSnapshot(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
+        public virtual bool GetAlreadyStreamedPrice(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
         {
             // Contract contract = new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" };
             var mktDataSubscr = MktDataSubscriptions.Values.FirstOrDefault(r => VBrokerUtils.IsContractEqual(r.Contract, p_contract));
             if (mktDataSubscr == null)
             {
-                Utils.Logger.Debug($"Market data for Contract {p_contract.Symbol} was not requested as Stream. Do make that request earlier.");
+                Utils.Logger.Debug($"Market data for Contract {p_contract.Symbol} was not requested as Stream. Do make that request earlier or ask Snapshot data.");
                 return false;
             }
 
@@ -540,7 +608,7 @@ namespace VirtualBroker
 
                 if (item.Value.Price < 0.0)
                 {
-                    Utils.Logger.Warn($"Warning. Something is wrong. Price is negative. Returning False for GetMktDataSnapshot().");   // however, VBroker may want to continue, so don't throw Exception or do StrongAssert()
+                    Utils.Logger.Warn($"Warning. Something is wrong. Price is negative. Returning False for GetAlreadyStreamedPrice().");   // however, VBroker may want to continue, so don't throw Exception or do StrongAssert()
                     isOk = false;
                 }
                 // for daily High, Daily Low, Previous Close, etc. don't check this staleness
@@ -622,8 +690,7 @@ namespace VirtualBroker
             //Utils.Logger.Warn("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
             Utils.Logger.Info("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
 
-            MktDataSubscription mktDataSubscription = null;
-            if (!MktDataSubscriptions.TryGetValue(tickId, out mktDataSubscription))
+            if (!MktDataSubscriptions.TryGetValue(tickId, out MktDataSubscription mktDataSubscription))
             {
                 Utils.Logger.Debug($"tickPrice(). MktDataSubscription tickerID { tickId} is not expected. Although IBGateway can send some prices even after CancelMktData was sent to IBGateway.");
                 return;
@@ -649,12 +716,11 @@ namespace VirtualBroker
                     tickData[field].Price = price;
                     tickData[field].Time = DateTime.UtcNow;
                 }
-                else
-                    Console.WriteLine("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
+                //else
+                //    Console.WriteLine("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
             }
 
-            if (mktDataSubscription.MarketDataArrived != null)
-                mktDataSubscription.MarketDataArrived(tickId, mktDataSubscription, field, price);
+            mktDataSubscription.MarketDataArrived?.Invoke(tickId, mktDataSubscription, field, price);
         }
 
 
@@ -698,6 +764,10 @@ namespace VirtualBroker
 
         public virtual void tickGeneric(int tickerId, int field, double value)
         {
+            //AskBidLastOpenClose,Prices come randomly, but the last items are lastTimeStamp and Generic Halted. We can use this for timing that we don't expect more data. In case we wait BidPrice when it doesn't exist
+            //1129T22: 53:03.382#16#5#Info: Tick Price. Tick Id:1011, Field: close, Price: 0.05, CanAutoExecute: 0
+            //1129T22: 53:03.382#16#5#Info: Tick string. Tick Id:1011, Type: lastTimestamp, Value: 1543521327
+            //1129T22: 53:03.382#16#5#Info: Tick Generic. Tick Id:1011, Field: halted, Value: 0
             Utils.Logger.Info("Tick Generic. Tick Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value);
             if (field == TickType.HALTED)
             {
@@ -709,9 +779,15 @@ namespace VirtualBroker
                 {
                     Utils.Logger.Warn("Trading is halted. Tick Generic. Tick Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value);
                 }
-                return;
             } else
                 Console.WriteLine("Tick Generic. Tick Id:" + tickerId + ", Field: " + TickType.getField(field) + ", Value: " + value);
+
+            if (!MktDataSubscriptions.TryGetValue(tickerId, out MktDataSubscription mktDataSubscription))
+            {
+                Utils.Logger.Debug($"tickPrice(). MktDataSubscription tickerID { tickerId} is not expected. Although IBGateway can send some prices even after CancelMktData was sent to IBGateway.");
+                return;
+            }
+            mktDataSubscription.MarketDataTickGeneric?.Invoke(tickerId, mktDataSubscription, field, value);
         }
 
         public virtual void tickEFP(int tickerId, int tickType, double basisPoints, string formattedBasisPoints, double impliedFuture, int holdDays, string futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate)
@@ -721,7 +797,9 @@ namespace VirtualBroker
 
         public virtual void tickSnapshotEnd(int tickerId)
         {
-            Console.WriteLine("TickSnapshotEnd: " + tickerId);
+            // this comes 8 seconds after ReqMktDataStream(), about 7 seconds after the last data: tickGeneric, so it is not useful to time the end-of snapshot.
+            //Console.WriteLine("TickSnapshotEnd: " + tickerId);
+            Utils.Logger.Info("TickSnapshotEnd: " + tickerId);
         }
 
         public virtual void nextValidId(int orderId)
@@ -741,21 +819,23 @@ namespace VirtualBroker
             //Console.WriteLine("Account list: "+accountsList);
         }
 
+        // streamed or snapshot ReqMktData will send this info continously for Option contracts, not for stocks. We don't need it so, skip them.
+        // reqMktData() has a param 'mktDataOptions', but it is undocumented, so there is no way to ask IB to NOT send this data.
         public virtual void tickOptionComputation(int tickerId, int field, double impliedVolatility, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice)
         {
-            Console.WriteLine("TickOptionComputation. TickerId: " + tickerId + ", field: " + field + ", ImpliedVolatility: " + impliedVolatility + ", Delta: " + delta
-                + ", OptionPrice: " + optPrice + ", pvDividend: " + pvDividend + ", Gamma: " + gamma + ", Vega: " + vega + ", Theta: " + theta + ", UnderlyingPrice: " + undPrice);
+            //Console.WriteLine("TickOptionComputation. TickerId: " + tickerId + ", field: " + field + ", ImpliedVolatility: " + impliedVolatility + ", Delta: " + delta
+            //    + ", OptionPrice: " + optPrice + ", pvDividend: " + pvDividend + ", Gamma: " + gamma + ", Vega: " + vega + ", Theta: " + theta + ", UnderlyingPrice: " + undPrice);
         }
 
         public virtual void accountSummary(int reqId, string account, string tag, string value, string currency)
         {
-            Console.WriteLine("Acct Summary. ReqId: " + reqId + ", Acct: " + account + ", Tag: " + tag + ", Value: " + value + ", Currency: " + currency);
+            Utils.Logger.Trace("Acct Summary. ReqId: " + reqId + ", Acct: " + account + ", Tag: " + tag + ", Value: " + value + ", Currency: " + currency);
             m_accSumArrCb?.Invoke(reqId, tag, value, currency);
         }
 
         public virtual void accountSummaryEnd(int reqId)
         {
-            Console.WriteLine("AccountSummaryEnd. Req Id: " + reqId);
+            Utils.Logger.Trace("AccountSummaryEnd. Req Id: " + reqId);
             m_accSumEndCb?.Invoke(reqId);
         }
 
@@ -1006,10 +1086,19 @@ namespace VirtualBroker
 
         public virtual void marketDataType(int reqId, int marketDataType)
         {
-            // marketDataType 1 for real time, 2 for frozen
+            // Maybe this interpretation is wrong. "marketDataType 1 for real time, 2 for frozen"
+            // !! Correct interpretation marketDataType(2)=streaming data (realtime), marketDataType(1)=historical (non-streaming)
             // if we ask m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL" });,
             // then After market Close, there is no more realtime price, and this call back tells us that it has a marketDataType=2, which is an Index
-            Utils.Logger.Info("MarketDataType. " + reqId + ", Type: (1 for real time, 2 for frozen (Index after MarketClose)) " + marketDataType);
+            // TMF, VXX can be Frozen(2) too after market close, or at weekend. It means there is no more price data. So, we should signal to clients that don't expect more data. Don't wait.
+            Utils.Logger.Info("MarketDataType. " + reqId + ", <!this explanation maybe wrong> Type(1 for real time, 2 for frozen (Index after MarketClose)): " + marketDataType);
+            if (!MktDataSubscriptions.TryGetValue(reqId, out MktDataSubscription mktDataSubscription))
+            {
+                Utils.Logger.Debug($"tickPrice(). MktDataSubscription tickerID { reqId} is not expected. Although IBGateway can send some prices even after CancelMktData was sent to IBGateway.");
+                return;
+            }
+            mktDataSubscription.MarketDataType?.Invoke(reqId, mktDataSubscription, marketDataType);
+            mktDataSubscription.PreviousMktDataType = marketDataType;
         }
 
         public virtual void updateMktDepth(int tickerId, int position, int operation, int side, double price, int size)
@@ -1030,15 +1119,15 @@ namespace VirtualBroker
 
         public virtual void position(string account, Contract contract, double pos, double avgCost)
         {
-            Console.WriteLine("Position. " + account + " - Symbol: " + contract.Symbol + ", SecType: " + contract.SecType + ", Currency: " + contract.Currency + ", Position: " + pos + ", Avg cost: " + avgCost);
-            if (contract.SecType == "OPT")
-                Console.WriteLine($"  Option. LastTradeDate: {contract.LastTradeDateOrContractMonth}, Right: {contract.Right}, Strike: {contract.Strike}, Multiplier: {contract.Multiplier}, LocalSymbol:'{contract.LocalSymbol}'");
+            Utils.Logger.Trace("Position. " + account + " - Symbol: " + contract.Symbol + ", SecType: " + contract.SecType + ", Currency: " + contract.Currency + ", Exchange: " + contract.Exchange + ", ConId: " + contract.ConId + ", Position: " + pos + ", Avg cost: " + avgCost);
+            if (contract.SecType == "OPT" || contract.SecType == "WAR")
+                Utils.Logger.Trace($"  Option or Warrant. LastTradeDate: {contract.LastTradeDateOrContractMonth}, Right: {contract.Right}, Strike: {contract.Strike}, Multiplier: {contract.Multiplier}, LocalSymbol:'{contract.LocalSymbol}'");
             m_accPosArrCb?.Invoke(account, contract, pos, avgCost);
         }
 
         public virtual void positionEnd()
         {
-            Console.WriteLine("PositionEnd \n");
+            Utils.Logger.Trace("PositionEnd \n");
             m_accPosEndCb?.Invoke();
         }
 

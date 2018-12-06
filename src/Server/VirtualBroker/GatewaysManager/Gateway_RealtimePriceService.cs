@@ -85,7 +85,7 @@ namespace VirtualBroker
                                         //{ TickType.CLOSE, new PriceAndTime() },
                                         { TickType.LAST, new PriceAndTime() } };
                             }
-                            if (BrokerWrapper.GetMktDataSnapshot(contract, ref rtPrices))
+                            if (BrokerWrapper.GetAlreadyStreamedPrice(contract, ref rtPrices))
                             {
                                 tickerList.Add(new Tuple<string, Dictionary<int, PriceAndTime>, int>(sqTicker, rtPrices, -1));  // -1 means: isTemporaryTicker = false, it was permanently subscribed
                             }
@@ -121,7 +121,7 @@ namespace VirtualBroker
                             {
                                 if (tickerList[i].Item2 == null) // if it is temporary ticker  (it should be -2, at this point)
                                 {
-                                    int mktDataId = BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract(tickerList[i].Item1), true,
+                                    int mktDataId = BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract(tickerList[i].Item1), null, true,
                                         (cb_mktDataId, cb_mktDataSubscr, cb_tickType, cb_price) => {
                                             Utils.Logger.Trace($"{cb_mktDataSubscr.Contract.Symbol} : {cb_tickType}: {cb_price}");
                                             //Console.WriteLine($"{cb_mktDataSubscr.Contract.Symbol} : {cb_tickType}: {cb_price}");  // better not clutter the console
@@ -169,7 +169,7 @@ namespace VirtualBroker
                                                     //{ TickType.CLOSE, new PriceAndTime() },
                                                     { TickType.LAST, new PriceAndTime() } };
                                             }
-                                            if (BrokerWrapper.GetMktDataSnapshot(contract, ref rtPrices))
+                                            if (BrokerWrapper.GetAlreadyStreamedPrice(contract, ref rtPrices))
                                             {
                                                 tickerList[i] = new Tuple<string, Dictionary<int, PriceAndTime>, int>(sqTicker, rtPrices, mktDataId);
                                             }
@@ -213,7 +213,7 @@ namespace VirtualBroker
                     } // lock
                 } // if nTempTickers
 
-                // 2. Assuming BrokerWrapper.GetMktDataSnapshot() now has all the data
+                // 2. Assuming BrokerWrapper.GetAlreadyStreamedPrice() now has all the data
                 StringBuilder jsonResultBuilder = new StringBuilder(resultPrefix + "[");
                 bool isFirstTickerWrittenToOutput = false;
                 foreach (var tickerItem in tickerList)
