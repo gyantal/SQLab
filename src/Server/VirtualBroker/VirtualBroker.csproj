@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Common\DbCommon\DbCommon.csproj" />
     <ProjectReference Include="..\..\Common\RxCommon\RxCommon.csproj" />
     <ProjectReference Include="..\..\Common\SqCommon\SqCommon.csproj" />

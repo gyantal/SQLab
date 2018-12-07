@@ -67,7 +67,9 @@ namespace SQLab.Controllers
 #endif
         public ActionResult UserInfo()
         {
-            var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
+            var authorizedEmailErrResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config);
+            if (authorizedEmailErrResponse != null)
+                return authorizedEmailErrResponse;
 
             StringBuilder sb = new StringBuilder();
             sb.Append("<html><body>");

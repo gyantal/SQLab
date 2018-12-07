@@ -36,20 +36,26 @@ namespace VirtualBroker
             }
 
             string reply = null;
-            switch (message.ID)
+            try
             {
-                case VirtualBrokerMessageID.GetRealtimePrice:
-                    reply = Controller.g_gatewaysWatcher.GetRealtimePriceService(message.ParamStr);
-                    break;
-                //case VirtualBrokerMessageID.GetAccountsSummary:
-                //case VirtualBrokerMessageID.GetAccountsPositions:
-                case VirtualBrokerMessageID.GetAccountsInfo:
-                    reply = Controller.g_gatewaysWatcher.GetAccountsInfo(message.ParamStr);
-                    break;
-                default:
-                    StrongAssert.Fail(Severity.NoException, $"<Tcp:> ProcessTcpClient: Message ID:'{ message.ID}' is unexpected, unhandled. This probably means a serious error.");
-                    break;
+                switch (message.ID)
+                {
+                    case VirtualBrokerMessageID.GetRealtimePrice:
+                        reply = Controller.g_gatewaysWatcher.GetRealtimePriceService(message.ParamStr);
+                        break;
+                    //case VirtualBrokerMessageID.GetAccountsSummary:
+                    //case VirtualBrokerMessageID.GetAccountsPositions:
+                    case VirtualBrokerMessageID.GetAccountsInfo:
+                        reply = Controller.g_gatewaysWatcher.GetAccountsInfo(message.ParamStr);
+                        break;
+                    default:
+                        StrongAssert.Fail(Severity.NoException, $"<Tcp:> ProcessTcpClient: Message ID:'{ message.ID}' is unexpected, unhandled. This probably means a serious error.");
+                        break;
 
+                }
+            } catch (Exception e)
+            {
+                Utils.Logger.Error($"<Tcp:> Error. {e.Message}");
             }
 
             if (message.ResponseFormat != VirtualBrokerMessageResponseFormat.None)

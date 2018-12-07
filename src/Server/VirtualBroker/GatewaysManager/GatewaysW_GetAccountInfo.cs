@@ -50,7 +50,7 @@ namespace VirtualBroker
     public partial class GatewaysWatcher
     {
 
-        public string GetAccountsInfo(string p_input)     // p_input = @"?bAcc=Gyantal,Charmat,DeBlanzac&type=AccSum,Pos,EstPr";
+        public string GetAccountsInfo(string p_input)     // p_input = @"?v=1&secTok=42axpka335o&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr&flags=PrefCache";
         {
             Utils.Logger.Info($"GetAccountsInfo() START with parameter '{p_input}'");
             if (!m_isReady || m_mainGateway == null)
@@ -67,25 +67,44 @@ namespace VirtualBroker
             // 3. If client wants RT MktValue too, collect needed RT prices (stocks, options, underlying of options, futures). Use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
             // 4. Fill LastPrice, LastUnderlyingPrice in all AccPos for all ibGateways. (Alternatively Calculate the MktValue, DelivValue, but better to just pass the raw data to client)
 
-            string input = Uri.UnescapeDataString(p_input.Substring(1));    // change %20 to ' ', and %5E to '^', skip the first '?' in p_input
-            string[] inputParams = input.Split(new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
-            if (!inputParams[0].StartsWith("bAcc=", StringComparison.CurrentCultureIgnoreCase))
+            var queryDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(p_input);     // in .NET core, this is the standard for manipulating queries
+            string verQ, secTokQ, bAccQ, dataQ, flagsQ;
+            try
             {
-                Utils.Logger.Error($"GetAccountsInfo() error. No bAcc parameter.");
+                verQ = queryDict["v"];      // it is case sensitive and will throw Exception if not found, but it is fine, it is quick and sure
+                secTokQ = queryDict["secTok"];
+                bAccQ = queryDict["bAcc"];
+                dataQ = queryDict["data"];
+                flagsQ = queryDict["flags"];
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error($"GetAccountsInfo() error. Wrong parameters '{p_input}'. Err: {e.Message}");
                 return null;
             }
-            if (!inputParams[1].StartsWith("type=", StringComparison.CurrentCultureIgnoreCase))
-            {
-                Utils.Logger.Error($"GetAccountsInfo() error. No type parameter.");
+
+            if (verQ != "1")    // currently only Version 1.0 is supported
                 return null;
-            }
-            string[] typeArr = inputParams[1].Substring("type=".Length).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            bool isNeedAccSum = typeArr.Contains("AccSum");
-            bool isNeedPos = typeArr.Contains("Pos");
-            bool isNeedEstPr = typeArr.Contains("EstPr");   // Last price, last underlying price is needed for marketValue
+            
+            char[] charArray = secTokQ.ToCharArray();     // reverse it, so it is not that obvious that it is the seconds
+            Array.Reverse(charArray);
+            string securityTokenVer2 = new string(charArray);
+            if (!Int64.TryParse(securityTokenVer2, out long totalSeconds))
+                return null;
+            DateTime secTokenTimeBegin = new DateTime(2010, 1, 1);      // we need a security token checking, so 3rd party cannot easily get this data
+            DateTime clientQueryTime = secTokenTimeBegin.AddSeconds(totalSeconds);
+            var timeDiff = DateTime.UtcNow - clientQueryTime;
+            if (timeDiff.TotalHours > 1.0 || timeDiff.TotalHours < -1.0)        // allow 1 hour difference, so a token can be used for a long time
+                return null;
+
+            string[] dataArr = dataQ.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            bool isNeedAccSum = dataArr.Contains("AccSum");
+            bool isNeedPos = dataArr.Contains("Pos");
+            bool isNeedEstPr = dataArr.Contains("EstPr");   // Last price, last underlying price is needed for marketValue
 
             var allAccInfos = new List<AccInfo>();
-            string[] bAccArr = inputParams[0].Substring("bAcc=".Length).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] bAccArr = bAccQ.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
             foreach (var bAcc in bAccArr)
             {
                 AccInfo accSumPos = new AccInfo { BrAccStr = bAcc };
@@ -95,7 +114,7 @@ namespace VirtualBroker
                         FindGatewayAndAdd(new GatewayUser[] { GatewayUser.GyantalMain, GatewayUser.GyantalSecondary }, accSumPos);
                         break;
                     case "CHARMAT":
-                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.CharmatMain }, accSumPos);
+                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.CharmatMain, GatewayUser.CharmatSecondary }, accSumPos);
                         break;
                     case "DEBLANZAC":
                         FindGatewayAndAdd(new GatewayUser[] { GatewayUser.DeBlanzacMain }, accSumPos);
@@ -454,7 +473,7 @@ namespace VirtualBroker
                             List<AccPos> poss = pair.Value;
                             if (Double.IsNaN(poss[0].EstPrice))     // These shouldn't be here. These are the Totally Unexpected missing ones or the errors. Estimate missing numbers with zero.
                             {
-                                Utils.Logger.Warn($"GetAccountsInfo() warning! Totally unexpected missing EstPrice for '{poss[0].Contract.LocalSymbol ?? poss[0].Contract.Symbol}'");
+                                Utils.Logger.Warn($"!GetAccInf().Unexpected no EstPr'{poss[0].Contract.LocalSymbol ?? poss[0].Contract.Symbol}'");
                                 if (Double.IsNaN(poss[0].BidPrice))
                                     poss[0].BidPrice = 0;
                                 if (Double.IsNaN(poss[0].AskPrice))

@@ -30,7 +30,8 @@ namespace SQLab.Controllers
 #endif
         public ActionResult Index()
         {
-            //var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
+            //var authorizedEmailErrResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); 
+            //if (authorizedEmailErrResponse != null) return authorizedEmailErrResponse;
             var urlPath = (HttpContext.Request.Path.HasValue) ? HttpContext.Request.Path.Value.ToLower() : String.Empty;
             if (urlPath == "/qt")
             {

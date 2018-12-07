@@ -35,6 +35,7 @@ namespace VirtualBroker
             g_brokerScheduler.Init();
 
             m_tcpListener = new ParallelTcpListener(VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener, VirtualBrokerMessage.DefaultVirtualBrokerServerPort, ProcessTcpClient);
+            Console.WriteLine($"VBroker is listening on privateIP: {VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener}:{VirtualBrokerMessage.DefaultVirtualBrokerServerPort}");
             m_tcpListener.StartTcpMessageListenerThreads();
         }
 

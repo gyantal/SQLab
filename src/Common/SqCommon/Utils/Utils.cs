@@ -603,11 +603,12 @@ namespace SqCommon
             // Decode all from Base64 encodings, so later the code don't have to do it all the time
             foreach (var item in configDict)
             {
-                // base64 codes always ends with '='. if it doesn't end with '=', treat it as non-scrambled
-                if (item.Value.EndsWith("="))
-                    configuration[item.Key] = Encoding.UTF8.GetString(Convert.FromBase64String(item.Value));
+                // first idea was: base64 codes always ends with '='. if it doesn't end with '=', treat it as non-scrambled. Not true. "Ag" is "QWc=", but "Agy" is "QWd5"
+                // if Name ends with "_P" treat it as Public, so visible, so no need to unscramble. And remove the "_P" tag too.
+                if (item.Key.EndsWith("_P"))
+                    configuration[item.Key.Substring(0, item.Key.Length - "_P".Length)] = item.Value;
                 else
-                    configuration[item.Key] = item.Value;
+                    configuration[item.Key] = Encoding.UTF8.GetString(Convert.FromBase64String(item.Value));
             }
 
             //Utils.Logger.Info(@"Test from config.json after decoding, configuration[""EmailGyantal""]: " + configuration["EmailGyantal"]);

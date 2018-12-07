@@ -70,7 +70,9 @@ namespace SQLab.Controllers
 #endif
         public ActionResult Index()
         {
-            var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
+            var authorizedEmailErrResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config);
+            if (authorizedEmailErrResponse != null)
+                return authorizedEmailErrResponse;
 
             Tuple<string, string> contentAndType = GenerateYffResponse();
             return Content(contentAndType.Item1, contentAndType.Item2);
@@ -89,8 +91,7 @@ namespace SQLab.Controllers
                 }
 
                 Dictionary<string, StringValues> allParamsDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uriQuery);   // unlike ParseQueryString in System.Web, this returns a dictionary of type IDictionary<string, string[]>, so the value is an array of strings. This is how the dictionary handles multiple query string parameters with the same name.
-                StringValues queryStrVal;
-                if (!allParamsDict.TryGetValue("yffOutFormat", out queryStrVal))
+                if (!allParamsDict.TryGetValue("yffOutFormat", out StringValues queryStrVal))
                 {
                     return new Tuple<string, string>(@"{ ""Message"":  ""Error: yffOutFormat= was not found. Uri: " + uriQuery + @""" }", "application/json");
                 }

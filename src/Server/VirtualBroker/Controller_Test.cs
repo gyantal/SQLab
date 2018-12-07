@@ -273,17 +273,21 @@ namespace VirtualBroker
             //string s = @"?s=VXX,^VIX,^GSPC,SVXY,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction"; // with JsonP, this was the old test 2
             //string s = @"?s=^VIX,^^^VIX201610,^^^VIX201611,^^^VIX201701,VXX,^^^VIX201704&f=l";     // VixTimer asks this http://www.snifferquant.com/dac/VixTimer
             //string s = @"?s=^^^VIX201610,^^^VIX201611&f=l";     // VixTimer asks this http://www.snifferquant.com/dac/VixTimer
-            VirtualBrokerMessage.TcpServerHost = VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener;      // it is a Test inside VBroker server, so use Private IP, not public IP
-            string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetRealtimePrice).Result;
+            string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetRealtimePrice, VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener, VirtualBrokerMessage.DefaultVirtualBrokerServerPort).Result;  // it is a Test inside VBroker server, so use Private IP, not public IP
 
             Console.WriteLine($"Rtps returned: {reply}");
         }
 
         internal void TestGetAccountsInfo()
         {
-            string msg = @"?bAcc=Gyantal,Charmat,DeBlanzac&type=AccSum,Pos,EstPr";
-            VirtualBrokerMessage.TcpServerHost = VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener;      // it is a Test inside VBroker server, so use Private IP, not public IP
-            string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetAccountsInfo).Result;
+            DateTime secTokenTimeBegin = new DateTime(2010, 1, 1);
+            string securityTokenVer1 = ((long)(DateTime.UtcNow - secTokenTimeBegin).TotalSeconds).ToString();
+            char[] charArray = securityTokenVer1.ToCharArray();     // reverse it, so it is not that obvious that it is the seconds
+            Array.Reverse(charArray);
+            string securityTokenVer2 = new string(charArray);
+
+            string msg = $"?v=1&secTok={securityTokenVer2}&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr&flags=PrefCache";
+            string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetAccountsInfo, VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener, VirtualBrokerMessage.DefaultVirtualBrokerServerPort).Result;  // it is a Test inside VBroker server, so use Private IP, not public IP
 
             Console.WriteLine($"GetAccountsSummaryOrPositions returned: '{reply}'");
         }

@@ -22,8 +22,8 @@ namespace SqCommon
 
     public class VirtualBrokerMessage
     {
-        public static string TcpServerHost { get; set; } = VirtualBrokerServerPublicIpForClients;
-        public static int TcpServerPort { get; set; } = DefaultVirtualBrokerServerPort;
+        public string TcpServerHost { get; set; }   // = There are at least 2 Vbrokers: ManualTradingServer (for GetAccountInfo()), AutoTradingServer
+        public int TcpServerPort { get; set; }      // = DefaultVirtualBrokerServerPort;
 
         public VirtualBrokerMessageID ID { get; set; }
         public string ParamStr { get; set; } = String.Empty;
@@ -51,7 +51,7 @@ namespace SqCommon
             }
         }
 
-        public static string VirtualBrokerServerPublicIpForClients
+        public static string AtsVirtualBrokerServerPublicIpForClients   // AutoTraderServer
         {
             get {
                 if (Utils.RunningPlatform() == Platform.Windows)
@@ -62,21 +62,38 @@ namespace SqCommon
             }
         }
 
-      
-
-        public static void InitGlobals(string p_host, int p_port)
+        public static string MtsVirtualBrokerServerPublicIpForClients   //ManualTraderServer
         {
-            TcpServerHost = p_host;
-            TcpServerPort = p_port;
+            get
+            {
+                if (Utils.RunningPlatform() == Platform.Windows)
+                    //return "localhost";       // sometimes for clients running on Windows (in development), we want localHost if Testing new VirtualBroker features
+                    return "34.251.1.119";      // sometimes for clients running on Windows (in development), we want the proper VirtualBroker if Testing runnig VBroker locally
+                else
+                    return "34.251.1.119";
+            }
         }
 
 
+        //public static void InitGlobals(string p_host, int p_port)
+        //{
+        //    TcpServerHost = p_host;
+        //    TcpServerPort = p_port;
+        //}
+
         public static async Task<string> Send(string p_msg, VirtualBrokerMessageID p_vbMessageId)
+        {
+            return await Send(p_msg, p_vbMessageId, AtsVirtualBrokerServerPublicIpForClients, DefaultVirtualBrokerServerPort);
+        }
+
+        public static async Task<string> Send(string p_msg, VirtualBrokerMessageID p_vbMessageId, string p_tcpServerHost, int p_tcpServerPort)
         {
             Utils.Logger.Info($"VirtualBrokerMessage.Send(): Message: '{ p_msg}'");
 
             var t = (new VirtualBrokerMessage()
             {
+                TcpServerHost = p_tcpServerHost,
+                TcpServerPort = p_tcpServerPort,
                 ID = p_vbMessageId,
                 ParamStr = $"{p_msg}",
                 ResponseFormat = VirtualBrokerMessageResponseFormat.String
@@ -124,6 +141,10 @@ namespace SqCommon
                         delayTaskCancellationTokenSource.Cancel();  // Task.Delay task is backed by a system timer. Release those resources instead of waiting for 30sec
 
                         await connectTask;  // Very important in order to propagate exceptions
+                        // !!! IMPORTANT !!! If there is Exception here
+                        // Check that Amazon AWS Firewall let the port through
+                        // Check that Linux firewall is inactive "sudo ufw status verbose"
+
                         // sometimes task ConnectAsync() returns instantly (no timeout), but there is an error in it. Which results an hour later: "TaskScheduler_UnobservedTaskException. Exception. A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. "
                         if (connectTask.Exception != null)
                         {
@@ -150,7 +171,7 @@ namespace SqCommon
             }
             catch (Exception e)
             {
-                Utils.Logger.Error(e, "Error:VirtualBrokerMessage.SendMessage exception.");
+                Utils.Logger.Error(e, "Error:VirtualBrokerMessage.SendMessage exception. Check both AWS and Linux firewalls! ");
             }
             return reply; // in case of timeout, return null string to the caller.
         }

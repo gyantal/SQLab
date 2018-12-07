@@ -35,10 +35,12 @@ namespace SQLab.Controllers
             string callerIP = WsUtils.GetRequestIP(this.HttpContext);
             Utils.Logger.Info($"RealtimePrice is called from IP {callerIP}");
             // Authorized ServerIP whitelist: 
-            if (!String.Equals(callerIP, ServerIp.HealthMonitorPublicIp, StringComparison.CurrentCultureIgnoreCase) &&       //  HealthMonitor for checking that real-time price works
+            if (!String.Equals(callerIP, ServerIp.HealthMonitorPublicIp, StringComparison.CurrentCultureIgnoreCase) &&       //  HealthMonitor for checking that this service works
                 !String.Equals(callerIP, ServerIp.HQaVM1PublicIp, StringComparison.CurrentCultureIgnoreCase))     // HQaVM1. e.g. website for real time price of "VIX futures" http://www.snifferquant.com/dac/VixTimer
             {
-                var authorizedEmailResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config); if (authorizedEmailResponse != null) return authorizedEmailResponse;
+                var authorizedEmailErrResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config);
+                if (authorizedEmailErrResponse != null)
+                    return authorizedEmailErrResponse;
             }
 
             string content = GenerateRtpResponse(this.HttpContext.Request.QueryString.ToString()).Result;
@@ -52,12 +54,12 @@ namespace SQLab.Controllers
             {
                 var jsonDownload = string.Empty;
                 //string queryString = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
-                Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending '{p_queryString}'");
+                Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending to VBroker: '{p_queryString}'");
                 Task<string> vbMessageTask = VirtualBrokerMessage.Send(p_queryString, VirtualBrokerMessageID.GetRealtimePrice);
                 string reply = await vbMessageTask;
                 if (vbMessageTask.Exception != null || String.IsNullOrEmpty(reply))
                 {
-                    string errorMsg = $"RealtimePrice.GenerateRtpResponse(). Received Null or Empty from VBroker. Check that the VirtualBroker is listering on IP: {VirtualBrokerMessage.TcpServerHost}:{VirtualBrokerMessage.TcpServerPort}";
+                    string errorMsg = $"RealtimePrice.GenerateRtpResponse(). Received Null or Empty from VBroker. Check that the VirtualBroker is listering on IP: {VirtualBrokerMessage.AtsVirtualBrokerServerPublicIpForClients}:{VirtualBrokerMessage.DefaultVirtualBrokerServerPort}";
                     Utils.Logger.Error(errorMsg);
                     return @"{ ""Message"":  """ + errorMsg + @""" }";
                 }
