@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html style="background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%); background-attachment: fixed; /*background-repeat: repeat overflow: visible; /*avoid scrollbars  min-height: 200% min-width: 200%*/">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Br.Acc.Info,v1.0</title>
+    <link rel="icon" href="data:,"> <!--to prevent favicon.ico requests-->
+
+    <link rel="stylesheet" type="text/css" href="/css/SQStudiesList.css">
+    <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+
+    <script>
+        console.log("Script in Header1.");
+        accInfos=[{"ToBeReplaced":"ByWebserver"}]
+    </script>
+
+</head>
+<body>
+    <h1>IntBrokers Accounts Info (<span id="idBrAccounts"></span>),v1.0</h1>
+    <hr>
+    IB Total NetLiquidation: <font size="4"><b><span id="idTotalNetLiquidation"></span></b></font><br>
+    IB Total Cash: <span id="idTotalCash"></span>/
+    IB Initial MarginReq: <span id="idTotalInitMarginReq"></span>/
+    IB Maintenance MarginReq: <span id="idTotalMaintMarginReq"></span>/
+    IB Gross Position Value: <span id="idTotalGrossPosValue"></span><br>
+    <hr>
+    Long Stock Value: <b><span id="idLongStockValue"></span></b>  <small><i>_____(!! This is not the ?Bullish? Market stock exposure. 'Short VXX', 'short SH' are market bullish, but not here. How to fix that?)</i></small> <br>
+    Short Stock Value: <b><span id="idShortStockValue"></span></b><br>
+    GrossStockExposure (LongStock - Short Stock): <b><span id="idGrossStockExposure"></span></b> and Leverage <b><span id="idGrossStockExposureLeverage"></span></b><br>
+    <hr style="height:2pt; margin:0px; visibility:hidden;" />   <!--a very thin separator-->
+    Long Option DelivValue: <b><span id="idLongOptionValue"></span></b>  <small><i>_____(!! Far OTM DelivValue is also summed. On top of the stock bullishness determination problem. How to fix that?)</i></small> <br>
+    Short Option DelivValue: <b><span id="idShortOptionValue"></span></b><br>
+    GrossOptionExposure (Long - Short): <b><span id="idGrossOptionExposure"></span></b><br>
+    <hr>
+    Bullish/Bearish Market Stock Value:[need a DB list of long symbol's bullishness]<br>
+    <hr>
+    <table id="idPosTable">
+        <!--<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>MktValue &#8661;</th><th>EstUnderlPr &#8661;</th><th>DelivValue &#8661;</th></tr>
+        <tr><td>2013-04-12</td><td>2013-04-12</td></tr>
+        <tr><td>2013-04-17</td><td>2013-04-17</td></tr>
+        <tr class="secpri"><td>2013-04-30</td><td>2013-04-30</td></tr>-->
+    </table>
+
+    <hr>
+    <small>Data timestamp: <span id="idTimestamp"></span></small>
+    <div id="idDebugInfoDiv">
+        <small>
+            <span id="idDebugInfoSpan">
+                Data in JSON:
+                <pre id="idDebugInfoPre"> </pre>
+                <br>
+            </span>
+        </small>
+    </div>
+
+    <script>
+        console.log("Script in Body1.");
+        var round = Math.round;
+
+        brAccounts = "", timestamps = "";
+        totalNetLiquidation = 0.0, totalCash = 0.0, totalInitMarginReq = 0.0, totalMaintMarginReq = 0.0, totalGrossPosValue = 0.0;
+        longStockValue = 0.0, shortStockValue = 0.0;
+        longOptionValue = 0.0, shortOptionValue = 0.0;
+        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;</th><th>MktValue &#8661;</th><th>EstUnderlPr &#8661;</th><th>DelivValue &#8661;</th><th>BrAccount &#8661;</th></tr>";
+        for (i in accInfos) {
+            if (i == 0) {
+                brAccounts += accInfos[i].BrAcc;
+                timestamps += accInfos[i].Timestamp;
+            } else {
+                brAccounts += ", " + accInfos[i].BrAcc;
+                timestamps += ", " + accInfos[i].Timestamp;
+            }
+
+            accSums = accInfos[i].AccSums;
+            accPoss = accInfos[i].AccPoss;
+            for (j in accSums) {
+                if (accSums[j].Tag == "NetLiquidation")
+                    totalNetLiquidation += Number(accSums[j].Value);    // ! assume accSums[j].Currency = "USD"
+                if (accSums[j].Tag == "TotalCashValue")
+                    totalCash += Number(accSums[j].Value);
+                if (accSums[j].Tag == "InitMarginReq")
+                    totalInitMarginReq += Number(accSums[j].Value);
+                if (accSums[j].Tag == "MaintMarginReq")
+                    totalMaintMarginReq += Number(accSums[j].Value);
+                if (accSums[j].Tag == "GrossPositionValue")
+                    totalGrossPosValue += Number(accSums[j].Value);
+            }
+
+            for (k in accPoss) {
+                accPos = accPoss[k];
+                localSymbol = "", estUnderyingPrice = "", deliveryValue = "";
+                posN = Number(accPos.Pos);          // postfix N means Number type
+                mktValueN = round(posN * Number(accPos.EstPrice));
+                deliveryValueN = 0;
+                if (accPos.SecType == "STK")
+                    if (mktValueN > 0)
+                        longStockValue += mktValueN;
+                    else if (mktValueN < 0)  // so NaN is not added to any of them.
+                        shortStockValue += mktValueN;
+
+                avgCost = accPos.AvgCost;
+                plN = round(posN * (Number(accPos.EstPrice) - Number(avgCost)));
+
+                if (accPos.hasOwnProperty('LocalSymbol')) {
+                    localSymbol = accPos.LocalSymbol;
+                }
+                if (accPos.hasOwnProperty('EstUnderlyingPrice')) {
+                    estUnderyingPrice = accPos.EstUnderlyingPrice;
+                    optCallPutMulN = 1;
+                    if (accPos.Right == "P")
+                        optCallPutMulN = -1;
+                    deliveryValueN = round(posN * optCallPutMulN * Number(accPos.Multiplier) * Number(estUnderyingPrice));
+                    deliveryValue = deliveryValueN.toLocaleString('en');
+                }
+
+                if (accPos.SecType == "OPT")
+                    if (deliveryValueN > 0)
+                        longOptionValue += deliveryValueN;
+                    else if (deliveryValueN < 0)    // so NaN is not added to any of them.
+                        shortOptionValue += deliveryValueN;
+
+                rowClass = "";
+                if (plN > 3000)
+                    rowClass = " class=\"secpri\"";
+                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + avgCost + "</td><td>" + accPos.EstPrice + "</td><td>" + plN.toLocaleString('en') + "</td><td>" + mktValueN.toLocaleString('en') + "</td><td>" + estUnderyingPrice + "</td><td>" + deliveryValue + "</td><td>" + accInfos[i].BrAcc + "</td></tr>";
+                //if (accPos.Symbol == "NetLiquidation")
+                //    totalNetLiquidation += Number(accPos.Value);
+            }
+
+        }
+        document.getElementById("idBrAccounts").innerHTML = brAccounts;
+        document.getElementById("idTimestamp").innerHTML = timestamps;
+
+        document.getElementById("idTotalNetLiquidation").innerHTML = round(totalNetLiquidation).toLocaleString('en');
+        document.getElementById("idTotalCash").innerHTML = round(totalCash).toLocaleString('en');
+        document.getElementById("idTotalInitMarginReq").innerHTML = round(totalInitMarginReq).toLocaleString('en');
+        document.getElementById("idTotalMaintMarginReq").innerHTML = round(totalMaintMarginReq).toLocaleString('en');
+        document.getElementById("idTotalGrossPosValue").innerHTML = round(totalGrossPosValue).toLocaleString('en');
+
+        document.getElementById("idLongStockValue").innerHTML = round(longStockValue).toLocaleString('en');
+        document.getElementById("idShortStockValue").innerHTML = round(shortStockValue).toLocaleString('en');
+        document.getElementById("idGrossStockExposure").innerHTML = round(longStockValue + shortStockValue).toLocaleString('en');
+        document.getElementById("idGrossStockExposureLeverage").innerHTML = (round(longStockValue + shortStockValue) / totalNetLiquidation).toLocaleString('en');
+        document.getElementById("idLongOptionValue").innerHTML = round(longOptionValue).toLocaleString('en');
+        document.getElementById("idShortOptionValue").innerHTML = round(shortOptionValue).toLocaleString('en');
+        document.getElementById("idGrossOptionExposure").innerHTML = round(longOptionValue + shortOptionValue).toLocaleString('en');
+
+        document.getElementById("idPosTable").innerHTML = posTableInner;
+
+        document.getElementById("idDebugInfoPre").innerHTML = JSON.stringify(accInfos);
+
+
+
+
+        console.log("Script in Body2.");
+        $('th').click(function () {  // need for table header click sorting
+            var table = $(this).parents('table').eq(0)
+            var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+            this.asc = !this.asc
+            if (!this.asc) { rows = rows.reverse() }
+            for (var i = 0; i < rows.length; i++) { table.append(rows[i]) }
+        })
+        function comparer(index) {
+            return function (a, b) {
+                var valA = getCellValue(a, index), valB = getCellValue(b, index)
+                // thousand separator is not handled as numeric well, remove it and see if it is a number or not.
+                valAA = valA.replace(",", ""), valBB = valB.replace(",", "");
+                if ($.isNumeric(valAA))
+                    valA = valAA;
+                if ($.isNumeric(valBB))
+                    valB = valBB;
+                return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.localeCompare(valB)
+            }
+        }
+        function getCellValue(row, index) { return $(row).children('td').eq(index).html() }
+        console.log("Body is running...");
+    </script>
+
+
+
+</body>
+</html>

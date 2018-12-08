@@ -543,6 +543,7 @@ namespace VirtualBroker
                 if (i != 0)
                     jsonResultBuilder.AppendFormat(",");
                 jsonResultBuilder.Append($"{{\"BrAcc\":\"{accInfo.BrAccStr}\"");
+                jsonResultBuilder.Append($",\"Timestamp\":\"{DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")}\"");
                 jsonResultBuilder.Append($",\"AccSums\":[");
                 for (int j = 0; j < accInfo.AccSums.Count; j++)
                 {
