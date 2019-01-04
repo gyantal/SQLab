@@ -159,17 +159,24 @@ namespace SqCommon
                 p_td = p_td.Replace('*', ' ');  //remove ** if it is in the string, because Date.Parse() will fail on that
             }
 
+            // p_td can be "Friday, July 4 (Observed July 3)" or "Friday, July 3 (July 4 holiday observed)" or "Friday, July 3"
             DateTime dateHoliday;
             int indObserved = p_td.IndexOf("(Observed");
-            if (indObserved == -1)
-            {
-                dateHoliday = DateTime.Parse(p_td + ", " + p_year.ToString());
-            }
-            else
+            if (indObserved != -1)
             {
                 int observedDateStartInd = indObserved + "(Observed".Length;
                 int indObservedEnd = p_td.IndexOf(')', observedDateStartInd);
                 dateHoliday = DateTime.Parse(p_td.Substring(observedDateStartInd, indObservedEnd - observedDateStartInd) + ", " + p_year.ToString());
+            }
+            else
+            {
+                indObserved = p_td.IndexOf("observed)");
+                if (indObserved != -1)
+                {
+                    int indObservedStart = p_td.LastIndexOf('(', indObserved - 1, indObserved);
+                    dateHoliday = DateTime.Parse(p_td.Substring(0, indObservedStart) + ", " + p_year.ToString());
+                } else
+                    dateHoliday = DateTime.Parse(p_td + ", " + p_year.ToString());
             }
             p_holidays.Add(new Tuple<DateTime, DateTime?>(dateHoliday, null));
 
