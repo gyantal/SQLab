@@ -69,7 +69,7 @@ namespace HealthMonitor
                         break;
                 }
 
-            } while (userInput != "6" && userInput != "ConsoleIsForcedToShutDown");
+            } while (userInput != "7" && userInput != "ConsoleIsForcedToShutDown");
 
             Utils.Logger.Info("****** Main() END");
             Utils.MainThreadIsExiting.Set();
