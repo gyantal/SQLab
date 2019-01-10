@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html style="background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%); background-attachment: fixed; /*background-repeat: repeat overflow: visible; /*avoid scrollbars  min-height: 200% min-width: 200%*/">
+
+<head>
+    <meta charset="utf-8" />
+    <title>GameChanger Beta Calculator</title>
+
+    <link rel="stylesheet" type="text/css" href="/css/GChBetaCalculator.css">
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
+    <script language="javascript" type="text/javascript" src="/js/jquery.flot.axislabels.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.min.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.navigate.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.selection.js"></script>
+    <script type="text/javascript" src="/js/GChBetaCalculator.js"></script>
+
+    <script>
+        onHeadProcessing();
+    </script>
+
+</head>
+
+<body>
+    <h1>GameChanger Beta Calculator</h1>
+
+    <div id="waitingMessage" style="visibility: visible">
+        <IMG SRC="/images/szuriopt3b.gif" width="600">
+    </div>
+
+    <div id="errorMessage" style="visibility: hidden">
+        <div class="herror" id="idErrorCont"></div>
+    </div>
+
+    <div id="inviCharts" style="visibility: hidden">
+
+        <p>
+            <span id="idTimeNow"></span>&emsp;&emsp;<span id="idLiveDataTime"></span>
+        </p>
+        <!--<span id="idChBxs"></span>-->
+        <table class="histData">
+            <tr>
+                <td>
+                    <div class="demo-container">
+                        <span id="idChartQQQLB"></span>
+                        <div id="placeholder2" class="demo-placeholder"></div>
+                    </div>
+                    <button class="button4" style="background: url(/images/zoomout.png); background-size: cover;" title="Zoom Out" id="clearSelectionQQQ"></button>
+                </td>
+                <td>
+                    <div class="demo-container">
+                        <span id="idChartSPYLB"></span>
+                        <div id="placeholder3" class="demo-placeholder"></div>
+                    </div>
+                    <button class="button4" style="background: url(/images/zoomout.png); background-size: cover;" title="Zoom Out" id="clearSelectionSPY"></button>
+                </td>
+            </tr>
+        </table>
+        <br>
+        <br>
+        <table class="histData">
+            <tr><td><span id="idCurrTableMtxa"></span></td><td>&emsp;&emsp;</td><td><span id="idCurrTableMtxb"></span></td></tr>
+        </table>
+        <br>
+        <table class="histData">
+            <tr><td><span id="idCurrTableMtx3a"></span></td><td>&emsp;&emsp;</td><td><span id="idCurrTableMtx3b"></span></td></tr>
+        </table>
+        <br>
+        <br>
+        <button class="buttonSH" style="background: url(/images/ShowHide.png); background-size: cover;" id="showHide"></button>
+        <br>
+        <br>
+        <table class="histData" id="suppTables">
+            <tr><td><span id="idCurrTableMtx3c"></span></td><td>&emsp;&emsp;</td><td><span id="idCurrTableMtx3d"></span></td></tr>
+            <tr><td><br><br></td></tr>
+            <tr><td><span id="idCurrTableMtx3e"></span></td><td>&emsp;&emsp;</td><td><span id="idCurrTableMtx3f"></span></td></tr>
+        </table>
+
+        <br>
+        <span id="idCurrTableMtx5"></span>
+        <br>
+        <div class="demo-container">
+            <span id="idChartLength"></span>
+
+            <div id="placeholder1" class="demo-placeholder"></div>
+        </div>
+
+
+        <br>
+        <span id="idCurrTableMtx7"></span>
+
+        <br>
+
+
+
+
+    </div>
+
+
+</body>
+</html>
