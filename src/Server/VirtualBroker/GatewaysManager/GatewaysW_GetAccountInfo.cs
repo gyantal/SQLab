@@ -161,9 +161,9 @@ namespace VirtualBroker
                     //If client wants RT MktValue too, collect needed RT prices (stocks, options, underlying of options, futures). Use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
                     if (isNeedEstPr)
                     {
-                        //Position.U407941 - Symbol: VXX, SecType: STK, Currency: USD, Position: -87, Avg cost: 21.1106586, LocalSymbol: 'VXX'
-                        //Position.U407941 - Symbol: VXX, SecType: OPT, Currency: USD, Position: 3, Avg cost: 780.35113335
-                        //    Option.LastTradeDate: 20181221, Right: C, Strike: 37, Multiplier: 100, LocalSymbol: 'VXX   181221C00037000'
+                        //Position.U407941 - Symbol: VXXB, SecType: STK, Currency: USD, Position: -87, Avg cost: 21.1106586, LocalSymbol: 'VXXB'
+                        //Position.U407941 - Symbol: VXXB, SecType: OPT, Currency: USD, Position: 3, Avg cost: 780.35113335
+                        //    Option.LastTradeDate: 20181221, Right: C, Strike: 37, Multiplier: 100, LocalSymbol: 'VXXB   181221C00037000'
                         // Contract.ConID is inique integer. But for options of the same underlying ConID is different, so we cannot use ConID. We have to group it by stocks.
 
                         Dictionary<int, List<AccPos>> knownConIds = new Dictionary<int, List<AccPos>>();    // ContracdId to AccPos list.
@@ -276,7 +276,7 @@ namespace VirtualBroker
 
                                     // Discussion: last price would be fine for stocks usually, but midPrice of askBid is needed for Options, because Last can be half a day ago. So, do midPrice in general, except for "IND" where only Last is possible
                                     // "STK" or "OPT": MID is the most honest price. LAST may happened 1 hours ago
-                                    //  far OTM options (VIX, VXX) have only Ask, but no Bid. Estimate missing by zero.
+                                    //  far OTM options (VIX, VXXB) have only Ask, but no Bid. Estimate missing by zero.
                                     // After market hour, even liquid stocks (PM, IBKR) doesn't return Ask,Bid. And we have to wait after the 5 second timeout, when they do TickSnapshotEnd, and just before that they send Trace: IBKR : bidPrice: -1.
                                     // so, for stocks. (especially AMC), we should accept LastPrice.
                                     // Using LastPrice instead of Ask,Bid for stocks changed that this query of 58 contracts returns in 300msec, instead of 900msec + the possibility of 5second timeout.
@@ -402,9 +402,9 @@ namespace VirtualBroker
                                 (cb_mktDataId, cb_mktDataSubscr, cb_type) =>
                                 {
                                     Utils.Logger.Trace($"MarketDataType in ReqMktDataStream(). {cb_mktDataSubscr.Contract.Symbol} : {cb_type}");
-                                    // TMF, VXX can be Frozen(2) too after market close, or at weekend. It means that sometimes there is no more price data. So, we should signal to clients that don't expect more data. Don't wait.
+                                    // TMF, VXXB can be Frozen(2) too after market close, or at weekend. It means that sometimes there is no more price data. So, we should signal to clients that don't expect more data. Don't wait.
                                     // However, 95% of the cases there is proper market data even in this case
-                                    // weird notice AfterMarketClose: for TMF, VXX, SVXY stocks: MarketDataType(2) first, then MarketDataType(1), then nothing. Other stocks: only MarketDataType(2), then proper Last,Ask,Bid prices
+                                    // weird notice AfterMarketClose: for TMF, VXXB, SVXY stocks: MarketDataType(2) first, then MarketDataType(1), then nothing. Other stocks: only MarketDataType(2), then proper Last,Ask,Bid prices
                                     // this may means that we started StreamingDataType(2), but later IB realized it is impossible, so changed it to FrozenHistorical (DataType=1)
                                     if (cb_mktDataSubscr.PreviousMktDataType == 2 && cb_type == 1)
                                     {

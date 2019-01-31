@@ -82,8 +82,8 @@ namespace SQLab.Controllers
         public string GetStr(int p_lbP)
         {
             //Defining asset lists.
-            string[] volAssetList = new string[] { "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ"};
-            string[] volAssetListNN = new string[] { "SVXY_Light", "VXX", "VXZ", "UVXY_Light", "TVIX_Better" };
+            string[] volAssetList = new string[] { "SVXY!Light0.5x.SQ", "VXXB.SQ", "VXZB.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ"};
+            string[] volAssetListNN = new string[] { "SVXY_Light", "VXXB", "VXZB", "UVXY_Light", "TVIX_Better" };
 
             string[] etpAssetList = new string[] { "SPY", "UPRO.SQ", "QQQ", "TQQQ.SQ", "FAS.SQ", "TMV", "UGAZ", "UWT", "UGLD"};
             string[] etpAssetListNN = new string[] { "SPY", "UPRO", "QQQ", "TQQQ", "FAS", "TMV", "UGAZ", "UWT", "UGLD" };
@@ -96,14 +96,14 @@ namespace SQLab.Controllers
 
             string[] vixAssetList = new string[] { "^VIX" };
 
-            string[] defaultCheckedList = new string[] { "SPY", "QQQ", "VXX", "VXZ", "AAPL", "AMZN", "FB", "GOOGL" }; 
+            string[] defaultCheckedList = new string[] { "SPY", "QQQ", "VXXB", "VXZB", "AAPL", "AMZN", "FB", "GOOGL" }; 
 
             var allAssetList = etpAssetList.Union(volAssetList).Union(gchAssetList).Union(gmAssetList).Union(vixAssetList).ToArray();
             var usedAssetList = etpAssetListNN.Union(volAssetListNN).Union(gchAssetListNN).Union(gmAssetListNN).ToArray();
 
 
-            //string[] allAssetList = new string[]{ "SPY", "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ", "TQQQ.SQ", "TCEHY", "^VIX" };
-            //string[] usedAssetList = new string[] { "SPY", "SVXY_Light", "VXX", "VXZ", "UVXY_Light", "TVIX_Better", "TQQQ", "TCEHY"};
+            //string[] allAssetList = new string[]{ "SPY", "SVXY!Light0.5x.SQ", "VXXB.SQ", "VXZB.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ", "TQQQ.SQ", "TCEHY", "^VIX" };
+            //string[] usedAssetList = new string[] { "SPY", "SVXY_Light", "VXXB", "VXZB", "UVXY_Light", "TVIX_Better", "TQQQ", "TCEHY"};
 
             int volLBPeriod = p_lbP;
             int[] retLB = new int[] {1, 3, 5, 10, 20, 63, 126, 252};

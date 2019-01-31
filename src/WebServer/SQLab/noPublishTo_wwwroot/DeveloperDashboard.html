@@ -44,13 +44,13 @@
     <a href="/home">Angular 4.4 Home example template</a><br />
     <a href="/WebServer/TestGoogleApiGsheet1">WebServer/Test GoogleApi: sheets.spreadsheets.values.get() via HTTP</a><br />
     <br />
-    <a href="/YahooFinanceForwarder?yffOutFormat=json&yffOutVar=myData1&yffUri=query1.finance.yahoo.com/v7/finance/download/VXX&period1=1492941064&period2=1495533064&interval=1d&events=history">Test YahooFinanceForwarder (JSON data), all yffColumns</a><br />
-    <a href="/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dc1&yffOutVar=myData1&yffUri=query1.finance.yahoo.com/v7/finance/download/VXX&period1=1492941064&period2=1495533064&interval=1d&events=history">Test YahooFinanceForwarder  (JSON data), columns: d:date, c1-AdjClose</a><br />
-    <a href="/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dc1&jsonp=JsonpCallbackFunc&yffUri=query1.finance.yahoo.com/v7/finance/download/VXX&period1=2017-02-02&period2=2017-05-22&interval=1d&events=history">Test YahooFinanceForwarder  (JSONP), columns: d:date, c1-AdjClose, startDate, endDate is not Unix format</a><br />
-    <a href="/YahooFinanceForwarder?yffOutFormat=csv&yffColumns=dc1&yffOutVar=myData1&yffUri=query1.finance.yahoo.com/v7/finance/download/VXX&period1=2017-02-02&period2=UtcNow&interval=1d&events=history">Test YahooFinanceForwarder (CSV), columns: d:date, c1-AdjClose, startDate is not Unix, endDate is UtcNow (intraday realtime price)</a><br />
+    <a href="/YahooFinanceForwarder?yffOutFormat=json&yffOutVar=myData1&yffUri=query1.finance.yahoo.com/v7/finance/download/VXXB&period1=1492941064&period2=1495533064&interval=1d&events=history">Test YahooFinanceForwarder (JSON data), all yffColumns</a><br />
+    <a href="/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dc1&yffOutVar=myData1&yffUri=query1.finance.yahoo.com/v7/finance/download/VXXB&period1=1492941064&period2=1495533064&interval=1d&events=history">Test YahooFinanceForwarder  (JSON data), columns: d:date, c1-AdjClose</a><br />
+    <a href="/YahooFinanceForwarder?yffOutFormat=json&yffColumns=dc1&jsonp=JsonpCallbackFunc&yffUri=query1.finance.yahoo.com/v7/finance/download/VXXB&period1=2017-02-02&period2=2017-05-22&interval=1d&events=history">Test YahooFinanceForwarder  (JSONP), columns: d:date, c1-AdjClose, startDate, endDate is not Unix format</a><br />
+    <a href="/YahooFinanceForwarder?yffOutFormat=csv&yffColumns=dc1&yffOutVar=myData1&yffUri=query1.finance.yahoo.com/v7/finance/download/VXXB&period1=2017-02-02&period2=UtcNow&interval=1d&events=history">Test YahooFinanceForwarder (CSV), columns: d:date, c1-AdjClose, startDate is not Unix, endDate is UtcNow (intraday realtime price)</a><br />
     <br />
-    <a href="/rtp?s=VXX,^VIX,^GSPC,SVXY&f=l">Test Realtime Price 1</a><br />
-    <a href="/rtp?s=VXX,^VIX,^VIX3M,^GSPC,SVXY,^^^VIX201903,GOOG&f=l&jsonp=myCallbackFunction">Test Realtime Price 2</a><br />
+    <a href="/rtp?s=VXXB,^VIX,^GSPC,SVXY&f=l">Test Realtime Price 1</a><br />
+    <a href="/rtp?s=VXXB,^VIX,^VIX3M,^GSPC,SVXY,^^^VIX201903,GOOG&f=l&jsonp=myCallbackFunction">Test Realtime Price 2</a><br />
     <br />
     <a href="/gai?d=ATS&bAcc=Gyantal,Charmat&data=AccSum,Pos,EstPr&flags=CacheMaxStaleMin5">Test (JSON) GetAccountsInfo() AutoTradeServer</a><br />
     <a href="/gai?d=MTS&bAcc=Charmat,DeBlanzac&data=AccSum,Pos,EstPr&flags=CacheMaxStaleMin5">Test (JSON) GetAccountsInfo() ManualTradeServer</a><br />

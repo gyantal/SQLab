@@ -277,13 +277,13 @@ namespace Overmind
                 gyantalEmailInnerlStr += "BIDU price warning: bigger than usual move. In percentage: " + (biduTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
                 gyantalPhoneCallInnerStr += "the ticker B I D U, ";
             }
-            double vxxTodayPctChange = GetTodayPctChange("VXX");
+            double vxxTodayPctChange = GetTodayPctChange("VXXB");
             if (Math.Abs(vxxTodayPctChange) >= 0.06)
             {
-                gyantalEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
-                gyantalPhoneCallInnerStr += "the ticker V X X ";
-                charmatEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
-                charmatPhoneCallInnerStr += "the ticker V X X ";
+                gyantalEmailInnerlStr += "VXXB price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
+                gyantalPhoneCallInnerStr += "the ticker V X X B ";
+                charmatEmailInnerlStr += "VXXB price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
+                charmatPhoneCallInnerStr += "the ticker V X X B ";
             }
 
             double fbTodayPctChange = GetTodayPctChange("FB");
@@ -354,12 +354,12 @@ namespace Overmind
         private static double GetTodayPctChange(string p_exchangeWithTicker)    // for GoogleFinance: TSE:VXX is the Toronto stock exchange, we need "NYSEARCA:VXX"
         {
             Utils.Logger.Trace("GetTodayPctChange(): " + p_exchangeWithTicker);
-            // https://finance.google.com/finance?q=NYSEARCA%3AVXX
+            // https://finance.google.com/finance?q=BATS%3AVXXB
             var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Accept", "text/html, application/xhtml+xml, image/jxr, */*");
             client.DefaultRequestHeaders.Add("Accept-Language", "en-GB, en; q=0.7, hu; q=0.3");
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063");  // this is the Edge string on 2017-11-03
-            //var priceHtml = client.GetStringAsync($"https://finance.google.com/finance?q=NYSEARCA%3AVXX" + p_exchangeWithTicker.Replace(":", "%3A")).Result;
+            //var priceHtml = client.GetStringAsync($"https://finance.google.com/finance?q=BATS%3AVXXB" + p_exchangeWithTicker.Replace(":", "%3A")).Result;
             string url = $"https://www.cnbc.com/quotes/?symbol=" + p_exchangeWithTicker.Replace(":", "%3A");
             Utils.Logger.Trace("HttpClient().GetStringAsync queried with:'" + url + "'");
             var priceHtml = client.GetStringAsync(url).Result;
@@ -417,7 +417,7 @@ namespace Overmind
             var sqlReturn = sqlReturnData.Item1;
 
             List<List<DailyData>> returnQuotes = null;
-            // sql query of "VXX.SQ" gives back tickers of VXX and also tickers of "VXX.SQ"
+            // sql query of "VXXB.SQ" gives back tickers of VXXB and also tickers of "VXXB.SQ"
             int closePriceIndex = 2;
 
             returnQuotes = tickers.Select(ticker =>
@@ -490,8 +490,8 @@ namespace Overmind
             string subjectPart = "Monthly Option expiration. Trade HarryLong 2 manually!";
             StringBuilder sb = new StringBuilder(g_htmlEmailStart);
             sb.Append(
-                @"<small>Because of the EU PRIIPs (KID) Regulation, IB UK doesn't allow US domiciled ETFs like SPY, QQQ, VXX to buy until the account is worth less than 500K EUR. Workaround is options.<br/>
-- for shorting VXX stock, we buy VXX Put option (cheap, very close to expiration, when time value is tiny), then we let it expire or force-exercise. The result is 100 short VXX stock immediately. It WORKED !, because it is technically not a stock shorting/buying, and EU regulation protect Funds (ETF) only, and when you trade options you are assumed to be sophisticated investor already.<br/>
+                @"<small>Because of the EU PRIIPs (KID) Regulation, IB UK doesn't allow US domiciled ETFs like SPY, QQQ, VXXB to buy until the account is worth less than 500K EUR. Workaround is options.<br/>
+- for shorting VXXB stock, we buy VXXB Put option (cheap, very close to expiration, when time value is tiny), then we let it expire or force-exercise. The result is 100 short VXXB stock immediately. It WORKED !, because it is technically not a stock shorting/buying, and EU regulation protect Funds (ETF) only, and when you trade options you are assumed to be sophisticated investor already.<br/>
 - only 100 stocks in batches can be obtained, but we can even go more granular by exercising 1 option for 100 shares, then liquidating 2/3rd of it instantly. Liquidation is allowed.<br/>
 - Don't fret if it is rebalanced only after 2 months. Actually it (SR) is better.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;Daily,1d: CAGR: 58.24%, SR 1.14<br/>&nbsp;&nbsp;&nbsp;&nbsp;Daily,20d: CAGR: 59.09%, SR 1.16<br/>&nbsp;&nbsp;&nbsp;&nbsp;Daily,40d: CAGR: 59.53%, SR 1.19 

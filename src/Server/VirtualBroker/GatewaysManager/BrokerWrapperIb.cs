@@ -313,7 +313,7 @@ namespace VirtualBroker
                 return; // skip processing the error further. Don't send it to HealthMonitor.
 
             // ErrId: 34, ErrCode: 2137, Msg: The closing order quantity is greater than your current position.
-            // Treat it only as a warning. It happens when HarryLong has -100 VXX and then UberVXX buys 150 VXX, which results +50 VXX.
+            // Treat it only as a warning. It happens when HarryLong has -100 VXXB and then UberVXX buys 150 VXXB, which results +50 VXXB.
             // The warning is correct, however we expect this to happen. So, don't raise error.
             if (errorCode == 2137)
                 return; // skip processing the error further. Don't send it to HealthMonitor.
@@ -372,7 +372,7 @@ namespace VirtualBroker
             }
 
             // SERIOUS ERRORS AFTER THIS LINE. Notify HealthMonitor.
-            // after asking realtime price as "s=^VIX,^^^VIX201610,^^^VIX201611,^^^VIX201701,VXX,^^^VIX201704&f=l"
+            // after asking realtime price as "s=^VIX,^^^VIX201610,^^^VIX201611,^^^VIX201701,VXXB,^^^VIX201704&f=l"
             // Code: 200, Msg: The contract description specified for VIX is ambiguous; you must specify the multiplier or trading class.
             if (isAddOrderInfoToErrMsg)
             {
@@ -536,7 +536,7 @@ namespace VirtualBroker
 
         public virtual bool GetAlreadyStreamedPrice(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes)
         {
-            // Contract contract = new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" };
+            // Contract contract = new Contract() { Symbol = "VXXB", SecType = "STK", Currency = "USD", Exchange = "SMART" };
             var mktDataSubscr = MktDataSubscriptions.Values.FirstOrDefault(r => VBrokerUtils.IsContractEqual(r.Contract, p_contract));
             if (mktDataSubscr == null)
             {
@@ -973,7 +973,7 @@ namespace VirtualBroker
         // But their buying price was 19.02. Considering the 18.75 MOC price, it is about 1.4% loss, which is $21. However, who knows, maybe UVXY tomorrow mean reverts. So it was good.
         // Funny news: next day at MOC price was 19.81. So IB buying it for 19.02 was better than if I change UVXY to TVIX 1 day later. 
         // It was a 4.3% better price for me, so actually I profited $62 on the fact that IB made this forced buy-in without warning me before.
-        // + 2017-02-14: Decision was made to switch from UVXY to TVIX, as UVXY cannot be shorted. If TVIX is difficult to short, I may short 2x VXX, or long 2x XIV or long 2x SXVY.
+        // + 2017-02-14: Decision was made to switch from UVXY to TVIX, as UVXY cannot be shorted. If TVIX is difficult to short, I may short 2x VXXB, or long 2x XIV or long 2x SXVY.
         // on the top of it Borrowing fees: UVXY: it was 12%, but now 20%. TVIX: 3.5%.
 
 
@@ -1090,7 +1090,7 @@ namespace VirtualBroker
             // !! Correct interpretation marketDataType(2)=streaming data (realtime), marketDataType(1)=historical (non-streaming)
             // if we ask m_mainGateway.BrokerWrapper.ReqMktDataStream(new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL" });,
             // then After market Close, there is no more realtime price, and this call back tells us that it has a marketDataType=2, which is an Index
-            // TMF, VXX can be Frozen(2) too after market close, or at weekend. It means there is no more price data. So, we should signal to clients that don't expect more data. Don't wait.
+            // TMF, VXXB can be Frozen(2) too after market close, or at weekend. It means there is no more price data. So, we should signal to clients that don't expect more data. Don't wait.
             Utils.Logger.Info("MarketDataType. " + reqId + ", <!this explanation maybe wrong> Type(1 for real time, 2 for frozen (Index after MarketClose)): " + marketDataType);
             if (!MktDataSubscriptions.TryGetValue(reqId, out MktDataSubscription mktDataSubscription))
             {
@@ -1202,7 +1202,7 @@ namespace VirtualBroker
             ClientSocket.reqHistoricalData(histDataId, p_contract, p_endDateTime.ToString("yyyyMMdd HH:mm:ss"), durationString, "1 day", p_whatToShow, 1, 1, null);    // with daily data formatDate is always "yyyyMMdd", no seconds, and param=2 doesn't give seconds
 
             // wait here with timeout of 14seconds. In general it is only 1 second, but it took 13sec when  HMDS data farm was disconnected
-            // 1109T14:50:02.192#91#5#Info: ReqHistoricalData() for VXX, reqId: 1001
+            // 1109T14:50:02.192#91#5#Info: ReqHistoricalData() for VXXB, reqId: 1001
             // 1109T14:50:06.972#23#5#Debug: BrokerWrapper.error(). ErrId: -1, ErrCode: 2106, Msg: HMDS data farm connection is OK:ushmds
             // 1109T14:50:14.875#23#5#Trace: HistoricalData. 1001 - Date: 20160511, Open: 59.48, High: 61.88, Low: 58.56, Close: 61.4, Volume: 161447, Count: 167906, WAP: 60.284, HasGaps: False
             // 1109T14:50:14.875#23#5#Error: HistDataSubscriptions reqId 1001 is not expected

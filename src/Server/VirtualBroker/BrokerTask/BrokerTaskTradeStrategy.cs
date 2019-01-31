@@ -63,7 +63,7 @@ namespace VirtualBroker
             Strategy.Init(detailedReportSb);
             List<PortfolioPositionSpec> proposedPositionSpecs = null;
             // try to make IsSameStrategyForAllUsers true, because then it is enough to run the complex Strategy calculation only once, 
-            // Strategy gives only a guideline for the BrokerTask, who customize it to portfolios. Modify Leverage (1x, 2x), or change trading instrument (long XIV, instead of short VXX)
+            // Strategy gives only a guideline for the BrokerTask, who customize it to portfolios. Modify Leverage (1x, 2x), or change trading instrument (long XIV, instead of short VXXB)
             if (Strategy.IsSameStrategyForAllUsers)
             {
                 proposedPositionSpecs = Strategy.GeneratePositionSpecs(null); // Strategy calculates suggested positions only once (it may be a long calculation, like Neural Network), and use it for all portfolios
@@ -119,7 +119,7 @@ namespace VirtualBroker
                 DetermineProposedTransactions(portfolios[i]);
                 
                 //************************* 3.3 Play transactions, don't play too small transactions, however only VbGateway can decide what is small transaction, not VBroker
-                // For example, selling 2 VXX is small in itself, but if VbGateway has another big VXX (MOC) transaction at the same time from another VBroker, than VbGateway can decide to play that 2 VXX too.
+                // For example, selling 2 VXXB is small in itself, but if VbGateway has another big VXXB (MOC) transaction at the same time from another VBroker, than VbGateway can decide to play that 2 VXX too.
                 PlaceTransactionsViaBroker(portfolios[i], detailedReportSb);
             }
 

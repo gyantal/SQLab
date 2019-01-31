@@ -64,7 +64,7 @@ namespace VirtualBroker
                 return;
 
             // IB MOC orders: https://www.interactivebrokers.com/en/index.php?f=599  (NYSE, NYSE MKT, NYSE Arca: 15:45 ET, Nasdaq: 15:50 ET)
-            // EU PRIIPs Regulation (2018-06-19) : EU based investors cannot trade SPY, QQQ, VXX, etc. ETFs, only the UCITS equivalents in EU, but they are scarce. Reverting to manual trading for a while.
+            // EU PRIIPs Regulation (2018-06-19) : EU based investors cannot trade SPY, QQQ, VXXB, etc. ETFs, only the UCITS equivalents in EU, but they are scarce. Reverting to manual trading for a while.
             //var neuralSniffer1TaskSchema = new BrokerTaskSchema()
             //{
             //    Name = "NeuralSniffer1",
@@ -160,7 +160,7 @@ namespace VirtualBroker
                     { BrokerTaskSetting.OrderExecution, OrderExecution.Market },
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
-                        //new BrokerTaskPortfolio() { Name = "! AdaptiveConnor,VXX autocorrelation (VXX-XIV, stocks, noHedge) Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
+                        //new BrokerTaskPortfolio() { Name = "! AdaptiveConnor,VXX autocorrelation (VXXB-XIV, stocks, noHedge) Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
                         //    MaxTradeValueInCurrency = 48000, // portfolio is 5K original, 8K is 2017-01, but it plays double leverage: 16K-20K. 20K is possible. So, almost double the range to 35K too.
                         //    MinTradeValueInCurrency = 100,
                         //    //Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 2.0 } },
@@ -168,9 +168,9 @@ namespace VirtualBroker
                         //    //Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 2.0 } },  // 2017-08-22: "VixShortLeverage" from 1.0 to 2.0, because InitialMargin of 'long SVXY' has OK margin now. 'Portfolio Margin Details' shows about 43% margin for ZIV, and something similar to XIV. Margins are moderated.
                         //    //Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 1.0 } },  // 2017-08-14: "VixShortLeverage" from 2.0 to 1.0 again, because IB: "assuming a decline of 10% in the market index SPX and a consistent increase in the market volatility index VIX. With VIX currently around 11 the consistent upward move will put VIX around 37. At higher levels of VIX, the VIX change corresponding to a 10% decline in the SPX will be lower (in accordance with expected behavior of the beta between VIX and SPX)."
                         //    //Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 2.0 } },    // 2017-11-16: back to normal as we have 29K available funds now
-                        //    Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 1.5 } },    // 20178-01-03: After having 100+% in 2017, prefer safer play now. IB margin handling is still bad. 100% maintenance margin and 110% initial margin. Calculated from yesterday closePrice. In case of -20% intraday VXX spike, these margin can be reached. Only have 15K available funds. On top of it: realized that in case of XIV termination event, portfolio can lose more than its value. Not losing 100% and going to Zero, but losing an extra -100%. That shouldn't be allowed. In 2018, let's play safer and only 150% shorts, not 200%.
+                        //    Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 1.5 } },    // 20178-01-03: After having 100+% in 2017, prefer safer play now. IB margin handling is still bad. 100% maintenance margin and 110% initial margin. Calculated from yesterday closePrice. In case of -20% intraday VXXB spike, these margin can be reached. Only have 15K available funds. On top of it: realized that in case of XIV termination event, portfolio can lose more than its value. Not losing 100% and going to Zero, but losing an extra -100%. That shouldn't be allowed. In 2018, let's play safer and only 150% shorts, not 200%.
                         new BrokerTaskPortfolio() { Name = "! AdaptiveConnor,VXX autocorrelation (VXX-XIV, stocks, noHedge) Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
-                            MaxTradeValueInCurrency = 20000, // >For Mr.C. VXX (10K original, 9K now, I would set MaxValue=20K (assuming portfolio double in a year)
+                            MaxTradeValueInCurrency = 20000, // >For DC (10K original, 9K now, I would set MaxValue=20K (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 100,
                             Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 1.0 } }
                         }
@@ -220,21 +220,21 @@ namespace VirtualBroker
                         //    MaxTradeValueInCurrency = 70000, // For Agy: portfolio is 50K original. Set MaxValue=40K  (HarryLong shouldn't trade more than that, because it is only a small adjustment every day)
                         //    MinTradeValueInCurrency = 100,
                         //    Param = new PortfolioParamHarryLong() {                                
-                        //        // 2018-03-29: for tax reasons, change TMV to TMF, and ZIV to VXZ for 30 days. Then change it back.
-                        //        Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.15, -0.05, -0.10, 0.25, -0.85, -0.09, -0.26 }
+                        //        // 2018-03-29: for tax reasons, change TMV to TMF, and ZIV to VXZB for 30 days. Then change it back.
+                        //        Tickers = new string[] { "SVXY", "VXXB", "VXZB", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.15, -0.05, -0.10, 0.25, -0.85, -0.09, -0.26 }
                         //    } },
                         // 2018-02-06: when VIX went to 50 in market panic, XIV was terminated, I thought it is better to retire this for DC. 200K portfolio ended in 130K. About -70K loss. He wouldn't like to continue that.
                         // 2018-03-28: we restarted HL. PV was 135K, but restarted with 150K. However, HL made safer, because we halved all weights. CAGR: 60% to 31%; maxDD: -53% to -30%. Sharpe: 1.17 to 1.20. Good.
                         new BrokerTaskPortfolio() { Name = "! Harry Long2(Contango-Bond) harvester Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
                             MaxTradeValueInCurrency = 400000, // For Mr.C.: portfolio is 150K original. Set MaxValue=300K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 200,  //50% allocation to all assets
-                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.075, -0.025, 0.05, 0.125, -0.425, -0.045, -0.13 }  } }
+                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXXB", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.075, -0.025, 0.05, 0.125, -0.425, -0.045, -0.13 }  } }
                         //new BrokerTaskPortfolio() { Name = "! IB T. Risky 2 Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.TuSecondary,
                         //    MaxTradeValueInCurrency = 15000, // For Tu: portfolio is 5K original. Set MaxValue=15K  (assuming portfolio double in a year)
                         //    MinTradeValueInCurrency = 200,
                         //    Param = new PortfolioParamHarryLong() {
                         //        // UWT short is changed to long DWT until UWT becomes shortable...
-                        //        Tickers = new string[] { "SVXY", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] {  0.20, 0.10, 0.25, -0.85, -0.09, -0.26 } // for T. It is safer if we don't have to login and check the shortVXX position. On the top of it, VXX $pos would be under $200, not traded by VBroker.
+                        //        Tickers = new string[] { "SVXY", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] {  0.20, 0.10, 0.25, -0.85, -0.09, -0.26 } // for T. It is safer if we don't have to login and check the shortVXX position. On the top of it, VXXB $pos would be under $200, not traded by VBroker.
                         //    } }
                         }
                     }

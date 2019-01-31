@@ -18,7 +18,7 @@ namespace VirtualBroker
     //02-21 08:19:52.459: ***** InitRTP().
     //02-21 08:19:56.738: ^VIX tickID:2
     //02-21 08:19:56.769: ^VXV tickID:3
-    //02-21 08:19:56.769: VXX tickID:4
+    //02-21 08:19:56.769: VXXB tickID:4
     //02-21 08:19:56.769: XIV tickID:5
     //02-21 08:19:56.769: SPY tickID:6
     //02-21 08:19:56.879: TickPriceCB(): 5/ClosePrice/32.23/False 
@@ -39,9 +39,9 @@ namespace VirtualBroker
     // (In JavaScript semicolon says the line end, and they are immediately flowed by a newline that says the same)
 
     // the input is the queryString of this 
-    //http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^GSPC,SVXY&f=l 
-    //http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^GSPC,SVXY&f=l&jsonp=MyCallBackFunction
-    //string s = @"?s=VXX,^VIX,^GSPC,SVXY,^^^VIX201404,GOOG&f=l&jsonp=MyCallBackFunction";
+    //http://hqacompute.cloudapp.net/q/rtp?s=VXXB,^VIX,^GSPC,SVXY&f=l 
+    //http://hqacompute.cloudapp.net/q/rtp?s=VXXB,^VIX,^GSPC,SVXY&f=l&jsonp=MyCallBackFunction
+    //string s = @"?s=VXXB,^VIX,^GSPC,SVXY,^^^VIX201404,GOOG&f=l&jsonp=MyCallBackFunction";
 
     public partial class Gateway
     {
@@ -53,6 +53,12 @@ namespace VirtualBroker
 
             try
             {
+                // !!! HACK, temporary: 2019-01-31: 
+                // http://www.snifferquant.com/dac/VixTimer asks for VXX every 20 minutes, which is wrong. VBroker will fail on that. If VXX is asked, we change it to VXXB.
+                // TEMPorary. Remove these after Laszlo fixed the query in VixTimer quote
+                p_input = p_input.Replace(",VXX,", ",VXXB");
+
+
                 // caret(^) is not a valid URL character, so it is encoded to %5E; skip the first '?'  , convert everything to Uppercase, because '%5e', and '%5E' is the same for us
                 string input = Uri.UnescapeDataString(p_input.Substring(1));    // change %20 to ' ', and %5E to '^'  , "^VIX" is encoded in the URI as "^%5EVIX"
 

@@ -60,7 +60,7 @@ namespace VirtualBroker
         public void Init(StringBuilder p_detailedReportSb)
         {
             m_detailedReportSb = p_detailedReportSb;
-            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(new List<string>() { "VXX", "SVXY" }));   // task will start to run on another thread (in the threadpool)
+            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(new List<string>() {"VXXB", "SVXY" }));   // task will start to run on another thread (in the threadpool)
         }
 
         public string StockIdToTicker(int p_stockID)
@@ -80,8 +80,8 @@ namespace VirtualBroker
         public double GetPortfolioLeverage(List<PortfolioPositionSpec> p_suggestedPortfItems, IPortfolioParam p_param)
         {
             PortfolioParamUberVXX param = (PortfolioParamUberVXX)p_param;
-            // the strategy knows that p_suggestedPortfItems only has 1 row, either VXX (for long VXX) or SVXY (for short VXX)
-            if (p_suggestedPortfItems[0].Ticker == "VXX")
+            // the strategy knows that p_suggestedPortfItems only has 1 row, either VXXB (for long VXXB) or SVXY (for short VXXB)
+            if (p_suggestedPortfItems[0].Ticker == "VXXB")
                 return param.PlayingInstrumentVixLongLeverage;
             else
                 return param.PlayingInstrumentVixShortLeverage;
@@ -96,19 +96,19 @@ namespace VirtualBroker
             }
             double forecast = GetForecastVxx();
 
-            Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"Final VXX Forecast:{forecast * 100}%");
-            Utils.Logger.Info($"Final VXX Forecast:{forecast * 100}%");
-            m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">Final VXX Forecast:{forecast * 100}%</font>");
+            Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"Final VXXB Forecast:{forecast * 100}%");
+            Utils.Logger.Info($"Final VXXB Forecast:{forecast * 100}%");
+            m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">Final VXXB Forecast:{forecast * 100}%</font>");
 
             List <PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
-            if (forecast > 0)   // bullish on VXX: buy VXX or UVXY/TVIX
+            if (forecast > 0)   // bullish on VXXB: buy VXXB or UVXY/TVIX
             {
                 // IBrokerStrategy should not really know about the Trading Execution, or the proper trading instrument of the user or leverage of the user. 
                 // The BrokerTask should overwrite the trading instrument if it wants that suits to the different portfolios
                 // but we want to Calculate this complex Strategy only once, just giving a guideline for the BrokerTask
-                specs.Add(new PortfolioPositionSpec() { Ticker = "VXX", PositionType = PositionType.Long, Size = WeightedSize.Create(1.0) });
+                specs.Add(new PortfolioPositionSpec() { Ticker = "VXXB", PositionType = PositionType.Long, Size = WeightedSize.Create(1.0) });
             }
-            else if (forecast < 0)  // bearish on VXX: short VXX or UVXY/TVIX
+            else if (forecast < 0)  // bearish on VXXB: short VXXB or UVXY/TVIX
             {
                 specs.Add(new PortfolioPositionSpec() { Ticker = "SVXY", PositionType = PositionType.Long, Size = WeightedSize.Create(1.0) });
             }
@@ -121,7 +121,7 @@ namespace VirtualBroker
         private bool GetHistoricalAndRealTimeDataForAllParts()
         {
             bool isOkGettingHistoricalData = true;
-            // 1. Get VXX price data
+            // 1. Get VXXB price data
             // we can get histical data from these sources and compare them
             // 1. IB: quickest, but 'Historical data request for greater than 365 days rejected.' and it is split adjusted, but if dividend is less than 10%, it is not adjusted.
             //      checked that: the today (last day) of IB.ReqHistoricalData() is not always correct. And it is not always the last real time price. It only works 90% of the time.
@@ -138,7 +138,7 @@ namespace VirtualBroker
             //var p_sqlConn = new SqlConnection("ConnectionString");
             int vxxLookbackWindowSize = 102;
             m_vxxQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
-                    new QuoteRequest { Ticker = "VXX", nQuotes = vxxLookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
+                    new QuoteRequest { Ticker = "VXXB", nQuotes = vxxLookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
                     Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)Convert.ToDecimal(row[2]) }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
 
             // check that the last date in the CSV is what we expect: the previous market Open day
@@ -149,12 +149,12 @@ namespace VirtualBroker
 
             //m_vxx = vxxQuotesFromSqlDB.Select(item => new QuoteData() { Date = item.Date, AdjClosePrice = item.AdjClosePrice }).ToList(); // Clone the SQL version, not YF
 
-            // so, for VXX, for which there is no dividend, I can use the split-adjusted IB prices, but for other cases, I will have to use our SQL database (or YF or GF or all)
-            Contract contract = VBrokerUtils.ParseSqTickerToContract("VXX");
+            // so, for VXXB, for which there is no dividend, I can use the split-adjusted IB prices, but for other cases, I will have to use our SQL database (or YF or GF or all)
+            Contract contract = VBrokerUtils.ParseSqTickerToContract("VXXB");
             if (!Controller.g_gatewaysWatcher.ReqHistoricalData(DateTime.UtcNow, vxxLookbackWindowSize, "TRADES", contract, out m_vxxQuotesFromIB))   // real trades, not the MidPoint = AskBidSpread
             {
                 isOkGettingHistoricalData = false;
-                Utils.Logger.Error("VXX historical data was not given from IB within the 14seconds timeout. We continue, but it will be a problem later. If this problem continues, try to get historical VXX data from both IB and SQL DB, and use the one which returns within 5 seconds. We cannot delay this data, because we only have 15 seconds to do the trade before Market Closes.");
+                Utils.Logger.Error("VXXB historical data was not given from IB within the 14seconds timeout. We continue, but it will be a problem later. If this problem continues, try to get historical VXXB data from both IB and SQL DB, and use the one which returns within 5 seconds. We cannot delay this data, because we only have 15 seconds to do the trade before Market Closes.");
             }
             else
             {
@@ -162,14 +162,14 @@ namespace VirtualBroker
                 StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, "There is no point continuing if rtPrice cannot be obtained.");
                 double rtPrice = rtPrices[TickType.MID].Price;
                 StrongAssert.True(Math.Abs((m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice - rtPrice) / m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.006, Severity.NoException,  // should be less than 0.6%
-                    $"VXX RT price from stream ({rtPrice}) is too far away from lastPrice ({m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice}) from IB.ReqHistoricalData(), which usually is the RT price. We continue using RT stream price anyway. This usually happens after 3days weekends. No worries, replacing last historical price with RT stream price solves this perfectly. Make a comment into BrokerWrapperIb.cs/ReqHistoricalData() function in the source code with this example and date.");
+                    $"VXXB RT price from stream ({rtPrice}) is too far away from lastPrice ({m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].AdjClosePrice}) from IB.ReqHistoricalData(), which usually is the RT price. We continue using RT stream price anyway. This usually happens after 3days weekends. No worries, replacing last historical price with RT stream price solves this perfectly. Make a comment into BrokerWrapperIb.cs/ReqHistoricalData() function in the source code with this example and date.");
 
                 m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1] = new QuoteData() { Date = m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].Date, AdjClosePrice = rtPrice };   // but we use the streamed rtPrice anyway
 
                 // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
                 if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
                 {// in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
-                    // 2016-06-27: VXX ClosePrice: YF historical: $16.83, all others: GF, Marketwatch, IB, YF main (not historical) page: $16.92
+                    // 2016-06-27: VXXB ClosePrice: YF historical: $16.83, all others: GF, Marketwatch, IB, YF main (not historical) page: $16.92
                     StrongAssert.True(Math.Abs(m_vxxQuotesFromSqlDB[m_vxxQuotesFromSqlDB.Count - 1].AdjClosePrice - m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.02, Severity.NoException,
                         $"Yesterday close price for {contract.Symbol} doesn't match between IB ({m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice}) and SQL DB ({m_vxxQuotesFromSqlDB[m_vxxQuotesFromSqlDB.Count - 1].AdjClosePrice}). We continue trading and use only the more trustworthy IB data. If you check IB ClosePrice with other sources (GF, Marketwatch), and that is a good value, there is nothing to do. VBroker will use the IB historical price and IB ClosePrice.");
                 }
