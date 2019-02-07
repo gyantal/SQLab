@@ -43,9 +43,9 @@ namespace HealthMonitor
                 }
 
 
-                //string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^VXV,^GSPC,SVXY&f=l";
-                //string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^GSPC,SVXY&f=l";  // 2017-10-25: VXV: IB error: "No security definition has been found for the request", and not even in TWS. So, cancel it.
-                string url = "https://www.snifferquant.net/rtp?s=VXX,^VIX,^GSPC,SVXY&f=l"; // 2018-10-10: thinking about removing ^VIX,^GSPC so less strain on VBroker. But the point of HealthMonitor is to see if there is a problem (no index data subscription). So, keep them.
+                //string url = "https://www.snifferquant.net/rtp?s=VXXB,^VIX,^VXV,^GSPC,SVXY&f=l";
+                //string url = "https://www.snifferquant.net/rtp?s=VXXB,^VIX,^GSPC,SVXY&f=l";  // 2017-10-25: VXV: IB error: "No security definition has been found for the request", and not even in TWS. So, cancel it.
+                string url = "https://www.snifferquant.net/rtp?s=VXXB,^VIX,^GSPC,SVXY&f=l"; // 2018-10-10: thinking about removing ^VIX,^GSPC so less strain on VBroker. But the point of HealthMonitor is to see if there is a problem (no index data subscription). So, keep them.
                 string rtpsReply = String.Empty;
                 if (Utils.DownloadStringWithRetry(out rtpsReply, url, 5, TimeSpan.FromSeconds(5), false))
                     Utils.Logger.Info(url + " returned: " + (rtpsReply.Substring(0, (rtpsReply.Length > 45) ? 45 : rtpsReply.Length)).Replace("\r\n", "").Replace("\n", ""));   // it is better to see it as one line in the log file
@@ -117,10 +117,10 @@ namespace HealthMonitor
         }
 
         //on weekends and on days when stock market is not open(holidays) this is what it returns, which is fine:
-        //>>>on Saturday: [{"Symbol":"VXX"},{"Symbol":"^VIX"},{"Symbol":"^VXV"},{"Symbol":"^GSPC","LastUtc":"2015-12-13T00:39:41","Last":2010.52,"UtcTimeType":"LastChangedTime"},{"Symbol":"XIV"}]
-        //>>>On Sunday: [{"Symbol":"VXX"},{"Symbol":"^VIX"},{"Symbol":"^VXV"},{"Symbol":"^GSPC"},{"Symbol":"XIV"}]
+        //>>>on Saturday: [{"Symbol":"VXXB"},{"Symbol":"^VIX"},{"Symbol":"^VXV"},{"Symbol":"^GSPC","LastUtc":"2015-12-13T00:39:41","Last":2010.52,"UtcTimeType":"LastChangedTime"},{"Symbol":"XIV"}]
+        //>>>On Sunday: [{"Symbol":"VXXB"},{"Symbol":"^VIX"},{"Symbol":"^VXV"},{"Symbol":"^GSPC"},{"Symbol":"XIV"}]
         //But this return without prices at least it shows that the Service is not crashed, it returns data
-        //>>>Monday night: [{"Symbol":"VXX","LastUtc":"2015-12-15T00:56:09","Last":21.97,"BidUtc":"2015-12-15T00:59:58","Bid":21.88,"AskUtc":"2015-12-15T00:58:33","Ask":22,"UtcTimeType":"LastChangedTime"},{"Symbol":"^VIX","LastUtc":"2015-12-14T21:14:47","Last":22.73,"UtcTimeType":"LastChangedTime"},{"Symbol":"^VXV","LastUtc":"2015-12-14T21:14:47","Last":23.3,"UtcTimeType":"LastChangedTime"},{"Symbol":"^GSPC","LastUtc":"2015-12-15T00:13:07","Last":2022.52,"UtcTimeType":"LastChangedTime"},{"Symbol":"XIV","LastUtc":"2015-12-15T00:59:34","Last":24.23,"BidUtc":"2015-12-15T00:59:58","Bid":24.17,"AskUtc":"2015-12-15T00:59:03","Ask":24.23,"UtcTimeType":"LastChangedTime"}]
+        //>>>Monday night: [{"Symbol":"VXXB","LastUtc":"2015-12-15T00:56:09","Last":21.97,"BidUtc":"2015-12-15T00:59:58","Bid":21.88,"AskUtc":"2015-12-15T00:58:33","Ask":22,"UtcTimeType":"LastChangedTime"},{"Symbol":"^VIX","LastUtc":"2015-12-14T21:14:47","Last":22.73,"UtcTimeType":"LastChangedTime"},{"Symbol":"^VXV","LastUtc":"2015-12-14T21:14:47","Last":23.3,"UtcTimeType":"LastChangedTime"},{"Symbol":"^GSPC","LastUtc":"2015-12-15T00:13:07","Last":2022.52,"UtcTimeType":"LastChangedTime"},{"Symbol":"XIV","LastUtc":"2015-12-15T00:59:34","Last":24.23,"BidUtc":"2015-12-15T00:59:58","Bid":24.17,"AskUtc":"2015-12-15T00:59:03","Ask":24.23,"UtcTimeType":"LastChangedTime"}]
         private bool IsRtpsReplyOk(string rtpsReply)
         {
             // implement check logic here.
@@ -130,9 +130,9 @@ namespace HealthMonitor
             try
             {
                 var rtpsReplyDicts = Utils.LoadFromJSON<List<Dictionary<string, string>>>(rtpsReply);
-                var vxxItem = rtpsReplyDicts.Find(r => r["Symbol"] == "VXX");
+                var vxxItem = rtpsReplyDicts.Find(r => r["Symbol"] == "VXXB");
                 if (vxxItem == null)
-                    return false;   // 2. if VXX record is not found
+                    return false;   // 2. if record is not found
                 string vxxLastPriceStr;
                 bool isVXXHasLastPrice = vxxItem.TryGetValue("Last", out vxxLastPriceStr);
                 if (!isVXXHasLastPrice)
@@ -140,12 +140,12 @@ namespace HealthMonitor
                     if (!Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
                     {
                         // if it is premarket (specially on Monday), we would 
-                        // accept if VXX does'nt have Last price "'[{"Symbol":"VXX"},{"Symbol":"^VIX"},""
+                        // accept if it does'nt have Last price "'[{"Symbol":"VXXB"},{"Symbol":"^VIX"},""
                         return true;
                     }
                 }
                 if (String.IsNullOrEmpty(vxxLastPriceStr))  // "Last":21.97
-                    return false;   // 3. if VXX's Last price is empty. 
+                    return false;   // 3. if it's Last price is empty. 
                 double vxxLastPrice;
                 if (!Double.TryParse(vxxLastPriceStr, out vxxLastPrice))
                     return false;   // 4. if it is not a number. For example if it is "N/A", we return error

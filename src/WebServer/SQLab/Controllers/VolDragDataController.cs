@@ -102,8 +102,8 @@ namespace SQLab.Controllers
             var usedAssetList = etpAssetListNN.Union(volAssetListNN).Union(gchAssetListNN).Union(gmAssetListNN).ToArray();
 
 
-            //string[] allAssetList = new string[]{ "SPY", "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ", "TQQQ.SQ", "TCEHY", "^VIX" };
-            //string[] usedAssetList = new string[] { "SPY", "SVXY_Light", "VXX", "VXZ", "UVXY_Light", "TVIX_Better", "TQQQ", "TCEHY"};
+            //string[] allAssetList = new string[]{ "SPY", "SVXY!Light0.5x.SQ", "VXXB.SQ", "VXZB.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ", "TQQQ.SQ", "TCEHY", "^VIX" };
+            //string[] usedAssetList = new string[] { "SPY", "SVXY_Light", "VXXB", "VXZB", "UVXY_Light", "TVIX_Better", "TQQQ", "TCEHY"};
 
             int volLBPeriod = p_lbP;
             int[] retLB = new int[] {1, 3, 5, 10, 20, 63, 126, 252};

@@ -8,8 +8,8 @@ from stat import S_ISDIR
 from colorama import Fore, Back, Style
 # Parameters to change:
 
-#vbServerEnvironment = "AutoTradingServer"
-vbServerEnvironment = "ManualTradingServer"
+vbServerEnvironment = "AutoTradingServer"
+#vbServerEnvironment = "ManualTradingServer"
 
 rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
 acceptedSubTreeRoots = ["Server\\VirtualBroker", "Common\\SqCommon", "Common\\DbCommon", "Common\\RxCommon", "ThirdParty\\Reactive\\System.Reactive.Interfaces", "ThirdParty\\Reactive\\System.Reactive.Core", "ThirdParty\\Reactive\\System.Reactive.Linq", "ThirdParty\\Reactive\\System.Reactive.PlatformServices", "ThirdParty\\IbApiSocketClient"]        # everything under these relPaths is traversed: files or folders too

@@ -13,7 +13,7 @@ namespace VirtualBroker
         // 
         // Holiday substrategy is too overoptimized, because the number of samples are low. For 20 years data, the number of samples is 20. Not much.
         // still, it is better to play it adaptively with learning, because we don't have to manually fine-tune the rules later.
-        public double? GetUberVxx_FomcAndHolidays_ForecastVxx()    // forecast VXX, not SPY
+        public double? GetUberVxx_FomcAndHolidays_ForecastVxx()    // forecast VXXB, not SPY
         {
             List<DateProperty> specialDates = DbCommon.SqlTools.LoadRegularEventDatesHolidays().Result[CountryID.UnitedStates]; // it is ordered by Date
 
@@ -28,14 +28,14 @@ namespace VirtualBroker
             var closestFomcET = specialDates.FindLast(r => ((r.Flags & DatePropertiesFlags.FomcMeetingLastDay) != 0) && (r.DateLoc < fomcDateUpperThresholdET) && (r.DateLoc > fomcDateLowerThresholdET)); // FindLast(), ordered list. Search backward as there are less items in the future than in the past
             if (closestFomcET != null)
             {
-                int offsetInd = CalculateOffsetIndOfTradingDateFromEvent(nextTradingDayET_Date, closestFomcET.DateLoc);       // VXX forecast: Long,Long,Short,Short,Long for days T-3, T-2, T-1, T+0, T+1
+                int offsetInd = CalculateOffsetIndOfTradingDateFromEvent(nextTradingDayET_Date, closestFomcET.DateLoc);       // VXXB forecast: Long,Long,Short,Short,Long for days T-3, T-2, T-1, T+0, T+1
                 Utils.ConsoleWriteLine(null, false, $"Closest FOMC date: {closestFomcET.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
                 Utils.Logger.Debug($"Closest FOMC date found: {closestFomcET.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd>=0)? "+": "-")}{Math.Abs(offsetInd)}");
                 m_detailedReportSb.AppendLine($"Closest FOMC date: {closestFomcET.DateLoc.ToString("yyyy-MM-dd")}, day T{((offsetInd >= 0) ? "+" : "-")}{Math.Abs(offsetInd)}");
                 if (offsetInd == -1 || offsetInd == 0)
-                    return -1.0;    // VXX negative short forecast, which is bullish for the market
+                    return -1.0;    // VXXB negative short forecast, which is bullish for the market
                 if (offsetInd == -3 || offsetInd == -2 || offsetInd == +1)
-                    return 1.0;     // VXX positive long forecast, which is bearish for the market
+                    return 1.0;     // VXXB positive long forecast, which is bearish for the market
             }
 
 
@@ -93,43 +93,43 @@ namespace VirtualBroker
             {
                 case DatePropertiesFlags.NewYear:
                     if (p_offsetInd == +1 || p_offsetInd == +2 || p_offsetInd == +3 || p_offsetInd == +4 || p_offsetInd == +5)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                        return -1.0;    // VXXB negative short forecast, which is bullish for the market
                     if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3)
-                        return 1.0;    // VXX positive long forecast, which is bearish for the market
+                        return 1.0;    // VXXB positive long forecast, which is bearish for the market
                     break;
                 case DatePropertiesFlags.MLutherKing:
                     if (p_offsetInd == -1 || p_offsetInd == -2)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                        return -1.0;    // VXXB negative short forecast, which is bullish for the market
                     break;
                 // as of 2016, SuperBowl is not a stock market holiday, only civil holiday, 
                 // 2017-02-03: it is not in our database, but I am happy to skip this, it shouldn't be significant
-                // 2018-02-05: it was not in our database, so we didn't play it. However the forecast was very good. VXX went up + 30% on that day. A pity we didn't have 
+                // 2018-02-05: it was not in our database, so we didn't play it. However the forecast was very good. VXXB went up + 30% on that day. A pity we didn't have 
                 // Balazs's HolidayResearch Excel table should contain old dates for SuperBowl and other holidays, Future dates should be collected by a Crawler, or by a Warning email to Supervisors.
                 case DatePropertiesFlags.SuperBowl:     // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
                     if (p_offsetInd == 0)
-                        return 1.0;    // VXX positive long forecast, which is bearish for the market
+                        return 1.0;    // VXXB positive long forecast, which is bearish for the market
                     break;
                 case DatePropertiesFlags.Presidents:
                     if (p_offsetInd == -1 || p_offsetInd == -2)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                        return -1.0;    // VXXB negative short forecast, which is bullish for the market
                     break;
                 case DatePropertiesFlags.GoodFriday:
                     if (p_offsetInd == +1 || p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                        return -1.0;    // VXXB negative short forecast, which is bullish for the market
                     break;
                 case DatePropertiesFlags.Memorial:
                     break;
                 case DatePropertiesFlags.Independence:
                     if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4 || p_offsetInd == -5)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                        return -1.0;    // VXXB negative short forecast, which is bullish for the market
                     if (p_offsetInd == +1)
-                        return 1.0;    // VXX positive long forecast, which is bearish for the market
+                        return 1.0;    // VXXB positive long forecast, which is bearish for the market
                     break;
                 case DatePropertiesFlags.Labor:
                     if (p_offsetInd == -4 || p_offsetInd == -5)
-                        return 1.0;    // VXX positive long forecast, which is bearish for the market
+                        return 1.0;    // VXXB positive long forecast, which is bearish for the market
                     if (p_offsetInd == +3 || p_offsetInd == +2 || p_offsetInd == +1 || p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                        return -1.0;    // VXXB negative short forecast, which is bullish for the market
                     break;
                 case DatePropertiesFlags.Columbus: // T+1 in the Sub-strategy table is actually Day T+0, because after 1998, MarketOpenDayHolidays = ColombusDay OR SuperBowl OR VeteranDay
                     break;
@@ -137,13 +137,13 @@ namespace VirtualBroker
                     break;
                 case DatePropertiesFlags.Thanksgiving:
                     if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4 || p_offsetInd == +3 || p_offsetInd == +4)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                        return -1.0;    // VXXB negative short forecast, which is bullish for the market
                     if (p_offsetInd == +1 || p_offsetInd == +2)
-                        return 1.0;    // VXX positive long forecast, which is bearish for the market
+                        return 1.0;    // VXXB positive long forecast, which is bearish for the market
                     break;
                 case DatePropertiesFlags.Xmas:
                     if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4 || p_offsetInd == -5)
-                        return -1.0;    // VXX negative short forecast, which is bullish for the market
+                        return -1.0;    // VXXB negative short forecast, which is bullish for the market
                     break;
                 default:
                     break;

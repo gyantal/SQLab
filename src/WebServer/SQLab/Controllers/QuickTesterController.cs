@@ -48,7 +48,7 @@ namespace SQLab.Controllers
             string uriQuery = "";
             try
             {
-                uriQuery = this.HttpContext.Request.QueryString.ToString();    // "?s=VXX,SVXY,^vix&f=ab&o=csv" from the URL http://localhost:58213/api/rtp?s=VXX,XIV,^vix&f=ab&o=csv
+                uriQuery = this.HttpContext.Request.QueryString.ToString();    // "?s=VXXB,SVXY,^vix&f=ab&o=csv" from the URL http://localhost:58213/api/rtp?s=VXXB,XIV,^vix&f=ab&o=csv
 
                 if (uriQuery.Length > 8192)
                 {//When you try to pass a string longer than 8192 charachters, a faultException will be thrown. There is a solution, but I don't want
@@ -101,7 +101,7 @@ namespace SQLab.Controllers
 
 
                 //var jsonDownload = string.Empty;
-                ////string queryString = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
+                ////string queryString = @"?s=VXXB,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
                 //Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending '{this.HttpContext.Request.QueryString.ToString()}'");
                 //string reply = VirtualBrokerMessage.Send(this.HttpContext.Request.QueryString.ToString(), VirtualBrokerMessageID.GetRealtimePrice).Result;
                 //Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Received '{reply}'");

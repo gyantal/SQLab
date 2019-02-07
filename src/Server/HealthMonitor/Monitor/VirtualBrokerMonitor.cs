@@ -61,9 +61,9 @@ namespace HealthMonitor
             if (!isErrorOrWarning && (briefReport != null))
             {
                 // sometimes the message seems OK, but if the messageParam contains the word "Error" treat it as error. For example, if this email was sent to the user, with the Message that everything is OK, treat it as error
-                // "***Trade: ERROR"   + "*** StrongAssert failed (severity==Exception): BrokerAPI.GetStockMidPoint(VXX,...) failed"
+                // "***Trade: ERROR"   + "*** StrongAssert failed (severity==Exception): BrokerAPI.GetStockMidPoint(...) failed"
                 // "ibNet_ErrorMsg(). TickerID: 742, ErrorCode: 404, ErrorMessage: 'Order held while securities are located.'
-                // "Error. A transaction was not executed. p_brokerAPI.GetExecutionData = null for Sell VXX Volume: 266. Check that it was not executed and if not, perform it manually then enter into the DB.
+                // "Error. A transaction was not executed. p_brokerAPI.GetExecutionData = null for Sell SPY Volume: 266. Check that it was not executed and if not, perform it manually then enter into the DB.
                 isErrorOrWarning = (briefReport.IndexOf("Error", StringComparison.CurrentCultureIgnoreCase) != -1);  // in DotNetCore, there is no StringComparison.InvariantCultureIgnoreCase
             }
 

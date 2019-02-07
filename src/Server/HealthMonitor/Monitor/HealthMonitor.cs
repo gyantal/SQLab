@@ -165,6 +165,8 @@ namespace HealthMonitor
             if (!isTradingHoursOK)
             {
                 Utils.Logger.Warn("DetermineUsaMarketTradingHours() was not ok.");
+                // SetupNotRepeatingDailyReportTimer() happens once per day, if DetermineUsaMarketTradingHours() fails, send email only once per day.
+                StrongAssert.Fail(Severity.NoException, $"DetermineUsaMarketTradingHours() failed. They probably changed their website. They do it annually. Daily HealthMonitor email at market close will not be sent.");
             }
             else
             {

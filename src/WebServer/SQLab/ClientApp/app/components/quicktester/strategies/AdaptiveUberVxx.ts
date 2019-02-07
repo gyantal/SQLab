@@ -34,7 +34,7 @@ export class SubStrategy {
 
 export class AdaptiveUberVxx extends Strategy {
 
-    public bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Long IYR", "Short VXX", "Short VXX.SQ", "Short VXZ", "Short VXZ.SQ"];
+    public bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Long IYR", "Short VXXB", "Short VXXB.SQ", "Short VXZB", "Short VXZB.SQ"];
     public selectedBullishTradingInstrument = this.bullishTradingInstrument[0];
     public param = "UseKellyLeverage=false;MaxLeverage=1.0";      // params shouldn't use &, because that is used for URI.Query parameters. Better to avoid it. Use CSV, come separation instead. Or better: ";"
 
