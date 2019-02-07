@@ -486,7 +486,19 @@ function creatingTables(data) {
         currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
     currTableMtxa += "<td class=\"" + assetNames2Array[assetNames2Array.length - 1] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[assetNames2Array.length - 1] + "</td></tr>";
-    for (var j = 0; j < betaLBPeriods.length; j++) {
+    for (var j = 0; j < 6; j++) {
+        currTableMtxa += "<tr align=\"center\"><td>" + betaLBPeriods[j] + "</td>";
+        for (var i = 0; i < assetNames2Array.length; i++) {
+            currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + betaCalcQQQCurrMtx[j][i] + "</td>";
+        }
+        currTableMtxa += "</tr>";
+    }
+    currTableMtxa += "<tr align=\"center\" style=\"font-weight: bold\"><td>" + betaLBPeriods[6] + "</td>";
+    for (var i = 0; i < assetNames2Array.length; i++) {
+        currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + betaCalcQQQCurrMtx[6][i] + "</td>";
+    }
+    currTableMtxa += "</tr>";
+    for (var j = 7; j < betaLBPeriods.length; j++) {
         currTableMtxa += "<tr align=\"center\"><td>" + betaLBPeriods[j] + "</td>";
         for (var i = 0; i < assetNames2Array.length; i++) {
             currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + betaCalcQQQCurrMtx[j][i] + "</td>";
@@ -500,7 +512,19 @@ function creatingTables(data) {
         currTableMtxb += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
     currTableMtxb += "<td class=\"" + assetNames2Array[assetNames2Array.length - 1] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[assetNames2Array.length - 1] + "</td></tr>";
-    for (var j = 0; j < betaLBPeriods.length; j++) {
+    for (var j = 0; j < 6; j++) {
+        currTableMtxb += "<tr align=\"center\"><td>" + betaLBPeriods[j] + "</td>";
+        for (var i = 0; i < assetNames2Array.length; i++) {
+            currTableMtxb += "<td class=\"" + assetNames2Array[i] + "\">" + betaCalcSPYCurrMtx[j][i] + "</td>";
+        }
+        currTableMtxb += "</tr>";
+    }
+    currTableMtxb += "<tr align=\"center\" style=\"font-weight: bold\"><td>" + betaLBPeriods[6] + "</td>";
+    for (var i = 0; i < assetNames2Array.length; i++) {
+        currTableMtxb += "<td class=\"" + assetNames2Array[i] + "\">" + betaCalcSPYCurrMtx[6][i] + "</td>";
+    }
+    currTableMtxb += "</tr>";
+    for (var j = 7; j < betaLBPeriods.length; j++) {
         currTableMtxb += "<tr align=\"center\"><td>" + betaLBPeriods[j] + "</td>";
         for (var i = 0; i < assetNames2Array.length; i++) {
             currTableMtxb += "<td class=\"" + assetNames2Array[i] + "\">" + betaCalcSPYCurrMtx[j][i] + "</td>";
@@ -849,13 +873,13 @@ function creatingTables(data) {
     var divChartQQQLB = document.getElementById("idChartQQQLB");
     divChartQQQLB.innerHTML = "<strong>Beta of GameChanger Stocks in Comparison to QQQ using &emsp;<select id=\"limit1\"><option value=\"0\">1 Week</option><option value=\"1\">2 Weeks</option><option value=\"2\">1 Month</option><option value=\"3\">2 Months</option><option value=\"4\">3 Months</option><option value=\"5\">6 Months</option><option value=\"6\" selected>1 Year</option><option value=\"7\">2 Years</option><option value=\"8\">3 Years</option><option value=\"9\">Max</option>" + betaLBPeriods[selLBPeri] + "</select> &emsp;Lookback Period</strong>";
 
-    var selLBPeriSPY = 6;
-    var divChartSPYLB = document.getElementById("idChartSPYLB");
-    divChartSPYLB.innerHTML = "<strong>Beta of GameChanger Stocks in Comparison to SPY using &emsp;<select id=\"limit3\"><option value=\"0\">1 Week</option><option value=\"1\">2 Weeks</option><option value=\"2\">1 Month</option><option value=\"3\">2 Months</option><option value=\"4\">3 Months</option><option value=\"5\">6 Months</option><option value=\"6\" selected>1 Year</option><option value=\"7\">2 Years</option><option value=\"8\">3 Years</option><option value=\"9\">Max</option>" + betaLBPeriods[selLBPeriSPY] + "</select> &emsp;Lookback Period</strong>";
+    //var selLBPeriSPY = 6;
+    //var divChartSPYLB = document.getElementById("idChartSPYLB");
+    //divChartSPYLB.innerHTML = "<strong>Beta of GameChanger Stocks in Comparison to SPY using &emsp;<select id=\"limit3\"><option value=\"0\">1 Week</option><option value=\"1\">2 Weeks</option><option value=\"2\">1 Month</option><option value=\"3\">2 Months</option><option value=\"4\">3 Months</option><option value=\"5\">6 Months</option><option value=\"6\" selected>1 Year</option><option value=\"7\">2 Years</option><option value=\"8\">3 Years</option><option value=\"9\">Max</option>" + betaLBPeriods[selLBPeriSPY] + "</select> &emsp;Lookback Period</strong>";
 
     creatingChartData1();
     creatingChartData2();
-    creatingChartData3();
+
 
     $('#limit2').bind('change', function () {
         lengthOfChart = parseInt(this.value);
@@ -868,10 +892,7 @@ function creatingTables(data) {
         creatingChartData2();
     });
 
-    $('#limit3').bind('change', function () {
-        selLBPeriSPY = parseInt(this.value);
-        creatingChartData3();
-    });
+  
 
     //Declaring data sets to charts.
     function creatingChartData1() {
@@ -950,37 +971,6 @@ function creatingTables(data) {
 
         flotPlotMyData3(datasets2, nCurrDataVD, xTicksHVD, noAssets, assetNames2Array, selLBPeri, betaLBPeriods);
 
-    }
-    function creatingChartData3() {
-
-        var noAssets = assetNames2Array.length;
-
-        var nCurrDataVD = dailyDatesMEArray.length;
-
-        var xTicksHVD = new Array(nCurrDataVD);
-        for (var i = 0; i < nCurrDataVD; i++) {
-            var xTicksHVDRows = new Array(2);
-            xTicksHVDRows[0] = i;
-            xTicksHVDRows[1] = dailyDatesMEArray[i];
-            xTicksHVD[i] = xTicksHVDRows;
-        }
-
-        var listHVD = [];
-        for (var j = 0; j < noAssets; j++) {
-            var assChartVD = new Array(nCurrDataVD);
-            for (var i = 0; i < nCurrDataVD; i++) {
-                var assChartVDRows = new Array(2);
-                assChartVDRows[0] = i;
-                assChartVDRows[1] = parseFloat(betaCalcSPYMtx[i][selLBPeriSPY * noAssets + j]);
-                assChartVD[i] = assChartVDRows;
-            }
-            listHVD.push({ label: assetNames2Array[j], data: assChartVD, points: { show: true, radius: 0.01 }, lines: { show: true, lineWidth: 1 } });
-        }
-
-
-        var datasets3 = listHVD;
-
-        flotPlotMyData5(datasets3, nCurrDataVD, xTicksHVD, noAssets, assetNames2Array, selLBPeriSPY, betaLBPeriods);
     }
 }
 // Creating charts.
@@ -1162,7 +1152,7 @@ function flotPlotMyData3(datasets2, nCurrData2, xTicksH2, noAssets, assetNamesAr
             var ssdfs = plot2.getOptions().tooltip.content;
             plot2.setupGrid();
             plot2.draw();
-            plot2.clearSelectionQQQ();
+            plot2.clearSelection();
             xTickReDraw();
 
         });
@@ -1175,7 +1165,7 @@ function flotPlotMyData3(datasets2, nCurrData2, xTicksH2, noAssets, assetNamesAr
 
         xTickReDraw();
 
-        $("#clearSelectionQQQ").click(plotAccordingToChoices2);
+        $("#clearSelection").click(plotAccordingToChoices2);
     }
     plotAccordingToChoices2();
 
@@ -1184,136 +1174,6 @@ function flotPlotMyData3(datasets2, nCurrData2, xTicksH2, noAssets, assetNamesAr
 
 function xTickReDraw() {
     var myDivChart2Element = $("#placeholder2")[0];
-
-    var flotXaxisObj2 = myDivChart2Element.getElementsByClassName('flot-text')[0].getElementsByClassName('flot-x-axis flot-x1-axis xAxis x1Axis')[0];
-    var xWidth2 = flotXaxisObj2.clientWidth;
-    var flotTickLabelObj2 = flotXaxisObj2.childNodes;
-
-    var xTicks2 = flotTickLabelObj2.length;
-    var limiter2 = Math.max(Math.floor(xWidth2 / xTicks2), 0.5);
-    var xConst2 = 60;
-    if (limiter2 < xConst2) {
-
-        for (var i = 0; i < xTicks2; i++) {
-            if (i % Math.floor(xConst2 / limiter2) > 0) {
-                flotTickLabelObj2[i].style.display = "none";
-            }
-        }
-
-    }
-}
-function flotPlotMyData5(datasets3, nCurrData3, xTicksH2, noAssets, assetNamesArray, selLBPeriSPY, betaLBPeriods) {
-    $("#update_all").click(plotAccordingToChoices3);
-    function plotAccordingToChoices3() {
-        var dataB3 = [];
-        $.each(datasets3, function (key) {
-            dataB3.push(datasets3[key]);
-        });
-
-        //$("input:checkbox:checked").each(function () {
-        //    var key = $(this).attr("id");
-        //    var aaa = assetNamesArray.indexOf(key);
-        //    if (key && datasets2[aaa]) {
-        //        dataB2.push(datasets2[aaa]);
-        //    }
-        //});
-
-        var placeholder3 = $("#placeholder3");
-        var data3 = dataB3;
-        var options3 = {
-            yaxis: {
-                axisLabel: "Beta",
-                tickFormatter: function (v, axis) {
-                    return v.toFixed(2);
-                }
-            },
-            xaxis: {
-                //tickDecimals: 0,
-                min: 0,
-                //max: nCurrData-1,
-                ticks: xTicksH2,
-                axisLabel: "Date"
-            },
-            legend: {
-                position: "nw",
-                noColumns: Math.min(noAssets, 10),
-                backgroundColor: "#F4F6F6"
-            },
-            grid: {
-                backgroundColor: "#F4F6F6",
-                hoverable: true
-            },
-            tooltip: {
-                show: true,
-                content: function (label, x, y) {
-                    var xVals = [];
-                    for (var i = 0; i < nCurrData3; i++) {
-                        xVals[i] = dataB3[0].data[i][0];
-                    };
-                    var indi = xVals.indexOf(x);
-
-                    var text = "<b>" + label + "<br/></b><i>" + betaLBPeriods[selLBPeriSPY] + " Beta in Comparison to SPY on " + xTicksH2[indi][1] + "<br/></i>";
-                    dataB3.forEach(function (series) {
-                        text += series.label + ' : ' + series.data[indi][1] + "<br/>";
-                    });
-
-                    return text;
-                }
-            },
-            selection: {
-                mode: "x"
-            }
-
-        };
-
-        placeholder3.bind("plotselected", function (event, ranges) {
-
-            $("#selection").text(ranges.xaxis.from.toFixed(1) + " to " + ranges.xaxis.to.toFixed(1));
-
-            $.each(plot3.getXAxes(), function (_, axis) {
-                var opts = axis.options;
-                opts.min = ranges.xaxis.from;
-                opts.max = ranges.xaxis.to;
-                var xMin = Math.round(ranges.xaxis.from);
-                var xMax = Math.round(ranges.xaxis.to);
-                var yMax = 0;
-                var noLines = data3.length;
-                for (var i = xMin; i < xMax + 1; i++) {
-                    for (var j = 0; j < noLines; j++) {
-                        let v = data3[j].data[i][1];
-                        yMax = (v > yMax) ? v : yMax;
-
-                    }
-                }
-                plot3.getAxes().yaxis.options.max = yMax * 1.2;
-            });
-
-            var sdsd = plot3.getAxes().yaxis.options.max;
-            var ssdfs = plot3.getOptions().tooltip.content;
-            plot3.setupGrid();
-            plot3.draw();
-            plot3.clearSelectionSPY();
-            xTickReDraw2();
-
-        });
-
-        placeholder3.bind("plotunselected", function (event) {
-            $("#selection").text("");
-        });
-
-        var plot3 = $.plot(placeholder3, data3, options3);
-
-        xTickReDraw2();
-
-        $("#clearSelectionSPY").click(plotAccordingToChoices3);
-    }
-    plotAccordingToChoices3();
-
-
-}
-
-function xTickReDraw2() {
-    var myDivChart2Element = $("#placeholder3")[0];
 
     var flotXaxisObj2 = myDivChart2Element.getElementsByClassName('flot-text')[0].getElementsByClassName('flot-x-axis flot-x1-axis xAxis x1Axis')[0];
     var xWidth2 = flotXaxisObj2.clientWidth;
