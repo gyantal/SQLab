@@ -103,7 +103,7 @@ namespace VirtualBroker
                     if (m_getAccountPosMres == null)
                         m_getAccountPosMres = new ManualResetEventSlim(false);  // initialize as unsignaled
                     else
-                        m_getAccountPosMres.Reset();        // set to unsignaled, which makes thread to block
+                        m_getAccountPosMres.Reset();        // set to unsignaled, which makes the thread to block
 
                     BrokerWrapper.ReqPositions();
                     bool wasLightSet = m_getAccountPosMres.Wait(5000);     // timeout at 5sec
