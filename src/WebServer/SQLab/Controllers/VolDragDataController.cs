@@ -85,8 +85,8 @@ namespace SQLab.Controllers
             string[] volAssetList = new string[] { "SVXY!Light0.5x.SQ", "VXXB.SQ", "VXZB.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ"};
             string[] volAssetListNN = new string[] { "SVXY_Light", "VXXB", "VXZB", "UVXY_Light", "TVIX_Better" };
 
-            string[] etpAssetList = new string[] { "SPY", "UPRO.SQ", "QQQ", "TQQQ.SQ", "FAS.SQ", "TMV", "UGAZ", "UWT", "UGLD"};
-            string[] etpAssetListNN = new string[] { "SPY", "UPRO", "QQQ", "TQQQ", "FAS", "TMV", "UGAZ", "UWT", "UGLD" };
+           string[] etpAssetList = new string[] { "SPY", "UPRO.SQ", "QQQ", "TQQQ.SQ", "FAS.SQ", "TMV", "UGAZ", "UWT", "UGLD"};
+           string[] etpAssetListNN = new string[] { "SPY", "UPRO", "QQQ", "TQQQ", "FAS", "TMV", "UGAZ", "UWT", "UGLD" };
 
             string[] gchAssetList = new string[] { "AAPL", "AMZN","BABA","BIDU","BKNG", "FB", "GOOGL", "JD", "NFLX", "NVDA", "TCEHY"};
             string[] gchAssetListNN = new string[] { "AAPL", "AMZN", "BABA", "BIDU", "BKNG", "FB", "GOOGL", "JD", "NFLX", "NVDA", "TCEHY" };
