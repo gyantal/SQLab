@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "990ebdcf34a2bcc01c15"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "91f3e4b0b73231d06509"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -1799,6 +1799,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var FetchDataComponent = (function () {
     function FetchDataComponent(http, baseUrl) {
         var _this = this;
+        this.forecasts = [];
         http.get(baseUrl + 'api/SampleData/WeatherForecasts').subscribe(function (result) {
             _this.forecasts = result.json();
         }, function (error) { return console.error(error); });
@@ -1858,7 +1859,10 @@ var gDefaultHMData = {
 var HealthMonitorComponent = (function () {
     function HealthMonitorComponent(http, baseUrl) {
         this.m_title = 'SQ HealthMonitor Dashboard'; // strongly typed variables in TS
+        this.m_data = {};
         this.m_userEmail = 'Unknown user';
+        // debug info here
+        this.m_webAppResponse = '';
         this.m_http = http;
         this.m_baseUrl = baseUrl;
         this.getHMData(gDefaultHMData);
@@ -2737,6 +2741,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 var DailyBar = (function () {
     function DailyBar() {
+        this.time = 0; // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
+        this.close = 0.0;
+        this.open = 0.0;
+        this.high = 0.0;
+        this.low = 0.0;
     }
     return DailyBar;
 }());
@@ -2751,6 +2760,14 @@ var QuickTesterComponent = (function () {
         this.tradingViewChartName = "DayOfTheWeek data";
         this.inputStartDateStr = ""; // empty string means maximum available
         this.inputEndDateStr = ""; // empty string means: today
+        // Inputs area
+        this.strategy_LEtf = {}; // strategy variables are needed separately, because HTML uses them
+        this.strategy_VXX_SPY_Controversial = {};
+        this.strategy_TotM = {};
+        this.strategy_AdaptiveUberVxx = {};
+        this.strategy_AssetAllocation = {};
+        this.strategies = [];
+        this.selectedStrategy = {};
         this.selectedSubStrategyMenuItemId = ""; // This identifies the substrategy under Strategy.  Also, the HTML hidden or visible parts are controlled by this. 
         this.selectedSubStrategyName = "";
         this.selectedSubStrategyHelpUri = "";
@@ -2791,8 +2808,11 @@ var QuickTesterComponent = (function () {
         this.endDateUtc = new Date(2000, 0, 1, 1, 0); // 1st January, 2000, T: 1:00
         this.debugMessage = "";
         this.errorMessage = "";
+        // debug info here
+        this.m_webAppResponse = "";
         this.clickMessage = '';
     }
+    ; // Identifies the main strategy, but not the sub-strategy. 
     QuickTesterComponent.prototype.ngOnInit = function () {
         console.log("ngOnInit() START");
         //this.getHMData(gDefaultHMData);

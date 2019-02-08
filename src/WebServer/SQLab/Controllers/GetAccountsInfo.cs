@@ -77,7 +77,8 @@ namespace SQLab.Controllers
                 // get JSON data and create item in the m_dataCache
                 string content = GenerateGaiResponse(queryStr + "&flags=None").Result;
                 data = new Tuple<DateTime, string>(DateTime.UtcNow, content);
-                g_dataCache[queryStr] = data;
+                if (!data.Item2.StartsWith("{ \"Message\": \"Error"))   // only store it in cache if it is not an error
+                    g_dataCache[queryStr] = data;
             }
 
 
@@ -119,9 +120,9 @@ namespace SQLab.Controllers
                 string reply = await vbMessageTask;
                 if (vbMessageTask.Exception != null || String.IsNullOrEmpty(reply))
                 {
-                    string errorMsg = $"RealtimePrice.GenerateRtpResponse(). Received Null or Empty from VBroker. Check that the VirtualBroker is listering on IP: {vbServerIp}:{VirtualBrokerMessage.DefaultVirtualBrokerServerPort}";
+                    string errorMsg = $"Error.<BR> Check that both the IB's TWS and the VirtualBroker are running on Manual Trading Server! Start them manually if needed!";
                     Utils.Logger.Error(errorMsg);
-                    return @"{ ""Message"":  """ + errorMsg + @""" }";
+                    return @"{ ""Message"": """ + errorMsg + @""" }";
                 }
                 Utils.Logger.Info($"GetAccountsInfo.GenerateGaiResponse(). Received '{reply}'");
                 return reply;

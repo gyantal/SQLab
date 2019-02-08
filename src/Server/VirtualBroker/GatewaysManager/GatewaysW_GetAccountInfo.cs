@@ -44,6 +44,10 @@ namespace VirtualBroker
         public double IbMarkPrice { get; set; } = Double.NaN;       // streamed (non-snapshot) mode. Usually LastPrice, but if Last is not in Ask-Bid range, then Ask or Bid, whichever makes sense
 
         public KeyValuePair<int, List<AccPos>> UnderlyingDictItem { get; set; }
+
+        public double IbComputedImpVol { get; set; } = Double.NaN;
+        public double IbComputedDelta { get; set; } = Double.NaN;
+        public double IbComputedUndPrice { get; set; } = Double.NaN;
     }
 
 
@@ -419,6 +423,24 @@ namespace VirtualBroker
                                             priceTickARE.Set();
                                         }
                                     }
+                                },
+                                (cb_mktDataId, cb_mktDataSubscr, cb_field, cd_impVol, cb_delta, cb_undPrice) => // TickGeneric() callback. Assume this is the last callback for snapshot data. (!Not true for OTC stocks, but we only use this for options) Note sometimes it is not called, only Ask,Bid is coming.
+                                {  // Tick Id:1222, Field: halted, Value: 0
+                                    Utils.Logger.Trace($"TickOptionComputation in ReqMktDataStream(). {cb_mktDataSubscr.Contract.Symbol} : {TickType.getField(cb_field)}: {cb_delta}, {cb_undPrice}");
+                                    if ((cb_mktDataSubscr.Contract.SecType == "IND") || (cb_mktDataSubscr.Contract.SecType == "STK"))
+                                    { // do nothing. LastPrice is already filled
+                                    }
+                                    else // SecType == "OPT"
+                                    {  // TickOptionComputation() comes 4 times with 4 different IV; the lastly reported Delta seems to be the best.
+                                       // if (cd_impVol != "1.79769313486232E+308")  = Double.MaxValue, but if that comes, then don't replace the last Delta values
+                                       // if cb_undPrice = 0.0, then every Greek value is computed wrongly, Gamma =0, Vega = 0, Delta = -1. That is a faulty data given after MOC.
+                                        if (cd_impVol != Double.MaxValue)
+                                            poss[0].IbComputedImpVol = cd_impVol;
+                                        if (cb_delta != Double.MaxValue && cb_undPrice != 0.0)
+                                            poss[0].IbComputedDelta = cb_delta;
+                                        if (cb_undPrice != Double.MaxValue && cb_undPrice != 0.0) // after market close, even QQQ option returns this nonsense than UnderlyingPrice = 0 or Double.MaxValue. Ignore that.
+                                            poss[0].IbComputedUndPrice = cb_undPrice;
+                                    }
                                 });    // as Snapshot, not streaming data
                             pair.Value[0].MktDataID = mktDataId;    // use the first AccPos item in the list as the representative
                         }  // foreach knownConIds
@@ -491,6 +513,9 @@ namespace VirtualBroker
                             {
                                 poss[i].EstPrice = poss[0].EstPrice;
                                 poss[i].EstUndPrice = poss[0].EstUndPrice;
+                                poss[i].IbComputedImpVol = poss[0].IbComputedImpVol;
+                                poss[i].IbComputedDelta = poss[0].IbComputedDelta;
+                                poss[i].IbComputedUndPrice = poss[0].IbComputedUndPrice;
                             }
                             
                         }
@@ -577,7 +602,7 @@ namespace VirtualBroker
                         }
                         jsonResultBuilder.Append($",\"EstPrice\":\"{accPos.EstPrice:0.00}\"");
                         if (accPos.Contract.SecType == "OPT")
-                            jsonResultBuilder.Append($",\"EstUnderlyingPrice\":\"{accPos.EstUndPrice:0.00}\"");
+                            jsonResultBuilder.Append($",\"EstUnderlyingPrice\":\"{accPos.EstUndPrice:0.00}\",\"IbComputedImpVol\":\"{accPos.IbComputedImpVol:0.000}\",\"IbComputedDelta\":\"{accPos.IbComputedDelta:0.000}\",\"IbComputedUndPrice\":\"{accPos.IbComputedUndPrice:0.00}\"");
                     }
                     jsonResultBuilder.Append($"}}");
                     //break; // temp here

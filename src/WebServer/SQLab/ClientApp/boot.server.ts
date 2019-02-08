@@ -9,6 +9,8 @@ import { AppModule } from './app/app.server.module';
 
 enableProdMode();
 
+declare const setImmediate: Function;
+
 export default createServerRenderer(params => {
     const providers = [
         { provide: INITIAL_CONFIG, useValue: { document: '<app></app>', url: params.url } },

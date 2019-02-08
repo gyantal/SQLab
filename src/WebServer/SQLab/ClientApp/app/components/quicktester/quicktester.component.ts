@@ -20,11 +20,11 @@ declare var $: any;
 declare var chartWidget: any;
 
 class DailyBar {
-    public time: number;  // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
-    public close: number;
-    public open: number;
-    public high: number;
-    public low: number;
+    public time: number = 0;  // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
+    public close: number = 0.0;
+    public open: number = 0.0;
+    public high: number = 0.0;
+    public low: number = 0.0;
 
 }
 
@@ -47,14 +47,14 @@ export class QuickTesterComponent {
     public inputEndDateStr: string = "";    // empty string means: today
 
     // Inputs area
-    public strategy_LEtf: LEtf;     // strategy variables are needed separately, because HTML uses them
-    public strategy_VXX_SPY_Controversial: VXX_SPY_Controversial;
-    public strategy_TotM: TotM;
-    public strategy_AdaptiveUberVxx: AdaptiveUberVxx;
-    public strategy_AssetAllocation: AssetAllocation;
+    public strategy_LEtf: LEtf = <LEtf>{};     // strategy variables are needed separately, because HTML uses them
+    public strategy_VXX_SPY_Controversial: VXX_SPY_Controversial = <VXX_SPY_Controversial>{};
+    public strategy_TotM: TotM = <TotM>{};
+    public strategy_AdaptiveUberVxx: AdaptiveUberVxx = <AdaptiveUberVxx>{};
+    public strategy_AssetAllocation: AssetAllocation = <AssetAllocation>{};
 
-    public strategies: Strategy[];
-    public selectedStrategy: Strategy;      // Identifies the main strategy, but not the sub-strategy. 
+    public strategies: Strategy[] = [];
+    public selectedStrategy: Strategy = <Strategy>{};;      // Identifies the main strategy, but not the sub-strategy. 
     public selectedSubStrategyMenuItemId = ""; // This identifies the substrategy under Strategy.  Also, the HTML hidden or visible parts are controlled by this. 
     public selectedSubStrategyName = "";
     public selectedSubStrategyHelpUri = "";
@@ -425,7 +425,7 @@ export class QuickTesterComponent {
 
 
     // debug info here
-    m_webAppResponse: string;
+    m_webAppResponse: string = "";
     m_wasRefreshClicked: any;
 
     clickMessage = '';

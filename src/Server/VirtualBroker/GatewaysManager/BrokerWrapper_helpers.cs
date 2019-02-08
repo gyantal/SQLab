@@ -35,6 +35,9 @@ namespace VirtualBroker
         public delegate void MktDataTypeFunc(int p_mktDataId, MktDataSubscription p_mktDataSubscription, int marketDataType);
         public MktDataTypeFunc MarketDataType;
 
+        public delegate void MktDataTickOptionComputationFunc(int p_mktDataId, MktDataSubscription p_mktDataSubscription, int field, double iv, double delta, double undPrice);
+        public MktDataTickOptionComputationFunc MarketDataTickOptionComputation;
+
         public Contract Contract { get; set; }
         public int MarketDataId { get; set; }
         public bool IsSnapshot { get; set; } = true; // Snapshot is simpler then Stream
@@ -106,7 +109,7 @@ namespace VirtualBroker
 
         // snapshot = true means, Last, Ask,Bid,High, Low, Close, Open comes only once. No streaming. No need to CancelMktData().
         // if data is streamed continously and then we ask one snapshot of the same contract, snapshot returns currently, and stream also correctly continous later. As expected.
-        int ReqMktDataStream(Contract p_contract, string p_genericTickList = null, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null, MktDataSubscription.MktDataErrorFunc p_mktDataErrorFunc = null, MktDataSubscription.MktDataTickGenericFunc p_mktDataTickGenericFunc = null, MktDataSubscription.MktDataTypeFunc p_mktDataTypeFunc = null);
+        int ReqMktDataStream(Contract p_contract, string p_genericTickList = null, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null, MktDataSubscription.MktDataErrorFunc p_mktDataErrorFunc = null, MktDataSubscription.MktDataTickGenericFunc p_mktDataTickGenericFunc = null, MktDataSubscription.MktDataTypeFunc p_mktDataTypeFunc = null, MktDataSubscription.MktDataTickOptionComputationFunc p_mktDataTickOptionComputationFunc = null);
         void CancelMktData(int p_marketDataId);
         bool GetAlreadyStreamedPrice(Contract p_contract, ref Dictionary<int, PriceAndTime> p_quotes);
 

@@ -11,10 +11,10 @@ export class StopWatch {
         return getTimestampMilliseconds();
     }
 
-    private _elapsed: number;
-    private _startTimeStamp: number;
+    private _elapsed: number = 0;
+    private _startTimeStamp: number = 0;
 
-    private _isRunning: boolean;
+    private _isRunning: boolean = false;
 
     constructor() {
         this.reset();

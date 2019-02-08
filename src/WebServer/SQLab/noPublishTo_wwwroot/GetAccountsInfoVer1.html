@@ -18,6 +18,7 @@
 <body>
     <h1>IntBrokers Accounts Info (<span id="idBrAccounts"></span>),v1.0</h1>
     <hr>
+    <font size="5" color=#FF0000><b><span id="idMessageFromWebserverIfAny"></span></b></font><br>
     IB Total NetLiquidation: <font size="4"><b><span id="idTotalNetLiquidation"></span></b></font><br>
     IB Total Cash: <span id="idTotalCash"></span>/
     IB Initial MarginReq: <span id="idTotalInitMarginReq"></span>/
@@ -26,7 +27,7 @@
     <hr>
     Long Stock Value: <b><span id="idLongStockValue"></span></b>  <small><i>_____(!! This is not the ?Bullish? Market stock exposure. 'Short VXXB', 'short SH' are market bullish, but not here. How to fix that?)</i></small> <br>
     Short Stock Value: <b><span id="idShortStockValue"></span></b><br>
-    GrossStockExposure (LongStock - Short Stock): <b><span id="idGrossStockExposure"></span></b> and Leverage <b><span id="idGrossStockExposureLeverage"></span></b><br>
+    GrossStockExposure (LongStock - Short Stock): <b><span id="idGrossStockExposure"></span></b> and Leverage: <b><span id="idGrossStockExposureLeverage"></span></b><br>
     <hr style="height:2pt; margin:0px; visibility:hidden;" />   <!--a very thin separator-->
     Long Option DelivValue: <b><span id="idLongOptionValue"></span></b>  <small><i>_____(!! Far OTM DelivValue is also summed. On top of the stock bullishness determination problem. How to fix that?)</i></small> <br>
     Short Option DelivValue: <b><span id="idShortOptionValue"></span></b><br>
@@ -61,9 +62,13 @@
         totalNetLiquidation = 0.0, totalCash = 0.0, totalInitMarginReq = 0.0, totalMaintMarginReq = 0.0, totalGrossPosValue = 0.0;
         longStockValue = 0.0, shortStockValue = 0.0;
         longOptionValue = 0.0, shortOptionValue = 0.0;
-        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;</th><th>MktValue &#8661;</th><th>EstUnderlPr &#8661;</th><th>DelivValue &#8661;</th><th>BrAccount &#8661;</th></tr>";
+        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;</th><th>MktValue &#8661;</th><th>EstUnderlPr &#8661;</th><th>IbCompUndPr &#8661;</th><th>IbCompDlt &#8661;</th><th>DelivValue &#8661;</th><th>BrAccount &#8661;</th></tr>";
         for (i in accInfos) {
-            if (i == 0) {
+            if (i == "Message") {
+                document.getElementById("idMessageFromWebserverIfAny").innerHTML = accInfos[i];
+                if (accInfos[i].startsWith("Error"))    // if Message is a Warning or Info, process it. If it is an Error, don't process it further.
+                    break;
+            } else if (i == 0) {
                 brAccounts += accInfos[i].BrAcc;
                 timestamps += accInfos[i].Timestamp;
             } else {
@@ -88,7 +93,8 @@
 
             for (k in accPoss) {
                 accPos = accPoss[k];
-                localSymbol = "", estUnderyingPrice = "", deliveryValue = "";
+                localSymbol = "", estUnderyingPrice = "", deliveryValue = "", ibComputedUndPrice = "", ibComputedDelta = "";
+                estUnderyingPriceNum = 0.0, ibComputedUndPriceNum = 0.0;
                 posN = Number(accPos.Pos);          // postfix N means Number type
                 mktValueN = round(posN * Number(accPos.EstPrice));
                 deliveryValueN = 0;
@@ -106,12 +112,31 @@
                 }
                 if (accPos.hasOwnProperty('EstUnderlyingPrice')) {
                     estUnderyingPrice = accPos.EstUnderlyingPrice;
+                    estUnderyingPriceNum = Number(estUnderyingPrice);
+                }
+                if (accPos.hasOwnProperty('IbComputedUndPrice')) {
+                    ibComputedUndPrice = accPos.IbComputedUndPrice;
+                    ibComputedUndPriceNum = Number(ibComputedUndPrice);
+                }
+                if (accPos.hasOwnProperty('IbComputedDelta')) {
+                    ibComputedDelta = accPos.IbComputedDelta;
+                }
+
+
+                combinedUndPrice = estUnderyingPriceNum;
+                if (isNaN(combinedUndPrice) || combinedUndPrice == 0.0)
+                    combinedUndPrice = ibComputedUndPriceNum;
+
+                if (accPos.SecType == "OPT" && !isNaN(combinedUndPrice) && combinedUndPrice != 0.0) {
                     optCallPutMulN = 1;
                     if (accPos.Right == "P")
                         optCallPutMulN = -1;
-                    deliveryValueN = round(posN * optCallPutMulN * Number(accPos.Multiplier) * Number(estUnderyingPrice));
+                    deliveryValueN = round(posN * optCallPutMulN * Number(accPos.Multiplier) * Number(combinedUndPrice));
                     deliveryValue = deliveryValueN.toLocaleString('en');
                 }
+
+
+                
 
                 if (accPos.SecType == "OPT")
                     if (deliveryValueN > 0)
@@ -122,7 +147,7 @@
                 rowClass = "";
                 if (plN > 3000)
                     rowClass = " class=\"secpri\"";
-                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + avgCost + "</td><td>" + accPos.EstPrice + "</td><td>" + plN.toLocaleString('en') + "</td><td>" + mktValueN.toLocaleString('en') + "</td><td>" + estUnderyingPrice + "</td><td>" + deliveryValue + "</td><td>" + accInfos[i].BrAcc + "</td></tr>";
+                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + avgCost + "</td><td>" + accPos.EstPrice + "</td><td>" + plN.toLocaleString('en') + "</td><td>" + mktValueN.toLocaleString('en') + "</td><td>" + estUnderyingPrice + "</td><td>" + ibComputedUndPrice + "</td><td>" + ibComputedDelta + "</td><td>" + deliveryValue + "</td><td>" + accInfos[i].BrAcc + "</td></tr>";
                 //if (accPos.Symbol == "NetLiquidation")
                 //    totalNetLiquidation += Number(accPos.Value);
             }
@@ -140,7 +165,10 @@
         document.getElementById("idLongStockValue").innerHTML = round(longStockValue).toLocaleString('en');
         document.getElementById("idShortStockValue").innerHTML = round(shortStockValue).toLocaleString('en');
         document.getElementById("idGrossStockExposure").innerHTML = round(longStockValue + shortStockValue).toLocaleString('en');
-        document.getElementById("idGrossStockExposureLeverage").innerHTML = (round(longStockValue + shortStockValue) / totalNetLiquidation).toLocaleString('en');
+        grossStockExposureLeverage = 0.0;
+        if (totalNetLiquidation != 0.0)
+            grossStockExposureLeverage = round(longStockValue + shortStockValue) / totalNetLiquidation;
+        document.getElementById("idGrossStockExposureLeverage").innerHTML = grossStockExposureLeverage.toLocaleString('en');
         document.getElementById("idLongOptionValue").innerHTML = round(longOptionValue).toLocaleString('en');
         document.getElementById("idShortOptionValue").innerHTML = round(shortOptionValue).toLocaleString('en');
         document.getElementById("idGrossOptionExposure").innerHTML = round(longOptionValue + shortOptionValue).toLocaleString('en');

@@ -364,7 +364,7 @@ namespace VirtualBroker
             return true;
         }
 
-        public int ReqMktDataStream(Contract p_contract, string p_genericTickList = null, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null, MktDataSubscription.MktDataErrorFunc p_mktDataErrorFunc = null, MktDataSubscription.MktDataTickGenericFunc p_mktDataTickGenericFunc = null, MktDataSubscription.MktDataTypeFunc p_mktDataTypeFunc = null)
+        public int ReqMktDataStream(Contract p_contract, string p_genericTickList = null, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null, MktDataSubscription.MktDataErrorFunc p_mktDataErrorFunc = null, MktDataSubscription.MktDataTickGenericFunc p_mktDataTickGenericFunc = null, MktDataSubscription.MktDataTypeFunc p_mktDataTypeFunc = null, MktDataSubscription.MktDataTickOptionComputationFunc p_mktDataTickOptionComputationFunc = null)
         {
             switch (p_contract.Symbol)
             {

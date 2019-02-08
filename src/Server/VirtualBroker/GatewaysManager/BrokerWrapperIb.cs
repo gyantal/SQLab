@@ -457,7 +457,7 @@ namespace VirtualBroker
         }
 
         // 1. IB do not provide tick data. For U.S. Equities, you get one price update (not a tick!) per 250ms. Assuming that the exchanges step at 1ms, TTBOMK, this is some kind of volume-weighted average of these 250 data points.
-        public virtual int ReqMktDataStream(Contract p_contract, string p_genericTickList = null, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null, MktDataSubscription.MktDataErrorFunc p_mktDataErrorFunc = null, MktDataSubscription.MktDataTickGenericFunc p_mktDataTickGenericFunc = null, MktDataSubscription.MktDataTypeFunc p_mktDataTypeFunc = null)
+        public virtual int ReqMktDataStream(Contract p_contract, string p_genericTickList = null, bool p_snapshot = false, MktDataSubscription.MktDataArrivedFunc p_mktDataArrivedFunc = null, MktDataSubscription.MktDataErrorFunc p_mktDataErrorFunc = null, MktDataSubscription.MktDataTickGenericFunc p_mktDataTickGenericFunc = null, MktDataSubscription.MktDataTypeFunc p_mktDataTypeFunc = null, MktDataSubscription.MktDataTickOptionComputationFunc p_mktDataTickOptionComputationFunc = null)
         {
             int marketDataId = GetUniqueReqMktDataID;
             Utils.Logger.Debug($"ReqMktDataStream() {p_contract.Symbol}{((p_contract.LocalSymbol != null)? ("(" + p_contract.LocalSymbol + ")"):"")}: { marketDataId} START");
@@ -470,7 +470,8 @@ namespace VirtualBroker
                 MarketDataArrived = p_mktDataArrivedFunc,
                 MarketDataError = p_mktDataErrorFunc,
                 MarketDataTickGeneric = p_mktDataTickGenericFunc,
-                MarketDataType = p_mktDataTypeFunc
+                MarketDataType = p_mktDataTypeFunc,
+                MarketDataTickOptionComputation = p_mktDataTickOptionComputationFunc,
             };
             // RUT index data comes once ever 5 seconds
             if (!p_snapshot)    // only if it is a continous streaming
@@ -667,27 +668,6 @@ namespace VirtualBroker
         //Tick Size. Ticker Id:1001, Field: bidSize, Size: 8
         public virtual void tickPrice(int tickId, int field, double price, int canAutoExecute)
         {
-            // This is from old VBrokers code
-            //  System.Diagnostics.Trace.WriteLine(DateTime.UtcNow.ToString("MM-dd HH:mm:ss.fff") + ": " + String.Format("TickPriceCB(): {0}/{1}/{2}/{3} ", e.TickerId, e.TickType, e.Price, e.CanAutoExecute));
-            //if ((double)e.Price <= 0)        // drop 0 or -1 prices; they are meaningless
-            //    return;
-
-            //lock (tickData)
-            //{
-            //    if (tickData.ContainsKey(e.TickType))     // the Decimal is 20x slower than float, we don't use it: http://gregs-blog.com/2007/12/10/dot-net-decimal-type-vs-float-type/
-            //    {
-            //        if (m_priceTickARE != null)
-            //            m_priceTickARE.Set();     // AutoResetEvent to notify Sleeping Listeners, but I will do it with Reactive Programming later.
-
-            //        tickData[e.TickType].Price = (double)e.Price;
-            //        tickData[e.TickType].Time = DateTime.UtcNow;
-            //    }
-            //}
-            // instead of Thread.Sleep(2000);  // wait until data is here; TODO: make it sophisticated later
-            //RtpAppController.gBrokerAPI.m_priceTickARE.Reset();
-            //Console.WriteLine("Tick Price. Tick Id:"+tickerId+", Field: "+ TickType.getField(field) + ", Price: " +price+", CanAutoExecute: "+canAutoExecute);
-            // Logger.Warn will put it to the Console too. Temporary
-            //Utils.Logger.Warn("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
             Utils.Logger.Info("Tick Price. Tick Id:" + tickId + ", Field: " + TickType.getField(field) + ", Price: " + price + ", CanAutoExecute: " + canAutoExecute);
 
             if (!MktDataSubscriptions.TryGetValue(tickId, out MktDataSubscription mktDataSubscription))
@@ -819,12 +799,28 @@ namespace VirtualBroker
             //Console.WriteLine("Account list: "+accountsList);
         }
 
-        // streamed or snapshot ReqMktData will send this info continously for Option contracts, not for stocks. We don't need it so, skip them.
+        // streamed or snapshot ReqMktData will send this info continously for Option contracts, not for stocks. We don't need it in general for real time prices, but we need it for GetAccountsInfo() to calculate the DeltaAdjustedDeliveryValue
         // reqMktData() has a param 'mktDataOptions', but it is undocumented, so there is no way to ask IB to NOT send this data.
+        // UnderlyingPrice is good for stock options, but totally off for VIX options. We may use it for stock options, to speed up GetAccountsInfo()
+        // TickOptionComputation() comes 4 times with different fields from 10..13. All the 4 times the IV is different, therefore the Delta calculation is different. My experience is that the last one (field = 13) seems to be the one that is shown in TWS.
+        //{"Symbol":"QQQ","SecType":"OPT","Currency":"USD","Pos":"10","AvgCost":"33.78","LastTradeDate":"20200117","Right":"C","Strike":"250","Multiplier":"100","LocalSymbol":"QQQ   200117C00250000","EstPrice":"0.07","EstUnderlyingPrice":"167.79"}
+        //TickOptionComputation.TickerId: 1062, field: 10, ImpliedVolatility: 0.155203259626018, Delta: 0.00656475154392036, OptionPrice: 0.0500000007450581, pvDividend: 1.25896178502438, Gamma: 0.000732138477560608, Vega: 0.0369295524834344, Theta: -0.000745103332077535, UnderlyingPrice: 167.789993286133
+        //TickOptionComputation.TickerId: 1062, field: 11, ImpliedVolatility: 0.166019683329638, Delta: 0.0105321251750728, OptionPrice: 0.0900000035762787, pvDividend: 1.25896178502438, Gamma: 0.00103740161541857, Vega: 0.0508112077445905, Theta: -0.00120614030071572, UnderlyingPrice: 167.789993286133
+        //TickOptionComputation.TickerId: 1062, field: 12, ImpliedVolatility: 0.154653871169709, Delta: 0.00639224036956221, OptionPrice: 0.0500000007450581, pvDividend: 1.25896178502438, Gamma: 0.000717526218798153, Vega: 0.0359134002027889, Theta: -0.000725136237099267, UnderlyingPrice: 167.789993286133
+        //TickOptionComputation.TickerId: 1062, field: 13, ImpliedVolatility: 0.158388264566503, Delta: 0.00752481853860245, OptionPrice: 0.0610202906226993, pvDividend: 1.25896178502438, Gamma: 0.00081107874803257, Vega: 0.0427398500810083, Theta: -0.000858885577012274, UnderlyingPrice: 167.779998779297
+        //>IB shows 0.008, none of them is that, but I can use the last one(field = 13) ,nd round it, then you round it up, so that is the used value.
+        //So, just use the last Delta value.
         public virtual void tickOptionComputation(int tickerId, int field, double impliedVolatility, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice)
         {
-            //Console.WriteLine("TickOptionComputation. TickerId: " + tickerId + ", field: " + field + ", ImpliedVolatility: " + impliedVolatility + ", Delta: " + delta
-            //    + ", OptionPrice: " + optPrice + ", pvDividend: " + pvDividend + ", Gamma: " + gamma + ", Vega: " + vega + ", Theta: " + theta + ", UnderlyingPrice: " + undPrice);
+            Console.WriteLine("TickOptionComputation. TickerId: " + tickerId + ", field: " + field + ", ImpliedVolatility: " + impliedVolatility + ", Delta: " + delta
+                + ", OptionPrice: " + optPrice + ", pvDividend: " + pvDividend + ", Gamma: " + gamma + ", Vega: " + vega + ", Theta: " + theta + ", UnderlyingPrice: " + undPrice);
+
+            if (!MktDataSubscriptions.TryGetValue(tickerId, out MktDataSubscription mktDataSubscription))
+            {
+                Utils.Logger.Debug($"tickPrice(). MktDataSubscription tickerID { tickerId} is not expected. Although IBGateway can send some prices even after CancelMktData was sent to IBGateway.");
+                return;
+            }
+            mktDataSubscription.MarketDataTickOptionComputation?.Invoke(tickerId, mktDataSubscription, field, impliedVolatility, delta, undPrice);
         }
 
         public virtual void accountSummary(int reqId, string account, string tag, string value, string currency)

@@ -43,7 +43,8 @@ namespace VirtualBroker
             // 2018-11: EUR cash is coming ONLY on DeBlanzac account, not Main account, neither Agy, which also has many other currencies. Maybe it is only a 'virtual' cash FX position. Assume it is virtual, so ignore it.
             if (p_contract.SecType == "CASH")
                 return;
-            m_accPoss.Add(new AccPos() { Contract = p_contract, Position = p_pos, AvgCost = p_avgCost });
+            if (p_pos != 0.0)   // If a position is 0, it means we just sold it, but IB reports it during that day, because of Realized P&L. However, we don't need that position any more.
+                m_accPoss.Add(new AccPos() { Contract = p_contract, Position = p_pos, AvgCost = p_avgCost });
         }
 
         ManualResetEventSlim m_getAccountPosMres;

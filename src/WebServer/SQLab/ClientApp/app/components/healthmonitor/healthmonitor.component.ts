@@ -36,11 +36,11 @@ export class HealthMonitorComponent {
     m_http: Http;
     m_baseUrl: string;
     public m_title: string = 'SQ HealthMonitor Dashboard';    // strongly typed variables in TS
-    public m_data: HMData;
+    public m_data: HMData = <HMData>{};
     public m_userEmail: string = 'Unknown user';
 
     // debug info here
-    m_webAppResponse: string;
+    m_webAppResponse: string = '';
     m_wasRefreshClicked: any;
 
     constructor(http: Http, @Inject('BASE_URL') baseUrl: string) {
