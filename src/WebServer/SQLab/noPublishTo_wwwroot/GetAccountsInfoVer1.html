@@ -19,21 +19,29 @@
     <h1>IntBrokers Accounts Info (<span id="idBrAccounts"></span>),v1.0</h1>
     <hr>
     <font size="5" color=#FF0000><b><span id="idMessageFromWebserverIfAny"></span></b></font><br>
-    IB Total NetLiquidation: <font size="4"><b><span id="idTotalNetLiquidation"></span></b></font><br>
+    IB Total NetLiquidation (with cash): <font size="4"><b><span id="idTotalNetLiquidation"></span></b></font><br>
     IB Total Cash: <span id="idTotalCash"></span>/
     IB Initial MarginReq: <span id="idTotalInitMarginReq"></span>/
     IB Maintenance MarginReq: <span id="idTotalMaintMarginReq"></span>/
     IB Gross Position Value: <span id="idTotalGrossPosValue"></span><br>
     <hr>
-    Long Stock Value: <b><span id="idLongStockValue"></span></b>  <small><i>_____(!! This is not the ?Bullish? Market stock exposure. 'Short VXXB', 'short SH' are market bullish, but not here. How to fix that?)</i></small> <br>
-    Short Stock Value: <b><span id="idShortStockValue"></span></b><br>
-    GrossStockExposure (LongStock - Short Stock): <b><span id="idGrossStockExposure"></span></b> and Leverage: <b><span id="idGrossStockExposureLeverage"></span></b><br>
+    Long Stock MktValue: <b><span id="idLongStockValue"></span></b>  <small><i>_____(!! This is not the ?Bullish? Market stock exposure. 'Short VXXB', 'short SH' are market bullish, but not here. Long VXX is here, although it is market bearish. How to fix that?)</i></small> <br>
+    Short Stock MktValue: <b><span id="idShortStockValue"></span></b><br>
+
     <hr style="height:2pt; margin:0px; visibility:hidden;" />   <!--a very thin separator-->
-    Long Option DelivValue: <b><span id="idLongOptionValue"></span></b>  <small><i>_____(!! Far OTM DelivValue is also summed. On top of the stock bullishness determination problem. How to fix that?)</i></small> <br>
-    Short Option DelivValue: <b><span id="idShortOptionValue"></span></b><br>
-    GrossOptionExposure (Long - Short): <b><span id="idGrossOptionExposure"></span></b><br>
+    Call Option Delta Adjusted DelivValue <font size="2"><i>(Long market if GameChangers)</i></font>: <b><span id="idAdjLongOptionValue"></span></b><br>
+    Put Option Delta Adjusted DelivValue <font size="2"><i>(<b><font size="3">Hedges</font></b> if QQQ Put)</i></font>: <b><span id="idAdjShortOptionValue"></span></b><br>
     <hr>
-    Bullish/Bearish Market Stock Value:[need a DB list of long symbol's bullishness]<br>
+    <span style="font: x-large sans-serif">Bullish/Bearish Market Orientation <font size="2">(LongStock - ShortStock + Adj.CallOption - Adj.PutOption)</font>: <font size="4"><b><span id="idTotalMarketOrientation"></span></b></font> </span><br>
+    <hr>
+    <small><i>[need a DB list of long symbol's bullishness]</i></small><br>
+    <font size="1">
+        GrossStockExposure (LongStock - Short Stock): <b><span id="idGrossStockExposure"></span></b> and Leverage: <b><span id="idGrossStockExposureLeverage"></span></b><br>
+        Delta Adjusted GrossOptionExposure (Long - Short / Call - Put): <b><span id="idAdjGrossOptionExposure"></span></b><br>
+        Long Option DelivValue: <b><span id="idLongOptionValue"></span></b>  <small><i>_____(!! Far OTM DelivValue is also summed. On top of the stock bullishness determination problem. How to fix that?)</i></small> <br>
+        Short Option DelivValue: <b><span id="idShortOptionValue"></span></b><br>
+    </font>
+
     <hr>
     <table id="idPosTable">
         <!--<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>MktValue &#8661;</th><th>EstUnderlPr &#8661;</th><th>DelivValue &#8661;</th></tr>
@@ -62,7 +70,9 @@
         totalNetLiquidation = 0.0, totalCash = 0.0, totalInitMarginReq = 0.0, totalMaintMarginReq = 0.0, totalGrossPosValue = 0.0;
         longStockValue = 0.0, shortStockValue = 0.0;
         longOptionValue = 0.0, shortOptionValue = 0.0;
-        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;</th><th>MktValue &#8661;</th><th>EstUnderlPr &#8661;</th><th>IbCompUndPr &#8661;</th><th>IbCompDlt &#8661;</th><th>DelivValue &#8661;</th><th>BrAccount &#8661;</th></tr>";
+        adjLongOptionValue = 0.0, adjShortOptionValue = 0.0;
+        totalMarketOrientation = 0.0;
+        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;</th><th>MktValue &#8661;</th><th>Est &#8661;<br/>UnderlPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>DelivValue &#8661;</th><th>DeltaAdj &#8661;<br/>DelivValue</th><th>BrAccount &#8661;</th></tr>";
         for (i in accInfos) {
             if (i == "Message") {
                 document.getElementById("idMessageFromWebserverIfAny").innerHTML = accInfos[i];
@@ -93,11 +103,15 @@
 
             for (k in accPoss) {
                 accPos = accPoss[k];
-                localSymbol = "", estUnderyingPrice = "", deliveryValue = "", ibComputedUndPrice = "", ibComputedDelta = "";
+                if (accPos.Symbol == "VIX")      // we just don't want to see these. Not interested. Ignore it even from the table. Later, there could be a UI radiobox for this.
+                    continue;
+
+                localSymbol = "", estUnderyingPrice = "", ibComputedUndPrice = "", ibComputedDelta = "", deliveryValue = "", deltaAdjDeliveryValue = "";
                 estUnderyingPriceNum = 0.0, ibComputedUndPriceNum = 0.0;
                 posN = Number(accPos.Pos);          // postfix N means Number type
                 mktValueN = round(posN * Number(accPos.EstPrice));
                 deliveryValueN = 0;
+                deltaAdjDeliveryValueN = 0;
                 if (accPos.SecType == "STK")
                     if (mktValueN > 0)
                         longStockValue += mktValueN;
@@ -132,49 +146,65 @@
                     if (accPos.Right == "P")
                         optCallPutMulN = -1;
                     deliveryValueN = round(posN * optCallPutMulN * Number(accPos.Multiplier) * Number(combinedUndPrice));
-                    deliveryValue = deliveryValueN.toLocaleString('en');
+                    deliveryValue = deliveryValueN.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+                    deltaAdjDeliveryValueN = Math.abs(deliveryValueN) * ibComputedDelta;    // deliveryValueN can be negative, because of optCallPutMulN, and delta is also negative for Put options.
+                    deltaAdjDeliveryValue = deltaAdjDeliveryValueN.toLocaleString(undefined, { maximumFractionDigits: 0 });
                 }
 
 
-                
 
-                if (accPos.SecType == "OPT")
+
+                if (accPos.SecType == "OPT") {
                     if (deliveryValueN > 0)
                         longOptionValue += deliveryValueN;
                     else if (deliveryValueN < 0)    // so NaN is not added to any of them.
                         shortOptionValue += deliveryValueN;
 
+                    if (deltaAdjDeliveryValueN > 0)
+                        adjLongOptionValue += deltaAdjDeliveryValueN;
+                    else if (deltaAdjDeliveryValueN < 0)    // so NaN is not added to any of them.
+                        adjShortOptionValue += deltaAdjDeliveryValueN;
+                }
+
                 rowClass = "";
                 if (plN > 3000)
                     rowClass = " class=\"secpri\"";
-                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + avgCost + "</td><td>" + accPos.EstPrice + "</td><td>" + plN.toLocaleString('en') + "</td><td>" + mktValueN.toLocaleString('en') + "</td><td>" + estUnderyingPrice + "</td><td>" + ibComputedUndPrice + "</td><td>" + ibComputedDelta + "</td><td>" + deliveryValue + "</td><td>" + accInfos[i].BrAcc + "</td></tr>";
+                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + avgCost + "</td><td>" + accPos.EstPrice + "</td><td>" + plN.toLocaleString() + "</td><td>" + mktValueN.toLocaleString() + "</td><td>" + estUnderyingPrice + "</td><td>" + ibComputedUndPrice + "</td><td>" + ibComputedDelta + "</td><td>" + deliveryValue + "</td><td>" + deltaAdjDeliveryValue + "</td><td>" + accInfos[i].BrAcc + "</td></tr>";
                 //if (accPos.Symbol == "NetLiquidation")
                 //    totalNetLiquidation += Number(accPos.Value);
             }
 
         }
+
+
+
         document.getElementById("idBrAccounts").innerHTML = brAccounts;
         document.getElementById("idTimestamp").innerHTML = timestamps;
 
-        document.getElementById("idTotalNetLiquidation").innerHTML = round(totalNetLiquidation).toLocaleString('en');
-        document.getElementById("idTotalCash").innerHTML = round(totalCash).toLocaleString('en');
-        document.getElementById("idTotalInitMarginReq").innerHTML = round(totalInitMarginReq).toLocaleString('en');
-        document.getElementById("idTotalMaintMarginReq").innerHTML = round(totalMaintMarginReq).toLocaleString('en');
-        document.getElementById("idTotalGrossPosValue").innerHTML = round(totalGrossPosValue).toLocaleString('en');
+        document.getElementById("idTotalNetLiquidation").innerHTML = round(totalNetLiquidation).toLocaleString();
+        document.getElementById("idTotalCash").innerHTML = round(totalCash).toLocaleString();
+        document.getElementById("idTotalInitMarginReq").innerHTML = round(totalInitMarginReq).toLocaleString();
+        document.getElementById("idTotalMaintMarginReq").innerHTML = round(totalMaintMarginReq).toLocaleString();
+        document.getElementById("idTotalGrossPosValue").innerHTML = round(totalGrossPosValue).toLocaleString();
 
-        document.getElementById("idLongStockValue").innerHTML = round(longStockValue).toLocaleString('en');
-        document.getElementById("idShortStockValue").innerHTML = round(shortStockValue).toLocaleString('en');
-        document.getElementById("idGrossStockExposure").innerHTML = round(longStockValue + shortStockValue).toLocaleString('en');
+        document.getElementById("idLongStockValue").innerHTML = round(longStockValue).toLocaleString();
+        document.getElementById("idShortStockValue").innerHTML = round(shortStockValue).toLocaleString();
+        document.getElementById("idGrossStockExposure").innerHTML = round(longStockValue + shortStockValue).toLocaleString();
         grossStockExposureLeverage = 0.0;
         if (totalNetLiquidation != 0.0)
             grossStockExposureLeverage = round(longStockValue + shortStockValue) / totalNetLiquidation;
-        document.getElementById("idGrossStockExposureLeverage").innerHTML = grossStockExposureLeverage.toLocaleString('en');
-        document.getElementById("idLongOptionValue").innerHTML = round(longOptionValue).toLocaleString('en');
-        document.getElementById("idShortOptionValue").innerHTML = round(shortOptionValue).toLocaleString('en');
-        document.getElementById("idGrossOptionExposure").innerHTML = round(longOptionValue + shortOptionValue).toLocaleString('en');
+        document.getElementById("idGrossStockExposureLeverage").innerHTML = grossStockExposureLeverage.toLocaleString();
+        document.getElementById("idLongOptionValue").innerHTML = round(longOptionValue).toLocaleString();
+        document.getElementById("idShortOptionValue").innerHTML = round(shortOptionValue).toLocaleString();
+
+        document.getElementById("idAdjLongOptionValue").innerHTML = round(adjLongOptionValue).toLocaleString();
+        document.getElementById("idAdjShortOptionValue").innerHTML = round(adjShortOptionValue).toLocaleString();
+        document.getElementById("idAdjGrossOptionExposure").innerHTML = round(adjLongOptionValue + adjShortOptionValue).toLocaleString();
+
+        document.getElementById("idTotalMarketOrientation").innerHTML = round(longStockValue + shortStockValue + adjLongOptionValue + adjShortOptionValue).toLocaleString();
 
         document.getElementById("idPosTable").innerHTML = posTableInner;
-
         document.getElementById("idDebugInfoPre").innerHTML = JSON.stringify(accInfos);
 
 
