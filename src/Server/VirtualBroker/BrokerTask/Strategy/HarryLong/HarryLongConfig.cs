@@ -7,7 +7,9 @@ namespace VirtualBroker
 {
     public class HarryLongConfig
     {
-        public string[] AllPotentialTickersOfPortfolios = new string[] { "SVXY", "VXXB", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ",       "DWT", "VXZB", "TMF" };  // DWT is used only if short UWT is not available, DWT can be left here, no harm
+        // DWT is used only if short UWT is not available, DWT can be left here, no harm, UNG is used if UWT cannot be traded by user
+        // SCO is used instead of UWT sometimes
+        public string[] AllPotentialTickersOfPortfolios = new string[] { "SVXY", "VXXB", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ",       "SCO", "UNG",  "DWT", "VXZB", "TMF" };  
 
         public string[] DefaultTradedTickers = new string[] { "TVIX", "TMV" };            // strategy default is used only if PortfolioParamHarryLong is not given
         public double[] DefaultTradedAssetsWeights = new double[] { -0.35, -0.65 };       // strategy default is used only if PortfolioParamHarryLong is not given
