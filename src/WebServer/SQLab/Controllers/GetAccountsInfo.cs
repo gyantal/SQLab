@@ -17,6 +17,12 @@ namespace SQLab.Controllers
         private readonly ILogger<Program> m_logger;
         private readonly SqCommon.IConfigurationRoot m_config;
 
+        //Note: The caching is done in the Webserver, not in the VBroker.The Webserver can decide to use the cached or approximated values. 
+        //Webserver can query VBroker every 30 minutes (like Robert), or like once every day (preferred),
+        //or like once 30 minutes after market open, and every hour until market close. Once around market close, and no query until next day. 
+        //Or until next user-query.Yes.that can be done. But do it on the Webserver cache, not in the VBroker cache.Do no caching in VBroker for less complication.
+        //So, the VBroker function can be lengthy, if user asked that Delta is necessary.
+        //If we want faster user feedback, Webserver should cache, approximate it, and later update the user-website.
         static Dictionary<string, Tuple<DateTime, string>> g_dataCache = new Dictionary<string, Tuple<DateTime, string>>()
         {
         };
@@ -30,10 +36,10 @@ namespace SQLab.Controllers
         //#if !DEBUG
         //        [Authorize]
         //#endif
-        // https://www.snifferquant.net/gai?d=ATS&bAcc=Gyantal,Charmat&data=AccSum,Pos,EstPr&flags=CacheMaxStaleMin5    // Destination=AutoTradeServer
-        // https://www.snifferquant.net/gai?d=MTS&bAcc=Charmat,DeBlanzac&data=AccSum,Pos,EstPr&flags=CacheMaxStaleMin5    // Destination=ManualTradeServer
+        // https://www.snifferquant.net/gai?d=ATS&bAcc=Gyantal,Charmat&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF    // Destination=AutoTradeServer
+        // https://www.snifferquant.net/gai?d=MTS&bAcc=Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF    // Destination=ManualTradeServer
         [Route("~/gai", Name = "gai")]
-        public ActionResult Index()     // returns only data in JSON form
+        public ActionResult IndexJson()     // returns only data in JSON form
         {
             string callerIP = WsUtils.GetRequestIP(this.HttpContext);
             Utils.Logger.Info($"GetAccountsInfo is called from IP {callerIP}");
@@ -46,50 +52,82 @@ namespace SQLab.Controllers
                     return authorizedEmailErrResponse;
             }
 
+            // now g_dataCache is not used for JSON. Assuming JSON is for developers or programs (e.g. SQDesktop) and those should do their own caching
             string content = GenerateGaiResponse(this.HttpContext.Request.QueryString.ToString()).Result;
             return Content(content, "application/json");
 
         }
 
-        // https://www.snifferquant.net/gaiV1?d=ATS&bAcc=Gyantal&data=AccSum,Pos,EstPr&flags=CacheMaxStaleMin5      // Destination=AutoTradeServer
-        // https://www.snifferquant.net/gaiV1?d=MTS&bAcc=Charmat,DeBlanzac&data=AccSum,Pos,EstPr&flags=CacheMaxStaleMin5   // Destination=ManualTradeServer
+        // https://www.snifferquant.net/gaiV1?d=ATS&bAcc=Gyantal&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF&cache=MaxStaleMin5      // Destination=AutoTradeServer
+        // https://www.snifferquant.net/gaiV1?d=MTS&bAcc=Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF&cache=MaxStaleMin5   // Destination=ManualTradeServer
         [Route("~/gaiV1", Name = "gaiV1")]
-        public ActionResult Index2()    // returns UI in HTML form
+        public ActionResult IndexHtml()    // returns UI in HTML form
         {
             var authorizedEmailErrResponse = ControllerCommon.CheckAuthorizedGoogleEmail(this, m_logger, m_config);
             if (authorizedEmailErrResponse != null)
                 return authorizedEmailErrResponse;
 
             var queryStr = HttpContext.Request.QueryString.ToString();
-            int iFlags = queryStr.IndexOf("&flags=");
-            if (iFlags != -1)    // remove everything over "&flags="
-                queryStr = queryStr.Substring(0, iFlags);
+            string queryStrWithoutCacheFlags = queryStr;
+            string cacheFlagsStr = String.Empty;
+            int iCacheStart = queryStr.IndexOf("&cache=");
+            if (iCacheStart != -1)
+            {  // remove "&cache=" part
+                int iCacheEnd = queryStr.IndexOf("&", iCacheStart + "&cache=".Length);
+                if (iCacheEnd == -1)
+                    iCacheEnd = queryStr.Length;
 
-            // TODO: process flags=CacheMaxStaleMin5 and act accordingly, not the fix 1 hour stale
-            if (g_dataCache.TryGetValue(queryStr, out Tuple<DateTime, string> data))
-            {
-                if ((DateTime.UtcNow - data.Item1).TotalHours > 1.0) // if data is too stale, we have to query it again.
-                    data = null;
+                cacheFlagsStr = queryStr.Substring(iCacheStart + "&cache=".Length, iCacheEnd - (iCacheStart + "&cache=".Length));
+                queryStrWithoutCacheFlags = queryStr.Substring(0, iCacheStart) + queryStr.Substring(iCacheEnd);
             }
 
-            if (data == null)
+
+            Tuple<DateTime, string> cacheData = null;
+            //if (cacheFlagsStr != "ClearWebsiteCache")     // it is not necessary. If there is no "&cache=" part that means, we don't want to allow cache usage.
+            //{
+            if (g_dataCache.TryGetValue(queryStrWithoutCacheFlags, out cacheData))
+                {
+                    bool isCacheDataAllowed = false;
+                    TimeSpan timespanFromLastQuery = (DateTime.UtcNow - cacheData.Item1);
+
+                    if (cacheFlagsStr.StartsWith("MaxStale"))
+                    {
+                        string allowedTimeStr = cacheFlagsStr.Substring("MaxStale".Length);
+                        if (allowedTimeStr.EndsWith("min"))
+                        {
+                            string allowedMinStr = allowedTimeStr.Substring(0, allowedTimeStr.Length - "min".Length);
+                            if (Double.TryParse(allowedMinStr, out double allowedMin))
+                            {
+                                if (timespanFromLastQuery.TotalMinutes < allowedMin)
+                                    isCacheDataAllowed = true;      // only allow if all cache parameters were correctly recognized
+                            }
+                        }
+                    }
+
+                    if (!isCacheDataAllowed)
+                        cacheData = null;
+                }
+            //}
+
+            if (cacheData == null)
             {
                 // get JSON data and create item in the m_dataCache
-                string content = GenerateGaiResponse(queryStr + "&flags=None").Result;
-                data = new Tuple<DateTime, string>(DateTime.UtcNow, content);
-                if (!data.Item2.StartsWith("{ \"Message\": \"Error"))   // only store it in cache if it is not an error
-                    g_dataCache[queryStr] = data;
+                string content = GenerateGaiResponse(queryStrWithoutCacheFlags).Result;
+                cacheData = new Tuple<DateTime, string>(DateTime.UtcNow, content);
+                if (!cacheData.Item2.StartsWith("{ \"Message\": \"Error"))   // only store it in cache if it is not an error
+                    g_dataCache[queryStrWithoutCacheFlags] = cacheData;
             }
 
 
             string wwwRootPath = Program.RunningEnvStr(RunningEnvStrType.DontPublishToPublicWwwroot);
             string fileStr = System.IO.File.ReadAllText(wwwRootPath + "GetAccountsInfoVer1.html");
 
-            var result = fileStr.Replace("[{\"ToBeReplaced\":\"ByWebserver\"}]", data.Item2);
+            var result = fileStr.Replace("[{\"AccInfosToBeReplaced\":\"ByWebserver\"}]", cacheData.Item2);
+            result = result.Replace("ForceReloadUrlToBeReplaced", HttpContext.Request.Path + queryStrWithoutCacheFlags);
             return Content(result, "text/html");
         }
 
-        public static async Task<string> GenerateGaiResponse(string p_queryString)  // ?d=MTS&bAcc=Charmat,DeBlanzac&data=AccSum,Pos,EstPr&flags=CacheMaxStaleMin5
+        public static async Task<string> GenerateGaiResponse(string p_queryString)  // ?d=MTS&bAcc=Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF
         {
             try
             {

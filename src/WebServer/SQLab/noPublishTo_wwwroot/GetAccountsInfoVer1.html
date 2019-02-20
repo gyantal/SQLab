@@ -11,14 +11,16 @@
 
     <script>
         console.log("Script in Header1.");
-        accInfos=[{"ToBeReplaced":"ByWebserver"}]
+        accInfos=[{"AccInfosToBeReplaced":"ByWebserver"}]
     </script>
 
 </head>
 <body>
-    <h1>IntBrokers Accounts Info (<span id="idBrAccounts"></span>),v1.0</h1>
+    <h1>IntBrokers Accounts Info (<span id="idBrAccounts"></span>),v1.0 <font size="1" color=#FF0000><a href="ForceReloadUrlToBeReplaced"><span title="Force-Refresh: Disable website cached values."><b>
+    <img src="/images/Refresh64.png" height="20" width="20" align="top" /></b></span></a></font></h1>
+    <small>Data timestamp: <font size="4" color=#0000FF><b><span id="idTimestamp"></b></span> </font> </small>
     <hr>
-    <font size="5" color=#FF0000><b><span id="idMessageFromWebserverIfAny"></span></b></font><br>
+    <font size="5" color=#FF0000><b><span id="idMessageFromWebserverIfAny"></span></b></font>
     IB Total NetLiquidation (with cash): <font size="4"><b><span id="idTotalNetLiquidation"></span></b></font><br>
     IB Total Cash: <span id="idTotalCash"></span>/
     IB Initial MarginReq: <span id="idTotalInitMarginReq"></span>/
@@ -51,7 +53,7 @@
     </table>
 
     <hr>
-    <small>Data timestamp: <span id="idTimestamp"></span></small>
+    
     <div id="idDebugInfoDiv">
         <small>
             <span id="idDebugInfoSpan">
@@ -222,7 +224,7 @@
             return function (a, b) {
                 var valA = getCellValue(a, index), valB = getCellValue(b, index)
                 // thousand separator is not handled as numeric well, remove it and see if it is a number or not.
-                valAA = valA.replace(",", ""), valBB = valB.replace(",", "");
+                valAA = valA.replace(new RegExp(",", 'g'), ""), valBB = valB.replace(new RegExp(",", 'g'), "");     // replace all with the 'g' global flag
                 if ($.isNumeric(valAA))
                     valA = valAA;
                 if ($.isNumeric(valBB))

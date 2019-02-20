@@ -19,6 +19,7 @@ namespace VirtualBroker
     {
         List<AccSum> m_accSums;
         List<AccPos> m_accPoss;
+        string[] m_exclSymbolsArr;
         private readonly object m_getAccountSummaryLock = new object();        
 
         public void AccSumArrived(int p_reqId, string p_tag, string p_value, string p_currency)
@@ -43,7 +44,7 @@ namespace VirtualBroker
             // 2018-11: EUR cash is coming ONLY on DeBlanzac account, not Main account, neither Agy, which also has many other currencies. Maybe it is only a 'virtual' cash FX position. Assume it is virtual, so ignore it.
             if (p_contract.SecType == "CASH")
                 return;
-            if (p_pos != 0.0)   // If a position is 0, it means we just sold it, but IB reports it during that day, because of Realized P&L. However, we don't need that position any more.
+            if (p_pos != 0.0 && !m_exclSymbolsArr.Contains(p_contract.Symbol))   // If a position is 0, it means we just sold it, but IB reports it during that day, because of Realized P&L. However, we don't need that position any more.
                 m_accPoss.Add(new AccPos() { Contract = p_contract, Position = p_pos, AvgCost = p_avgCost });
         }
 
@@ -92,9 +93,10 @@ namespace VirtualBroker
             return true;
         }
 
-        public bool GetAccountPoss(List<AccPos> p_accPos)
+        public bool GetAccountPoss(List<AccPos> p_accPos, string[] p_exclSymbolsArr)
         {
             m_accPoss = p_accPos;
+            m_exclSymbolsArr = p_exclSymbolsArr;
             try
             {
                 Stopwatch sw2 = Stopwatch.StartNew();
