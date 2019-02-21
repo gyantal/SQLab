@@ -395,6 +395,35 @@ namespace VirtualBroker
                         // TODO: Maybe TWS uses historicalData (not realtime) then when we don't have RT data, but it would delay the query again. So, skip it for now.
                         // During market hours, which is important we can return the correct data.
                         // 2. for options: IbMarkPrice is not available, LastPrice can be too old, so the only way to use AskBid
+
+                        // AskBid is good for both options and stocks if it is given.
+                        // we have to use it even for stocks. TMF stock, even in regular trading hours, on AutoTraderServer: only askBid comes, no LastPr. 
+                        // However, on ManualTradingServer (Ireland), it is not a problem. So, we have to use AskBid for stocks for Agy account.
+                        // TODO: if both Ask,Bid = -1 (no data), use PrClose price, which is given many times.
+                        if ((cb_tickType == TickType.ASK) || (cb_tickType == TickType.BID))
+                        {
+                            if (cb_tickType == TickType.ASK)
+                                poss[0].AskPrice = cb_price;
+                            if (cb_tickType == TickType.BID)
+                                poss[0].BidPrice = cb_price;
+
+                            if (!(Double.IsNaN(poss[0].AskPrice) || Double.IsNaN(poss[0].BidPrice)))
+                            {
+                                // sometimes Ask or Bid that comes is -1 (even for stock MVV), which shows that Bid is missing (nobody is willing to buy). Round them to 0, or use LastTradedPrice in that case
+                                double pAsk = (poss[0].AskPrice < 0.0) ? 0.0 : poss[0].AskPrice;
+                                double pBid = (poss[0].BidPrice < 0.0) ? 0.0 : poss[0].BidPrice;
+                                double proposedPrice = (pAsk + pBid) / 2.0;
+                                if (Double.IsNaN(poss[0].EstPrice))    // only increase the nKnownConIdsPrReadyOk counter once when we turn from NaN to a proper number.
+                                {
+                                    poss[0].EstPrice = proposedPrice;
+                                    nKnownConIdsPrReadyOk++;
+                                    priceOrDeltaTickARE.Set();
+                                }
+                                else
+                                    poss[0].EstPrice = proposedPrice;    // update it with new value
+                            }
+                        }
+
                         if ((cb_mktDataSubscr.Contract.SecType == "IND") || (cb_mktDataSubscr.Contract.SecType == "STK"))
                         {
                             if (cb_mktDataSubscr.Contract.Exchange == "PINK")   // even though we ignore PINK, we may need them in the future.
@@ -410,17 +439,16 @@ namespace VirtualBroker
 
                             // Store both IbMarkPrice and LastPrice too. And any of them is fine. Sometimes both are given, but at the weekend only LastPrice is given no IbMarkPrice. So, we cannot rely on that. 
                             // However, until we wait for other prices, maybe we got the better MarkPrice. If it is given, use the MarkPrice, otherwise the LastPrice. Store both temporarily.
-                            if (cb_tickType == TickType.MARK_PRICE)
-                            {
-                                poss[0].IbMarkPrice = cb_price;
-                            }
-                            if (cb_tickType == TickType.LAST)
-                            {
-                                poss[0].LastPrice = cb_price;
-                            }
-
                             if ((cb_tickType == TickType.MARK_PRICE) || (cb_tickType == TickType.LAST))
                             {
+                                if (cb_tickType == TickType.MARK_PRICE)
+                                {
+                                    poss[0].IbMarkPrice = cb_price;
+                                }
+                                if (cb_tickType == TickType.LAST)
+                                {
+                                    poss[0].LastPrice = cb_price;
+                                }
                                 if (Double.IsNaN(poss[0].EstPrice))    // only increase the nKnownConIdsPrReadyOk counter once when we turn from NaN to a proper number.
                                 {
                                     poss[0].EstPrice = cb_price;
@@ -433,35 +461,7 @@ namespace VirtualBroker
                                         poss[0].EstPrice = cb_price;
                                 }
                             }
-                        }
-                        else // SecType == "OPT"
-                        {
-                            // TODO: if both Ask,Bid = -1 (no data), use PrClose price, which is given many times.
-                            if ((cb_tickType == TickType.ASK) || (cb_tickType == TickType.BID))
-                            {
-                                if (cb_tickType == TickType.ASK)
-                                    poss[0].AskPrice = cb_price;
-                                if (cb_tickType == TickType.BID)
-                                    poss[0].BidPrice = cb_price;
-
-                                if (!(Double.IsNaN(poss[0].AskPrice) || Double.IsNaN(poss[0].BidPrice)))
-                                {
-                                    // sometimes Ask or Bid that comes is -1 (even for stock MVV), which shows that Bid is missing (nobody is willing to buy). Round them to 0, or use LastTradedPrice in that case
-                                    double pAsk = (poss[0].AskPrice < 0.0) ? 0.0 : poss[0].AskPrice;
-                                    double pBid = (poss[0].BidPrice < 0.0) ? 0.0 : poss[0].BidPrice;
-                                    double proposedPrice = (pAsk + pBid) / 2.0;
-                                    if (Double.IsNaN(poss[0].EstPrice))    // only increase the nKnownConIdsPrReadyOk counter once when we turn from NaN to a proper number.
-                                    {
-                                        poss[0].EstPrice = proposedPrice;
-                                        nKnownConIdsPrReadyOk++;
-                                        priceOrDeltaTickARE.Set();
-                                    }
-                                    else
-                                        poss[0].EstPrice = proposedPrice;    // update it with new value
-                                }
-                            }
-
-                        }
+                        }                    
                     },
                     (cb_mktDataId, cb_mktDataSubscr, cb_errorCode, cb_errorMsg) =>
                     {
