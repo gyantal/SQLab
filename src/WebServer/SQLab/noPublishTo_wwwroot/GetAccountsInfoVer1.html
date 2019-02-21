@@ -34,7 +34,9 @@
     Call Option Delta Adjusted DelivValue <font size="2"><i>(Long market if GameChangers)</i></font>: <b><span id="idAdjLongOptionValue"></span></b><br>
     Put Option Delta Adjusted DelivValue <font size="2"><i>(<b><font size="3">Hedges</font></b> if QQQ Put)</i></font>: <b><span id="idAdjShortOptionValue"></span></b><br>
     <hr>
-    <span style="font: x-large sans-serif">Bullish/Bearish Market Orientation <font size="2">(LongStock - ShortStock + Adj.CallOption - Adj.PutOption)</font>: <font size="4"><b><span id="idTotalMarketOrientation"></span></b></font> </span><br>
+    <span title="This is probably a useless number." style="font: large sans-serif">Bullish/Bearish Market Orientation, ver1 <font size="2">(LongStock - ShortStock + Adj.CallOption - Adj.PutOption)</font>: <font size="4"><b><span id="idTotalMarketOrientation"></span></b></font> </span><br>
+    <span title="If All (even hedges) goes against you. Use this for leverage calculation." style="font: x-large sans-serif">Max Risked Estimate <font size="2">(LongStk + ShortStk (incorrect! Infinite) + LongOptMktValue + ShortOptMktValue(incorrect! Infinite))</font>: <font size="4" color=#0000FF><b><span id="idTotalMaxRisked"></span></b></font> </span><br>
+    <span title="Expect this Beta exposure to QQQ. If QQQ goes up 1%, expect this exposure to go up 1%." style="font: x-large sans-serif">Beta-Delta Adjusted Bullish/Bearish Market Orientation <font size="2">(approx. mkt exposure sum)</font>: <font size="4" color=#0000FF><b><span id="idBetaDeltaAdjTotalMarketOrientation"></span></b></font> </span><br>
     <hr>
     <small><i>[need a DB list of long symbol's bullishness]</i></small><br>
     <font size="1">
@@ -68,13 +70,19 @@
         console.log("Script in Body1.");
         var round = Math.round;
 
+        var betaArr = {"QQQ": 1.0, "TQQQ": 3.0, "SPY": 0.8, "TWM": -1,            // market ETFs
+        "VXXB": -2,  "VXZB": -1,  "SVXY": 1, "ZIV": 1,                  // VIX
+        "TLT": -0.5, "TMF": "-1.5", "TIP": -0.3, "USO": 0.5, "UWT": 1.5, "UNG": 0.5, "UGAZ": 1.5,                            // HL hedges
+        "PM": 0.6 };     // it is QQQ Beta, not SPY beta                // companies
+
         brAccounts = "", timestamps = "";
         totalNetLiquidation = 0.0, totalCash = 0.0, totalInitMarginReq = 0.0, totalMaintMarginReq = 0.0, totalGrossPosValue = 0.0;
         longStockValue = 0.0, shortStockValue = 0.0;
         longOptionValue = 0.0, shortOptionValue = 0.0;
         adjLongOptionValue = 0.0, adjShortOptionValue = 0.0;
-        totalMarketOrientation = 0.0;
-        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;</th><th>MktValue &#8661;</th><th>Est &#8661;<br/>UnderlPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>DelivValue &#8661;</th><th>DeltaAdj &#8661;<br/>DelivValue</th><th>BrAccount &#8661;</th></tr>";
+        totalMaxRiskedN = 0.0;
+        betaDeltaAdjTotalMarketOrientationN = 0.0;
+        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;</th><th>MktValue &#8661;</th><th>Est &#8661;<br/>UnderlPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>DelivValue &#8661;</th><th>DeltaAdj &#8661;<br/>DelivValue</th><th title=\"Guessed Beta (QQQ, 1 month)\">gBeta &#8661;</th><th>BetaDeltaAdj &#8661;<br/>MktOrientVal</th><th>BrAccount &#8661;</th></tr>";
         for (i in accInfos) {
             if (i == "Message") {
                 document.getElementById("idMessageFromWebserverIfAny").innerHTML = accInfos[i];
@@ -109,11 +117,17 @@
                     continue;
 
                 localSymbol = "", estUnderyingPrice = "", ibComputedUndPrice = "", ibComputedDelta = "", deliveryValue = "", deltaAdjDeliveryValue = "";
+                guessedBetaN = 1.0;
+                betaDeltaAdjMktOrValN = NaN;
                 estUnderyingPriceNum = 0.0, ibComputedUndPriceNum = 0.0;
                 posN = Number(accPos.Pos);          // postfix N means Number type
                 mktValueN = round(posN * Number(accPos.EstPrice));
                 deliveryValueN = 0;
-                deltaAdjDeliveryValueN = 0;
+                deltaAdjDeliveryValueN = NaN;
+
+                if (accPos.Symbol in betaArr)
+                    guessedBetaN = betaArr[accPos.Symbol];
+
                 if (accPos.SecType == "STK")
                     if (mktValueN > 0)
                         longStockValue += mktValueN;
@@ -169,10 +183,24 @@
                         adjShortOptionValue += deltaAdjDeliveryValueN;
                 }
 
+                if (accPos.SecType == "STK") {
+                    betaDeltaAdjMktOrValN =  guessedBetaN * mktValueN;
+                } else if (accPos.SecType == "OPT") {
+                    betaDeltaAdjMktOrValN =  guessedBetaN * deltaAdjDeliveryValueN; 
+                }
+                betaDeltaAdjTotalMarketOrientationN += betaDeltaAdjMktOrValN;
+                totalMaxRiskedN += Math.abs(mktValueN);
+
                 rowClass = "";
-                if (plN > 3000)
+                if (plN > 3000) // if profit is bigger than 3K
                     rowClass = " class=\"secpri\"";
-                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + avgCost + "</td><td>" + accPos.EstPrice + "</td><td>" + plN.toLocaleString() + "</td><td>" + mktValueN.toLocaleString() + "</td><td>" + estUnderyingPrice + "</td><td>" + ibComputedUndPrice + "</td><td>" + ibComputedDelta + "</td><td>" + deliveryValue + "</td><td>" + deltaAdjDeliveryValue + "</td><td>" + accInfos[i].BrAcc + "</td></tr>";
+
+                deltaAdjDeliveryValue =  isNaN(deltaAdjDeliveryValueN) ? "": deltaAdjDeliveryValueN.toLocaleString(undefined, { maximumFractionDigits: 0 });
+                betaDeltaAdjMktOrVal =  isNaN(betaDeltaAdjMktOrValN) ? "": betaDeltaAdjMktOrValN.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + avgCost + "</td><td>" + accPos.EstPrice + "</td><td>" + plN.toLocaleString() + "</td><td>" + mktValueN.toLocaleString() + "</td><td>" + estUnderyingPrice + "</td><td>" + ibComputedUndPrice + "</td><td>" 
+                    + ibComputedDelta + "</td><td>" + deliveryValue + "</td><td>" + deltaAdjDeliveryValue + "</td><td>" 
+                    + guessedBetaN + "</td><td>" + betaDeltaAdjMktOrVal + "</td><td>" + accInfos[i].BrAcc + "</td></tr>";
                 //if (accPos.Symbol == "NetLiquidation")
                 //    totalNetLiquidation += Number(accPos.Value);
             }
@@ -205,6 +233,8 @@
         document.getElementById("idAdjGrossOptionExposure").innerHTML = round(adjLongOptionValue + adjShortOptionValue).toLocaleString();
 
         document.getElementById("idTotalMarketOrientation").innerHTML = round(longStockValue + shortStockValue + adjLongOptionValue + adjShortOptionValue).toLocaleString();
+        document.getElementById("idTotalMaxRisked").innerHTML = round(totalMaxRiskedN).toLocaleString();
+        document.getElementById("idBetaDeltaAdjTotalMarketOrientation").innerHTML = round(betaDeltaAdjTotalMarketOrientationN).toLocaleString();
 
         document.getElementById("idPosTable").innerHTML = posTableInner;
         document.getElementById("idDebugInfoPre").innerHTML = JSON.stringify(accInfos);
