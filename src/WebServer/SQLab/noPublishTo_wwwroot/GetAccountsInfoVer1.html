@@ -82,7 +82,7 @@
         adjLongOptionValue = 0.0, adjShortOptionValue = 0.0;
         totalMaxRiskedN = 0.0;
         betaDeltaAdjTotalMarketOrientationN = 0.0;
-        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;</th><th>MktValue &#8661;</th><th>Est &#8661;<br/>UnderlPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>DelivValue &#8661;</th><th>DeltaAdj &#8661;<br/>DelivValue</th><th title=\"Guessed Beta (QQQ, 1 month)\">gBeta &#8661;</th><th>BetaDeltaAdj &#8661;<br/>MktOrientVal</th><th>BrAccount &#8661;</th></tr>";
+        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;</th><th>MktValue &#8661;</th><th>Est &#8661;<br/>UnderlPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>DelivValue &#8661;</th><th>DeltaAdj &#8661;<br/>DelivValue</th><th title=\"Guessed Beta (QQQ, 1 month)\">gBeta &#8661;</th><th>BetaDeltaAdj &#8661;<br/>MktOrientVal</th><th>Acc &#8661;</th></tr>";
         for (i in accInfos) {
             if (i == "Message") {
                 document.getElementById("idMessageFromWebserverIfAny").innerHTML = accInfos[i];
@@ -169,8 +169,6 @@
                 }
 
 
-
-
                 if (accPos.SecType == "OPT") {
                     if (deliveryValueN > 0)
                         longOptionValue += deliveryValueN;
@@ -194,13 +192,16 @@
                 rowClass = "";
                 if (plN > 3000) // if profit is bigger than 3K
                     rowClass = " class=\"secpri\"";
+                if (accPos.EstPrice == 0.0) // if price is probably erroneous
+                    rowClass += " bgcolor=\"#FF0000\" title=\"Likely error in price\"";
 
-                deltaAdjDeliveryValue =  isNaN(deltaAdjDeliveryValueN) ? "": deltaAdjDeliveryValueN.toLocaleString(undefined, { maximumFractionDigits: 0 });
+                deltaAdjDeliveryValue = isNaN(deltaAdjDeliveryValueN) ? "" : deltaAdjDeliveryValueN.toLocaleString(undefined, { maximumFractionDigits: 0 });
                 betaDeltaAdjMktOrVal =  isNaN(betaDeltaAdjMktOrValN) ? "": betaDeltaAdjMktOrValN.toLocaleString(undefined, { maximumFractionDigits: 0 });
+                brAccStr = (accInfos[i].BrAcc.length > 3) ? accInfos[i].BrAcc.substr(0, 3) : accInfos[i].BrAcc;
 
                 posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + avgCost + "</td><td>" + accPos.EstPrice + "</td><td>" + plN.toLocaleString() + "</td><td>" + mktValueN.toLocaleString() + "</td><td>" + estUnderyingPrice + "</td><td>" + ibComputedUndPrice + "</td><td>" 
                     + ibComputedDelta + "</td><td>" + deliveryValue + "</td><td>" + deltaAdjDeliveryValue + "</td><td>" 
-                    + guessedBetaN + "</td><td>" + betaDeltaAdjMktOrVal + "</td><td>" + accInfos[i].BrAcc + "</td></tr>";
+                    + guessedBetaN + "</td><td>" + betaDeltaAdjMktOrVal + "</td><td>" +  brAccStr + "</td></tr>";
                 //if (accPos.Symbol == "NetLiquidation")
                 //    totalNetLiquidation += Number(accPos.Value);
             }
