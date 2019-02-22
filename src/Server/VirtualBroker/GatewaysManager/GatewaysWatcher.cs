@@ -97,12 +97,6 @@ namespace VirtualBroker
         private void ReconnectToGatewaysTimer_Elapsed(object p_stateObj)   // Timer is coming on a ThreadPool thread
         {
             Utils.Logger.Info("GatewaysWatcher:ReconnectToGatewaysTimer_Elapsed() BEGIN");
-            TryReconnectToGateways();
-            Utils.Logger.Info("GatewaysWatcher:ReconnectToGatewaysTimer_Elapsed() END");
-        }
-        void TryReconnectToGateways()
-        {
-            Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() BEGIN");
             try
             {
                 bool isMainGatewayConnectedBefore = m_mainGateway.IsConnected;
@@ -133,17 +127,16 @@ namespace VirtualBroker
             }
 
             var vbServerEnvironment = Utils.Configuration["VbServerEnvironment"];
-            // if (vbServerEnvironment.ToLower() == "AutoTradingServer".ToLower())
-            // {
-            //     // Without all the IB connections (isAllConnected), we can choose to crash the App, but we do NOT do that, because we may be able to recover them later. 
-            //     // It is a strategic (safety vs. conveniency) decision: in that case if not all IBGW is connected, (it can be an 'expected error'), VBroker runs further and try connecting every 10 min.
-            //     // on ManualTrader server failed connection is expected. Don't send Error. However, on AutoTraderServer, it is unexpected (at the moment), because IBGateways and VBrokers restarts every day.
-            //     var notConnectedGateways = String.Join(",", m_gateways.Where(l=> !l.IsConnected).Select(r => r.GatewayUser + "/"));
-            //     if (!String.IsNullOrEmpty(notConnectedGateways))
-            //         HealthMonitorMessage.SendAsync($"Gateways not connected. vbServerEnvironment: '{vbServerEnvironment}', not connected gateways {notConnectedGateways}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).ConfigureAwait(continueOnCapturedContext: false);
-            // }
-
-            Utils.Logger.Info("GatewaysWatcher:ReconnectToGateways() END");
+             if (vbServerEnvironment.ToLower() == "AutoTradingServer".ToLower())
+             {
+                // Without all the IB connections (isAllConnected), we can choose to crash the App, but we do NOT do that, because we may be able to recover them later. 
+                // It is a strategic (safety vs. conveniency) decision: in that case if not all IBGW is connected, (it can be an 'expected error'), VBroker runs further and try connecting every 10 min.
+                // on ManualTrader server failed connection is expected. Don't send Error. However, on AutoTraderServer, it is unexpected (at the moment), because IBGateways and VBrokers restarts every day.
+                var notConnectedGateways = String.Join(",", m_gateways.Where(l=> !l.IsConnected).Select(r => r.GatewayUser + "/"));
+                if (!String.IsNullOrEmpty(notConnectedGateways))
+                    HealthMonitorMessage.SendAsync($"Gateways not connected. vbServerEnvironment: '{vbServerEnvironment}', not connected gateways {notConnectedGateways}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).ConfigureAwait(continueOnCapturedContext: false);
+            }
+            Utils.Logger.Info("GatewaysWatcher:ReconnectToGatewaysTimer_Elapsed() END");
         }
 
         void ReconnectToGateway(object p_object)
