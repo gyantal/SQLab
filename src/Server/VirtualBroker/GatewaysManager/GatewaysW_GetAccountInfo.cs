@@ -58,12 +58,11 @@ namespace VirtualBroker
         public string GetAccountsInfo(string p_input)     
         {
             Utils.Logger.Info($"GetAccountsInfo() START with parameter '{p_input}'");
-            if (!m_isReady || m_mainGateway == null)
+            if (m_mainGateway == null || !m_mainGateway.IsConnected)
             {
-                Utils.Logger.Error($"GetAccountsInfo() error. GatewaysWatcher is not ready.");
+                Utils.Logger.Error($"GetAccountsInfo() error. Without mainGateway price data is not possible.");
                 return null;
             }
-
             // Problem is: GetPosition only gives back the Position: 218, Avg cost: $51.16, but that is not enough, because we would like to see the MktValue, DelivValue. 
             // So we need the LastPrice too. Even for options. And it is better to get it in here, than having a separate function call later.
             // 1. Let's collect all the AccountSum for all the ibGateways in a separate threads. This takes about 280msec
@@ -552,8 +551,8 @@ namespace VirtualBroker
             // for 23 stocks, 0 options, LocalDevelopment, collecting RT price: 273-300ms
             //Thread.Sleep(3000);
             int iTimeoutCount = 0;
-            int cMaxTimeout = 15;
-            while (iTimeoutCount < 15)    // all these checks usually takes 0.1 seconds = 100msec, so do it every time after connection 
+            int cMaxTimeout = 30;   //  15*400=6sec was not enough. Needed another 5sec for option Delta calculation. So, now do 30*400=12sec.
+            while (iTimeoutCount < cMaxTimeout)    // all these checks usually takes 0.1 seconds = 100msec, so do it every time after connection 
             {
                 bool isOneSignalReceived = priceOrDeltaTickARE.WaitOne(400);  // 400ms wait, max 6 times.
                 if (isOneSignalReceived)   // so, it was not a timeout, but a real signal
@@ -648,7 +647,7 @@ namespace VirtualBroker
             foreach (var gwUser in p_possibleGwUsers)
             {
                 Gateway gw = m_gateways.Find(r => r.GatewayUser == gwUser);
-                if (gw != null)
+                if (gw != null && gw.IsConnected)   // only add the connected gateways
                 {
                     p_accSumPos.Gateway = gw;
                     return;

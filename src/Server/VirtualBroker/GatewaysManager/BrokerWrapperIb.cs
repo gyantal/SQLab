@@ -141,20 +141,44 @@ namespace VirtualBroker
 
         public virtual void Disconnect()
         {
-            foreach (var item in MktDataSubscriptions)
+            Disconnect(true);
+        }
+        public virtual void Disconnect(bool p_isIbConnectionAlive = true)
+        {
+            if (p_isIbConnectionAlive)
             {
-                if (!item.Value.IsSnapshot)
-                    ClientSocket.cancelMktData(item.Key);
+                foreach (var item in MktDataSubscriptions)
+                {
+                    if (!item.Value.IsSnapshot)
+                        ClientSocket.cancelMktData(item.Key);
+                }
             }
             m_eReader.Stop();
             ClientSocket.eDisconnect();
         }
 
+        public virtual void connectionClosed()
+        {
+            //Notifes when the API-TWS connectivity has been closed. via call to ClientSocket.eDisconnect();
+            Utils.Logger.Info($"BrokerWrapperIb.connectionClosed() callback: {m_gatewayUser}");
+            Console.WriteLine($"*{DateTime.UtcNow.ToString("dd'T'HH':'mm':'ss")}: Warning! IB Connection Closed: {m_gatewayUser}.");
+        }
 
         // Exception thrown: System.IO.EndOfStreamException: Unable to read beyond the end of the stream.     (if IBGateways are crashing down.)
         public virtual void error(Exception e)
         {
-            Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e);
+            bool isExpectedException = false;
+            // Expect no connection at ManualTraderServer, don't clutter the Console, but save it to log file.
+            if (e.Message.StartsWith("One or more errors occurred. (No connection could be made because the target machine actively refused it"))
+                isExpectedException = true;
+            if (e is System.IO.EndOfStreamException) {
+                isExpectedException = true;
+                // Do not reset now. We can decide to reset MktDataSubscriptions, but HistDataSubscriptions and OrderSubscriptions are better to keep, so it needs more thinking whether to discard old things. 
+                // E.g. a BrokerTask will be able to get data of Finished orders, or finished historical prices, if we leave those data.
+                // The downside is that if there is many Disconnect/Reconnect then MktDataSubscriptions can grow at every reconnect. But on ManualTraderServer we don't stream price data, so it is fine now.
+                Disconnect(false);  // this will set ClientSocket.IsConnected to false.
+            }
+            //Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e);    // Utils.Logger.Error() will write to console anyway
             Utils.Logger.Info("BrokerWrapperIb.error(). Exception: " + e);  // exception.ToString() writes the Stacktrace, not only the Message, which is OK.
 
             // when VBroker server restarts every morning, the IBGateways are closed too, and as we were keeping a live TcpConnection, we will get an Exception here.
@@ -178,23 +202,27 @@ namespace VirtualBroker
 
             // if there is a Connection Error at the begginning, GatewaysWatcher will try to Reconnect 3 times. 
             // There is no point sending HealthManager.ErrorMessages and Phonecalls when the first Connection error occurs. GatewaysWatcher() will send it after the 3rd connection fails.
-            if (e is System.AggregateException)
-            {
-                Utils.Logger.Info("BrokerWrapperIb.error(). AggregateException. Inner: " + e.InnerException.Message);
-                if (e.InnerException.Message.IndexOf("Connection refused") != -1)
-                {
-                    Utils.Logger.Info("BrokerWrapperIb.error().  AggregateException. Inner exception is expected. Don't raise HealthMonitor alert phonecalls (yet)");
-                    return;
-                }
-            }
+            // if (e is System.AggregateException)
+            // {
+            //     Utils.Logger.Info("BrokerWrapperIb.error(). AggregateException. Inner: " + e.InnerException.Message);
+            //     if (e.InnerException.Message.IndexOf("Connection refused") != -1)
+            //     {
+            //         Utils.Logger.Info("BrokerWrapperIb.error().  AggregateException. Inner exception is expected. Don't raise HealthMonitor alert phonecalls (yet)");
+            //         return;
+            //     }
+            // }
 
             // Otherwise, maybe a trading Error, exception.
             // Maybe IBGateways were shut down. In which case, we cannot continue this VBroker App, because we should restart IBGateways, and reconnect to them by restarting VBroker.
             // Try to send HealthMonitor message and shut down the VBroker.
-            Utils.Logger.Error("Unexpected BrokerWrapperIb.error(). Exception thrown: " + e);
-            if (!Controller.IsRunningAsLocalDevelopment())
-                HealthMonitorMessage.SendAsync($"Exception in Unexpected  BrokerWrapperIb.error(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
-            throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
+            if (!isExpectedException)
+            {
+                // If it is not Expected exception => this thread will terminate, which will terminate the whole App. Send HealthMonitorMessage, if it is an active.
+                Utils.Logger.Error("Unexpected BrokerWrapperIb.error(). Exception thrown: " + e);
+                if (!Controller.IsRunningAsLocalDevelopment())
+                    HealthMonitorMessage.SendAsync($"Exception in Unexpected  BrokerWrapperIb.error(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
+                throw e;    
+            }
         }
 
         public virtual void error(string p_str)
@@ -405,11 +433,6 @@ namespace VirtualBroker
 
             // you can skip holiday days too later
             return true;
-        }
-
-        public virtual void connectionClosed()
-        {
-            Utils.Logger.Info("Connection closed.");
         }
 
         static string GetUsefulAccountSummaryTags()
@@ -1113,7 +1136,8 @@ namespace VirtualBroker
 
         public virtual void updateNewsBulletin(int msgId, int msgType, String message, String origExchange)
         {
-            Console.WriteLine("News Bulletins. " + msgId + " - Type: " + msgType + ", Message: " + message + ", Exchange of Origin: " + origExchange);
+            //Console.WriteLine("News Bulletins. " + msgId + " - Type: " + msgType + ", Message: " + message + ", Exchange of Origin: " + origExchange);
+            Utils.Logger.Info("News Bulletins. " + msgId + " - Type: " + msgType + ", Message: " + message + ", Exchange of Origin: " + origExchange);
         }
 
         public virtual void position(string account, Contract contract, double pos, double avgCost)

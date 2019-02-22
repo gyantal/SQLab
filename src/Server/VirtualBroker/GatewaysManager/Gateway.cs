@@ -63,7 +63,15 @@ namespace VirtualBroker
         public string VbAccountsList { get; set; }
         public int SocketPort { get; set; }
         public int BrokerConnectionClientID { get; set; }
-        public bool IsConnected { get; set; }
+        public bool IsConnected
+        {
+            get
+            {
+                if (BrokerWrapper == null)
+                    return false;
+                return BrokerWrapper.IsConnected();
+            }
+        }
 
         public IBrokerWrapper BrokerWrapper { get; set; }
 
@@ -106,12 +114,78 @@ namespace VirtualBroker
 
         public Gateway(GatewayUser p_gatewayUser, double p_accountMaxTradeValueInCurrency = Double.NaN, double p_accountMaxEstimatedValueSumRecentlyAllowed = Double.NaN)   // gateWayUser will be fixed. We don't allow to change it later.
         {
-            IsConnected = false;
             GatewayUser = p_gatewayUser;
             if (!Double.IsNaN(p_accountMaxTradeValueInCurrency))
                 m_IbAccountMaxTradeValueInCurrency = p_accountMaxTradeValueInCurrency;
             if (!Double.IsNaN(p_accountMaxEstimatedValueSumRecentlyAllowed))
                 m_IbAccountMaxEstimatedValueSumRecentlyAllowed = p_accountMaxEstimatedValueSumRecentlyAllowed;
+
+        }
+
+        public void Reconnect()
+        {
+            int nMaxRetry = 3;
+            int nConnectionRetry = 0;
+            do
+            {
+                try
+                {
+                    nConnectionRetry++;
+                    IBrokerWrapper ibWrapper = null;
+                    if (!Controller.IsRunningAsLocalDevelopment())
+                    {
+                        ibWrapper = new BrokerWrapperIb(AccSumArrived, AccSumEnd, AccPosArrived, AccPosEnd);      // recreate IB wrapper at every reConnection. Safer this way.
+                    }
+                    else
+                    {
+                        bool isPreferIbAlltime = true;  // isPreferIbAlltime is used in general for functionality (RT price) development, but !isPreferIbAlltime is better for strategy developing (maybe)
+                        if (isPreferIbAlltime || Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
+                            ibWrapper = new BrokerWrapperIb(AccSumArrived, AccSumEnd, AccPosArrived, AccPosEnd);    // when isPreferIbAlltime or when !isPreferIbAlltime, but USA market is open
+                        else
+                            ibWrapper = new BrokerWrapperYF();     // Before market open, or After market close. Simulated real time price is needed to determine current portfolio $size.
+                    }
+                    if (!ibWrapper.Connect(GatewayUser, SocketPort, BrokerConnectionClientID))
+                    {
+                        Utils.Logger.Info($"No connection to IB {GatewayUser}, port {SocketPort}. Trials: {nConnectionRetry}/{nMaxRetry}");
+                        if (nConnectionRetry == nMaxRetry)
+                            Console.WriteLine($"*{DateTime.UtcNow.ToString("dd'T'HH':'mm':'ss")}: No connection to IB {GatewayUser}. Trials: {nConnectionRetry}/{nMaxRetry}");
+                        continue;
+                    }
+
+                    StrongAssert.Equal(ibWrapper.IbAccountsList, VbAccountsList, Severity.ThrowException, $"Expected IbAccount {VbAccountsList} is not found: { ibWrapper.IbAccountsList}.");
+
+                    // after this line, we are really connected
+                    BrokerWrapper = ibWrapper;
+
+                    string warnMessage = (ibWrapper is BrokerWrapperIb) ? "" : "!!!WARNING. Fake Broker (YF!). ";
+                    Utils.Logger.Info($"{warnMessage}Gateway {ibWrapper} is connected. User {GatewayUser} acc {VbAccountsList}.");
+                    Console.WriteLine($"*{DateTime.UtcNow.ToString("dd'T'HH':'mm':'ss")}: {warnMessage}Gateway {GatewayUser} acc {VbAccountsList} connected.");
+                    return;
+                }
+                catch (Exception e)
+                {
+                    //If IBGateways doesn't connect: Retry the connection about 3 times, before Exception. So, so this problem is an Expected problem if another try to reconnect solves it.
+                    Utils.Logger.Info(e, $"Exception in ReconnectToGateway()-user:{GatewayUser}: nRetry:{nConnectionRetry} : Msg:{e.Message}");
+                    if (nConnectionRetry >= nMaxRetry)
+                    {
+                        Utils.Logger.Info("GatewaysWatcher:ReconnectToGateway(). This gateway failed after many retries. We could send HealthMonitor message here, but better at a higher level if the second Gateway fails too.");
+                        //HealthMonitorMessage.SendException($"ReConnectToGateway Thread: nMaxRetry: {nMaxRetry}", e, HealthMonitorMessageID.ReportErrorFromVirtualBroker);  // the higher level ReconnectToGateways() will send the Error to HealthMonitor
+                        throw;
+                    }
+                    else
+                    {
+                        // if we do retry, wait 10 seconds here. Maybe IB Gateway is will reconnect later
+                        Thread.Sleep(10000);
+                    }
+                }
+            } while (nConnectionRetry < nMaxRetry);
+        }
+
+        public void Disconnect()
+        {
+            if (BrokerWrapper == null)
+                return;
+            BrokerWrapper.Disconnect();
         }
 
         // PlayTransactionsViaBroker(). Consider these use-cases:
