@@ -167,9 +167,13 @@ namespace VirtualBroker
         // Exception thrown: System.IO.EndOfStreamException: Unable to read beyond the end of the stream.     (if IBGateways are crashing down.)
         public virtual void error(Exception e)
         {
+            //Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e);    // Utils.Logger.Error() will write to console anyway
+            Utils.Logger.Info("BrokerWrapperIb.error(). Exception: " + e);  // exception.ToString() writes the Stacktrace, not only the Message, which is OK.
+
             bool isExpectedException = false;
             // Expect no connection at ManualTraderServer, don't clutter the Console, but save it to log file.
-            if (e.Message.StartsWith("One or more errors occurred. (No connection could be made because the target machine actively refused it"))
+            if (e.Message.StartsWith("One or more errors occurred. (No connection could be made because the target machine actively refused it") ||     // on Windows local development
+                (e.Message.IndexOf("Connection refused") != -1))   // on Linux, ManualTraderServer, after IB TWS auto-exited and no longer exist.
                 isExpectedException = true;
             if (e is System.IO.EndOfStreamException) {
                 isExpectedException = true;
@@ -178,9 +182,7 @@ namespace VirtualBroker
                 // The downside is that if there is many Disconnect/Reconnect then MktDataSubscriptions can grow at every reconnect. But on ManualTraderServer we don't stream price data, so it is fine now.
                 Disconnect(false);  // this will set ClientSocket.IsConnected to false.
             }
-            //Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e);    // Utils.Logger.Error() will write to console anyway
-            Utils.Logger.Info("BrokerWrapperIb.error(). Exception: " + e);  // exception.ToString() writes the Stacktrace, not only the Message, which is OK.
-
+            
             // when VBroker server restarts every morning, the IBGateways are closed too, and as we were keeping a live TcpConnection, we will get an Exception here.
             // We cannot properly Close our connection in this case, because IBGateways are already shutting down.
             // Actually, This expected exception in the Background thread comes 5 mseconds before the ConsoleApp gets the Console.Readline() exception.
