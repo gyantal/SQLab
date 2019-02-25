@@ -269,9 +269,10 @@ namespace VirtualBroker
                     //IB Error. Id: -1, Code: 2119, Msg: Market data farm is connecting:usfarm
                     return; // skip processing the error further. Don't send it to HealthMonitor.
                 }
-                if (errorCode == 2103 || errorCode == 1100 || errorCode == 1102)
+                if (errorCode == 2103  || errorCode == 2105 || errorCode == 1100 || errorCode == 1102)
                 {
                     // This is Usually not an error if it is received pre-market or after market. IBGateway will try reconnecting, so this is usually temporary. However, log it.
+                    //IB Error. ErrId: -1, ErrCode: 2105, Msg: HMDS data farm connection is broken:ushmds
                     //IB Error. ErrId: -1, ErrCode: 2103, Msg: Market data farm connection is broken:usfarm
                     //IB Error. ErrId: -1, ErrCode: 1100, Msg: Connectivity between IB and Trader Workstation has been lost.
                     //IB Error. ErrId: -1, ErrCode: 1102, Msg: Connectivity between IB and Trader Workstation has been restored - data maintained.
