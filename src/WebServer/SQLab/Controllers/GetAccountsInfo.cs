@@ -36,7 +36,7 @@ namespace SQLab.Controllers
         static Dictionary<string, Tuple<DateTime, string>> g_dataCache = new Dictionary<string, Tuple<DateTime, string>>() {     };
 
         static List<string> g_symbolsNeedLastClosePrice = new List<string>() { };
-        static Dictionary<string, double> g_LastClosePrices = new Dictionary<string, double>() { { "VXZB", 8000.0 }, { "URE", 8000.0 }, { "CRM", 8000.0 }, { "NOW", 8000.0 } };
+        static Dictionary<string, double> g_LastClosePrices = new Dictionary<string, double>() {  };
         static DateTime g_LastClosePricesFetchTime = DateTime.MinValue;
 
         public GetAccountsInfo(ILogger<Program> p_logger, SqCommon.IConfigurationRoot p_config)
@@ -192,33 +192,35 @@ namespace SQLab.Controllers
                         {
                             if (!g_symbolsNeedLastClosePrice.Contains(accPos["Symbol"]))
                             {
+                                Utils.Logger.Info($"g_symbolsNeedLastClosePrice.Add():'{accPos["Symbol"]}'");
                                 g_symbolsNeedLastClosePrice.Add(accPos["Symbol"]);
                                 isNeedSqlDownload = true;
-                                break;
                             }
                             else
                             {
                                 if ((DateTime.UtcNow - g_LastClosePricesFetchTime).TotalHours > 12.0)
                                 {
                                     isNeedSqlDownload = true;
-                                    break;
                                 }
-
-                                if (g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose))
+                                else
                                 {
-                                    accPos["EstPrice"] = lastClose.ToString("0.00");
-                                    isReplyNeedModification = true;
+                                    if (g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose))
+                                    {
+                                        accPos["EstPrice"] = lastClose.ToString("0.00");
+                                        isReplyNeedModification = true;
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
+                Utils.Logger.Info($"isNeedSqlDownload: {isNeedSqlDownload}");
                 if (isNeedSqlDownload)
                 {
                     // we download data now and wait here, because in that case user always get a proper data (just at first time it is slower)
                     // 1. download data 
-                     DateTime endDateUtc = DateTime.UtcNow.Date.AddDays(-1);
+                    DateTime endDateUtc = DateTime.UtcNow.Date.AddDays(-1);
                     DateTime startDateUtc = endDateUtc.AddDays(-6);     // what if 3 days holidays weekend. So, go back 6 days.
                     var sqlReturnTask = SqlTools.GetHistQuotesAsync(startDateUtc, endDateUtc, g_symbolsNeedLastClosePrice, QuoteRequest.TDC);
                     var sqlReturnData = await sqlReturnTask;
@@ -236,6 +238,11 @@ namespace SQLab.Controllers
                         var last = rows.Last();
                         return new KeyValuePair<string, double>(ticker, last.AdjClosePrice);
                     }).ToDictionary(r => r.Key, v => v.Value);
+
+                    foreach (var item in g_LastClosePrices)
+                    {
+                        Utils.Logger.Info($"g_LastClosePrices: {item.Key}, {item.Value}");
+                    }
 
                     g_LastClosePricesFetchTime = DateTime.UtcNow;
 
