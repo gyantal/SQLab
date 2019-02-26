@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http.Extensions;
+﻿using DbCommon;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SqCommon;
+using SQLab.Controllers.QuickTester.Strategies;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -12,6 +14,14 @@ using System.Threading.Tasks;
 namespace SQLab.Controllers
 {
     
+    public class BrAccJsonHelper
+    {
+        public string BrAcc;
+        public string Timestamp;
+        public List<Dictionary<string,string>> AccSums;
+        public List<Dictionary<string,string>> AccPoss;
+
+    }
     public class GetAccountsInfo : Controller
     {
         private readonly ILogger<Program> m_logger;
@@ -23,9 +33,11 @@ namespace SQLab.Controllers
         //Or until next user-query.Yes.that can be done. But do it on the Webserver cache, not in the VBroker cache.Do no caching in VBroker for less complication.
         //So, the VBroker function can be lengthy, if user asked that Delta is necessary.
         //If we want faster user feedback, Webserver should cache, approximate it, and later update the user-website.
-        static Dictionary<string, Tuple<DateTime, string>> g_dataCache = new Dictionary<string, Tuple<DateTime, string>>()
-        {
-        };
+        static Dictionary<string, Tuple<DateTime, string>> g_dataCache = new Dictionary<string, Tuple<DateTime, string>>() {     };
+
+        static List<string> g_symbolsNeedLastClosePrice = new List<string>() { };
+        static Dictionary<string, double> g_LastClosePrices = new Dictionary<string, double>() { { "VXZB", 8000.0 }, { "URE", 8000.0 }, { "CRM", 8000.0 }, { "NOW", 8000.0 } };
+        static DateTime g_LastClosePricesFetchTime = DateTime.MinValue;
 
         public GetAccountsInfo(ILogger<Program> p_logger, SqCommon.IConfigurationRoot p_config)
         {
@@ -151,19 +163,103 @@ namespace SQLab.Controllers
                 var qb = new QueryBuilder(queryItems);  // Use the QueryBuilder to add in new items in a safe way (handles multiples and empty values)
                 var queryStr = qb.ToQueryString();  // it contains the prefix '?'
 
+
+
                 Utils.Logger.Info($"GetAccountsInfo.GenerateGaiResponse(). Sending to VBroker: '?{queryStr}'");
 
                 string vbServerIp = String.Equals(destinationServ, "MTS", StringComparison.InvariantCultureIgnoreCase) ? VirtualBrokerMessage.MtsVirtualBrokerServerPublicIpForClients : VirtualBrokerMessage.AtsVirtualBrokerServerPublicIpForClients;
                 Task<string> vbMessageTask = VirtualBrokerMessage.Send(queryStr.ToString(), VirtualBrokerMessageID.GetAccountsInfo, vbServerIp, VirtualBrokerMessage.DefaultVirtualBrokerServerPort);
-                string reply = await vbMessageTask;
-                if (vbMessageTask.Exception != null || String.IsNullOrEmpty(reply))
+                string vbReplyStr = (await vbMessageTask).Replace("\\\"", "\"");
+                if (vbMessageTask.Exception != null || String.IsNullOrEmpty(vbReplyStr))
                 {
                     string errorMsg = $"Error.<BR> Check that both the IB's TWS and the VirtualBroker are running on Manual Trading Server! Start them manually if needed!";
                     Utils.Logger.Error(errorMsg);
                     return @"{ ""Message"": """ + errorMsg + @""" }";
                 }
-                Utils.Logger.Info($"GetAccountsInfo.GenerateGaiResponse(). Received '{reply}'");
-                return reply;
+                Utils.Logger.Info($"GetAccountsInfo.GenerateGaiResponse(). Received '{vbReplyStr}'");
+
+                // 2019-03: After Market close: IB doesn't  give price for some 2-3 stocks (VXZB (only gives ask = -1, bid = -1), URE (only gives ask = 61, bid = -1), no open,low/high/last, not even previous Close price, nothing), these are the ideas to consider: We need some kind of estimation, even if it is not accurate.
+                //     >One idea: ask IB's historical data for those missing prices. Then price query is in one place, but we have to wait more for VBroker, and IB throttle (max n. number of queries) may cause problem, so we get data slowly.
+                //     >Betteridea: in Website, where the caching happens: ask our SQL database for those missing prices. We can ask our SQL parallel to the Vb query. No throttle is necessary. It can be very fast for the user. Prefer this now. More error proof this solution.
+                var vbReply = Utils.LoadFromJSON<List<BrAccJsonHelper>>(vbReplyStr);
+                bool isReplyNeedModification = false;
+                bool isNeedSqlDownload = false;
+                foreach (var brAccInfo in vbReply)
+                {
+                    foreach (var accPos in brAccInfo.AccPoss)
+                    {
+                        if (accPos["SecType"] == "STK" && Double.TryParse(accPos["EstPrice"], out double estPrice) && estPrice == 0.0)  // so a price is missing
+                        {
+                            if (!g_symbolsNeedLastClosePrice.Contains(accPos["Symbol"]))
+                            {
+                                g_symbolsNeedLastClosePrice.Add(accPos["Symbol"]);
+                                isNeedSqlDownload = true;
+                                break;
+                            }
+                            else
+                            {
+                                if ((DateTime.UtcNow - g_LastClosePricesFetchTime).TotalHours > 12.0)
+                                {
+                                    isNeedSqlDownload = true;
+                                    break;
+                                }
+
+                                if (g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose))
+                                {
+                                    accPos["EstPrice"] = lastClose.ToString("0.00");
+                                    isReplyNeedModification = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (isNeedSqlDownload)
+                {
+                    // we download data now and wait here, because in that case user always get a proper data (just at first time it is slower)
+                    // 1. download data 
+                     DateTime endDateUtc = DateTime.UtcNow.Date.AddDays(-1);
+                    DateTime startDateUtc = endDateUtc.AddDays(-6);     // what if 3 days holidays weekend. So, go back 6 days.
+                    var sqlReturnTask = SqlTools.GetHistQuotesAsync(startDateUtc, endDateUtc, g_symbolsNeedLastClosePrice, QuoteRequest.TDC);
+                    var sqlReturnData = await sqlReturnTask;
+                    var sqlReturn = sqlReturnData.Item1;
+
+                    g_LastClosePrices = g_symbolsNeedLastClosePrice.Select(ticker =>
+                    {
+                        IEnumerable<object[]> mergedRows = SqlTools.GetTickerAndBaseTickerRows(sqlReturn, ticker);
+                        var rows = mergedRows.Select(
+                            row => new DailyData()
+                            {
+                                Date = ((DateTime)row[1]),
+                                AdjClosePrice = (double)Convert.ToDecimal(row[2])  // row[2] is object(decimal) (from 2017-08-25, it was object(double) before) if it is a stock (because Adjustment multiplier and AS DECIMAL(19,4) in SQL); and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
+                            }).ToList();
+                        var last = rows.Last();
+                        return new KeyValuePair<string, double>(ticker, last.AdjClosePrice);
+                    }).ToDictionary(r => r.Key, v => v.Value);
+
+                    g_LastClosePricesFetchTime = DateTime.UtcNow;
+
+                    // 2. fill 0.00 prices
+                    foreach (var brAccInfo in vbReply)
+                    {
+                        foreach (var accPos in brAccInfo.AccPoss)
+                        {
+                            if (accPos["SecType"] == "STK" && Double.TryParse(accPos["EstPrice"], out double estPrice) && estPrice == 0.0)  // so a price is missing
+                            {
+                                if (g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose))
+                                {
+                                    accPos["EstPrice"] = lastClose.ToString("0.00");
+                                    isReplyNeedModification = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                if (isReplyNeedModification)
+                    vbReplyStr =  Utils.SaveToJSON<List<BrAccJsonHelper>>(vbReply);
+                return vbReplyStr;
             }
             catch (Exception e)
             {

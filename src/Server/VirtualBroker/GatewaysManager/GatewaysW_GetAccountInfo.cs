@@ -250,9 +250,9 @@ namespace VirtualBroker
             return result;
         }
 
-// If IB doesn't  give price for some 2-3 stocks, these are the ideas to consider: We need some kind of estimation, even if it is not accurate.
-//     >One idea: ask IB's historical data for those missing prices. Then price query is in one place, but we have to wait more for VBroker, and IB throttle (max n. number of queries) may cause problem, so we get data slowly.
-//     >Betteridea: in Website, where the caching happens: ask our SQL database for those missing prices. We can ask our SQL parallel to the Vb query. No throttle is necessary. It can be very fast for the user. Prefer this now. More error proof this solution.
+        // >2019-03: After Market close: IB doesn't  give price for some 2-3 stocks (VXZB (only gives ask = -1, bid = -1), URE (only gives ask = 61, bid = -1), no open,low/high/last, not even previous Close price, nothing), these are the ideas to consider: We need some kind of estimation, even if it is not accurate.
+        //     >One idea: ask IB's historical data for those missing prices. Then price query is in one place, but we have to wait more for VBroker, and IB throttle (max n. number of queries) may cause problem, so we get data slowly.
+        //     >Betteridea: in Website, where the caching happens: ask our SQL database for those missing prices. We can ask our SQL parallel to the Vb query. No throttle is necessary. It can be very fast for the user. Prefer this now. More error proof this solution.
         private void CollectEstimatedPrices(List<AccInfo> allAccInfos, bool p_isNeedOptDelta)
         {
             //Position.U407941 - Symbol: VXXB, SecType: STK, Currency: USD, Position: -87, Avg cost: 21.1106586, LocalSymbol: 'VXXB'
@@ -409,9 +409,15 @@ namespace VirtualBroker
                             if (cb_tickType == TickType.BID)
                                 poss[0].BidPrice = cb_price;
 
-                            if (!(Double.IsNaN(poss[0].AskPrice) || Double.IsNaN(poss[0].BidPrice)))
+                            // some stocks have proper LastPrice and MarkPrice, but later ask/bid comes as -1/-1 meaning no ask-bid. And because we round that -1 to 0 properly, we have a proposedPrice = 0.
+                            // assure that a '0' proposedPrice will not overwrite a previously correct lastPrice 
+                            // sometimes Ask or Bid that comes is -1 (even for stock MVV), which shows that Bid is missing (nobody is willing to buy). For non-liquid options, this is acceptable. Round them to 0, or use LastTradedPrice in that case
+                            // But if both ask and bid is -1, then don't accept the price, but wait for more data
+                            bool isAskBidAcceptable = (!Double.IsNaN(poss[0].AskPrice)) && (!Double.IsNaN(poss[0].BidPrice));
+                            if (isAskBidAcceptable)
+                                isAskBidAcceptable = (poss[0].AskPrice != -1.0) && (poss[0].BidPrice != -1.0);
+                            if (isAskBidAcceptable)
                             {
-                                // sometimes Ask or Bid that comes is -1 (even for stock MVV), which shows that Bid is missing (nobody is willing to buy). Round them to 0, or use LastTradedPrice in that case
                                 double pAsk = (poss[0].AskPrice < 0.0) ? 0.0 : poss[0].AskPrice;
                                 double pBid = (poss[0].BidPrice < 0.0) ? 0.0 : poss[0].BidPrice;
                                 double proposedPrice = (pAsk + pBid) / 2.0;
@@ -421,11 +427,9 @@ namespace VirtualBroker
                                     nKnownConIdsPrReadyOk++;
                                     priceOrDeltaTickARE.Set();
                                 }
-                                else {
-                                    // some stocks have proper LastPrice and MarkPrice, but later ask/bid comes as -1/-1 meaning no ask-bid. And because we round that -1 to 0 properly, we have a proposedPrice = 0.
-                                    // assure that a '0' proposedPrice will not overwrite a previously correct lastPrice
-                                    if (proposedPrice != 0.0)
-                                        poss[0].EstPrice = proposedPrice;    // update it with new value
+                                else
+                                {
+                                    poss[0].EstPrice = proposedPrice;    // update it with new value
                                 }
                             }
                         }
@@ -608,11 +612,13 @@ namespace VirtualBroker
                 if (Double.IsNaN(poss[0].EstPrice))     // These shouldn't be here. These are the Totally Unexpected missing ones or the errors. Estimate missing numbers with zero.
                 {
                     Utils.Logger.Warn($"!GetAccInf().Unexpected no EstPr'{poss[0].Contract.LocalSymbol ?? poss[0].Contract.Symbol}'");
+
                     if (Double.IsNaN(poss[0].BidPrice))
                         poss[0].BidPrice = 0;
                     if (Double.IsNaN(poss[0].AskPrice))
                         poss[0].AskPrice = 0;
-                    poss[0].EstPrice = (poss[0].AskPrice + poss[0].BidPrice) / 2.0;
+                    //poss[0].EstPrice = (poss[0].AskPrice + poss[0].BidPrice) / 2.0;
+                    poss[0].EstPrice = 0.0; // Estimate missing numbers with zero.
                 }
 
                 poss[0].EstUndPrice = 0.0;
