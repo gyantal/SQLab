@@ -117,6 +117,8 @@ namespace DbCommon
 
         public static async Task<Tuple<List<object[]>, TimeSpan>> GetHistQuotesAsync(DateTime p_startDateUtc, DateTime p_endDateUtc, List<string> p_tickers, ushort p_sqlReturnedColumns)
         {
+            Utils.Logger.Info($"GetHistQuotesAsync() START ('{ string.Join(",", p_tickers)}')");
+
             List<string> stockTickers = p_tickers.Where(r => !r.StartsWith("^")).ToList();
             List<string> indicesTickers = p_tickers.Where(r => r.StartsWith("^")).ToList();
 

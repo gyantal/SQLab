@@ -229,14 +229,8 @@ namespace SQLab.Controllers
                     g_LastClosePrices = g_symbolsNeedLastClosePrice.Select(ticker =>
                     {
                         IEnumerable<object[]> mergedRows = SqlTools.GetTickerAndBaseTickerRows(sqlReturn, ticker);
-                        var rows = mergedRows.Select(
-                            row => new DailyData()
-                            {
-                                Date = ((DateTime)row[1]),
-                                AdjClosePrice = (double)Convert.ToDecimal(row[2])  // row[2] is object(decimal) (from 2017-08-25, it was object(double) before) if it is a stock (because Adjustment multiplier and AS DECIMAL(19,4) in SQL); and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
-                            }).ToList();
-                        var last = rows.Last();
-                        return new KeyValuePair<string, double>(ticker, last.AdjClosePrice);
+                        var lastRow = mergedRows.Last();
+                        return new KeyValuePair<string, double>(ticker, (double)Convert.ToDecimal(lastRow[2]));
                     }).ToDictionary(r => r.Key, v => v.Value);
 
                     foreach (var item in g_LastClosePrices)
