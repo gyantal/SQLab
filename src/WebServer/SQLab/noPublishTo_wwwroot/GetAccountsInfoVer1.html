@@ -193,7 +193,8 @@
                 }
                 betaDeltaAdjTotalMarketOrientationN += betaDeltaAdjMktOrValN;
                 totalMaxRiskedN += Math.abs(mktValueN);
-                totalPLTodayN += plTodayN;
+                if (!isNaN(plTodayN))   // for options, as we don't know PreviousClose, the todayProfit is NaN. Don't aggregate this.
+                    totalPLTodayN += plTodayN;
 
                 rowClass = "";
                 if (plN > 3000) // if profit is bigger than 3K
@@ -246,9 +247,12 @@
         else
             document.getElementById("idBetaDeltaAdjTotalMarketOrientationLeverage").innerHTML = "";
 
-        document.getElementById("idTotalPLToday").innerHTML = round(totalPLTodayN).toLocaleString();
+    if (totalPLTodayN > 0)
+        document.getElementById("idTotalPLToday").innerHTML = "<font color=#00FF00>+" + round(totalPLTodayN).toLocaleString() + "</font>";
+    else
+        document.getElementById("idTotalPLToday").innerHTML = "<font color=#FF0000>" + round(totalPLTodayN).toLocaleString() + "</font>";
 
-        document.getElementById("idPosTable").innerHTML = posTableInner;
+    document.getElementById("idPosTable").innerHTML = posTableInner;
         document.getElementById("idDebugInfoPre").innerHTML = JSON.stringify(accInfos);
 
 

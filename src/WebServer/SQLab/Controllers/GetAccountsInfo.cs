@@ -35,9 +35,8 @@ namespace SQLab.Controllers
         //If we want faster user feedback, Webserver should cache, approximate it, and later update the user-website.
         static Dictionary<string, Tuple<DateTime, string>> g_dataCache = new Dictionary<string, Tuple<DateTime, string>>() {     };
 
-        static List<string> g_symbolsNeedLastClosePrice = new List<string>() { };
-        static Dictionary<string, double> g_LastClosePrices = new Dictionary<string, double>() {  };
-        static DateTime g_LastClosePricesFetchTime = DateTime.MinValue;
+        static Dictionary<string, DailyData> g_LastClosePrices = new Dictionary<string, DailyData>() {  };
+        
 
         public GetAccountsInfo(ILogger<Program> p_logger, SqCommon.IConfigurationRoot p_config)
         {
@@ -184,24 +183,17 @@ namespace SQLab.Controllers
                 //     >add lastClosePrice anyway. So, 2 new HTML columns: LastClose, $TodayProfit could be useful, because we don't have to login to TWS every day, and can be checked on smartphone too
                 var vbReply = Utils.LoadFromJSON<List<BrAccJsonHelper>>(vbReplyStr);
                 bool isNeedSqlDownload = false;
+                List<string> symbolsNeedLastClosePrice = new List<string>() { };
                 foreach (var brAccInfo in vbReply)
                 {
                     foreach (var accPos in brAccInfo.AccPoss)
                     {
                         if (accPos["SecType"] == "STK")
                         {
-                            if (!g_symbolsNeedLastClosePrice.Contains(accPos["Symbol"]))
+                            if (!g_LastClosePrices.TryGetValue(accPos["Symbol"], out DailyData dailyData) || ((DateTime.UtcNow - dailyData.Date).TotalHours > 12.0))
                             {
-                                Utils.Logger.Info($"g_symbolsNeedLastClosePrice.Add():'{accPos["Symbol"]}'");
-                                g_symbolsNeedLastClosePrice.Add(accPos["Symbol"]);
-                                isNeedSqlDownload = true;
-                            }
-                            else
-                            {
-                                if (!g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose)) // if previous was a fault, then even though g_symbolsNeedLastClosePrice contains ticker, g_LastClosePrices doesn't have it. So check again.
-                                    isNeedSqlDownload = true;
-                                if ((DateTime.UtcNow - g_LastClosePricesFetchTime).TotalHours > 12.0)
-                                    isNeedSqlDownload = true;
+                                isNeedSqlDownload = true;                                
+                                symbolsNeedLastClosePrice.Add(accPos["Symbol"]);
                             }
                         }
                     }
@@ -214,28 +206,26 @@ namespace SQLab.Controllers
                     // 1. download data 
                     DateTime endDateUtc = DateTime.UtcNow.Date.AddDays(-1);
                     DateTime startDateUtc = endDateUtc.AddDays(-6);     // what if 3 days holidays weekend. So, go back 6 days.
-                    var sqlReturnTask = SqlTools.GetHistQuotesAsync(startDateUtc, endDateUtc, g_symbolsNeedLastClosePrice, QuoteRequest.TDC);
+                    var sqlReturnTask = SqlTools.GetHistQuotesAsync(startDateUtc, endDateUtc, symbolsNeedLastClosePrice, QuoteRequest.TDC);
                     var sqlReturnData = await sqlReturnTask;
                     var sqlReturn = sqlReturnData.Item1;
 
-                    g_LastClosePrices = g_symbolsNeedLastClosePrice.Select(ticker =>
+                    foreach (var ticker in symbolsNeedLastClosePrice)
                     {
                         IEnumerable<object[]> mergedRows = SqlTools.GetTickerAndBaseTickerRows(sqlReturn, ticker);
                         var lastRow = mergedRows.LastOrDefault();
-                        double lastClosePrice = 0.0;
                         if (lastRow != null) // it happens if "BRK B" ticker is not found in the database.
                         {
-                            lastClosePrice = (double)Convert.ToDecimal(lastRow[2]);
+                            double lastClosePrice = (double)Convert.ToDecimal(lastRow[2]);
+                            g_LastClosePrices[ticker] = new DailyData() { Date = DateTime.UtcNow, AdjClosePrice = lastClosePrice };
                         }
-                        return new KeyValuePair<string, double>(ticker, lastClosePrice);
-                    }).ToDictionary(r => r.Key, v => v.Value);
+                    }
 
                     foreach (var item in g_LastClosePrices)
                     {
-                        Utils.Logger.Info($"g_LastClosePrices: {item.Key}, {item.Value}");
+                        Utils.Logger.Info($"g_LastClosePrices: {item.Key}, Update time: {item.Value.Date}, {item.Value.AdjClosePrice}");
                     }
 
-                    g_LastClosePricesFetchTime = DateTime.UtcNow;
                 }
 
                 // 2. fill LastClosePrices and missing(0.00) RT EstPrice
@@ -243,16 +233,17 @@ namespace SQLab.Controllers
                 {
                     foreach (var accPos in brAccInfo.AccPoss)
                     {
-                        if (g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose))
+                        if ((accPos["SecType"] == "STK") && (g_LastClosePrices.TryGetValue(accPos["Symbol"], out DailyData dailyData)))
                         {
-                            if (accPos["SecType"] == "STK")
+                            accPos["LastClose"] = dailyData.AdjClosePrice.ToString("0.00");
+                            if (Double.TryParse(accPos["EstPrice"], out double estPrice) && estPrice == 0.0)  // so a price is missing
                             {
-                                accPos["LastClose"] = lastClose.ToString("0.00");
-                                if (Double.TryParse(accPos["EstPrice"], out double estPrice) && estPrice == 0.0)  // so a price is missing
-                                {
-                                    accPos["EstPrice"] = lastClose.ToString("0.00");
-                                }
+                                accPos["EstPrice"] = dailyData.AdjClosePrice.ToString("0.00");
                             }
+                        }
+                        else
+                        {
+                            accPos["LastClose"] = "NaN";    // for options LastClose, 'NaN' is better than 'undefined'
                         }
                     }
                 }

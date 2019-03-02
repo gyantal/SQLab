@@ -626,6 +626,9 @@ namespace VirtualBroker
                     poss[0].EstPrice = 0.0; // Estimate missing numbers with zero.
                 }
 
+                if ((poss[0].Contract.SecType == "OPT") && Double.TryParse(poss[0].Contract.Multiplier, out double multiplier))  // Options: Cost given by IB is multiplied by the Multiplier. It makes sense that the EstPrice of 1 option is also given back like that.
+                    poss[0].EstPrice *= multiplier;  
+
                 poss[0].EstUndPrice = 0.0;
                 if (poss[0].Contract.SecType == "OPT" && poss[0].UnderlyingDictItem.Value != null)
                 {
