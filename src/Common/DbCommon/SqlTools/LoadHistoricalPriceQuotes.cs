@@ -202,7 +202,8 @@ namespace DbCommon
             };
 
             // increased threshold from 20 to 40, because the other Slower SQL query is unreliable. Fixing it at Linux DB, not now.
-            if ((p_reqs = p_reqs as IList<QuoteRequest> ?? p_reqs.ToList()).Count() < 40)   // 20: because the number of UNION-able subSELECTs is limited:
+            // Agy + DeBlanzac stocks: 51, + Main stocks, it will be under 100. Increase from 40 to 100, but it may not work.
+            if ((p_reqs = p_reqs as IList<QuoteRequest> ?? p_reqs.ToList()).Count() < 100)   // 20: because the number of UNION-able subSELECTs is limited:
             {   // Compose a faster query: UNION of per-ticker SELECTs                          "Limited by available resources" -- stack space limit in query optimizer. goo.gl/MGO6Nb  msdn.microsoft.com/en-us/library/ms143432.aspx
                 foreach (var grp in (p_reqs.Count() == 1) ? new[] { p_reqs } : p_reqs.ToLookup(qr => qr.ReturnedColumns)
                     as IEnumerable<IEnumerable<QuoteRequest>>)

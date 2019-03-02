@@ -219,7 +219,12 @@ namespace VirtualBroker
                     if (isAnyRowWritten)
                         jsonResultBuilder.AppendFormat(",");
                     isAnyRowWritten = true;
-                    jsonResultBuilder.Append($"{{\"Symbol\":\"{accPos.Contract.Symbol}\",\"SecType\":\"{accPos.Contract.SecType}\",\"Currency\":\"{accPos.Contract.Currency}\",\"Pos\":\"{accPos.Position}\",\"AvgCost\":\"{accPos.AvgCost:0.00}\"");
+
+                    string symbol = accPos.Contract.Symbol; 
+                    if (symbol == "BRK B")  // IB uses with space, but in our database it is with hyphen. There can be other differences. It is better to instantly convert these in VBroker before passing it to clients of Webserver, SQDesktop
+                        symbol = "BRK-B";
+
+                    jsonResultBuilder.Append($"{{\"Symbol\":\"{symbol}\",\"SecType\":\"{accPos.Contract.SecType}\",\"Currency\":\"{accPos.Contract.Currency}\",\"Pos\":\"{accPos.Position}\",\"AvgCost\":\"{accPos.AvgCost:0.00}\"");
                     if (accPos.Contract.SecType == "OPT")
                         jsonResultBuilder.Append($",\"LastTradeDate\":\"{accPos.Contract.LastTradeDateOrContractMonth}\",\"Right\":\"{accPos.Contract.Right}\",\"Strike\":\"{accPos.Contract.Strike}\",\"Multiplier\":\"{accPos.Contract.Multiplier}\",\"LocalSymbol\":\"{accPos.Contract.LocalSymbol}\"");
 

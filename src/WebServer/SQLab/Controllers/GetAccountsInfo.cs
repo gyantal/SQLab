@@ -181,14 +181,14 @@ namespace SQLab.Controllers
                 // 2019-03: After Market close: IB doesn't  give price for some 2-3 stocks (VXZB (only gives ask = -1, bid = -1), URE (only gives ask = 61, bid = -1), no open,low/high/last, not even previous Close price, nothing), these are the ideas to consider: We need some kind of estimation, even if it is not accurate.
                 //     >One idea: ask IB's historical data for those missing prices. Then price query is in one place, but we have to wait more for VBroker, and IB throttle (max n. number of queries) may cause problem, so we get data slowly.
                 //     >Betteridea: in Website, where the caching happens: ask our SQL database for those missing prices. We can ask our SQL parallel to the Vb query. No throttle is necessary. It can be very fast for the user. Prefer this now. More error proof this solution.
+                //     >add lastClosePrice anyway. So, 2 new HTML columns: LastClose, $TodayProfit could be useful, because we don't have to login to TWS every day, and can be checked on smartphone too
                 var vbReply = Utils.LoadFromJSON<List<BrAccJsonHelper>>(vbReplyStr);
-                bool isReplyNeedModification = false;
                 bool isNeedSqlDownload = false;
                 foreach (var brAccInfo in vbReply)
                 {
                     foreach (var accPos in brAccInfo.AccPoss)
                     {
-                        if (accPos["SecType"] == "STK" && Double.TryParse(accPos["EstPrice"], out double estPrice) && estPrice == 0.0)  // so a price is missing
+                        if (accPos["SecType"] == "STK")
                         {
                             if (!g_symbolsNeedLastClosePrice.Contains(accPos["Symbol"]))
                             {
@@ -201,14 +201,6 @@ namespace SQLab.Controllers
                                 if ((DateTime.UtcNow - g_LastClosePricesFetchTime).TotalHours > 12.0)
                                 {
                                     isNeedSqlDownload = true;
-                                }
-                                else
-                                {
-                                    if (g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose))
-                                    {
-                                        accPos["EstPrice"] = lastClose.ToString("0.00");
-                                        isReplyNeedModification = true;
-                                    }
                                 }
                             }
                         }
@@ -229,8 +221,13 @@ namespace SQLab.Controllers
                     g_LastClosePrices = g_symbolsNeedLastClosePrice.Select(ticker =>
                     {
                         IEnumerable<object[]> mergedRows = SqlTools.GetTickerAndBaseTickerRows(sqlReturn, ticker);
-                        var lastRow = mergedRows.Last();
-                        return new KeyValuePair<string, double>(ticker, (double)Convert.ToDecimal(lastRow[2]));
+                        var lastRow = mergedRows.LastOrDefault();
+                        double lastClosePrice = 0.0;
+                        if (lastRow != null) // it happens if "BRK B" ticker is not found in the database.
+                        {
+                            lastClosePrice = (double)Convert.ToDecimal(lastRow[2]);
+                        }
+                        return new KeyValuePair<string, double>(ticker, lastClosePrice);
                     }).ToDictionary(r => r.Key, v => v.Value);
 
                     foreach (var item in g_LastClosePrices)
@@ -239,32 +236,33 @@ namespace SQLab.Controllers
                     }
 
                     g_LastClosePricesFetchTime = DateTime.UtcNow;
+                }
 
-                    // 2. fill 0.00 prices
-                    foreach (var brAccInfo in vbReply)
+                // 2. fill LastClosePrices and missing(0.00) RT EstPrice
+                foreach (var brAccInfo in vbReply)
+                {
+                    foreach (var accPos in brAccInfo.AccPoss)
                     {
-                        foreach (var accPos in brAccInfo.AccPoss)
+                        if (g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose))
                         {
-                            if (accPos["SecType"] == "STK" && Double.TryParse(accPos["EstPrice"], out double estPrice) && estPrice == 0.0)  // so a price is missing
+                            if (accPos["SecType"] == "STK")
                             {
-                                if (g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose))
+                                accPos["LastClose"] = lastClose.ToString("0.00");
+                                if (Double.TryParse(accPos["EstPrice"], out double estPrice) && estPrice == 0.0)  // so a price is missing
                                 {
                                     accPos["EstPrice"] = lastClose.ToString("0.00");
-                                    isReplyNeedModification = true;
                                 }
                             }
                         }
                     }
                 }
 
-
-                if (isReplyNeedModification)
-                    vbReplyStr =  Utils.SaveToJSON<List<BrAccJsonHelper>>(vbReply);
+                vbReplyStr = Utils.SaveToJSON<List<BrAccJsonHelper>>(vbReply);
                 return vbReplyStr;
             }
             catch (Exception e)
             {
-                return @"{ ""Message"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }";
+                return @"{ ""Message"":  ""Exception caught by Webserver GenerateGaiResponse(): " + e.Message + @""" }";
             }
         }
      
