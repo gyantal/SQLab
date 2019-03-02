@@ -198,10 +198,10 @@ namespace SQLab.Controllers
                             }
                             else
                             {
-                                if ((DateTime.UtcNow - g_LastClosePricesFetchTime).TotalHours > 12.0)
-                                {
+                                if (!g_LastClosePrices.TryGetValue(accPos["Symbol"], out double lastClose)) // if previous was a fault, then even though g_symbolsNeedLastClosePrice contains ticker, g_LastClosePrices doesn't have it. So check again.
                                     isNeedSqlDownload = true;
-                                }
+                                if ((DateTime.UtcNow - g_LastClosePricesFetchTime).TotalHours > 12.0)
+                                    isNeedSqlDownload = true;
                             }
                         }
                     }
