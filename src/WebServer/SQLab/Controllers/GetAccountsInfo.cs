@@ -212,6 +212,7 @@ namespace SQLab.Controllers
 
                     foreach (var ticker in symbolsNeedLastClosePrice)
                     {
+                        Utils.Logger.Info($"symbolsNeedLastClosePrice processing: {ticker}");
                         IEnumerable<object[]> mergedRows = SqlTools.GetTickerAndBaseTickerRows(sqlReturn, ticker);
                         var lastRow = mergedRows.LastOrDefault();
                         if (lastRow != null) // it happens if "BRK B" ticker is not found in the database.
@@ -253,7 +254,9 @@ namespace SQLab.Controllers
             }
             catch (Exception e)
             {
-                return @"{ ""Message"":  ""Exception caught by Webserver GenerateGaiResponse(): " + e.Message + @""" }";
+                string errorMsg = $"Error.<BR> Exception caught by Webserver GenerateGaiResponse()," + e.Message.Replace(Environment.NewLine, "<BR>");
+                Utils.Logger.Error(e, "Exception caught by Webserver GenerateGaiResponse()");
+                return @"{ ""Message"": """ + errorMsg + @""" }";
             }
         }
      

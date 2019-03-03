@@ -346,9 +346,11 @@ FROM (SELECT /*TopN*/ tt.* FROM (
             await Task.WhenAll(sqls.Select(kv => ExecuteSqlQueryAsync(kv.Key, p_canc: p_canc,
                     p_params: kv.Value == null ? null : new Dictionary<string, object> { { "@p_request", kv.Value } })
                     .ContinueWith(
-                t => {
-                    // TODO: check if SQL is so wrong that there is not even 0 result; then it will be Index out of Range exception; log it to a log file too.
-                    result.AddRange(t.Result[0]);
+                t =>
+                {
+                    // It is possible that if SQL query is so wrong that there is not even 0 result; Empty result is valid.
+                    if ((t.Result != null) && (t.Result.Count != 0))
+                        result.AddRange(t.Result[0]);
                 }
                 )));
             return result;
