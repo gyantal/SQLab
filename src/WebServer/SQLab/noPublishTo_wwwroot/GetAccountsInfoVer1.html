@@ -333,6 +333,9 @@
             return function (a, b) {
                 var valA = getCellValue(a, index), valB = getCellValue(b, index)
                 // thousand separator is not handled as numeric well, remove it and see if it is a number or not.
+                // sometimes there are HTML formatting in them. Remove that. valB: "<font color="#E00000">-0.21%</font>"
+                valA = valA.replace(new RegExp("<[^>]*>", 'g'), "");        // eliminate HTML elements, like "<font color="#E00000">-0.21%</font>"
+                valB = valB.replace(new RegExp("<[^>]*>", 'g'), "");
                 valAA = valA.replace(new RegExp(",", 'g'), "").replace(new RegExp("%", 'g'), ""); // replace all with the 'g' global flag
                 valBB = valB.replace(new RegExp(",", 'g'), "").replace(new RegExp("%", 'g'), "");     
                 if ($.isNumeric(valAA))
