@@ -31,6 +31,7 @@ namespace VirtualBroker
     public class AccPos
     {
         public Contract Contract { get; set; }
+        public int FakeContractID { get; set; } // when we cannot change Contract.ConID which should be left 0, but we use an Int in the dictionary.
         public double Position { get; set; }    // in theory, position is Int (whole number) for all the examples I seen. However, IB gives back as double, just in case of a complex contract. Be prepared.
         public double AvgCost { get; set; }
         public double EstPrice { get; set; } = Double.NaN;  // MktValue can be calculated
@@ -170,23 +171,8 @@ namespace VirtualBroker
                     //If client wants RT MktValue too, collect needed RT prices (stocks, options, underlying of options, futures). Use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
                     if (isNeedEstPr)
                     {
-                        foreach (var addPrTicker in addPrInfoSymbolsArr)
-                        {
-                            // if ticker is not in the list, add it as a size = 0, cost = 0 item. If it is in the list, don't add it.
-                            bool isTickerInAnyPosList = false;
-                            foreach (var accInfo in allAccInfos)
-                            {
-                                if (accInfo.AccPoss.Exists(r =>  r.Contract.SecType == "STK" && r.Contract.Symbol == addPrTicker)) {
-                                    isTickerInAnyPosList = true;
-                                    break;
-                                }
-                            }
-                            if (!isTickerInAnyPosList) {
-                                Contract cont = VBrokerUtils.ParseSqTickerToContract(addPrTicker);
-                                allAccInfos[0].AccPoss.Add(new AccPos() { Contract = cont, Position = 0.0, AvgCost = 0.0});
-                            }
-                        }
-                        CollectEstimatedPrices(allAccInfos, isNeedOptDelta);
+                        
+                        CollectEstimatedPrices(allAccInfos, isNeedOptDelta, addPrInfoSymbolsArr);
                     }
 
                     sw2.Stop();
@@ -278,22 +264,47 @@ namespace VirtualBroker
         // >2019-03: After Market close: IB doesn't  give price for some 2-3 stocks (VXZB (only gives ask = -1, bid = -1), URE (only gives ask = 61, bid = -1), no open,low/high/last, not even previous Close price, nothing), these are the ideas to consider: We need some kind of estimation, even if it is not accurate.
         //     >One idea: ask IB's historical data for those missing prices. Then price query is in one place, but we have to wait more for VBroker, and IB throttle (max n. number of queries) may cause problem, so we get data slowly.
         //     >Betteridea: in Website, where the caching happens: ask our SQL database for those missing prices. We can ask our SQL parallel to the Vb query. No throttle is necessary. It can be very fast for the user. Prefer this now. More error proof this solution.
-        private void CollectEstimatedPrices(List<AccInfo> allAccInfos, bool p_isNeedOptDelta)
+        private void CollectEstimatedPrices(List<AccInfo> allAccInfos, bool p_isNeedOptDelta, string[] p_addPrInfoSymbolsArr)
         {
             //Position.U407941 - Symbol: VXXB, SecType: STK, Currency: USD, Position: -87, Avg cost: 21.1106586, LocalSymbol: 'VXXB'
             //Position.U407941 - Symbol: VXXB, SecType: OPT, Currency: USD, Position: 3, Avg cost: 780.35113335
             //    Option.LastTradeDate: 20181221, Right: C, Strike: 37, Multiplier: 100, LocalSymbol: 'VXXB   181221C00037000'
             // Contract.ConID is inique integer. But for options of the same underlying ConID is different, so we cannot use ConID. We have to group it by stocks.
 
+            // 1. Add p_addPrInfoSymbolsArr additional tickers to the first AccInfo positions as 0 positions
+            int ourFakeContractIdSeed = -1;
+            foreach (var addPrTicker in p_addPrInfoSymbolsArr)
+            {
+                // if ticker is not in the list, add it as a size = 0, cost = 0 item. If it is in the list, don't add it.
+                bool isTickerInAnyPosList = false;
+                foreach (var accInfo in allAccInfos)
+                {
+                    if (accInfo.AccPoss.Exists(r => r.Contract.SecType == "STK" && r.Contract.Symbol == addPrTicker))
+                    {
+                        isTickerInAnyPosList = true;
+                        break;
+                    }
+                }
+                if (!isTickerInAnyPosList)
+                {
+                    Contract cont = VBrokerUtils.ParseSqTickerToContract(addPrTicker);
+                    // generate mockup ConID, because we will differentiate them later by this. IB uses only big positive values, we can use negative.
+                    allAccInfos[0].AccPoss.Add(new AccPos() { Contract = cont, FakeContractID = ourFakeContractIdSeed--, Position = 0.0, AvgCost = 0.0 });
+                }
+            }
+
+            // 2. Create knownConIds dictionary that aggregates all Broker Accounts (so if QQQ is in all 3 of them, only once is queried for price)
             Dictionary<int, List<AccPos>> knownConIds = new Dictionary<int, List<AccPos>>();    // ContracdId to AccPos list.
             foreach (var accInfo in allAccInfos)
             {
                 foreach (var pos in accInfo.AccPoss)
                 {
-
-                    if (!knownConIds.TryGetValue(pos.Contract.ConId, out List<AccPos> poss))
+                    int conId = pos.Contract.ConId;
+                    if (conId == 0)
+                        conId = pos.FakeContractID;
+                    if (!knownConIds.TryGetValue(conId, out List<AccPos> poss))
                     {
-                        knownConIds[pos.Contract.ConId] = new List<AccPos>() { pos };
+                        knownConIds[conId] = new List<AccPos>() { pos };
                     }
                     else
                     {
@@ -302,20 +313,20 @@ namespace VirtualBroker
                 }
             }
 
-            int ourFakeContractId = -1;
+            // 3. If it is an option, and the underlying is still not present, add it for price query. 
             foreach (var accInfo in allAccInfos)
             {
-                foreach (var pos in accInfo.AccPoss)
+                foreach (var optPos in accInfo.AccPoss)
                 {
-                    if (pos.Contract.SecType == "OPT")      // can be option on stocks or option on futures (VIX)
+                    if (optPos.Contract.SecType == "OPT")      // can be option on stocks or option on futures (VIX)
                     {
-                        string underlyingSymbol = pos.Contract.Symbol;
+                        string underlyingSymbol = optPos.Contract.Symbol;
                         // search for underlying's in knownConIds, if not found create it and put it into the list.
                         // Now, we only handle options on Stocks, not options on VIX futures. For VIX futures options we will return UnderlyingEstPrice = 0. Fine, now.
                         var underlyingDictItem = knownConIds.FirstOrDefault(r => r.Value[0].Contract.SecType == "STK" && r.Value[0].Contract.Symbol == underlyingSymbol);
                         if (underlyingDictItem.Value != null)   // The FirstOrDefault method returns a KeyValuePair<string, int> which is a value type, so it cannot ever be null.
                         {   // we have found the underlying stock behind the option
-                            pos.UnderlyingDictItem = underlyingDictItem;
+                            optPos.UnderlyingDictItem = underlyingDictItem;
                         }
                         else
                         {   // create a new KeyValuePair in knownConIds, so later RtPrice should be queried for that too
@@ -326,8 +337,8 @@ namespace VirtualBroker
                                 contractUnd.Exchange = "BASKET";
 
                             List<AccPos> poss = new List<AccPos>() { new AccPos() { Contract = contractUnd, Position = 0, AvgCost = 0 } };
-                            knownConIds[ourFakeContractId] = poss;
-                            pos.UnderlyingDictItem = new KeyValuePair<int, List<AccPos>>(ourFakeContractId--, poss);
+                            knownConIds[ourFakeContractIdSeed] = poss;
+                            optPos.UnderlyingDictItem = new KeyValuePair<int, List<AccPos>>(ourFakeContractIdSeed--, poss);
                         }
                     }
 
