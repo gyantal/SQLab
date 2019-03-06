@@ -286,7 +286,7 @@ namespace VirtualBroker
             Array.Reverse(charArray);
             string securityTokenVer2 = new string(charArray);
 
-            string msg = $"?v=1&secTok={securityTokenVer2}&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF";
+            string msg = $"?v=1&secTok={securityTokenVer2}&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF&addPrInfoSymbols=QQQ,SPY,TLT,VXXB,UNG";
             string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetAccountsInfo, VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener, VirtualBrokerMessage.DefaultVirtualBrokerServerPort).Result;  // it is a Test inside VBroker server, so use Private IP, not public IP
 
             Console.WriteLine($"GetAccountsSummaryOrPositions returned: '{reply}'");

@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Br.Acc.Info,v1.0</title>
-    <link rel="icon" href="data:,"> <!--to prevent favicon.ico requests-->
+      <link rel="icon" href="data:,"> <!--to prevent favicon.ico requests-->
 
     <link rel="stylesheet" type="text/css" href="/css/SQStudiesList.css">
     <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
@@ -17,10 +16,16 @@
 </head>
 <body>
     <h1>IntBrokers Accounts Info (<span id="idBrAccounts"></span>),v1.0 <font size="1" color=#FF0000><a href="ForceReloadUrlToBeReplaced"><span title="Force-Refresh: Disable website cached values."><b>
-    <img src="/images/Refresh64.png" height="20" width="20" align="top" /></b></span></a></font></h1>
-    <small>Data timestamp (UTC): <font size="4" color=#0000FF><b><span id="idTimestamp"></b></span> </font> </small>, 
+    <img src="/images/Refresh64.png" height="20" width="20" align="top" /></b></span></a></font>
+    <font size="1" color=#000000><span id="idTimestamp"></span></font></h1>
     <font size="5" color=#FF0000><b><span id="idMessageFromWebserverIfAny"></span></b></font>
-    IB Total NetLiquidation (with cash): <font size="4"><b><span id="idTotalNetLiquidation"></span></b></font><br>
+    <span id="idDashboard"></span>
+    <hr>
+    <span style="font: x-large sans-serif">P&L Today: 
+        <font size="4"><b><span id="idTotalPLToday"></span> (<span id="idTotalPLTodayPct"></span>%)</b></font>
+    </span>
+    , <span style="font: x-large sans-serif">NAV:</span> IB Total NetLiquidation (with cash): 
+        <font size="4"><b><span id="idTotalNetLiquidation"></span></b></font><br>
     IB Total Cash: <span id="idTotalCash"></span>/
     IB Initial MarginReq: <span id="idTotalInitMarginReq"></span>/
     IB Maintenance MarginReq: <span id="idTotalMaintMarginReq"></span>/
@@ -43,9 +48,7 @@
         <font size="4" color=#0000FF><b><span id="idBetaDeltaAdjTotalMarketOrientation"></span></b></font>
         <font size="2" color=#0000FF> (Leverage: <b><span id="idBetaDeltaAdjTotalMarketOrientationLeverage"></span></b>)</font>
     </span><br>
-    <span style="font: x-large sans-serif">P&L Today: 
-        <font size="4" color=#0000FF><b><span id="idTotalPLToday"></span></b></font>
-    </span><br>
+ 
 
     <hr>
     <table id="idPosTable">
@@ -79,27 +82,35 @@
         "TLT": -0.50/1.18, "TMF": 3*-0.50/1.18, "TIP": -0.06/1.18, "USO": 0.83/1.18, "UWT": 1.87/1.18, "UNG": 0.23/1.18, "UGAZ": 3*0.23/1.18,                            // HL hedges
         "PM": 0.62/1.18 };     // it is QQQ Beta, not SPY beta                // companies
 
-        brAccounts = "", timestamps = "";
+        brAccounts = "", timestamps = "", pageTitle = "";
         totalNetLiquidation = 0.0, totalCash = 0.0, totalInitMarginReq = 0.0, totalMaintMarginReq = 0.0, totalGrossPosValue = 0.0;
         longStockValue = 0.0, shortStockValue = 0.0;
         deltaAdjLongOptionValue = 0.0, deltaAdjShortOptionValue = 0.0;
         totalMaxRiskedN = 0.0;
         betaDeltaAdjTotalMarketOrientationN = 0.0;
         totalPLTodayN = 0.0;
-        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>Cost &#8661;</th><th>Last<br/>Close &#8661;</th><th>EstPrice &#8661;</th><th>P&L &#8661;<br/>Today</th><th>P&L &#8661;</th><th>MktVal &#8661;</th><th>Est &#8661;<br/>UndPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>Deliv<br/>Value &#8661;</th><th>DltAdj &#8661;<br/>DelivVal</th><th title=\"Guessed Beta (QQQ, 1 month)\">gBeta &#8661;</th><th id=\"idThBetaDltAdjMktOriVal\">BetaDltAdj &#8661;<br/>MktOriVal</th><th>Acc &#8661;</th></tr>";
+        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>Cost &#8661;</th><th>Last<br/>Close &#8661;</th><th>Est &#8661;<br/>Price</th><th>Chg%<br/>Today &#8661;</th><th>P&L &#8661;<br/>Today</th><th>P&L &#8661;</th><th>MktVal &#8661;</th><th>Est &#8661;<br/>UndPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>Deliv<br/>Value &#8661;</th><th>DltAdj &#8661;<br/>DelivVal</th><th title=\"Guessed Beta (QQQ, 1 month)\">gBeta &#8661;</th><th id=\"idThBetaDltAdjMktOriVal\">BetaDltAdj &#8661;<br/>MktOriVal</th><th>Acc &#8661;</th></tr>";
         for (i in accInfos) {
             if (i == "Message") {
-                document.getElementById("idMessageFromWebserverIfAny").innerHTML = accInfos[i];
+                document.getElementById("idMessageFromWebserverIfAny").innerHTML = accInfos[i] + "<br/><br/>";
                 if (accInfos[i].startsWith("Error"))    // if Message is a Warning or Info, process it. If it is an Error, don't process it further.
                     break;
             } else {
                 if (i != 0) {
-                    brAccounts += ", ";
-                    timestamps += ", ";
+                    brAccounts += ",";
+                    pageTitle += ",";
+                    timestamps += ",";
                 }
+
                 brAccounts += accInfos[i].BrAcc;
+                pageTitle += (accInfos[i].BrAcc.length > 2) ? accInfos[i].BrAcc.substr(0, 2) : accInfos[i].BrAcc; 
                 //timestamps += accInfos[i].Timestamp.replace('T', ' &nbsp ').replace('Z', '');
-                timestamps += accInfos[i].Timestamp.replace(/^.*T/, "").replace('Z', '');
+
+                timestampDate = new Date(accInfos[i].Timestamp);
+                timeAgoMsec = Date.now() - timestampDate;     // number of milliseconds
+                timeAgoMin = round(timeAgoMsec / (1000 * 60));
+                //timestamps += accInfos[i].Timestamp.replace(/^.*T/, "").replace('Z', '') + "(" + timeAgoMin.toLocaleString(undefined, { maximumFractionDigits: 0 }) + "min ago)";
+                timestamps += timestampDate.getHours() + ":" + timestampDate.getMinutes()  + "(" + timeAgoMin.toLocaleString(undefined, { maximumFractionDigits: 0 }) + "min ago)";
             }
 
             accSums = accInfos[i].AccSums;
@@ -119,33 +130,43 @@
 
             for (k in accPoss) {
                 accPos = accPoss[k];
+                posN = Number(accPos.Pos);          // postfix N means Number type
+                if (posN == 0)  // addPrInfoSymbols extra symbols. Calculate chgPctTodayStr for them too, but further calculation is not needed
+                    continue;
                 if (accPos.Symbol == "VIX")      // we just don't want to see these. Not interested. Ignore it even from the table. Later, there could be a UI radiobox for this.
                     continue;
 
-                localSymbol = "", estUnderyingPrice = "", ibComputedUndPrice = "", ibComputedDelta = "", deliveryValue = "", deltaAdjDeliveryValue = "";
-                guessedBetaN = 1.0;
-                betaDeltaAdjMktOrValN = NaN;
+                localSymbol = "", estUnderyingPrice = "", ibComputedUndPrice = "", ibComputedDelta = "", deliveryValue = "",  deliveryValueN = 0, deltaAdjDeliveryValue = "", deltaAdjDeliveryValueN = NaN;
+                guessedBetaN = 1.0, betaDeltaAdjMktOrValN = NaN;
                 estUnderyingPriceNum = 0.0, ibComputedUndPriceNum = 0.0;
-                posN = Number(accPos.Pos);          // postfix N means Number type
+
+                
                 mktValueN = round(posN * Number(accPos.EstPrice));
-                deliveryValueN = 0;
-                deltaAdjDeliveryValueN = NaN;
+                var guessedBetaN = (accPos.Symbol in betaArr) ? betaArr[accPos.Symbol] : 1.0;
 
-                if (accPos.Symbol in betaArr)
-                    guessedBetaN = betaArr[accPos.Symbol];
 
-                if (accPos.SecType == "STK")
+                if (accPos.SecType == "STK") {
+                    chgPctTodayN = round((Number(accPos.EstPrice) / Number(accPos.LastClose) - 1) * 10000.0) / 100.0;
+                    if (chgPctTodayN > 0)
+                        chgPctTodayStr = isNaN(chgPctTodayN) ? "" : "<font color=#005000>+" + chgPctTodayN.toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%</font>";
+                    else
+                        chgPctTodayStr = isNaN(chgPctTodayN) ? "" : "<font color=#E00000>" + chgPctTodayN.toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%</font>";
+
+                    plTodayN = round(posN * (Number(accPos.EstPrice) - Number(accPos.LastClose)));
+
                     if (mktValueN > 0)
                         longStockValue += mktValueN;
                     else if (mktValueN < 0)  // so NaN is not added to any of them.
                         shortStockValue += mktValueN;
-
-                avgCost = accPos.AvgCost;
-                plN = round(posN * (Number(accPos.EstPrice) - Number(avgCost)));
-                if (accPos.SecType == "STK")
-                    plTodayN = round(posN * (Number(accPos.EstPrice) - Number(accPos.LastClose)));
-                else
+                }
+                else {  // Options
+                    chgPctTodayN = Number.NaN;
+                    chgPctTodayStr = "";
                     plTodayN = 0.0; // for options, we don't know lastClosePrice, therefore cannot calculate P&L today
+                }
+                    
+                plN = round(posN * (Number(accPos.EstPrice) - Number(accPos.AvgCost)));
+                       
 
                 if (accPos.hasOwnProperty('LocalSymbol')) {
                     localSymbol = accPos.LocalSymbol;
@@ -197,30 +218,68 @@
                     totalPLTodayN += plTodayN;
 
                 rowClass = "";
-                if (plN > 3000) // if profit is bigger than 3K
+                if (mktValueN > 10000 || mktValueN < -10000) // if profit is bigger than 3K
                     rowClass = " class=\"secpri\"";
                 if (accPos.EstPrice == 0.0) // if price is probably erroneous
                     rowClass += " bgcolor=\"#FF0000\" title=\"Likely error in price\"";
 
                 deltaAdjDeliveryValue = isNaN(deltaAdjDeliveryValueN) ? "" : deltaAdjDeliveryValueN.toLocaleString(undefined, { maximumFractionDigits: 0 });
                 betaDeltaAdjMktOrVal =  isNaN(betaDeltaAdjMktOrValN) ? "": betaDeltaAdjMktOrValN.toLocaleString(undefined, { maximumFractionDigits: 0 });
-                brAccStr = (accInfos[i].BrAcc.length > 3) ? accInfos[i].BrAcc.substr(0, 3) : accInfos[i].BrAcc;
+                brAccStr = (accInfos[i].BrAcc.length > 3) ? accInfos[i].BrAcc.substr(0, 3) : accInfos[i].BrAcc;                
 
-                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + avgCost + "</td><td>"
-                    + accPos.LastClose + "</td><td>" + accPos.EstPrice + "</td><td>"
+                
+                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + accPos.AvgCost + "</td><td>"
+                    + accPos.LastClose + "</td><td>" + accPos.EstPrice + "</td><td>"                        
+                    + chgPctTodayStr + "</td><td>"
                     + plTodayN.toLocaleString() + "</td><td>" + plN.toLocaleString() + "</td><td>" + mktValueN.toLocaleString() + "</td><td>" + estUnderyingPrice + "</td><td>" + ibComputedUndPrice + "</td><td>"
                     + ibComputedDelta + "</td><td>" + deliveryValue + "</td><td>" + deltaAdjDeliveryValue + "</td><td>"
-                    + round(guessedBetaN*100)/100 + "</td><td>" + betaDeltaAdjMktOrVal + "</td><td>" +  brAccStr + "</td></tr>";
+                    + round(guessedBetaN * 100) / 100 + "</td><td>" + betaDeltaAdjMktOrVal + "</td><td>" + brAccStr + "</td></tr>";
                 //if (accPos.Symbol == "NetLiquidation")
                 //    totalNetLiquidation += Number(accPos.Value);
             }
 
         }
 
+        dashboardStr = "Dashboard: ";
+        const urlParams = new URLSearchParams(window.location.search);
+        var dashboardTickerArr = urlParams.get('addPrInfoSymbols').split(',');
+        for (iT in dashboardTickerArr) {
+            ticker = dashboardTickerArr[iT];
+            dashboardStr += ticker + ":";
 
+            foundAccPos = null;
+            for (i in accInfos) {
+                accPoss = accInfos[i].AccPoss;
+                for (k in accPoss) {
+                    accPos = accPoss[k];
+                    if (accPos.SecType == "STK" && accPos.Symbol == ticker)
+                    {
+                        foundAccPos = accPos;
+                        break;
+                    }
+                }
+                if (foundAccPos != null)
+                break;
+            }
+
+            if (foundAccPos != null) {
+                chgPctTodayN = round((Number(foundAccPos.EstPrice) / Number(foundAccPos.LastClose) - 1) * 10000.0) / 100.0;
+                if (chgPctTodayN > 0)
+                    chgPctTodayStr = isNaN(chgPctTodayN) ? "" : "<font color=#005000>+" + chgPctTodayN.toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%</font>";
+                else
+                    chgPctTodayStr = isNaN(chgPctTodayN) ? "" : "<font color=#E00000>" + chgPctTodayN.toLocaleString(undefined, { maximumFractionDigits: 2 }) + "%</font>";
+
+                dashboardStr += chgPctTodayStr + ",";
+            }
+    }
+
+
+        document.title = "Br.Acc.Inf:" + pageTitle;
 
         document.getElementById("idBrAccounts").innerHTML = brAccounts;
         document.getElementById("idTimestamp").innerHTML = timestamps;
+
+        document.getElementById("idDashboard").innerHTML = dashboardStr;
 
         document.getElementById("idTotalNetLiquidation").innerHTML = round(totalNetLiquidation).toLocaleString();
         document.getElementById("idTotalCash").innerHTML = round(totalCash).toLocaleString();
@@ -247,16 +306,20 @@
         else
             document.getElementById("idBetaDeltaAdjTotalMarketOrientationLeverage").innerHTML = "";
 
-    if (totalPLTodayN > 0)
-        document.getElementById("idTotalPLToday").innerHTML = "<font color=#00FF00>+" + round(totalPLTodayN).toLocaleString() + "</font>";
-    else
-        document.getElementById("idTotalPLToday").innerHTML = "<font color=#FF0000>" + round(totalPLTodayN).toLocaleString() + "</font>";
+        totalPLTodayPctN = round(totalPLTodayN / totalNetLiquidation * 10000.0) / 100.0;
+        totalPLTodayPctStr = Number.isNaN(totalPLTodayPctN) ? "" : totalPLTodayPctN.toLocaleString();
+        if (totalPLTodayN > 0) {
+            document.getElementById("idTotalPLToday").innerHTML = "<font color=#00FF00>+" + round(totalPLTodayN).toLocaleString() + "</font>";
+            document.getElementById("idTotalPLTodayPct").innerHTML = "<font color=#00FF00>+" + totalPLTodayPctStr + "</font>";
+        }
+        else {
+            document.getElementById("idTotalPLToday").innerHTML = "<font color=#FF0000>" + round(totalPLTodayN).toLocaleString() + "</font>";
+            document.getElementById("idTotalPLTodayPct").innerHTML = "<font color=#FF0000>" + totalPLTodayPctStr + "</font>";
+        }
 
-    document.getElementById("idPosTable").innerHTML = posTableInner;
+        document.getElementById("idPosTable").innerHTML = posTableInner;
         document.getElementById("idDebugInfoPre").innerHTML = JSON.stringify(accInfos);
-
-
-
+                
 
         console.log("Script in Body2.");
         $('th').click(function () {  // need for table header click sorting
@@ -270,7 +333,8 @@
             return function (a, b) {
                 var valA = getCellValue(a, index), valB = getCellValue(b, index)
                 // thousand separator is not handled as numeric well, remove it and see if it is a number or not.
-                valAA = valA.replace(new RegExp(",", 'g'), ""), valBB = valB.replace(new RegExp(",", 'g'), "");     // replace all with the 'g' global flag
+                valAA = valA.replace(new RegExp(",", 'g'), "").replace(new RegExp("%", 'g'), ""); // replace all with the 'g' global flag
+                valBB = valB.replace(new RegExp(",", 'g'), "").replace(new RegExp("%", 'g'), "");     
                 if ($.isNumeric(valAA))
                     valA = valAA;
                 if ($.isNumeric(valBB))

@@ -54,7 +54,7 @@ namespace VirtualBroker
     public partial class GatewaysWatcher
     {
 
-        //$"?v=1&secTok={securityTokenVer2}&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF";
+        //$"?v=1&secTok={securityTokenVer2}&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF&addPrInfoSymbols=QQQ,SPY,TLT,VXXB,UNG";
         public string GetAccountsInfo(string p_input)     
         {
             Utils.Logger.Info($"GetAccountsInfo() START with parameter '{p_input}'");
@@ -72,7 +72,7 @@ namespace VirtualBroker
             // 4. Fill LastPrice, LastUnderlyingPrice in all AccPos for all ibGateways. (Alternatively Calculate the MktValue, DelivValue, but better to just pass the raw data to client)
 
             var queryDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(p_input);     // in .NET core, this is the standard for manipulating queries
-            string verQ, secTokQ, bAccQ, dataQ, exclSymbolsQ;
+            string verQ, secTokQ, bAccQ, dataQ, exclSymbolsQ, addPrInfoSymbolsQ;
             try
             {
                 verQ = queryDict["v"];      // it is case sensitive and will throw Exception if not found, but it is fine, it is quick and sure
@@ -80,6 +80,7 @@ namespace VirtualBroker
                 bAccQ = queryDict["bAcc"];
                 dataQ = queryDict["data"];
                 exclSymbolsQ = queryDict["posExclSymbols"];
+                addPrInfoSymbolsQ = queryDict["addPrInfoSymbols"];
             }
             catch (Exception e)
             {
@@ -108,6 +109,7 @@ namespace VirtualBroker
             bool isNeedOptDelta = dataArr.Contains("OptDelta");
 
             string[] exclSymbolsArr = exclSymbolsQ.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] addPrInfoSymbolsArr = addPrInfoSymbolsQ.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
      
             var allAccInfos = new List<AccInfo>();
             string[] bAccArr = bAccQ.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -134,7 +136,7 @@ namespace VirtualBroker
                 allAccInfos.Add(accSumPos);
             }
 
-            Task task1 = Task.Run(() =>
+            Task taskAccSum = Task.Run(() =>
             {
                 try
                 {
@@ -154,7 +156,7 @@ namespace VirtualBroker
                 }
             });
 
-            Task task2 = Task.Run(() =>
+            Task taskAccPos = Task.Run(() =>
             {
                 try
                 {
@@ -167,7 +169,25 @@ namespace VirtualBroker
                     });
                     //If client wants RT MktValue too, collect needed RT prices (stocks, options, underlying of options, futures). Use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
                     if (isNeedEstPr)
+                    {
+                        foreach (var addPrTicker in addPrInfoSymbolsArr)
+                        {
+                            // if ticker is not in the list, add it as a size = 0, cost = 0 item. If it is in the list, don't add it.
+                            bool isTickerInAnyPosList = false;
+                            foreach (var accInfo in allAccInfos)
+                            {
+                                if (accInfo.AccPoss.Exists(r =>  r.Contract.SecType == "STK" && r.Contract.Symbol == addPrTicker)) {
+                                    isTickerInAnyPosList = true;
+                                    break;
+                                }
+                            }
+                            if (!isTickerInAnyPosList) {
+                                Contract cont = VBrokerUtils.ParseSqTickerToContract(addPrTicker);
+                                allAccInfos[0].AccPoss.Add(new AccPos() { Contract = cont, Position = 0.0, AvgCost = 0.0});
+                            }
+                        }
                         CollectEstimatedPrices(allAccInfos, isNeedOptDelta);
+                    }
 
                     sw2.Stop();
                     Console.WriteLine($"GetAccountsInfo()-AllUser_AccPos_WithEstPrices ends with CancelMktData() in {sw2.ElapsedMilliseconds}ms, Thread Id= {Thread.CurrentThread.ManagedThreadId}");
@@ -180,7 +200,7 @@ namespace VirtualBroker
 
 
             Stopwatch sw = Stopwatch.StartNew();
-            Task.WaitAll(task1, task2);     // AccountSummary() task takes 280msec in local development. (ReqAccountSummary(): 280msec, ReqPositions(): 50msec)
+            Task.WaitAll(taskAccSum, taskAccPos);     // AccountSummary() task takes 280msec in local development. (ReqAccountSummary(): 280msec, ReqPositions(): 50msec)
             sw.Stop();
             Console.WriteLine($"GetAccountsInfo() ends in {sw.ElapsedMilliseconds}ms, Thread Id= {Thread.CurrentThread.ManagedThreadId}");
 

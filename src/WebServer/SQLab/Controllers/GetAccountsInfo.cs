@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 
@@ -35,6 +36,9 @@ namespace SQLab.Controllers
         //If we want faster user feedback, Webserver should cache, approximate it, and later update the user-website.
         static Dictionary<string, Tuple<DateTime, string>> g_dataCache = new Dictionary<string, Tuple<DateTime, string>>() {     };
 
+
+        private static readonly SemaphoreSlim g_generateGaiResponseSemaphore = new SemaphoreSlim(1); 
+        
         static Dictionary<string, DailyData> g_LastClosePrices = new Dictionary<string, DailyData>() {  };
         
 
@@ -94,8 +98,6 @@ namespace SQLab.Controllers
 
 
             Tuple<DateTime, string> cacheData = null;
-            //if (cacheFlagsStr != "ClearWebsiteCache")     // it is not necessary. If there is no "&cache=" part that means, we don't want to allow cache usage.
-            //{
             if (g_dataCache.TryGetValue(queryStrWithoutCacheFlags, out cacheData))
                 {
                     bool isCacheDataAllowed = false;
@@ -118,7 +120,6 @@ namespace SQLab.Controllers
                     if (!isCacheDataAllowed)
                         cacheData = null;
                 }
-            //}
 
             if (cacheData == null)
             {
@@ -138,8 +139,14 @@ namespace SQLab.Controllers
             return Content(result, "text/html");
         }
 
+
         public static async Task<string> GenerateGaiResponse(string p_queryString)  // ?d=MTS&bAcc=Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF
         {
+            //Monitor.Enter(g_generateGaiResponseSyncObj);       // it can be fine tuned later, but for a while, this is what lock() uses. Better than the Mutex. http://www.albahari.com/threading/part2.aspx
+            // You can't await a task inside a lock scope (which is syntactic sugar for Monitor.Enter and Monitor.Exit). Using a Monitor directly will fool the compiler but not the framework.
+            //async-await has no thread-affinity like a Monitor does. The code after the await will probably run in a different thread than the code before it. Which means that the thread that releases the Monitor isn't necessarily the one that acquired it.
+            // Either don't use async-await in this case, or use a different synchronization construct like SemaphoreSlim or an AsyncLock you can build yourself.
+            await g_generateGaiResponseSemaphore.WaitAsync();
             try
             {
 
@@ -163,12 +170,11 @@ namespace SQLab.Controllers
                 var queryStr = qb.ToQueryString();  // it contains the prefix '?'
 
 
-
                 Utils.Logger.Info($"GetAccountsInfo.GenerateGaiResponse(). Sending to VBroker: '?{queryStr}'");
 
                 string vbServerIp = String.Equals(destinationServ, "MTS", StringComparison.InvariantCultureIgnoreCase) ? VirtualBrokerMessage.MtsVirtualBrokerServerPublicIpForClients : VirtualBrokerMessage.AtsVirtualBrokerServerPublicIpForClients;
                 Task<string> vbMessageTask = VirtualBrokerMessage.Send(queryStr.ToString(), VirtualBrokerMessageID.GetAccountsInfo, vbServerIp, VirtualBrokerMessage.DefaultVirtualBrokerServerPort);
-                string vbReplyStr = (await vbMessageTask).Replace("\\\"", "\"");
+                string vbReplyStr = (await vbMessageTask);
                 if (vbMessageTask.Exception != null || String.IsNullOrEmpty(vbReplyStr))
                 {
                     string errorMsg = $"Error.<BR> Check that both the IB's TWS and the VirtualBroker are running on Manual Trading Server! Start them manually if needed!";
@@ -176,6 +182,8 @@ namespace SQLab.Controllers
                     return @"{ ""Message"": """ + errorMsg + @""" }";
                 }
                 Utils.Logger.Info($"GetAccountsInfo.GenerateGaiResponse(). Received '{vbReplyStr}'");
+
+                vbReplyStr = vbReplyStr.Replace("\\\"", "\"");
 
                 // 2019-03: After Market close: IB doesn't  give price for some 2-3 stocks (VXZB (only gives ask = -1, bid = -1), URE (only gives ask = 61, bid = -1), no open,low/high/last, not even previous Close price, nothing), these are the ideas to consider: We need some kind of estimation, even if it is not accurate.
                 //     >One idea: ask IB's historical data for those missing prices. Then price query is in one place, but we have to wait more for VBroker, and IB throttle (max n. number of queries) may cause problem, so we get data slowly.
@@ -228,6 +236,7 @@ namespace SQLab.Controllers
                     }
 
                 }
+                
 
                 // 2. fill LastClosePrices and missing(0.00) RT EstPrice
                 foreach (var brAccInfo in vbReply)
@@ -257,6 +266,10 @@ namespace SQLab.Controllers
                 string errorMsg = $"Error.<BR> Exception caught by Webserver GenerateGaiResponse()," + e.Message.Replace(Environment.NewLine, "<BR>");
                 Utils.Logger.Error(e, "Exception caught by Webserver GenerateGaiResponse()");
                 return @"{ ""Message"": """ + errorMsg + @""" }";
+            }
+            finally
+            {
+                g_generateGaiResponseSemaphore.Release();
             }
         }
      
