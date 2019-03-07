@@ -89,7 +89,7 @@
         totalMaxRiskedN = 0.0;
         betaDeltaAdjTotalMarketOrientationN = 0.0;
         totalPLTodayN = 0.0;
-        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>Cost &#8661;</th><th>Last<br/>Close &#8661;</th><th>Est &#8661;<br/>Price</th><th>Chg%<br/>Today &#8661;</th><th>P&L &#8661;<br/>Today</th><th>P&L &#8661;</th><th>MktVal &#8661;</th><th>Est &#8661;<br/>UndPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>Deliv<br/>Value &#8661;</th><th>DltAdj &#8661;<br/>DelivVal</th><th title=\"Guessed Beta (QQQ, 1 month)\">gBeta &#8661;</th><th id=\"idThBetaDltAdjMktOriVal\">BetaDltAdj &#8661;<br/>MktOriVal</th><th>Acc &#8661;</th></tr>";
+        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>Cost &#8661;</th><th>Last<br/>Close &#8661;</th><th>Est &#8661;<br/>Price</th><th>Chg%<br/>Today &#8661;</th><th  id=\"idThPlToday\">P&L &#8661;<br/>Today</th><th>P&L &#8661;</th><th>MktVal &#8661;</th><th>Est &#8661;<br/>UndPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>Deliv<br/>Value &#8661;</th><th>DltAdj &#8661;<br/>DelivVal</th><th title=\"Guessed Beta (QQQ, 1 month)\">gBeta &#8661;</th><th id=\"idThBetaDltAdjMktOriVal\">BetaDltAdj &#8661;<br/>MktOriVal</th><th>Acc &#8661;</th></tr>";
         for (i in accInfos) {
             if (i == "Message") {
                 document.getElementById("idMessageFromWebserverIfAny").innerHTML = accInfos[i] + "<br/><br/>";
@@ -347,10 +347,10 @@
         }
         function getCellValue(row, index) { return $(row).children('td').eq(index).html() }
 
-        // order them by default (Symbol alphabet or MktCap or best: by BullishnessOrientation.)
-        var tableHeadOfOrdering = document.getElementById("idThBetaDltAdjMktOriVal");
-        tableHeadOfOrdering.click();
-        tableHeadOfOrdering.click();
+        // order them by default (Symbol alphabet or MktCap or BullishnessOrientation, or best: by P&L $ Today (in practice that is the most important, which one is the lossmaker today).)
+        var tableHeadOfOrdering = document.getElementById("idThPlToday");
+        tableHeadOfOrdering.click();    // if ordering once the most negative will be the first. Ascending order.
+        //tableHeadOfOrdering.click();  // if ordering twice the most positive will be the first. Descending order.
         console.log("Body is running...");
     </script>
 

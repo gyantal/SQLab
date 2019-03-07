@@ -1,0 +1,7 @@
+- 'Embed TypeScript code in an HTML document'? Directly: not possible.
+>https://github.com/Microsoft/TypeScript/issues/12874
+"One way to do this would be to support a .tshtml file format (or possibly .tml or .ts.html)."
+>https://stackoverflow.com/questions/14015899/embed-typescript-code-in-an-html-document
+"It's possible if you use a run-time compiler, but why in the world would you want to? TypeScript is designed to compile to JavaScript, and translating it at run-time will give you a performance hit."
+Agy: OK. Better to offline translate it the JS. Sure. Then, webserver should embed that JS to the HTML into a script tag. That way, there is only 1 round-trip.
+>So, next time: instead of JS code, write TS code into separate file, but Webserver should compose it into the HTML.
