@@ -212,20 +212,20 @@ namespace SQLab.Controllers
                 {
                     // we download data now and wait here, because in that case user always get a proper data (just at first time it is slower)
                     // 1. download data 
-                    DateTime endDateUtc = DateTime.UtcNow.Date.AddDays(-1);
-                    DateTime startDateUtc = endDateUtc.AddDays(-6);     // what if 3 days holidays weekend. So, go back 6 days.
-                    var sqlReturnTask = SqlTools.GetHistQuotesAsync(startDateUtc, endDateUtc, symbolsNeedLastClosePrice, QuoteRequest.TDC);
+                    var sqlReturnTask = SqlTools.GetLastQuotesAsync(symbolsNeedLastClosePrice, QuoteRequest.TDC);
                     var sqlReturnData = await sqlReturnTask;
                     var sqlReturn = sqlReturnData.Item1;
 
                     foreach (var ticker in symbolsNeedLastClosePrice)
                     {
                         Utils.Logger.Info($"symbolsNeedLastClosePrice processing: {ticker}");
-                        IEnumerable<object[]> mergedRows = SqlTools.GetTickerAndBaseTickerRows(sqlReturn, ticker);
-                        var lastRow = mergedRows.LastOrDefault();
-                        if (lastRow != null) // it happens if "BRK B" ticker is not found in the database.
+
+                        var tickerRow = sqlReturn.FirstOrDefault(r => (string)r[1] == ticker);
+                        if (tickerRow != null) // it happens if "BRK B" ticker is not found in the database.
                         {
-                            double lastClosePrice = (double)Convert.ToDecimal(lastRow[2]);
+                            // int stockID = Convert.ToInt32(tickerRow[0]);
+                            // DateTime lastClosePriceDate = Convert.ToDateTime(tickerRow[2]);
+                            double lastClosePrice = (double)Convert.ToDecimal(tickerRow[3]);
                             g_LastClosePrices[ticker] = new DailyData() { Date = DateTime.UtcNow, AdjClosePrice = lastClosePrice };
                         }
                     }

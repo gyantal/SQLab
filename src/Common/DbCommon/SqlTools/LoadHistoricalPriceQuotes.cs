@@ -115,9 +115,94 @@ namespace DbCommon
         }
 #endif
 
+        public static async Task<Tuple<List<object[]>, TimeSpan>> GetLastQuotesAsync(List<string> p_tickers, ushort p_sqlReturnedColumns)
+        {
+            // TODO: at the moment: just last ClosePrice (not other prices). Later use p_sqlReturnedColumns
+            // TODO: at the moment: just non-adjusted price. What if there was a split over the weekend. That splitadjustment is not handled yet. 
+            // TODO: at the moment: only stocks handled. Indices not.
+            Utils.Logger.Info($"GetLastQuotesAsync() START (p_tickers.Count:{p_tickers.Count}), ('{ string.Join(",", p_tickers)}')");
+            List<string> stockTickers = p_tickers.Where(r => !r.StartsWith("^")).ToList();
+            Stopwatch stopWatch = Stopwatch.StartNew();
+
+            Task<IList<object[]>> stocksSqlReturnTask = null;
+            IList<object[]> stocksSqlReturn = null;
+            if (stockTickers.Count != 0)
+                stocksSqlReturnTask = SqlTools.LoadLastQuotesAsync(stockTickers, DbCommon.AssetType.Stock); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+
+            if (stockTickers.Count != 0)
+                stocksSqlReturn = await stocksSqlReturnTask;
+            stopWatch.Stop();
+            TimeSpan historicalQueryTimeSpan = stopWatch.Elapsed;
+
+            List<object[]> sqlReturn = null;
+            if (stocksSqlReturn != null)
+                sqlReturn = stocksSqlReturn.ToList();   // the return is a List() already if you look deeper in the implementation
+
+            return new Tuple<List<object[]>, TimeSpan>(sqlReturn, historicalQueryTimeSpan);
+        }
+
+// SQL command variations without the WHERE Alive and Ticker in filter.
+// //// 1.  Inner Join is the Stock.
+// SELECT * FROM StockQuote v1		
+// INNER JOIN (SELECT * FROM Stock t
+//         INNER JOIN (SELECT StockID, MAX(Date) AS MaxDate
+//                         FROM StockQuote
+//                         GROUP BY StockID) q
+// 		ON t.ID = q.StockID) v2
+// 	ON v1.StockID = v2.ID AND v1.Date = MaxDate
+// // SLOW: 6:49sec.
+
+// //// 2. Inner Join is the StockQuote.
+// SELECT * FROM Stock v1		
+// INNER JOIN (SELECT * FROM StockQuote t
+//         INNER JOIN (SELECT StockID as StockID2, MAX(Date) AS MaxDate
+//                         FROM StockQuote
+//                         GROUP BY StockID) q
+// 		ON t.StockID = q.StockID2 AND t.Date = MaxDate	) v2
+// 	ON v1.ID = v2.StockID
+// // still too slow. 7:34sec
+
+// //// 3.
+// SELECT ID AS StockID, Ticker AS Ticker,
+// (SELECT TOP 1 Date FROM StockQuote  WHERE StockID = Stock.ID ORDER BY Date DESC) AS Date,
+// (SELECT TOP 1 ClosePrice FROM StockQuote  WHERE StockID = Stock.ID ORDER BY Date DESC) AS ClosePrice
+// FROM Stock 
+// // 2min27sec.  but another time it was: 9sec only.
+
+// // 4
+// SQL TOP cannot be used for Multiple columns. Weird. SQL is quite bad.
+// http://www.zvolkov.com/clog/2010/05/03/sql-select-top-1-record-with-multiple-columns-using-cross-apply/
+// "How often in SQL do you have to get the most recent child record of a given master record? Pretty damn often. The simplest solution is usually to use a correlated subquery (basically, a subselect inside the column list of the SELECT clause) with a TOP 1 / ORDER BY. However, this won't work if you need multiple columns from the child table. What to do? Resort to joins and group-by's, or perhaps, the mighty ROW_NUMBER? Not so fast. There's a neat intermediate solution, using CROSS APPLY."
+// SELECT ID, Ticker, Date, ClosePrice FROM Stock p  // This can be Select *
+// CROSS APPLY (SELECT TOP 1 Date, ClosePrice FROM StockQuote pp WHERE pp.StockID = p.ID ORDER BY Date DESC) pp
+// // best: 17sec!!! This is the fastest. by Far. Yeah.  Another time it was: 2:53sec. , next time: 9 sec only, another time it was 1 sec only, a bit later, 2:55, later: 0.06, 0.01
+
+        public static async Task<IList<object[]>> LoadLastQuotesAsync(List<string> p_tickers,
+            DbCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
+        {
+            var sqls = new Dictionary<string, string>(1); 
+            var sql = @"
+SELECT ID, Ticker, Date, ClosePrice FROM Stock p  
+CROSS APPLY (SELECT TOP 1 Date, ClosePrice FROM StockQuote pp WHERE pp.StockID = p.ID ORDER BY Date DESC) pp
+WHERE IsAlive = 1 AND Ticker in (" +  string.Join(",", p_tickers.Select(r => "'" + r + "'")) + ")";
+            sqls[sql] = null;
+
+            var result = new List<object[]>();
+            await Task.WhenAll(sqls.Select(kv => ExecuteSqlQueryAsync(kv.Key, p_canc: p_canc,
+                    p_params: kv.Value == null ? null : new Dictionary<string, object> { { "@p_request", kv.Value } })
+                    .ContinueWith(
+                t =>
+                {
+                    // It is possible that if SQL query is so wrong that there is not even 0 result; Empty result is valid.
+                    if ((t.Result != null) && (t.Result.Count != 0))
+                        result.AddRange(t.Result[0]);
+                }
+                )));
+            return result;
+        }
         public static async Task<Tuple<List<object[]>, TimeSpan>> GetHistQuotesAsync(DateTime p_startDateUtc, DateTime p_endDateUtc, List<string> p_tickers, ushort p_sqlReturnedColumns)
         {
-            Utils.Logger.Info($"GetHistQuotesAsync() START ('{ string.Join(",", p_tickers)}')");
+            Utils.Logger.Info($"GetHistQuotesAsync() START (p_tickers.Count:{p_tickers.Count}), ('{ string.Join(",", p_tickers)}')");
 
             List<string> stockTickers = p_tickers.Where(r => !r.StartsWith("^")).ToList();
             List<string> indicesTickers = p_tickers.Where(r => r.StartsWith("^")).ToList();
@@ -607,7 +692,8 @@ FROM (
                     }
                     catch (Exception e)
                     {
-                        SqCommon.Utils.Logger.Debug($"Exception: ExecuteSqlQueryAsync() catch inner exception. nTry: {nTry}. Try it again.");
+                        SqCommon.Utils.Logger.Debug($"Exception: ExecuteSqlQueryAsync() catch inner exception. nTry/MaxTry: {@try}/{nTry}. Try it again.");
+                        SqCommon.Utils.Logger.Error(e, "Exception: ExecuteSqlQueryAsync() catch inner exception. Error.");
                         bool failed = (nTry <= @try);
                         if (!failed)
                         {

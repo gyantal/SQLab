@@ -171,7 +171,7 @@ namespace VirtualBroker
         public static IList<List<object[]>> Test2ExecuteSqlQuery(string p_sql, SqlConnection p_conn = null,
             Dictionary<string, object> p_params = null, CancellationToken p_canc = default(CancellationToken))
         {
-            Utils.Logger.Info($"ExecuteSqlQueryAsync() START ('{p_sql}')");
+            Utils.Logger.Info($"Test2ExecuteSqlQuery() START ('{p_sql}')");
 
             // 2017-03-11: https://github.com/dotnet/corefx/issues/14638
             //"I've pinpointed it to that if I pass a ConnectionString to the SqlClient that doesn't include an explicit port 
@@ -210,12 +210,12 @@ namespace VirtualBroker
             }
             catch (Exception e)
             {
-                SqCommon.Utils.Logger.Debug($"Exception: ExecuteSqlQueryAsync() catch inner exception: " + e.ToString());
+                SqCommon.Utils.Logger.Debug($"Exception: Test2ExecuteSqlQuery() catch inner exception: " + e.ToString());
                 return new List<List<object[]>>();
             }
             finally
             {
-                Utils.Logger.Info("ExecuteSqlQueryAsync() END");
+                Utils.Logger.Info("Test2ExecuteSqlQuery() END");
             }
         }
 
