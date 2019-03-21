@@ -55,22 +55,29 @@ namespace VirtualBroker
                 }
             } catch (Exception e)
             {
-                Utils.Logger.Error($"<Tcp:> Error. {e.Message}");
+                Utils.Logger.Error($"<Tcp:> Error Exception in processing message with message.ID {message.ID}. {e.Message}");
             }
 
-            if (message.ResponseFormat != VirtualBrokerMessageResponseFormat.None)
+            try
             {
-                if (String.IsNullOrEmpty(reply))
+                if (message.ResponseFormat != VirtualBrokerMessageResponseFormat.None)
                 {
-                    Utils.Logger.Warn("<Tcp:> Warning. Controller.g_gatewaysWatcher.SomeService() returned IsNullOrEmpty. We return empty string to the caller. Better to send this error instantly than letting the caller timeout.");
-                    if (reply == null)
-                        reply = String.Empty;
-                }
-                BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
-                bw.Write(reply);
-                Utils.Logger.Trace($"<Tcp:> TcpListener.SomeService(). Message ID:'{ message.ID}', Query:'{message.ParamStr}', Reply:'{reply}'.");
+                    if (String.IsNullOrEmpty(reply))
+                    {
+                        Utils.Logger.Warn("<Tcp:> Warning. Controller.g_gatewaysWatcher.SomeService() returned IsNullOrEmpty. We return empty string to the caller. Better to send this error instantly than letting the caller timeout.");
+                        if (reply == null)
+                            reply = String.Empty;
+                    }
+                    BinaryWriter bw = new BinaryWriter(p_tcpClient.GetStream());
+                    bw.Write(reply);
+                    Utils.Logger.Trace($"<Tcp:> TcpListener.SomeService(). Message ID:'{ message.ID}', Query:'{message.ParamStr}', Reply:'{reply}'.");
 
-                Utils.TcpClientDispose(p_tcpClient); // if Processing needed Response to Client, we dispose here. otherwise, it was disposed before putting into processing queue
+                    Utils.TcpClientDispose(p_tcpClient); // if Processing needed Response to Client, we dispose here. otherwise, it was disposed before putting into processing queue
+                }
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error($"<Tcp:> Error Exception in writing reply to TcpClient. Client might have been shut down or other connection problem. Message.ID {message.ID}. {e.Message}");
             }
         }
     }

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-      <link rel="icon" href="data:,"> <!--to prevent favicon.ico requests-->
+      <!-- <link rel="icon" href="data:,"> to prevent favicon.ico requests -->
 
     <link rel="stylesheet" type="text/css" href="/css/SQStudiesList.css">
     <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
@@ -227,8 +227,8 @@
                 betaDeltaAdjMktOrVal =  isNaN(betaDeltaAdjMktOrValN) ? "": betaDeltaAdjMktOrValN.toLocaleString(undefined, { maximumFractionDigits: 0 });
                 brAccStr = (accInfos[i].BrAcc.length > 3) ? accInfos[i].BrAcc.substr(0, 3) : accInfos[i].BrAcc;                
 
-                
-                posTableInner += "<tr" + rowClass + "><td>" + accPos.Symbol + "</td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + accPos.AvgCost + "</td><td>"
+                // stockcharts.com denies serving if it is from our website link. So, start to use TradingView. It doesn't do hollow candles, and for bullish: it uses green, not black, but it is quite fast.
+                posTableInner += "<tr" + rowClass + "><td><a href=\"https://uk.tradingview.com/chart/?symbol=" + accPos.Symbol + "\"  target=\"_blank\" >" + accPos.Symbol + "</a></td><td>" + localSymbol + "</td><td>" + accPos.Pos + "</td><td>" + accPos.AvgCost + "</td><td>"
                     + accPos.LastClose + "</td><td>" + accPos.EstPrice + "</td><td>"                        
                     + chgPctTodayStr + "</td><td>"
                     + plTodayN.toLocaleString() + "</td><td>" + plN.toLocaleString() + "</td><td>" + mktValueN.toLocaleString() + "</td><td>" + estUnderyingPrice + "</td><td>" + ibComputedUndPrice + "</td><td>"

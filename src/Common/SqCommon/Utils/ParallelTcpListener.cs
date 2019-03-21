@@ -95,7 +95,7 @@ namespace SqCommon
                         catch (Exception e)
                         {
                             Utils.Logger.Error(e, "Exception caught in ParallelTcpListener.MessageProcessorWorkerLoop.QueueUserWorkItem().");
-                            throw;
+                            throw;  // be careful here, because it is a ThreadPool thread, which can crash the application. Leave it now for a while, but assure that ProcessTcpClient() catchen all its exceptions.
                         }
 
                         //do whatever you have to do

@@ -406,6 +406,13 @@ namespace VirtualBroker
                 return;
             }
 
+            if (errorCode == 10168) // it happened at the weekend, but IB fixed their mistake.
+            {
+                //"Id: 1358, ErrCode: 10168, Msg: Requested market data is not subscribed. Delayed market data is not enabled"
+                if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
+                    return; // skip processing the error further. Don't send it to HealthMonitor.
+            }
+
             // SERIOUS ERRORS AFTER THIS LINE. Notify HealthMonitor.
             // after asking realtime price as "s=^VIX,^^^VIX201610,^^^VIX201611,^^^VIX201701,VXXB,^^^VIX201704&f=l"
             // Code: 200, Msg: The contract description specified for VIX is ambiguous; you must specify the multiplier or trading class.
