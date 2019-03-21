@@ -35,7 +35,7 @@ namespace SQLab
             //Singleton objects are the same for every object and every request(regardless of whether an instance is provided in ConfigureServices)
             services.AddSingleton(_ => Utils.Configuration);      // this is the proper DependenciInjection (DI) way of pushing it as a service to Controllers. So you don't have to manage the creation or disposal of instances.
             services.AddSingleton(_ => Program.g_webAppGlobals);
-
+    
             if (!String.IsNullOrEmpty(Utils.Configuration["GoogleClientId"]) && !String.IsNullOrEmpty(Utils.Configuration["GoogleClientSecret"]))
             {
                 // The reason you have BOTH google and cookies Auth is because you're using google for identity information but using cookies for storage of the identity for only asking Google once.
@@ -53,6 +53,9 @@ namespace SQLab
                 .AddCookie(o => {  // CookieAuth will be the default from the two, GoogleAuth is used only for Challenge
                     o.LoginPath = "/account/login";
                     o.LogoutPath = "/account/logout";
+
+                    // Controls how much time the authentication ticket stored in the cookie will remain valid
+                    // This is separate from the value of Microsoft.AspNetCore.Http.CookieOptions.Expires, which specifies how long the browser will keep the cookie. We will set that in OnTicketReceived()
                     o.ExpireTimeSpan = TimeSpan.FromDays(25);
                 })
                 .AddGoogle("Google", options =>
@@ -67,13 +70,22 @@ namespace SQLab
                             Utils.Logger.Debug($"[Authorize] attribute forced Google auth. Email:'{email ?? "null"}', RedirectUri: '{context.Properties.RedirectUri ?? "null"}'");
 
                             if (!Utils.IsAuthorizedGoogleUsers(Utils.Configuration, email))
-                                throw new Exception($"Google Authorization Is Required. Your Google account: '{ email }' is not accepted. Logout this Google user and login with another one.");                                
+                                throw new Exception($"Google Authorization Is Required. Your Google account: '{ email }' is not accepted. Logout this Google user and login with another one.");
 
                             //string domain = context.User.Value<string>("domain");
                             //if (domain != "jerriepelser.com")
                             //    throw new GoogleAuthenticationException("You must sign in with a jerriepelser.com email address");
 
                             return Task.CompletedTask;
+                        },
+                        OnTicketReceived = context =>
+                        {
+                            // if this is not set, then the cookie in the browser expires, even though the validation-info in the cookie is still valid. By default, cookies expire: "When the browsing session ends" Expires: 'session'
+                            // https://www.jerriepelser.com/blog/managing-session-lifetime-aspnet-core-oauth-providers/
+                            context.Properties.IsPersistent = true;
+                            context.Properties.ExpiresUtc = DateTimeOffset.UtcNow.AddDays(25);
+
+                            return Task.FromResult(0);
                         }
                     };
                 });

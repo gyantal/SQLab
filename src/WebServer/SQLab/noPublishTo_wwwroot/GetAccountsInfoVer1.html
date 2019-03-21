@@ -245,7 +245,7 @@
         var dashboardTickerArr = urlParams.get('addPrInfoSymbols').split(',');
         for (iT in dashboardTickerArr) {
             ticker = dashboardTickerArr[iT];
-            dashboardStr += ticker + ":";
+            dashboardStr += "<a href=\"https://uk.tradingview.com/chart/?symbol=" + ticker + "\"  target=\"_blank\" >" + ticker + "</a>:";
 
             foundAccPos = null;
             for (i in accInfos) {
