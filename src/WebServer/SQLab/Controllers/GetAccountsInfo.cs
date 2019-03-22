@@ -212,7 +212,17 @@ namespace SQLab.Controllers
                 {
                     // we download data now and wait here, because in that case user always get a proper data (just at first time it is slower)
                     // 1. download data 
-                    var sqlReturnTask = SqlTools.GetLastQuotesAsync(symbolsNeedLastClosePrice, QuoteRequest.TDC);
+                    // 1 hour after close, Closeprice updated in SQL database. At the weekend, we want to see the last traded day (Friday) profit, (and surely 1 hour after close during weekdays).
+                    // in London time: after midnight we still want to see the previous day profit. However, at 7am, it is OK that it is reset. So, the cutoff time is actually midnight at ET time zone, which is about 5am in London
+                    DateTime nowET = Utils.ConvertTimeFromUtcToEt(DateTime.UtcNow);
+                    DateTime maxAcceptedDateLoc;
+                    if (nowET.DayOfWeek == DayOfWeek.Saturday)  // on Saturday, accept the previous Thursday as valid price
+                        maxAcceptedDateLoc = nowET.Date.AddDays(-2);
+                    else if (nowET.DayOfWeek == DayOfWeek.Sunday) // on Sunday, accept the previous Thursday as valid price
+                        maxAcceptedDateLoc = nowET.Date.AddDays(-3);
+                    else 
+                        maxAcceptedDateLoc = nowET.Date.AddDays(-1);   // on normal days, maxAcceptedDate is the previous date
+                    var sqlReturnTask = SqlTools.GetLastQuotesAsync(symbolsNeedLastClosePrice, maxAcceptedDateLoc, QuoteRequest.TDC);
                     var sqlReturnData = await sqlReturnTask;
                     var sqlReturn = sqlReturnData.Item1;
 

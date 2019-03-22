@@ -115,7 +115,7 @@ namespace DbCommon
         }
 #endif
 
-        public static async Task<Tuple<List<object[]>, TimeSpan>> GetLastQuotesAsync(List<string> p_tickers, ushort p_sqlReturnedColumns)
+        public static async Task<Tuple<List<object[]>, TimeSpan>> GetLastQuotesAsync(List<string> p_tickers, DateTime p_maxAcceptedDate, ushort p_sqlReturnedColumns)
         {
             // TODO: at the moment: just last ClosePrice (not other prices). Later use p_sqlReturnedColumns
             // TODO: at the moment: just non-adjusted price. What if there was a split over the weekend. That splitadjustment is not handled yet. 
@@ -127,7 +127,7 @@ namespace DbCommon
             Task<IList<object[]>> stocksSqlReturnTask = null;
             IList<object[]> stocksSqlReturn = null;
             if (stockTickers.Count != 0)
-                stocksSqlReturnTask = SqlTools.LoadLastQuotesAsync(stockTickers, DbCommon.AssetType.Stock); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+                stocksSqlReturnTask = SqlTools.LoadLastQuotesAsync(stockTickers, p_maxAcceptedDate, DbCommon.AssetType.Stock); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
 
             if (stockTickers.Count != 0)
                 stocksSqlReturn = await stocksSqlReturnTask;
@@ -177,13 +177,15 @@ namespace DbCommon
 // CROSS APPLY (SELECT TOP 1 Date, ClosePrice FROM StockQuote pp WHERE pp.StockID = p.ID ORDER BY Date DESC) pp
 // // best: 17sec!!! This is the fastest. by Far. Yeah.  Another time it was: 2:53sec. , next time: 9 sec only, another time it was 1 sec only, a bit later, 2:55, later: 0.06, 0.01
 
-        public static async Task<IList<object[]>> LoadLastQuotesAsync(List<string> p_tickers,
+        public static async Task<IList<object[]>> LoadLastQuotesAsync(List<string> p_tickers, DateTime p_maxAcceptedDate,
             DbCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
         {
             var sqls = new Dictionary<string, string>(1); 
             var sql = @"
 SELECT ID, Ticker, Date, ClosePrice FROM Stock p  
-CROSS APPLY (SELECT TOP 1 Date, ClosePrice FROM StockQuote pp WHERE pp.StockID = p.ID ORDER BY Date DESC) pp
+CROSS APPLY (SELECT TOP 1 Date, ClosePrice FROM StockQuote pp WHERE pp.StockID = p.ID " + 
+((p_maxAcceptedDate == DateTime.MaxValue) ? "" : "AND pp.Date <= '" + p_maxAcceptedDate.ToString("yyyy'-'MM'-'dd")  + "' ") +
+@"ORDER BY Date DESC) pp
 WHERE IsAlive = 1 AND Ticker in (" +  string.Join(",", p_tickers.Select(r => "'" + r + "'")) + ")";
             sqls[sql] = null;
 

@@ -20,7 +20,7 @@
     <font size="1" color=#000000><span id="idTimestamp"></span></font></h1>
     <font size="5" color=#FF0000><b><span id="idMessageFromWebserverIfAny"></span></b></font>
     <span id="idDashboard"></span>
-    <hr>
+    <hr style="margin:3px 0px 3px 0px;">
     <span style="font: x-large sans-serif">P&L Today: 
         <font size="4"><b><span id="idTotalPLToday"></span> (<span id="idTotalPLTodayPct"></span>%)</b></font>
     </span>
@@ -30,14 +30,14 @@
     IB Initial MarginReq: <span id="idTotalInitMarginReq"></span>/
     IB Maintenance MarginReq: <span id="idTotalMaintMarginReq"></span>/
     IB Gross Position Value: <span id="idTotalGrossPosValue"></span><br>
-    <hr>
+    <hr style="margin:3px 0px 3px 0px;">
     Long Stock MktValue: <b><span id="idLongStockValue"></span></b>  <small><i> (!! Long VXX is here, although it is market bearish. 'Short VXXB', 'short SH' are market bullish, but not here.)</i></small> <br>
     Short Stock MktValue: <b><span id="idShortStockValue"></span></b><br>
 
     <!-- <hr style="height:2pt; margin:0px; visibility:hidden;" />   a very thin separator -->
     Call Option Delta Adjusted DelivValue <font size="2"><i>(Long market if GameChangers)</i></font>: <b><span id="idDeltaAdjLongOptionValue"></span></b><br>
     Put Option Delta Adjusted DelivValue <font size="2"><i>(<b><font size="3">Hedges</font></b> if QQQ Put)</i></font>: <b><span id="idDeltaAdjShortOptionValue"></span></b><br>
-    <hr>
+    <hr style="margin:3px 0px 3px 0px;">
     <span title="If All (even hedges) goes against you. Use this for leverage calculation." style="font: x-large sans-serif">Max Risked estimate <font size="2">(LongStk + ShortStk (incorrect! Infinite) + LongOptMktValue + ShortOptMktValue(incorrect! Infinite))</font>: 
         <font size="4" color=#0000FF><b><span id="idTotalMaxRisked"></span></b></font>
         <font size="2" color=#0000FF> (Leverage: <b><span id="idTotalMaxRiskedLeverage"></span></b>)</font>
@@ -50,7 +50,7 @@
     </span><br>
  
 
-    <hr>
+    <hr style="margin:3px 0px 3px 0px;">
     <table id="idPosTable">
         <!--<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>AvgCost &#8661;</th><th>EstPrice &#8661;</th><th>MktValue &#8661;</th><th>EstUnderlPr &#8661;</th><th>DelivValue &#8661;</th></tr>
         <tr><td>2013-04-12</td><td>2013-04-12</td></tr>
@@ -110,7 +110,8 @@
                 timeAgoMsec = Date.now() - timestampDate;     // number of milliseconds
                 timeAgoMin = round(timeAgoMsec / (1000 * 60));
                 //timestamps += accInfos[i].Timestamp.replace(/^.*T/, "").replace('Z', '') + "(" + timeAgoMin.toLocaleString(undefined, { maximumFractionDigits: 0 }) + "min ago)";
-                timestamps += timestampDate.getHours() + ":" + timestampDate.getMinutes()  + "(" + timeAgoMin.toLocaleString(undefined, { maximumFractionDigits: 0 }) + "min ago)";
+                // if it is 5min after 21h, we want to see 21:05, instead of 21:5
+                timestamps += timestampDate.getHours() + ":" + ("0" + timestampDate.getMinutes()).slice(-2)  + "(" + timeAgoMin.toLocaleString(undefined, { maximumFractionDigits: 0 }) + "min ago)";
             }
 
             accSums = accInfos[i].AccSums;

@@ -1,4 +1,5 @@
 ﻿body {
+    margin: 3px 6px 5px 6px;
 }
 
 h1 {
@@ -6,6 +7,9 @@ h1 {
     text-align: center;
     color: blue;
     font-size: 150%;
+    border: 0px; 
+    padding: 0; 
+    margin: 0px;
 }
 
 h2 {
