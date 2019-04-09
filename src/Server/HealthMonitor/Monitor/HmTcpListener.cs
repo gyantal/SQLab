@@ -24,8 +24,14 @@ namespace HealthMonitor
             {
                 BinaryReader br = new BinaryReader(p_tcpClient.GetStream());
                 message = (new HealthMonitorMessage()).DeserializeFrom(br);
-                Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg.ID:{message.ID}, Param:{message.ParamStr}");  // user can quickly check from Console the messages
-                Utils.Logger.Info($"<Tcp:>ProcessTcpClient: Message ID:\"{ message.ID}\", ParamStr: \"{ message.ParamStr}\", ResponseFormat: \"{message.ResponseFormat}\"");
+                if (message == null)
+                {
+                    Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg: NULL");  // user can quickly check from Console the messages
+                    Utils.Logger.Info($"<Tcp:>ProcessTcpClient: Message: NULL");
+                    return;
+                }
+                Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg.ID:{message.ID}, Param:{(String.IsNullOrEmpty(message.ParamStr)?"NULL": message.ParamStr)}");  // user can quickly check from Console the messages
+                Utils.Logger.Info($"<Tcp:>ProcessTcpClient: Message ID:\"{ message.ID}\", ParamStr: \"{(String.IsNullOrEmpty(message.ParamStr)?"NULL": message.ParamStr)}\", ResponseFormat: \"{message.ResponseFormat}\"");
             }
             catch (Exception e) // Background thread can crash application. A background thread does not keep the managed execution environment running.
             {

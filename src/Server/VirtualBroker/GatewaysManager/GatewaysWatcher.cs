@@ -55,7 +55,7 @@ namespace VirtualBroker
             Gateway gateway1 = null, gateway2 = null, gateway3 = null;
             if (Controller.IsRunningAsLocalDevelopment())
             {
-                gateway1 = new Gateway(GatewayUser.GyantalMain, p_accountMaxTradeValueInCurrency: 100000 /* UberVXX is 12K, 2xleveraged=24K, double=48K*/, p_accountMaxEstimatedValueSumRecentlyAllowed: 75000) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41 };
+                gateway1 = new Gateway(GatewayUser.GyantalMain, p_accountMaxTradeValueInCurrency: 100000 /* UberVXX is 12K, 2xleveraged=24K, double=48K*/, p_accountMaxEstimatedValueSumRecentlyAllowed: 100000) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41 };
                 m_mainGatewayUser = GatewayUser.GyantalMain;
             }
             else
@@ -66,7 +66,7 @@ namespace VirtualBroker
                 StrongAssert.True(vbServerEnvironment != null, Severity.Halt, "Configuration['VbServerEnvironment'] is missing. It is safer to terminate.");
                 if (vbServerEnvironment.ToLower() == "AutoTradingServer".ToLower())
                 {
-                    gateway1 = new Gateway(GatewayUser.GyantalMain, p_accountMaxTradeValueInCurrency: 100000 /* UberVXX is 12K, 2xleveraged=24K, double=48K*/, p_accountMaxEstimatedValueSumRecentlyAllowed: 75000) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41 };
+                    gateway1 = new Gateway(GatewayUser.GyantalMain, p_accountMaxTradeValueInCurrency: 100000 /* UberVXX is 12K, 2xleveraged=24K, double=48K*/, p_accountMaxEstimatedValueSumRecentlyAllowed: 100000) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41 };
                     gateway2 = new Gateway(GatewayUser.CharmatSecondary, p_accountMaxTradeValueInCurrency: 600000.0 /* HarryLong is played 400K*70%=300K, double it */, p_accountMaxEstimatedValueSumRecentlyAllowed: 1000000  /* 1M */ ) { VbAccountsList = "U988767", SocketPort = (int)GatewayUserPort.CharmatSecondary, BrokerConnectionClientID = 42 };
                     gateway3 = new Gateway(GatewayUser.TuSecondary, p_accountMaxTradeValueInCurrency: 15000.0 /* HarryLong is played 10K*70%=7K, double it */, p_accountMaxEstimatedValueSumRecentlyAllowed: 20000  /* 20K */ ) { VbAccountsList = "U1156489", SocketPort = (int)GatewayUserPort.TuSecondary, BrokerConnectionClientID = 43 };
                     //Gateway gateway2 = new Gateway() { GatewayUser = GatewayUser.CharmatWifeMain, VbAccountsList = "U1034066", SocketPort = 7302 };
@@ -182,6 +182,8 @@ namespace VirtualBroker
 
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UGAZ")); // instead of UNG for DC
                                                                                                             //m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UNG")); // NatGas: UNG for Agy, , can be commented out if HL_Agy is not traded
+                // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("SCO"));  // Oil (2x) for Agy, but this can be commented out in general.
+                // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UNG"));  // NatGas (1x) for Agy, but this can be commented out in general.
 
                 // for TAA, but it is only temporary. We will not stream this unnecessary data all day long, as TAA can take its time. It only trades MOC. Extra 2-3 seconds doesn't matter.
                 // "TLT"+ "MDY","ILF","FEZ","EEM","EPP","VNQ","IBB"  +  "MVV", "URE", "BIB"
