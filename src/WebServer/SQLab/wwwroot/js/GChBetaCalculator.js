@@ -482,7 +482,7 @@ function creatingTables(data) {
     //}
     //currTableMtx += "</tr></table>";
 
-    var currTableMtxa = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Current Daily Beta of GameChanger Stocks in Comparison to QQQ <BR> (<a href=\"https://www.w3schools.com\">Optimal Monthly-izer Multiplicator: 120%</a>)</b></td></tr><tr align=\"center\"><td colspan=\"2\" bgcolor=\"#66CCFF\">Lookback Period</td>";
+    var currTableMtxa = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Current Daily Beta of GameChanger Stocks in Comparison to QQQ <BR> (<a target=\"_blank\" href=\"https://docs.google.com/document/d/1LPLzrdyE9XLmH02r68sf6DN2D5sTl08kTkYQb_7VwGQ/edit#heading=h.kv7ihzf58nm1\" title=\"Optimal Range: 110-125%\">Optimal Monthly-izer Multiplicator: 120%</a>)</b></td></tr><tr align=\"center\"><td colspan=\"2\" bgcolor=\"#66CCFF\">Lookback Period</td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
@@ -503,9 +503,11 @@ function creatingTables(data) {
         currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + rSqArray[i] + "</td>";
     }
     currTableMtxa += "</tr><tr style=\"font-weight: bold; color: navy; font-style: italic;font-size:95%;\"><td>Monthly-ized Beta</td>";
-    for (var i = 0; i < assetNames2Array.length; i++) {
+    for (var i = 0; i < assetNames2Array.length-1; i++) {
         currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + Math.round(betaCalcQQQCurrMtx[6][i] * 1.2 * 100) / 100 + "</td>";
     }
+    currTableMtxa += "<td class=\"" + assetNames2Array[assetNames2Array.length - 1] + "\" style=\"font-size:140%;\">" + Math.round(betaCalcQQQCurrMtx[6][assetNames2Array.length - 1] * 1.2 * 100) / 100 + "</td>";
+    
     currTableMtxa += "</tr>";
     for (var j = 7; j < betaLBPeriods.length; j++) {
         currTableMtxa += "<tr align=\"center\"><td colspan=\"2\">" + betaLBPeriods[j] + "</td>";
