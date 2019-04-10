@@ -11,6 +11,7 @@ using System.Globalization;
 using SQCommon.MathNet;
 using System.Numerics;
 
+
 namespace SQLab.Controllers
 {
     public static class EM
@@ -380,7 +381,18 @@ namespace SQLab.Controllers
                 }
             }
 
-            double[,] betaCalcQQQCurr = new double[betaLBStr.Length, noGChs + 1];
+            double[] rSquared = new double[noGChs + 1];
+            double[] qqqRetsRS = quotesRets[noAssets - 2].GetRange(noBtDays-252, 252).ToArray();
+            for (int kAssets = 0; kAssets < noGChs + 1; kAssets++)
+            {
+                double[] assRetsRS = quotesRets2[kAssets].GetRange(noBtDays - 252, 252).ToArray();
+                double covRS = ArrayStatistics.Covariance(qqqRetsRS, assRetsRS);
+                double assRS = covRS*covRS / (ArrayStatistics.Variance(qqqRetsRS) * ArrayStatistics.Variance(assRetsRS));
+                rSquared[kAssets] = assRS;
+            }
+
+
+                double[,] betaCalcQQQCurr = new double[betaLBStr.Length, noGChs + 1];
             for (int jLB = 0; jLB < betaLBStr.Length; jLB++)
             {
                 for (int kAssets = 0; kAssets < noGChs + 1; kAssets++)
@@ -814,6 +826,11 @@ namespace SQLab.Controllers
                     sb.Append("ß ");
                 }
             }
+
+            sb.Append(@"""," + Environment.NewLine + @"""reliabRS"": """);
+            for (int i = 0; i < rSquared.Length - 1; i++)
+                sb.Append(Math.Round(rSquared[i], 3).ToString() + ", ");
+            sb.Append(Math.Round(rSquared[rSquared.Length - 1], 3).ToString());
 
             sb.Append(@"""," + Environment.NewLine + @"""yearlyBetasQQQ"": """);
             for (int i = 0; i < betaCalcQQQYearly.GetLength(0); i++)
