@@ -466,6 +466,7 @@ function creatingTables(data) {
     var betaLBPeriods = data.betaLBPeris.split(", ");
     //var noLBPeriods = betaLBPeriods.length;
 
+    var rSqArray = data.reliabRS.split(", ");
 
     //Creating the HTML code of tables.
 
@@ -481,25 +482,35 @@ function creatingTables(data) {
     //}
     //currTableMtx += "</tr></table>";
 
-    var currTableMtxa = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Current Beta of GameChanger Stocks in Comparison to QQQ</b></td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\">Lookback Period</td>";
+    var currTableMtxa = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Current Daily Beta of GameChanger Stocks in Comparison to QQQ <BR> (<a target=\"_blank\" href=\"https://docs.google.com/document/d/1LPLzrdyE9XLmH02r68sf6DN2D5sTl08kTkYQb_7VwGQ/edit#heading=h.kv7ihzf58nm1\" title=\"Optimal Range: 110-125%\">Optimal Monthly-izer Multiplicator: 120%</a>)</b></td></tr><tr align=\"center\"><td colspan=\"2\" bgcolor=\"#66CCFF\">Lookback Period</td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
     currTableMtxa += "<td class=\"" + assetNames2Array[assetNames2Array.length - 1] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[assetNames2Array.length - 1] + "</td></tr>";
     for (var j = 0; j < 6; j++) {
-        currTableMtxa += "<tr align=\"center\"><td>" + betaLBPeriods[j] + "</td>";
+        currTableMtxa += "<tr align=\"center\"><td colspan=\"2\">" + betaLBPeriods[j] + "</td>";
         for (var i = 0; i < assetNames2Array.length; i++) {
             currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + betaCalcQQQCurrMtx[j][i] + "</td>";
         }
         currTableMtxa += "</tr>";
     }
-    currTableMtxa += "<tr align=\"center\" style=\"font-weight: bold\"><td>" + betaLBPeriods[6] + "</td>";
+    currTableMtxa += "<tr align=\"center\"  style=\"font-weight: bold\"><td rowspan=\"3\">" + betaLBPeriods[6] + "</td><td>Daily Beta</td>";
     for (var i = 0; i < assetNames2Array.length; i++) {
         currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + betaCalcQQQCurrMtx[6][i] + "</td>";
     }
+    currTableMtxa += "</tr><tr style=\"font-weight: bold; color: blue; font-style: italic;font-size:95%;\"><td>Reliability (R<sup>2</sup>)</td>";
+    for (var i = 0; i < assetNames2Array.length; i++) {
+        currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + rSqArray[i] + "</td>";
+    }
+    currTableMtxa += "</tr><tr style=\"font-weight: bold; color: navy; font-style: italic;font-size:95%;\"><td>Monthly-ized Beta</td>";
+    for (var i = 0; i < assetNames2Array.length-1; i++) {
+        currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + Math.round(betaCalcQQQCurrMtx[6][i] * 1.2 * 100) / 100 + "</td>";
+    }
+    currTableMtxa += "<td class=\"" + assetNames2Array[assetNames2Array.length - 1] + "\" style=\"font-size:140%;\">" + Math.round(betaCalcQQQCurrMtx[6][assetNames2Array.length - 1] * 1.2 * 100) / 100 + "</td>";
+    
     currTableMtxa += "</tr>";
     for (var j = 7; j < betaLBPeriods.length; j++) {
-        currTableMtxa += "<tr align=\"center\"><td>" + betaLBPeriods[j] + "</td>";
+        currTableMtxa += "<tr align=\"center\"><td colspan=\"2\">" + betaLBPeriods[j] + "</td>";
         for (var i = 0; i < assetNames2Array.length; i++) {
             currTableMtxa += "<td class=\"" + assetNames2Array[i] + "\">" + betaCalcQQQCurrMtx[j][i] + "</td>";
         }
@@ -507,7 +518,7 @@ function creatingTables(data) {
     }
     currTableMtxa += "</table>";
 
-    var currTableMtxb = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Current Beta of GameChanger Stocks in Comparison to SPY</b></td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\">Lookback Period</td>";
+    var currTableMtxb = "<table class=\"currDataB\"><tr align=\"center\"><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Current Daily Beta of GameChanger Stocks in Comparison to SPY</b></td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\">Lookback Period</td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtxb += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
@@ -534,7 +545,7 @@ function creatingTables(data) {
     currTableMtxb += "</table>";
 
 
-    var currTableMtx3a = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Beta of GameChanger Stocks in Comparison to QQQ by Years and Months</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Days</td>";
+    var currTableMtx3a = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Daily Beta of GameChanger Stocks in Comparison to QQQ by Years and Months</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Days</td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtx3a += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
@@ -581,7 +592,7 @@ function creatingTables(data) {
     currTableMtx3a += "</tr></tbody></table>";
     
 
-    var currTableMtx3b = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Beta of GameChanger Stocks in Comparison to SPY by Years and Months</b></td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Days</td>";
+    var currTableMtx3b = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Daily Beta of GameChanger Stocks in Comparison to SPY by Years and Months</b></td></tr><tr align=\"center\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Days</td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtx3b += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
@@ -627,7 +638,7 @@ function creatingTables(data) {
     }
     currTableMtx3b += "</tr></tbody></table>";
 
-    var currTableMtx3c = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Beta of GameChanger Stocks in Comparison to QQQ by Years and Months - On Positive QQQ Days</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Positive Days</td>";
+    var currTableMtx3c = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Daily Beta of GameChanger Stocks in Comparison to QQQ by Years and Months - On Positive QQQ Days</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Positive Days</td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtx3c += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
@@ -673,7 +684,7 @@ function creatingTables(data) {
     }
     currTableMtx3c += "</tr></tbody></table>";
     
-    var currTableMtx3d = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Beta of GameChanger Stocks in Comparison to SPY by Years and Months - On Positive SPY Days</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Positive Days</td>";
+    var currTableMtx3d = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Daily Beta of GameChanger Stocks in Comparison to SPY by Years and Months - On Positive SPY Days</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Positive Days</td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtx3d += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
@@ -719,7 +730,7 @@ function creatingTables(data) {
     }
     currTableMtx3d += "</tr></tbody></table>";
 
-    var currTableMtx3e = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Beta of GameChanger Stocks in Comparison to QQQ by Years and Months - On Negative QQQ Days</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Negative Days</td>";
+    var currTableMtx3e = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Daily Beta of GameChanger Stocks in Comparison to QQQ by Years and Months - On Negative QQQ Days</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Negative Days</td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtx3e += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
@@ -765,7 +776,7 @@ function creatingTables(data) {
     }
     currTableMtx3e += "</tr></tbody></table>";
 
-    var currTableMtx3f = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Beta of GameChanger Stocks in Comparison to SPY by Years and Months - On Negative SPY Days</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Negative Days</td>";
+    var currTableMtx3f = "<table class=\"currData\"><thead><tr align=\"center\" ><td colspan=\"" + noColumns + "\" bgcolor=\"#66CCFF\"><b>Daily Beta of GameChanger Stocks in Comparison to SPY by Years and Months - On Negative SPY Days</b></td></tr><tr align=\"center\" class=\"parent2\"><td bgcolor=\"#66CCFF\"><span class=\"years\" id=\"hideAll\">Only Years</span>/ <span class=\"years\" id=\"expandAll\">Years+Months</span></td><td bgcolor=\"#66CCFF\">No. Negative Days</td>";
     for (var i = 0; i < assetNames2Array.length - 1; i++) {
         currTableMtx3f += "<td class=\"" + assetNames2Array[i] + "\" bgcolor=\"#66CCFF\">" + assetNames2Array[i] + "</td>";
     }
@@ -871,7 +882,7 @@ function creatingTables(data) {
 
     var selLBPeri = 6;
     var divChartQQQLB = document.getElementById("idChartQQQLB");
-    divChartQQQLB.innerHTML = "<strong>Beta of GameChanger Stocks in Comparison to QQQ using &emsp;<select id=\"limit1\"><option value=\"0\">1 Week</option><option value=\"1\">2 Weeks</option><option value=\"2\">1 Month</option><option value=\"3\">2 Months</option><option value=\"4\">3 Months</option><option value=\"5\">6 Months</option><option value=\"6\" selected>1 Year</option><option value=\"7\">2 Years</option><option value=\"8\">3 Years</option><option value=\"9\">Max</option>" + betaLBPeriods[selLBPeri] + "</select> &emsp;Lookback Period</strong>";
+    divChartQQQLB.innerHTML = "<strong>Daily Beta of GameChanger Stocks in Comparison to QQQ using &emsp;<select id=\"limit1\"><option value=\"0\">1 Week</option><option value=\"1\">2 Weeks</option><option value=\"2\">1 Month</option><option value=\"3\">2 Months</option><option value=\"4\">3 Months</option><option value=\"5\">6 Months</option><option value=\"6\" selected>1 Year</option><option value=\"7\">2 Years</option><option value=\"8\">3 Years</option><option value=\"9\">Max</option>" + betaLBPeriods[selLBPeri] + "</select> &emsp;Lookback Period</strong>";
 
     //var selLBPeriSPY = 6;
     //var divChartSPYLB = document.getElementById("idChartSPYLB");
@@ -976,19 +987,13 @@ function creatingTables(data) {
 // Creating charts.
 function flotPlotMyData1(datasets1, nCurrData, xTicksH, noAssets, assetNamesArray) {
     $("#update_all").click(plotAccordingToChoices);
+
     function plotAccordingToChoices() {
         var dataB = [];
         $.each(datasets1, function (key) {
             dataB.push(datasets1[key]);
         });
 
-        //$("input:checkbox:checked").each(function () {
-        //    var key = $(this).attr("id");
-        //    var aaa = assetNamesArray.indexOf(key);
-        //    if (key && datasets1[aaa]) {
-        //        dataB.push(datasets1[aaa]);
-        //    }
-        //});
 
         var placeholder1 = $("#placeholder1");
         var data1 = dataB;
