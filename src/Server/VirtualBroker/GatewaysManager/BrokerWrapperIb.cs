@@ -276,7 +276,7 @@ namespace VirtualBroker
                     //IB Error. ErrId: -1, ErrCode: 2105, Msg: HMDS data farm connection is broken:ushmds
                     //IB Error. ErrId: -1, ErrCode: 1100, Msg: Connectivity between IB and Trader Workstation has been lost.
                     //IB Error. ErrId: -1, ErrCode: 1102, Msg: Connectivity between IB and Trader Workstation has been restored - data maintained.
-                    if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
+                    if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
                         return; // skip processing the error further. Don't send it to HealthMonitor.
                     var vbServerEnvironment = Utils.Configuration["VbServerEnvironment"];
                     if (vbServerEnvironment.ToLower() == "ManualTradingServer".ToLower())
@@ -330,7 +330,7 @@ namespace VirtualBroker
                     // it is expected that for some stocks, there is no market data, but error message. Fine. Prepare for it and don't wait in that case.
                     return;
                 }
-                if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
+                if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
@@ -381,7 +381,7 @@ namespace VirtualBroker
                     errMsg += $". Id {id} cannot be found in MktDataSubscriptions or CancelledMktDataSubscriptions.";
                 }
 
-                if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
+                if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
@@ -409,7 +409,7 @@ namespace VirtualBroker
             if (errorCode == 10168) // it happened at the weekend, but IB fixed their mistake.
             {
                 //"Id: 1358, ErrCode: 10168, Msg: Requested market data is not subscribed. Delayed market data is not enabled"
-                if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
+                if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
@@ -428,25 +428,6 @@ namespace VirtualBroker
                 }
             }
             error(errMsg);
-        }
-
-        // there are some weird IB errors that happen usually when IB server is down. 99% of the time it is at the weekend, or when pre or aftermarket. In this exceptional times, ignore errors.
-        public static bool IsApproximatelyMarketTradingTimeForIgnoringIBErrors()
-        {
-            DateTime utcNow = DateTime.UtcNow;
-            DateTime etNow = Utils.ConvertTimeFromUtcToEt(utcNow);
-            if (etNow.DayOfWeek == DayOfWeek.Saturday || etNow.DayOfWeek == DayOfWeek.Sunday)   // if it is the weekend => no Error
-                return false;
-
-            // The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET.
-            TimeSpan timeTodayEt = etNow - etNow.Date;
-            if (timeTodayEt.TotalMinutes < 9 * 60 + 29)
-                return false;   // if it is not Approximately around market hours => no Error
-            if (timeTodayEt.TotalMinutes > 17 * 60)
-                return false;   // if it is not Approximately around market hours => no Error
-
-            // you can skip holiday days too later
-            return true;
         }
 
         static string GetUsefulAccountSummaryTags()

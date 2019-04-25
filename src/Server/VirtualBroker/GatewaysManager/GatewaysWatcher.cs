@@ -133,8 +133,11 @@ namespace VirtualBroker
                 // It is a strategic (safety vs. conveniency) decision: in that case if not all IBGW is connected, (it can be an 'expected error'), VBroker runs further and try connecting every 10 min.
                 // on ManualTrader server failed connection is expected. Don't send Error. However, on AutoTraderServer, it is unexpected (at the moment), because IBGateways and VBrokers restarts every day.
                 var notConnectedGateways = String.Join(",", m_gateways.Where(l => !l.IsConnected).Select(r => r.GatewayUser + "/"));
-                if (!String.IsNullOrEmpty(notConnectedGateways))
-                    HealthMonitorMessage.SendAsync($"Gateways not connected. vbServerEnvironment: '{vbServerEnvironment}', not connected gateways {notConnectedGateways}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).ConfigureAwait(continueOnCapturedContext: false);
+                if (!String.IsNullOrEmpty(notConnectedGateways)) {
+                     if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors(true))
+                        return; // skip processing the error further. Don't send it to HealthMonitor.
+                    HealthMonitorMessage.SendAsync($"Gateways are not connected. vbServerEnvironment: '{vbServerEnvironment}', not connected gateways {notConnectedGateways}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).ConfigureAwait(continueOnCapturedContext: false);
+                }
             }
             Utils.Logger.Info("GatewaysWatcher:ReconnectToGatewaysTimer_Elapsed() END");
         }
@@ -212,6 +215,34 @@ namespace VirtualBroker
 
             //PersistedState.Save();
             //StopTcpMessageListener();
+        }
+
+        // there are some weird IB errors that happen usually when IB server is down. 99% of the time it is at the weekend, or when pre or aftermarket. In this exceptional times, ignore errors.
+        public static bool IsApproximatelyMarketTradingTimeForIgnoringIBErrors(bool p_isIbNotConnectedError = false)
+        {
+            DateTime utcNow = DateTime.UtcNow;
+            DateTime etNow = Utils.ConvertTimeFromUtcToEt(utcNow);
+            if (etNow.DayOfWeek == DayOfWeek.Saturday || etNow.DayOfWeek == DayOfWeek.Sunday)   // if it is the weekend => no Error
+                return false;
+
+            // The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET.
+            TimeSpan timeTodayEt = etNow - etNow.Date;
+            if (p_isIbNotConnectedError)  // "Gateways are not connected" errors handled with more strictness. We expect that there is a connection to IBGateway at least 1 hour before open. At 8:30.
+            {
+                if (timeTodayEt.TotalMinutes < 8 * 60 + 29)
+                    return false;   // if it is not Approximately around market hours => no Error
+            }
+            else
+            {
+                if (timeTodayEt.TotalMinutes < 9 * 60 + 29)
+                    return false;   // if it is not Approximately around market hours => no Error
+            }
+
+            if (timeTodayEt.TotalMinutes > 17 * 60)
+                return false;   // if it is not Approximately around market hours => no Error
+
+            // you can skip holiday days too later
+            return true;
         }
 
         internal bool IsGatewayConnected(GatewayUser p_ibGatewayUserToTrade)
