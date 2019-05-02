@@ -267,10 +267,10 @@ namespace VirtualBroker
         {
             // for futures, we picked: ^^, because other characters are not really allowed in URLs
 
-            string msg = @"?s=VXXB,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
-            //string s = @"?s=VXXB,SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l"; // without JsonP, AAPL and GOOGL is not streamed
-            //string s = @"?s=VXXB,^VIX,^GSPC,SVXY&f=l"; // without JsonP, this was the old test 1
-            //string s = @"?s=VXXB,^VIX,^GSPC,SVXY,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction"; // with JsonP, this was the old test 2
+            string msg = @"?s=VXX,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
+            //string s = @"?s=SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l"; // without JsonP, AAPL and GOOGL is not streamed
+            //string s = @"?s=^VIX,^GSPC,SVXY&f=l"; // without JsonP, this was the old test 1
+            //string s = @"?s=^VIX,^GSPC,SVXY,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction"; // with JsonP, this was the old test 2
             //string s = @"?s=^VIX,^^^VIX201610,^^^VIX201611,^^^VIX201701,VXX,^^^VIX201704&f=l";     // VixTimer asks this http://www.snifferquant.com/dac/VixTimer
             //string s = @"?s=^^^VIX201610,^^^VIX201611&f=l";     // VixTimer asks this http://www.snifferquant.com/dac/VixTimer
             string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetRealtimePrice, VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener, VirtualBrokerMessage.DefaultVirtualBrokerServerPort).Result;  // it is a Test inside VBroker server, so use Private IP, not public IP
@@ -286,7 +286,7 @@ namespace VirtualBroker
             Array.Reverse(charArray);
             string securityTokenVer2 = new string(charArray);
 
-            string msg = $"?v=1&secTok={securityTokenVer2}&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF&addPrInfoSymbols=QQQ,SPY,TLT,VXXB,UNG";
+            string msg = $"?v=1&secTok={securityTokenVer2}&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF&addPrInfoSymbols=QQQ,SPY,TLT,VXX,UNG";
             string reply = VirtualBrokerMessage.Send(msg, VirtualBrokerMessageID.GetAccountsInfo, VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener, VirtualBrokerMessage.DefaultVirtualBrokerServerPort).Result;  // it is a Test inside VBroker server, so use Private IP, not public IP
 
             Console.WriteLine($"GetAccountsSummaryOrPositions returned: '{reply}'");

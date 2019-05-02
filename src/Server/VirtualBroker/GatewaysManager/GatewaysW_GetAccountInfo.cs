@@ -55,7 +55,7 @@ namespace VirtualBroker
     public partial class GatewaysWatcher
     {
 
-        //$"?v=1&secTok={securityTokenVer2}&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF&addPrInfoSymbols=QQQ,SPY,TLT,VXXB,UNG";
+        //$"?v=1&secTok={securityTokenVer2}&bAcc=Gyantal,Charmat,DeBlanzac&data=AccSum,Pos,EstPr,OptDelta&posExclSymbols=VIX,BLKCF,AXXDF&addPrInfoSymbols=QQQ,SPY,TLT,VXX,UNG";
         public string GetAccountsInfo(string p_input)     
         {
             Utils.Logger.Info($"GetAccountsInfo() START with parameter '{p_input}'");
@@ -261,14 +261,14 @@ namespace VirtualBroker
             return result;
         }
 
-        // >2019-03: After Market close: IB doesn't  give price for some 2-3 stocks (VXZB (only gives ask = -1, bid = -1), URE (only gives ask = 61, bid = -1), no open,low/high/last, not even previous Close price, nothing), these are the ideas to consider: We need some kind of estimation, even if it is not accurate.
+        // >2019-03: After Market close: IB doesn't  give price for some 2-3 stocks (VXZ (only gives ask = -1, bid = -1), URE (only gives ask = 61, bid = -1), no open,low/high/last, not even previous Close price, nothing), these are the ideas to consider: We need some kind of estimation, even if it is not accurate.
         //     >One idea: ask IB's historical data for those missing prices. Then price query is in one place, but we have to wait more for VBroker, and IB throttle (max n. number of queries) may cause problem, so we get data slowly.
         //     >Betteridea: in Website, where the caching happens: ask our SQL database for those missing prices. We can ask our SQL parallel to the Vb query. No throttle is necessary. It can be very fast for the user. Prefer this now. More error proof this solution.
         private void CollectEstimatedPrices(List<AccInfo> allAccInfos, bool p_isNeedOptDelta, string[] p_addPrInfoSymbolsArr)
         {
-            //Position.U407941 - Symbol: VXXB, SecType: STK, Currency: USD, Position: -87, Avg cost: 21.1106586, LocalSymbol: 'VXXB'
-            //Position.U407941 - Symbol: VXXB, SecType: OPT, Currency: USD, Position: 3, Avg cost: 780.35113335
-            //    Option.LastTradeDate: 20181221, Right: C, Strike: 37, Multiplier: 100, LocalSymbol: 'VXXB   181221C00037000'
+            //Position.U407941 - Symbol: VXX, SecType: STK, Currency: USD, Position: -87, Avg cost: 21.1106586, LocalSymbol: 'VXX'
+            //Position.U407941 - Symbol: VXX, SecType: OPT, Currency: USD, Position: 3, Avg cost: 780.35113335
+            //    Option.LastTradeDate: 20181221, Right: C, Strike: 37, Multiplier: 100, LocalSymbol: 'VXX   181221C00037000'
             // Contract.ConID is inique integer. But for options of the same underlying ConID is different, so we cannot use ConID. We have to group it by stocks.
 
             // 1. Add p_addPrInfoSymbolsArr additional tickers to the first AccInfo positions as 0 positions
@@ -409,7 +409,7 @@ namespace VirtualBroker
 
                         // Discussion: last price would be fine for stocks usually, but midPrice of askBid is needed for Options, because Last can be half a day ago. So, do midPrice in general, except for "IND" where only Last is possible
                         // "STK" or "OPT": MID is the most honest price. LAST may happened 1 hours ago
-                        //  far OTM options (VIX, VXXB) have only Ask, but no Bid. Estimate missing by zero.
+                        //  far OTM options (VIX, VXX) have only Ask, but no Bid. Estimate missing by zero.
                         // After market hour, even liquid stocks (PM, IBKR) doesn't return Ask,Bid. And we have to wait after the 5 second timeout, when they do TickSnapshotEnd, and just before that they send Trace: IBKR : bidPrice: -1.
                         // so, for stocks. (especially AMC), we should accept LastPrice.
                         // Using LastPrice instead of Ask,Bid for stocks changed that this query of 58 contracts returns in 300msec, instead of 900msec + the possibility of 5second timeout.
@@ -543,9 +543,9 @@ namespace VirtualBroker
                     (cb_mktDataId, cb_mktDataSubscr, cb_type) =>
                     {
                         Utils.Logger.Trace($"MarketDataType in ReqMktDataStream(). {cb_mktDataSubscr.Contract.Symbol} : {cb_type}");
-                        // TMF, VXXB can be Frozen(2) too after market close, or at weekend. It means that sometimes there is no more price data. So, we should signal to clients that don't expect more data. Don't wait.
+                        // TMF, VXX can be Frozen(2) too after market close, or at weekend. It means that sometimes there is no more price data. So, we should signal to clients that don't expect more data. Don't wait.
                         // However, 95% of the cases there is proper market data even in this case
-                        // weird notice AfterMarketClose: for TMF, VXXB, SVXY stocks: MarketDataType(2) first, then MarketDataType(1), then nothing. Other stocks: only MarketDataType(2), then proper Last,Ask,Bid prices
+                        // weird notice AfterMarketClose: for TMF, VXX, SVXY stocks: MarketDataType(2) first, then MarketDataType(1), then nothing. Other stocks: only MarketDataType(2), then proper Last,Ask,Bid prices
                         // this may means that we started StreamingDataType(2), but later IB realized it is impossible, so changed it to FrozenHistorical (DataType=1)
                         if (cb_mktDataSubscr.PreviousMktDataType == 2 && cb_type == 1)
                         {

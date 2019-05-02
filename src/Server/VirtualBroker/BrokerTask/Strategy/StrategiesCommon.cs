@@ -27,7 +27,7 @@ namespace VirtualBroker
             Utils.Logger.Trace("LoadHistoricalQuotesAsync() end");
 
             List<List<DailyData>> allQuotes = null;
-            // sql query of "VXXB.SQ" gives back tickers of VXXB and also tickers of "VXXB.SQ"
+            // sql query of "VXX.SQ" gives back tickers of VXX and also tickers of "VXX.SQ"
             int closePriceIndex = -1;
             if (sqlReturnedColumns == QuoteRequest.TDOHLCVS)
                 closePriceIndex = 5;

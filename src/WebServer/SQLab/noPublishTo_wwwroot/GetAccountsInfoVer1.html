@@ -24,14 +24,14 @@
     <span style="font: x-large sans-serif">P&L Today: 
         <font size="4"><b><span id="idTotalPLToday"></span> (<span id="idTotalPLTodayPct"></span>%)</b></font>
     </span>
-    , <span style="font: x-large sans-serif">NAV:</span> IB Total NetLiquidation (with cash): 
+    , <span style="font: x-large sans-serif">NAV,</span> IB Total NetLiquidation (with cash): 
         <font size="4"><b><span id="idTotalNetLiquidation"></span></b></font><br>
     IB Total Cash: <span id="idTotalCash"></span>/
     IB Initial MarginReq: <span id="idTotalInitMarginReq"></span>/
     IB Maintenance MarginReq: <span id="idTotalMaintMarginReq"></span>/
     IB Gross Position Value: <span id="idTotalGrossPosValue"></span><br>
     <hr style="margin:3px 0px 3px 0px;">
-    Long Stock MktValue: <b><span id="idLongStockValue"></span></b>  <small><i> (!! Long VXX is here, although it is market bearish. 'Short VXXB', 'short SH' are market bullish, but not here.)</i></small> <br>
+    Long Stock MktValue: <b><span id="idLongStockValue"></span></b>  <small><i> (!! Long VXX is here, although it is market bearish. 'Short VXX', 'short SH' are market bullish, but not here.)</i></small> <br>
     Short Stock MktValue: <b><span id="idShortStockValue"></span></b><br>
 
     <!-- <hr style="height:2pt; margin:0px; visibility:hidden;" />   a very thin separator -->
@@ -78,7 +78,7 @@
         // UNG: discretionary override from 0.03 to 0.23 (UGAZ too)
         // TLT: discretionary override from -0.31 to -0.50 (TMF too)
         var betaArr = {"QQQ": 1.18/1.18, "TQQQ": 3.0, "SPY": 1/1.18, "TWM": -2.07/1.18,            // market ETFs
-        "VXXB": -3.4/1.18,  "VXZB": -1.82/1.18,  "SVXY": 2.87/1.18, "ZIV": 1.82/1.18,                  // VIX
+        "VXX": -3.4/1.18,  "VXZ": -1.82/1.18,  "SVXY": 2.87/1.18, "ZIV": 1.82/1.18,                  // VIX
         "TLT": -0.50/1.18, "TMF": 3*-0.50/1.18, "TIP": -0.06/1.18, "USO": 0.83/1.18, "UWT": 1.87/1.18, "UNG": 0.23/1.18, "UGAZ": 3*0.23/1.18,                            // HL hedges
         "PM": 0.62/1.18 };     // it is QQQ Beta, not SPY beta                // companies
 

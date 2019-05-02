@@ -75,8 +75,8 @@ namespace DbCommon
 
             printResult(DateTime.UtcNow,
                 LoadHistoricalQuotesAsync(new[] {
-                    new QuoteRequest { Ticker = "VXXB", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
-                    new QuoteRequest { Ticker = "VXXB.SQ", nQuotes = 10, StartDate = new DateTime(2009,1,25) },
+                    new QuoteRequest { Ticker = "VXX", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
+                    new QuoteRequest { Ticker = "VXX.SQ", nQuotes = 10, StartDate = new DateTime(2009,1,25) },
                     new QuoteRequest { SubtableID = 6956, nQuotes = 3 },
                 }, DbCommon.AssetType.Stock).Result);
 
@@ -97,7 +97,7 @@ namespace DbCommon
             // Use 'await' if your method is 'async':
             Console.WriteLine("result:\n" + String.Join(Environment.NewLine,
                 (await LoadHistoricalQuotesAsync(new[] {
-                    new QuoteRequest { Ticker = "VXXB", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
+                    new QuoteRequest { Ticker = "VXX", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
                     new QuoteRequest { Ticker = "SPY", nQuotes = 3 }
                 }, DbCommon.AssetType.Stock))
             .Select(row => String.Join(",", row))));
@@ -351,7 +351,7 @@ DECLARE @TsqEnd0777 DATE = (SELECT TOP 1 [Date] FROM StockQuote WHERE StockID=@i
 IF (@ExclamPos777 = 0 AND @Tbegin777 < @TsqEnd0777) BEGIN
     SET @msg777 = @T777+' has quotes before the last quote of '+@Tsq777;
     PRINT @msg777;
-    --THROW 50000, @msg777, 1;   (SVXY!Light0.5x.SQ, VXXB.SQ, VXZB.SQ) has more accurate simulated values than real, because there was no liquidity at the beginning.
+    --THROW 50000, @msg777, 1;   (SVXY!Light0.5x.SQ, VXX.SQ, VXZ.SQ) has more accurate simulated values than real, because there was no liquidity at the beginning.
 END;
 --DECLARE @adjsq777 FLOAT = (SELECT f FROM dbo.GetAdjustmentFactorAt2(@id777,@Tbegin777));  -- was used by Robert
 DECLARE @adjsq777 FLOAT = (SELECT f FROM dbo.GetAdjustmentFactorAt2(@id777,@TsqEnd0777));  -- maybe 1 day off, but around switching dates, there shouldn't be split
@@ -370,7 +370,7 @@ FROM (SELECT /*TopN*/ tt.* FROM (
         [Close]=CAST(ClosePrice*adj.f AS DECIMAL(19,4)), Low =CAST(  LowPrice*adj.f AS DECIMAL(19,4))
     FROM StockQuote sq1
     CROSS APPLY dbo.GetAdjustmentFactorAt2(sq1.StockID,sq1.Date) adj
-    WHERE sq1.StockID=@id777 AND sq1.Date > @TsqEnd0777 -- handling overlap: BaseTicker (SVXY,VXXB,VXZB) is only used After the last date of SimulatedTicker (SVXY!Light0.5x.SQ, VXXB.SQ, VXZB.SQ).
+    WHERE sq1.StockID=@id777 AND sq1.Date > @TsqEnd0777 -- handling overlap: BaseTicker (SVXY,VXX,VXZ) is only used After the last date of SimulatedTicker (SVXY!Light0.5x.SQ, VXX.SQ, VXZ.SQ).
 ) AS tt WHERE 1=1 /*AND_DateRange*/ /*TopN_orderby*/) AS t
 ";
                         }
@@ -443,7 +443,7 @@ FROM (SELECT /*TopN*/ tt.* FROM (
             return result;
         }
         #region SQL scripts
-        // @p_request is like "VXXB,17529,20181201,,2,,SPY,6956,,,3,1": <Ticker>,<StockID>,<StartDate>,<EndDate>,<N>,<IsAdjusted>[,...]
+        // @p_request is like "VXX,17529,20181201,,2,,SPY,6956,,,3,1": <Ticker>,<StockID>,<StartDate>,<EndDate>,<N>,<IsAdjusted>[,...]
         // (StockID OR Ticker) AND N are obligatory, IsAdjusted must be 1 or other (may be empty). N:=nQuotes see description at QuoteRequest. The returned Ticker is not historical.
         public const string Sql_GetHistoricalStockQuotes = @"
 WITH req(ID,Start,[End],N,IsAdj) AS (
@@ -586,7 +586,7 @@ DECLARE @TsqEnd DATE = (SELECT TOP 1 [Date] FROM StockQuote WHERE StockID=@id0 O
 IF (@ExclamPos = 0 AND @Tbegin < @TsqEnd) BEGIN
    SET @msg = @T+' has quotes before the last quote of '+@Tsq;
    PRINT @msg;
-   -- THROW 50000, @msg, 1;   (SVXY!Light0.5x.SQ, VXXB.SQ, VXZB.SQ) has more accurate simulated values than real, because there was no liquidity at the beginning.
+   -- THROW 50000, @msg, 1;   (SVXY!Light0.5x.SQ, VXX.SQ, VXZ.SQ) has more accurate simulated values than real, because there was no liquidity at the beginning.
 END;
 IF (@Tbegin < @start) SET @Tbegin = @start;
 --DECLARE @adj0 FLOAT = (SELECT f FROM dbo.GetAdjustmentFactorAt2(@id1,@Tbegin)); -- was used by Robert

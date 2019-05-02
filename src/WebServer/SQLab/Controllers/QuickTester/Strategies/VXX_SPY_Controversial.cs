@@ -37,13 +37,13 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
 
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, (new string[] { "VXXB", "SPY" }).ToList());
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, (new string[] { "VXX", "SPY" }).ToList());
             var getAllQuotesData = await getAllQuotesTask;
             stopWatch.Stop();
 
             string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
             DateTime startDate, endDate;
-            StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(getAllQuotesData.Item1, new string[] { "VXXB", "SPY" }, ref warningToUser, out startDate, out endDate);
+            StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(getAllQuotesData.Item1, new string[] { "VXX", "SPY" }, ref warningToUser, out startDate, out endDate);
             List<DailyData> pv = StrategiesCommon.DeepCopyQuoteRange(getAllQuotesData.Item1[0], startDate, endDate);
 
             var vxxQoutes = getAllQuotesData.Item1[0];
@@ -66,7 +66,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
         }
 
 
-        // in general play Buy&Hold XIV, which is short VXXB daily. But
+        // in general play Buy&Hold XIV, which is short VXX daily. But
         //Stay out and go to cash on the next single trading day if and only if SPX and VIX move in the same direction, but at least with 0.1% and 0.25% (in absolute value, 12.22% of trading days from 2004 to 2014). 
         //In other words, we do not use this exit signal when daily percentage change of the SPX is 0.03% and the VIX is 0.1% (randomness, they are zero in fact). But we use, when SPX decreases with 0.23% and VIX with 0.36%.
         //This exit signal is valid only on non-FOMC, non-Holiday, non-OPEX and non-ToM days, i.e. only on those days when we use the pure Mix signal. In other words, this exit signal affects only on Mix-signalled days.

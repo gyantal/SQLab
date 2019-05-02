@@ -7,10 +7,10 @@ using System.Linq;
 using System.Threading.Tasks;
 
 
-// https://www.snifferquant.net/rtp?s=VXXB,SVXY,UWM,TWM,^RUT&f=l  // without JsonP, these tickers are streamed all the time
-// https://www.snifferquant.net/rtp?s=VXXB,SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l  // without JsonP, AAPL and GOOGL is not streamed
-// https://www.snifferquant.net/rtp?s=VXXB,^VIX,^GSPC,SVXY&f=l  // without JsonP, this was the old test 1
-// https://www.snifferquant.net/rtp?s=VXXB,^VIX,^GSPC,SVXY,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction  // with JsonP, this was the old test 2
+// https://www.snifferquant.net/rtp?s=SPY,SVXY,UWM,TWM,^RUT&f=l  // without JsonP, these tickers are streamed all the time
+// https://www.snifferquant.net/rtp?s=SPY,SVXY,UWM,TWM,^RUT,AAPL,GOOGL&f=l  // without JsonP, AAPL and GOOGL is not streamed
+// https://www.snifferquant.net/rtp?s=SPY,^VIX,^GSPC,SVXY&f=l  // without JsonP, this was the old test 1
+// https://www.snifferquant.net/rtp?s=SPY,^VIX,^GSPC,SVXY,^^^VIX201610,GOOG&f=l&jsonp=myCallbackFunction  // with JsonP, this was the old test 2
 namespace SQLab.Controllers
 {
     //[Route("api/[controller]")]
@@ -53,7 +53,7 @@ namespace SQLab.Controllers
             try
             {
                 var jsonDownload = string.Empty;
-                //string queryString = @"?s=VXXB,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
+                //string queryString = @"?s=SPY,SVXY,UWM,TWM,^RUT&f=l"; // without JsonP, these tickers are streamed all the time
                 Utils.Logger.Info($"RealtimePrice.GenerateRtpResponse(). Sending to VBroker: '{p_queryString}'");
                 Task<string> vbMessageTask = VirtualBrokerMessage.Send(p_queryString, VirtualBrokerMessageID.GetRealtimePrice);
                 string reply = await vbMessageTask;

@@ -76,7 +76,7 @@ namespace SQLab.Controllers
 
             //DateTime endTimeUtc = DateTime.UtcNow;
             //DateTime startTimeUtc = endTimeUtc.AddDays(-100);
-            //var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc, (new string[] { "VXXB", "SPY" }).ToList());
+            //var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc, (new string[] { "VXX", "SPY" }).ToList());
             //var getAllQuotesData = await getAllQuotesTask;
 
             //Downloading historical data from vixcentral.com.

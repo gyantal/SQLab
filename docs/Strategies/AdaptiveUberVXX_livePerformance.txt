@@ -6,10 +6,10 @@
 from https://docs.google.com/document/d/1DJtSt1FIPFbscAZsn8UAfiBBIhbeWvZcJWtQffGPTfU/edit#
 10. Starting trading with VirtualBroker
 
-On 2016-04-14, the VirtualBroker which previously played only the Connor TrendFollowing with VXXB as trading instrument started to play the 
+On 2016-04-14, the VirtualBroker which previously played only the Connor TrendFollowing with VXX as trading instrument started to play the 
 TotM+TotMidM with Summer/Winter distinction. It is an Adaptive UberVXX process. It uses the SPY for mask generation, using only the last 25 years 
-(later we may modify it to use only the last 20 years). Currently p-value of 10% is used for bullish bets (short VXXB), 
-and p-value of 15% is used for bearish bets (long VXXB), because we want more shorts and that is the less crowded trade. 
+(later we may modify it to use only the last 20 years). Currently p-value of 10% is used for bullish bets (short VXX), 
+and p-value of 15% is used for bearish bets (long VXX), because we want more shorts and that is the less crowded trade. 
 
 This is the SPY nSamples, Win%, T-value, P-values currently synthetized (Green is bullish day, Red is bearish) :
 --- Stats for Winter, TotM:    (Win%, aMean, t-value, p-value)
@@ -95,7 +95,7 @@ Annualized StDev: 14.16%
 Sharpe: 1.65
 
 
-For VXXB from 2004:
+For VXX from 2004:
 CAGR: 49.51%
 Annualized StDev: 39.59%
 Sharpe: 1.25

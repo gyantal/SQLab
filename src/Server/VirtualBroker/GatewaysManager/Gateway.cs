@@ -54,7 +54,7 @@ namespace VirtualBroker
     public class RealOrder
     {
         public int OrderId { get; set; }
-        public List<int> VirtualOrderIds { get; set; }  // sometimes one real order has many virtual orders. If one order is Short 10 VXXB, other order is long 7 VXXB, than the one real order will be short 3 VXXB
+        public List<int> VirtualOrderIds { get; set; }  // sometimes one real order has many virtual orders. If one order is Short 10 SPY, other order is long 7 SPY, than the one real order will be short 3 SPY
     }
 
     public partial class Gateway

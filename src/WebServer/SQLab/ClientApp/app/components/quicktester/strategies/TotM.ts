@@ -6,10 +6,10 @@ import { Strategy } from './Strategy';
 
 export class TotM extends Strategy {
 
-    public bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Long IYR", "Short VXXB", "Short VXXB.SQ", "Short VXZB", "Short VXZB.SQ"];
+    public bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Long IYR", "Short VXX", "Short VXX.SQ", "Short VXZ", "Short VXZ.SQ"];
     public selectedBullishTradingInstrument = this.bullishTradingInstrument[0];
 
-    //public totMStock = ["SPY", "QQQ", "VXXB"];
+    //public totMStock = ["SPY", "QQQ", "VXX"];
     //public selectedTotMStock = "SPY";
 
     //public totMLongOrShortWhenBullish = ["Long", "Short"];

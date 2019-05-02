@@ -183,9 +183,9 @@ namespace VirtualBroker
             // http://www.canbike.org/information-technology/yahoo-finance-url-download-to-a-csv-file.html
             // http://download.finance.yahoo.com/d/quotes.csv?s=AAPL&f=sl1d1t1c1ohgv&e=.csv     where s = symbol, l1 – Last Trade Price, b2	Ask (Real-time), b3	Bid (Real-time)
             // sometimes, when there is an 1 hour SummerTime setting difference, we have proper real-time price not 20min later, but 1h20min later.
-            //"VXXB",20.87,"3/15/2016","4:00pm",+0.29,21.19,21.27,20.83,541558
-            // but using k1,b2,b3 is no better: http://download.finance.yahoo.com/d/quotes.csv?s=VXXB&f=sl1d1t1k1b2b3c1ohgv&e=.csv
-            // "VXXB",20.87,"3/15/2016","4:00pm",N/A,N/A,N/A,+0.29,21.19,21.27,20.83,541558
+            //"VXX",20.87,"3/15/2016","4:00pm",+0.29,21.19,21.27,20.83,541558
+            // but using k1,b2,b3 is no better: http://download.finance.yahoo.com/d/quotes.csv?s=VXX&f=sl1d1t1k1b2b3c1ohgv&e=.csv
+            // "VXX",20.87,"3/15/2016","4:00pm",N/A,N/A,N/A,+0.29,21.19,21.27,20.83,541558
             //string uri = $"http://download.finance.yahoo.com/d/quotes.csv?s={ticker}&f=sl1d1t1k1b2b3c1ohgv&e=.csv";
             string uri = $"http://download.finance.yahoo.com/d/quotes.csv?s={ticker}&f=sl1d1t1k1abc1ohgv&e=.csv";
             string csvDownload;
@@ -322,7 +322,7 @@ namespace VirtualBroker
             string ticker = (p_contract.SecType != "IND") ? p_contract.Symbol : "^" + p_contract.Symbol;
 
             DateTime startDateTime = p_endDateTime.AddDays(-1.0 * p_lookbackWindowSize / 5.0 * 7.0 * 1.15);  // convert trading days to calendar days, and add extra 10%
-            //string uri = "http://ichart.finance.yahoo.com/table.csv?s=VXXB&d=1&e=21&f=2014&g=d&a=0&b=30&c=2009&ignore=.csv";
+            //string uri = "http://ichart.finance.yahoo.com/table.csv?s=VXX&d=1&e=21&f=2014&g=d&a=0&b=30&c=2009&ignore=.csv";
             string uri = $"http://ichart.finance.yahoo.com/table.csv?s={ticker}&d={p_endDateTime.Month - 1}&e={p_endDateTime.Day}&f={p_endDateTime.Year}&g=d&a={startDateTime.Month - 1}&b={startDateTime.Day}&c={startDateTime.Year}&ignore=.csv";
             string csvDownload;
             if (!Utils.DownloadStringWithRetry(out csvDownload, uri, 5, TimeSpan.FromSeconds(5), false))
@@ -372,7 +372,7 @@ namespace VirtualBroker
         {
             switch (p_contract.Symbol)
             {
-                case "VXXB":
+                case "VXX":
                     return 4001;
                 case "SVXY":
                     return 4002;

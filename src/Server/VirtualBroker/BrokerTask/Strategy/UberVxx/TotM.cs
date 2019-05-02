@@ -44,7 +44,7 @@ namespace VirtualBroker
         SampleStatsPerRegime m_summerStats;
         SampleStatsPerRegime m_allYearStats;
 
-        public double? GetUberVxx_TotM_TotMM_Summer_Winter_ForecastVxx()    // forecast VXXB, not SPY
+        public double? GetUberVxx_TotM_TotMM_Summer_Winter_ForecastVxx()
         {
             if (!PrepareHistoricalStatsForAllRegimes())
             {
@@ -52,7 +52,7 @@ namespace VirtualBroker
                 return null;
             }
 
-            //Utils.ConsoleWriteLine(null, false, $"TotM: Training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");    // next Console line shows the "SPY" or "VXXB" as for Win%
+            //Utils.ConsoleWriteLine(null, false, $"TotM: Training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");    // next Console line shows the "SPY" or "VXX" as for Win%
             Utils.Logger.Info($"TotM: Training set: SPY %Chg from {m_spy[0].Date.ToString("yyyy-MM-dd")}.");
 
             // In theory TotM vs. TotMM signals can conflict, because in 2001, market was closed for 4 days, because of the NY terrorist event. 
@@ -88,7 +88,7 @@ namespace VirtualBroker
             double? forecast = null;
             SampleStats statsToUse;
             // TotMidM should have the preference over TotM, because
-            // Reason1:  TotM (18%) + TotMM (32%): 50%, give ToMM priority.  (see 'Table 16: Performance indicators of Sub-strategies using VXXB'  https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit)
+            // Reason1:  TotM (18%) + TotMM (32%): 50%, give ToMM priority.  (see 'Table 16: Performance indicators of Sub-strategies using VXX'  https://docs.google.com/document/d/1OAlCYuPz5DXMDt5NiGaExQtmxVMClHbtVVyr4ViSs7g/edit)
             // Reason2: 2016-10-24: TotMM+6 and TotM-6 happened at the same time.
             //VBroker did choose: TotMidM+6, which was neutral, while TotM-6 would have been market bearish.
             //So, TotMidM had the preference over TotM. Is it good? Nobody knows. Quite random.
@@ -131,7 +131,7 @@ namespace VirtualBroker
                 Utils.Logger.Info($"{regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct*100:0.0}, T-val:{tValue:F2}, P-val:{pValue*100:F2}%. Signif. at {significantPvalue * 100.0:0.##}%.");
                 m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">{regimeToUse.Name},{statsToUse.Name}{statsToUse.DayOffset}; SPY Win%:{winPct * 100:0.0}, T-val:{tValue:F2}, P-val:{pValue * 100:F2}%. Signif. at {significantPvalue * 100.0:0.##}%.</font>");
 
-                forecast = -1.0 * Math.Sign(tValue);    //invert the prediction, because long SPY bullishness means short VXXB, and we predict VXXB.
+                forecast = -1.0 * Math.Sign(tValue);    //invert the prediction, because long SPY bullishness means short VXX, and we predict VXX.
             } else
             {
                 Utils.ConsoleWriteLine(null, false, $"{statsToUse.Name}{statsToUse.DayOffset}:{regimeToUse.Name}, SPY Win%:{winPct * 100:0.0}, T-val:{tValue:F2}, P-val:{pValue * 100:F2}%. NOT Signif. at {significantPvalue * 100.0:0.##}%.");
@@ -248,7 +248,7 @@ namespace VirtualBroker
                 //-calculate StDev.and http://www.itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
                 //	"Although it is common practice to use Z-scores to identify possible outliers, 
                 //    Iglewicz and Hoaglin recommend using the modified Z - score"
-                //- Balazs used +8% or lower than -8% percentages threshold for VXXB TotM. So determine 8% is how many StDev away, 
+                //- Balazs used +8% or lower than -8% percentages threshold for VXX TotM. So determine 8% is how many StDev away, 
                 //	and if it 2.2 times, than use that for the other samples (like QQQ, which will have less StDev)
                 //-(not likely, but) double check, that max. only 5 or 6% of the samples are eliminated. If 10% of the samples are eliminated
                 //	as outliers. (10 out of 100), then those are not random outliers.

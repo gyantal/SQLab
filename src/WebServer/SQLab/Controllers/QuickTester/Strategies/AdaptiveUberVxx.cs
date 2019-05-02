@@ -20,13 +20,13 @@ namespace SQLab.Controllers.QuickTester.Strategies
             //string assetsStr = p_allParamsDict["Assets"][0];                                         // "MDY,ILF,FEZ,EEM,EPP,VNQ,TLT"
 
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, (new string[] { "VXXB", "SPY" }).ToList());
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams.startDateUtc, p_generalParams.endDateUtc, (new string[] { "VXX", "SPY" }).ToList());
             var getAllQuotesData = await getAllQuotesTask;
             stopWatch.Stop();
 
             string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
             DateTime startDate, endDate;
-            StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(getAllQuotesData.Item1, new string[] { "VXXB", "SPY" }, ref warningToUser, out startDate, out endDate);
+            StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(getAllQuotesData.Item1, new string[] { "VXX", "SPY" }, ref warningToUser, out startDate, out endDate);
             List<DailyData> pv = StrategiesCommon.DeepCopyQuoteRange(getAllQuotesData.Item1[0], startDate, endDate);
 
             var vxxQoutes = getAllQuotesData.Item1[0];

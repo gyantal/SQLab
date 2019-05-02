@@ -155,7 +155,7 @@ namespace VirtualBroker
                 //Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "RUSSELL", LocalSymbol = "RUT" };
                 //Contract contract = new Contract() { Symbol = "ES", SecType = "IND", Currency = "USD", Exchange = "GLOBEX" };
                 //Contract contract = new Contract() { Symbol = "RUT", SecType = "IND", Currency = "USD", Exchange = "SMART" };
-                //Contract contract = new Contract() { Symbol = "VXXB", SecType = "STK", Currency = "USD", Exchange = "SMART" };
+                //Contract contract = new Contract() { Symbol = "VXX", SecType = "STK", Currency = "USD", Exchange = "SMART" };
                 //if (!Controller.g_gatewaysWatcher.ReqHistoricalData(DateTime.UtcNow, lookbackWindowSize, "TRADES", contract, out m_rut))   // real trades, not the MidPoint = AskBidSpread
                 //    return null;
 
@@ -187,7 +187,7 @@ namespace VirtualBroker
                 // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
                 if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3))) // in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
                     StrongAssert.True(Math.Abs(rutQuotesFromSqlDB[rutQuotesFromSqlDB.Count - 1].AdjClosePrice - m_rut[m_rut.Count - 2].AdjClosePrice) < 0.02, Severity.NoException,
-                        $"Yesterday close price for {contract.Symbol} doesn't match between IB ({m_rut[m_rut.Count - 2].AdjClosePrice}) and SQL DB ({rutQuotesFromSqlDB[rutQuotesFromSqlDB.Count - 1].AdjClosePrice}). Something is not right. We compare SQL data to SQL data here, so this warning shouldn't have been tiggered. For RUT, we use SQL (YF) historical data (can be wrong for the previous close temporarily). For UberVXX VXXB, we use IB historical data (more trustworthy).");
+                        $"Yesterday close price for {contract.Symbol} doesn't match between IB ({m_rut[m_rut.Count - 2].AdjClosePrice}) and SQL DB ({rutQuotesFromSqlDB[rutQuotesFromSqlDB.Count - 1].AdjClosePrice}). Something is not right. We compare SQL data to SQL data here, so this warning shouldn't have been tiggered. For RUT, we use SQL (YF) historical data (can be wrong for the previous close temporarily). For UberVXX VXX, we use IB historical data (more trustworthy).");
 
                 // log the last 3 values (for later debugging)
                 Utils.Logger.Trace($"{m_rut[m_rut.Count - 3].Date.ToString("yyyy-MM-dd")}: {m_rut[m_rut.Count - 3].AdjClosePrice}");
