@@ -25,7 +25,7 @@ namespace SqCommon
         {
             FileStream fs = new FileStream(p_filePath, FileMode.Append);
             m_file = new StreamWriter(fs);
-            m_file.AutoFlush = true;    // auto-Flush anych is ok. so no manual flush is required
+            m_file.AutoFlush = true;    // auto-Flush asych is ok. so no manual flush is required
         }
 
         public void Trace(string p_message)

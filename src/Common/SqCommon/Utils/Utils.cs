@@ -181,9 +181,15 @@ namespace SqCommon
             return RunningEnvironment;
         }
 
+
+        // ANSI escape code colour codes (which contain BOLD style too) in .NET Core Console applications: doesn't work on Windows, because of Windows. see more here
+        // https://www.jerriepelser.com/blog/using-ansi-color-codes-in-net-console-apps/
+        // http://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html
+        //
         // Note: this Linux specific functionality is not necessary. But it is decided that we leave it here, because this Linux specific
         // Bright and Bold ("1" means bold, (char)27 + "[1;35m";) colours looks much much prettier
         // than the Dotnetcore official non-bold and darkish looking Console.Magenta.
+        //
         // In the future, when DotNetCore supports Console.Bold colours too (in theory Windows console has this feature too), this code can be eliminated.
         //VT100 codes, http://www.cplusplus.com/forum/unices/36461/
         //this Linux handling should be temporary only until it is fixed in DotNetCore in Linux

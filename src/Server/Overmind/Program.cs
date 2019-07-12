@@ -91,7 +91,6 @@ namespace Overmind
                 switch (userInput)
                 {
                     case "1":
-                        //new HQEmail().SendOnMono(true);
                         Console.WriteLine("Hello. I am not crashed yet! :)");
                         Utils.Logger.Info("Hello. I am not crashed yet! :)");
                         break;

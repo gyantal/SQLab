@@ -277,7 +277,7 @@ namespace Overmind
                 gyantalEmailInnerlStr += "BIDU price warning: bigger than usual move. In percentage: " + (biduTodayPctChange * 100).ToString("0.00") + @"%." + Environment.NewLine;
                 gyantalPhoneCallInnerStr += "the ticker B I D U, ";
             }
-            double vxxTodayPctChange = GetTodayPctChange("VXB");
+            double vxxTodayPctChange = GetTodayPctChange("VXX");
             if (Math.Abs(vxxTodayPctChange) >= 0.06)
             {
                 gyantalEmailInnerlStr += "VXX price warning: bigger than usual move. In percentage: " + (vxxTodayPctChange * 100).ToString("0.00") + @"%";
