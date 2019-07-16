@@ -96,7 +96,7 @@ namespace RxCommon
         public void Info(Exception p_ex, string p_message)
         {
             // this was an Exception. That is important. Write it to the Console too, not only the log file.
-            string str = $"{p_message} : EXCEPTION - INFO: {p_ex.Message}";
+            string str = $"{p_message}, : EXCEPTION: {p_ex.ToStringWithShortenedStackTrace(400)}";
             Console.WriteLine(str);
             m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Info, Timestamp = DateTime.UtcNow, Message = str });
         }
@@ -109,7 +109,9 @@ namespace RxCommon
         public void Warn(Exception p_ex, string p_message)
         {
             // this was an Exception. That is important. Write it to the Console too, not only the log file. Warn level logs are listened by the ConsoleObserver
-            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Warn, Timestamp = DateTime.UtcNow, Message = $"{p_message} : EXCEPTION - INFO: {p_ex.Message}" });
+            string str = $"{p_message}, : EXCEPTION: {p_ex.ToStringWithShortenedStackTrace(400)}";
+            Console.WriteLine(str);
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Warn, Timestamp = DateTime.UtcNow, Message = str });
         }
 
         public void Warn(string p_fmt, params object[] p_args)
@@ -125,7 +127,9 @@ namespace RxCommon
         public void Error(Exception p_ex, string p_message)
         {
             // this was an Exception. That is important. Write it to the Console too, not only the log file. Warn level logs are listened by the ConsoleObserver
-            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Error, Timestamp = DateTime.UtcNow, Message = $"{p_message} : EXCEPTION - INFO: {p_ex.Message}" });
+            string str = $"{p_message}, : EXCEPTION: {p_ex.ToStringWithShortenedStackTrace(400)}";
+            Console.WriteLine(str);
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Error, Timestamp = DateTime.UtcNow, Message = str });
         }
 
         public void Error(string p_fmt, params object[] p_args)
@@ -141,7 +145,9 @@ namespace RxCommon
         public void Fatal(Exception p_ex, string p_message)
         {
             // this was an Exception. That is important. Write it to the Console too, not only the log file. Warn level logs are listened by the ConsoleObserver
-            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Fatal, Timestamp = DateTime.UtcNow, Message = $"{p_message} : EXCEPTION - INFO: {p_ex.Message}" });
+            string str = $"{p_message}, : EXCEPTION: {p_ex.ToStringWithShortenedStackTrace(400)}";
+            Console.WriteLine(str);
+            m_logDataSubject.OnNext(new LogItem() { CallerThreadId = Thread.CurrentThread.ManagedThreadId, LogLevel = LogLevel.Fatal, Timestamp = DateTime.UtcNow, Message = str });
         }
 
         public void Fatal(string p_fmt, params object[] p_args)
