@@ -165,7 +165,7 @@ namespace SqCommon
                         RunningEnvironment = RunningEnvironment.WindowsAGy;
                     else if (Environment.MachineName == "Reka-PC".ToUpper())
                         RunningEnvironment = RunningEnvironment.WindowsBL_laptop;
-                    else if (Environment.MachineName == "Balazswork-PC".ToUpper())
+                    else if (Environment.MachineName == "Balazswork2-PC".ToUpper())
                         RunningEnvironment = RunningEnvironment.WindowsBL_laptop;
                     else
                     {

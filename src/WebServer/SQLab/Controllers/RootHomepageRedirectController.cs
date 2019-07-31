@@ -24,6 +24,7 @@ namespace SQLab.Controllers
     [Route("~/VixFuturesAnalyser", Name = "VixFuturesAnalyser")]
     [Route("~/ContangoVisualizer", Name = "ContangoVisualizer")]
     [Route("~/AdvancedUberTAA", Name = "AdvancedUberTAA")]
+    [Route("~/SINAddiction", Name = "SINAddiction")]
     [Route("~/VolatilityDragVisualizer", Name = "VolatilityDragVisualizer")]
     [Route("~/VolatilityDragVisualizerHelp", Name = "VolatilityDragVisualizerHelp")]
     [Route("~/GameChangerBetaCalculator", Name = "GameChangerBetaCalculator")]
@@ -93,6 +94,9 @@ namespace SQLab.Controllers
                     break;
                 case "/advancedubertaa":
                     fileName = "AdvancedUberTAA.html";
+                    break;
+                case "/sinaddiction":
+                    fileName = "SINAddiction.html";
                     break;
                 case "/volatilitydragvisualizer":
                     fileName = "VolatilityDragVisualizer.html";
