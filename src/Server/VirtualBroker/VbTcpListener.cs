@@ -31,8 +31,8 @@ namespace VirtualBroker
             }
             catch (Exception e) // Background thread can crash application. A background thread does not keep the managed execution environment running.
             {
-                Console.WriteLine($"Expected Exception. We don't rethrow it. Occurs daily when client VBroker VM server reboots. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
-                Utils.Logger.Info($"Expected Exception. We don't rethrow it. Occurs daily when client VBroker VM server reboots. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
+                Console.WriteLine($"Expected Exception: 'InnerException: Connection reset by peer'. We don't rethrow it. Occurs daily when client VBroker VM server reboots. Unfortunatelly, it happens once a year at 12:30 UTC on normal trading day, which should be handled properly in the future. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
+                Utils.Logger.Info($"Expected Exception. 'InnerException: Connection reset by peer'. We don't rethrow it. Occurs daily when client VBroker VM server reboots. Unfortunatelly, it happens once a year at 12:30 UTC on normal trading day, which should be handled properly in the future. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
             }
 
             string reply = null;
