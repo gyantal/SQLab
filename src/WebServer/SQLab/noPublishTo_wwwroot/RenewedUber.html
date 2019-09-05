@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html style="background: linear-gradient(to right, #3080c7, #3080c7 4%, #75e0e1 45%, #73e5e1 55%, #91d73a 97%); background-attachment: fixed;">
+
+<head>
+    <meta charset="utf-8" />
+    <title>RenewedUber Live Strategy</title>
+
+    <link rel="stylesheet" type="text/css" href="/css/RenewedUber.css">
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
+    <script language="javascript" type="text/javascript" src="/js/jquery.flot.axislabels.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.js"></script>
+    <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.min.js"></script>
+    <script type="text/javascript" src="/js/RenewedUber.js"></script>
+
+    <script>
+        onHeadProcessing();
+    </script>
+
+</head>
+
+<body>
+
+    <h1>Extended Renewed Uber using STCI Live Strategy</h1>
+    <div class="h3" id="idTitleCont"></div>
+
+    <div id="errorMessage" style="visibility: hidden">
+        <br>
+        <br>
+        <div class="herror" id="idErrorCont"></div>
+    </div>
+
+    <div id="inviCharts" style="visibility: hidden">
+
+
+
+
+        <p class="bottom-three">
+            <span id="idTimeNow"></span>&emsp;&emsp;<span id="idLiveDataTime"></span>
+        </p>
+        <p class="bottom-three">
+            <span id="idCurrentPV"></span>
+        </p>
+        <p class="bottom-three">
+            <span id="idCurrentEvent"></span>
+        </p>
+
+
+        <span id="idCurrTableMtx"></span>
+        <br>
+        <div class="centerMatrix">
+            <span id="idCurrTableMtx7"></span>
+        </div>
+        <br>
+
+
+
+        <div class="center">
+            <p class="bottom-three">
+                <span class="clmt" id="idPosLast"></span>
+            </p>
+            <span id="idCurrTableMtx3"></span>
+            <br>
+            <p class="bottom-three">
+                <span class="clmt" id="idPosFut"></span>
+            </p>
+            <span id="idCurrTableMtx5"></span>
+        </div>
+        <br>
+        <br>
+        <div class="demo-container">
+            <strong>Percentage Changes in the Last 20 Days</strong>
+            <div id="placeholder1" class="demo-placeholder"></div>
+        </div>
+        <br>
+        <br>
+        <p class="bottom-three">
+            <span class="clmt" id="idVixCont"></span>
+        </p>
+        <span id="idCurrTableMtx11"></span>
+        <div class="demo-container">
+            <div id="placeholder2" class="demo-placeholder" style="float:left; width:670px;"></div>
+            <p id="choices1" style="float:right; width:70px; text-align:left"></p>
+        </div>
+    </div>
+
+    <div class="center">
+        <span id="idCurrTableMtx9"></span>
+    </div>
+
+    <br>
+    <p class="bottom-rules">
+        <span id="idRules"></span>
+    </p>
+
+
+
+</body>
+</html>
