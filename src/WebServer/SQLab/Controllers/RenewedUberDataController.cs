@@ -459,7 +459,7 @@ namespace SQLab.Controllers
             double[] bullishWeights = new double[] { -0.1, 0.3, 0.3, 0.2, -0.1, -0.05, -0.05 };
             double[] bearishWeights = new double[] { 1, 0, 0, 0, 0, 0, 0 };
             double[] eventMultiplicator = new double[] { 0.5, 1, 1, 0.85, 0.85, 0.7, 0.7 };
-            double[] stciThresholds = new double[] { 0.02, 0.09, 0.02 };
+            double[] stciThresholds = new double[] { 0.02, 0.09, 0.075 };
 
 
             string gchGSheetRefPos = "https://sheets.googleapis.com/v4/spreadsheets/1OZV2MqNJAep9SV1p1YribbHYiYoI7Qz9OjQutV6qJt4/values/A1:Z2000?key=";
@@ -679,27 +679,27 @@ namespace SQLab.Controllers
                 {
                     case 1:
                         nextEventNames[iRows] = "FOMC Bullish Day";
-                        nextEventColors[iRows] = "009900";
+                        nextEventColors[iRows] = "32CD32";
                         break;
                     case 2:
                         nextEventNames[iRows] = "FOMC Bearish Day";
-                        nextEventColors[iRows] = "FF0000";
+                        nextEventColors[iRows] = "c24f4f";
                         break;
                     case 3:
                         nextEventNames[iRows] = "Holiday Bullish Day";
-                        nextEventColors[iRows] = "00FF00";
+                        nextEventColors[iRows] = "7CFC00";
                         break;
                     case 4:
                         nextEventNames[iRows] = "Holiday Bearish Day";
-                        nextEventColors[iRows] = "DC143C";
+                        nextEventColors[iRows] = "d46a6a";
                         break;
                     case 5:
                         nextEventNames[iRows] = "Other Bullish Event Day";
-                        nextEventColors[iRows] = "66FF66";
+                        nextEventColors[iRows] = "00FA9A";
                         break;
                     case 6:
                         nextEventNames[iRows] = "Other Bearish Event Day";
-                        nextEventColors[iRows] = "FF8C00";
+                        nextEventColors[iRows] = "ed8c8c";
                         break;
                     case 0:
                         nextEventNames[iRows] = "Non-Event Day";
@@ -815,27 +815,27 @@ namespace SQLab.Controllers
                 {
                     case 1:
                         prevEventNames[iRows] = "FOMC Bullish Day";
-                        prevEventColors[iRows] = "009900";
+                        prevEventColors[iRows] = "32CD32";
                         break;
                     case 2:
                         prevEventNames[iRows] = "FOMC Bearish Day";
-                        prevEventColors[iRows] = "FF0000";
+                        prevEventColors[iRows] = "c24f4f";
                         break;
                     case 3:
                         prevEventNames[iRows] = "Holiday Bullish Day";
-                        prevEventColors[iRows] = "00FF00";
+                        prevEventColors[iRows] = "7CFC00";
                         break;
                     case 4:
                         prevEventNames[iRows] = "Holiday Bearish Day";
-                        prevEventColors[iRows] = "DC143C";
+                        prevEventColors[iRows] = "d46a6a";
                         break;
                     case 5:
                         prevEventNames[iRows] = "Other Bullish Event Day";
-                        prevEventColors[iRows] = "66FF66";
+                        prevEventColors[iRows] = "00FA9A";
                         break;
                     case 6:
                         prevEventNames[iRows] = "Other Bearish Event Day";
-                        prevEventColors[iRows] = "FF8C00";
+                        prevEventColors[iRows] = "ed8c8c";
                         break;
                     case 7:
                         prevEventNames[iRows] = "STCI Bullish Day";
@@ -889,7 +889,7 @@ namespace SQLab.Controllers
 
             //AssetPrice Changes in last 20 days to chart
             int assetChartLength = 20;
-            string[,] assetChangesMtx = new string[assetChartLength + 1, allAssetList.Length];
+            string[,] assetChangesMtx = new string[assetChartLength + 1, allAssetList.Length+1];
             for (int iRows = 0; iRows < assetChangesMtx.GetLength(0); iRows++)
             {
                 assetChangesMtx[iRows, 0] = quotesData[0][quotesData[0].Count - 1 - assetChartLength + iRows].Date.ToString("yyyy-MM-dd");
@@ -908,7 +908,7 @@ namespace SQLab.Controllers
             sb.Append(@"""," + Environment.NewLine + @"""currentPV"": """ + currPV.ToString("#,##0"));
             sb.Append(@"""," + Environment.NewLine + @"""currentPVDate"": """ + currPosDateString);
             sb.Append(@"""," + Environment.NewLine + @"""gDocRef"": """ + usedGDocRef);
-            sb.Append(@"""," + Environment.NewLine + @"""gSheetRef"": """ + usedGSheet2Ref);
+            sb.Append(@"""," + Environment.NewLine + @"""gSheetRef"": """ + usedGSheet2RefPos);
 
             sb.Append(@"""," + Environment.NewLine + @"""currentEventSignal"": """ + currEventSignal.ToString());
             sb.Append(@"""," + Environment.NewLine + @"""currentEventCode"": """ + currEventCode.ToString());

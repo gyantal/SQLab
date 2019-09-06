@@ -156,7 +156,7 @@ function creatingTables(data) {
     }
     currTableMtx5 += "</table>";
 
-    var currTableMtx7 = "<table class=\"currData2\"><tr><td bgcolor=\"#009900\">FOMC Bullish Day</td><td bgcolor=\"#00FF00\">Holiday Bullish Day</td><td bgcolor=\"#66FF66\">Other Bullish Event Day</td></tr><tr><td bgcolor=\"#FF0000\">FOMC Bearish Day</td><td bgcolor=\"#DC143C\">Holiday Bearish Day</td><td bgcolor=\"#FF8C00\">Other Bearish Event Day</td></tr><tr><td bgcolor=\"#C0C0C0\">Non-Playable Other Event Day</td><td bgcolor=\"#00FFFF\">STCI Bullish Day</td><td bgcolor=\"#FFFACD\">STCI Neutral Day</td></tr></table > ";
+    var currTableMtx7 = "<table class=\"currData2\"><tr><td bgcolor=\"#32CD32\">FOMC Bullish Day</td><td bgcolor=\"#7CFC00\">Holiday Bullish Day</td><td bgcolor=\"#00FA9A\">Other Bullish Event Day</td></tr><tr><td bgcolor=\"#c24f4f\">FOMC Bearish Day</td><td bgcolor=\"#d46a6a\">Holiday Bearish Day</td><td bgcolor=\"#ed8c8c\">Other Bearish Event Day</td></tr><tr><td bgcolor=\"#C0C0C0\">Non-Playable Other Event Day</td><td bgcolor=\"#00FFFF\">STCI Bullish Day</td><td bgcolor=\"#FFFACD\">STCI Neutral Day</td></tr></table > ";
 
     //"Sending" data to HTML file.
     var currTableMtx2 = document.getElementById("idCurrTableMtx");
@@ -180,7 +180,7 @@ function creatingTables(data) {
         xTicksH[i] = xTicksHRows;
     }
 
-    var noAssets = assetNames2Array.length - 2;
+    var noAssets = assetNames2Array.length - 1;
     var listH = [];
     for (var j = 0; j < noAssets; j++) {
         var assChartPerc1 = new Array(nCurrData);
