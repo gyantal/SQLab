@@ -142,7 +142,7 @@ namespace SQLab
                 app.UseExceptionHandler("/Home/Error");     // ExceptionHandlers will swallow the Exceptions. It will not be rolled further.
             }
 
-            app.UseMiddleware<RequestLoggingMiddleware>();  // For this to catch Exceptions, it should come after UseExceptionHadlers(), because those will swallow exceptions and generates nice ErrPage.
+            app.UseMiddleware<SqFirewallMiddleware>();  // For this to catch Exceptions, it should come after UseExceptionHadlers(), because those will swallow exceptions and generates nice ErrPage.
 
             app.UseStaticFiles();   // Call UseWebpackDevMiddleware before UseStaticFiles 
 

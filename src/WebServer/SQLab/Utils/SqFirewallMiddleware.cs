@@ -27,11 +27,12 @@ namespace SQLab
     }
 
 
-    internal class RequestLoggingMiddleware
+    // we can call it SqFirewallMiddleware because it is used as a firewall too, not only logging request
+    internal class SqFirewallMiddleware
     {
         readonly RequestDelegate _next;
 
-        public RequestLoggingMiddleware(RequestDelegate next)
+        public SqFirewallMiddleware(RequestDelegate next)
         {
             if (next == null)
                 throw new ArgumentNullException(nameof(next));
@@ -42,6 +43,25 @@ namespace SQLab
         {
             if (httpContext == null)
                 throw new ArgumentNullException(nameof(httpContext));
+
+
+            // Don't push it to the next Middleware if the path or IP is on the blacklist. In the future, implement a whitelist too, and only allow  requests explicitely on the whitelist.
+            if (IsHttpRequestOnBlacklist(httpContext))
+            {
+                // silently log it and stop processing
+                string isHttpsStr = httpContext.Request.IsHttps ? "HTTPS" : "HTTP";
+                var clientIP = WsUtils.GetRequestIP(httpContext);
+                string msg = String.Format($"{DateTime.UtcNow.ToString("HH':'mm':'ss.f")}#Blacklisted request is terminated: {isHttpsStr} {httpContext.Request.Method} '{httpContext.Request.Path}' from {clientIP}");
+                Console.WriteLine(msg);
+                Utils.Logger.Info(msg);
+                return;
+            }
+
+            if (!IsHttpRequestOnWhitelist(httpContext))
+            {
+                // inform the user in a nice HTML page that 'for security' ask the superwisor to whitelist path ''
+                return;
+            }
 
             Exception exception = null;
             DateTime startTime = DateTime.UtcNow;
@@ -87,7 +107,7 @@ namespace SQLab
                 // at the moment, send only raised Exceptions to HealthMonitor, not general IsErrors, like wrong statusCodes
                 if (requestLog.Exception != null && IsSendableToHealthMonitorForEmailing(requestLog.Exception))
                 {
-                    StringBuilder sb = new StringBuilder("Exception in Website.C#.RequestLoggingMiddleware. \r\n");
+                    StringBuilder sb = new StringBuilder("Exception in Website.C#.SqFirewallMiddleware. \r\n");
                     var requestLogStr = String.Format("{0}#{1}{2} {3} '{4}' from {5} (u: {6}) ret: {7} in {8:0.00}ms", requestLog.StartTime.ToString("HH':'mm':'ss.f"), requestLog.IsError ? "ERROR in " : String.Empty, requestLog.IsHttps ? "HTTPS" : "HTTP", requestLog.Method, requestLog.Path + (String.IsNullOrEmpty(requestLog.QueryString) ? "" : requestLog.QueryString), requestLog.ClientIP, requestLog.ClientUserEmail, requestLog.StatusCode, requestLog.TotalMilliseconds);
                     sb.Append("Request: " + requestLogStr + "\r\n");
                     sb.Append("Exception: '" + requestLog.Exception.ToStringWithShortenedStackTrace(400) + "'\r\n");
@@ -96,6 +116,24 @@ namespace SQLab
                     
             }
             
+        }
+
+        // crackers always try to break the server by typical vulnerability queries. It is pointless to process them. Most of the time it raises an exception.
+        static bool IsHttpRequestOnBlacklist(HttpContext p_httpContext)
+        {
+            // 1. check request path is allowed
+            if (p_httpContext.Request.Path.StartsWithSegments("/index.php", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (p_httpContext.Request.Path.StartsWithSegments("/user/register", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            // 2. check client IP is banned or not
+            return false;
+        }
+
+        static bool IsHttpRequestOnWhitelist(HttpContext p_httpContext)
+        {
+            return true;
         }
 
         static void LogDetailedContextForError(HttpContext httpContext, HttpRequestLog requestLog)
