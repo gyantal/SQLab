@@ -191,7 +191,7 @@ namespace SQLab
             //>see: my custom code hasn't been even invoked. Kestrel returns 404 not found, and my code has no chance to do anything at all.
             //>Solution: It is inevitable that crooks tries this query-and-abort and Kestrel is written badly that it doesn't handle Abortion properly.
             //So, in UnobservedTaskException() filters these aborts and don't send it to HealthMonitor.
-            if (RequestLoggingMiddleware.IsSendableToHealthMonitorForEmailing(e.Exception))
+            if (SqFirewallMiddleware.IsSendableToHealthMonitorForEmailing(e.Exception))
                 HealthMonitorMessage.SendAsync($"Exception in Website.C#.TaskScheduler_UnobservedTaskException. Exception: '{ e.Exception.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).RunSynchronously();
             e.SetObserved();        //  preventing it from triggering exception escalation policy which, by default, terminates the process.
 
