@@ -352,7 +352,14 @@ namespace SQLab.Controllers
             for (int iRow = 0; iRow < stciDateVec.Length; iRow++)
             {
                 stciDateVec[iRow] = vixCentralRec[usedDateIndexVec[iRow]].Date;
-                stciValue[iRow] = vixCentralRec[usedDateIndexVec[iRow]].STCont;
+                if (vixCentralRec[usedDateIndexVec[iRow]].F1expDays > 5)
+                {
+                    stciValue[iRow] = vixCentralRec[usedDateIndexVec[iRow]].STCont;
+                }
+                else
+                {
+                    stciValue[iRow] = vixCentralRec[usedDateIndexVec[iRow]].F3/ vixCentralRec[usedDateIndexVec[iRow]].F2-1;
+                }
             }
 
             //string ret = Processing(vixCentralRec, expDates, liveDate, liveFuturesDataTime);
@@ -757,19 +764,51 @@ namespace SQLab.Controllers
             currPosDateString = currPosDate.ToString("yyyy-MM-dd");
 
             double currPV;
+            double prevPV;
             int[] currPosInt = new int[allAssetList.Length + 1];
+            
 
 
             double[] currPosValue = new double[allAssetList.Length + 1];
+            double[] prevPosValue = new double[allAssetList.Length + 1];
             for (int jCols = 0; jCols < currPosValue.Length - 1; jCols++)
             {
                 currPosInt[jCols] = gSheetResToFinCalc.Item6[jCols];
                 currPosValue[jCols] = quotesData[jCols][quotesData[0].Count - 1].AdjClosePrice * currPosInt[jCols];
+                prevPosValue[jCols] = quotesData[jCols][quotesData[0].Count - 2].AdjClosePrice * currPosInt[jCols];
             }
 
             currPosInt[currPosInt.Length - 1] = gSheetResToFinCalc.Item5[1];
             currPosValue[currPosValue.Length - 1] = gSheetResToFinCalc.Item5[1];
+            prevPosValue[currPosValue.Length - 1] = gSheetResToFinCalc.Item5[1];
             currPV = Math.Round(currPosValue.Sum());
+            prevPV = Math.Round(prevPosValue.Sum());
+            double dailyProf = currPV - prevPV;
+            string dailyProfValString = "";
+            
+
+            string dailyProfString = "";
+            string dailyProfSign = "";
+            if (currPosDateString == liveDateTime.ToString("yyyy-MM-dd") && currPosDateString== quotesData[0][quotesData[0].Count - 1].Date.ToString("yyyy-MM-dd") && dailyProf >= 0)
+            {
+                dailyProfString = "posDaily";
+                dailyProfSign = "+$";
+                dailyProfValString = dailyProf.ToString("#,##0");
+
+            }
+            else if (currPosDateString == liveDateTime.ToString("yyyy-MM-dd") && currPosDateString == quotesData[0][quotesData[0].Count - 1].Date.ToString("yyyy-MM-dd") && dailyProf < 0)
+            {
+                dailyProfString = "negDaily";
+                dailyProfSign = "-$";
+                dailyProfValString = (-dailyProf).ToString("#,##0");
+            }
+            else
+            {
+                dailyProfString = "notDaily";
+                dailyProfSign = "N/A";
+                dailyProfValString = "";
+            }
+             
 
             double[] nextPosValue = new double[allAssetList.Length + 1];
             for (int jCols = 0; jCols < nextPosValue.Length - 1; jCols++)
@@ -906,6 +945,9 @@ namespace SQLab.Controllers
             sb.Append(@"""requestTime"": """ + liveDateString);
             sb.Append(@"""," + Environment.NewLine + @"""lastDataTime"": """ + lastDataTimeString);
             sb.Append(@"""," + Environment.NewLine + @"""currentPV"": """ + currPV.ToString("#,##0"));
+            sb.Append(@"""," + Environment.NewLine + @"""dailyProfSig"": """ + dailyProfSign);
+            sb.Append(@"""," + Environment.NewLine + @"""dailyProfAbs"": """ + dailyProfValString);
+            sb.Append(@"""," + Environment.NewLine + @"""dailyProfString"": """ + dailyProfString);
             sb.Append(@"""," + Environment.NewLine + @"""currentPVDate"": """ + currPosDateString);
             sb.Append(@"""," + Environment.NewLine + @"""gDocRef"": """ + usedGDocRef);
             sb.Append(@"""," + Environment.NewLine + @"""gSheetRef"": """ + usedGSheet2RefPos);

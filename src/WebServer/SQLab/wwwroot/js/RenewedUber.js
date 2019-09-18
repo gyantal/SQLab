@@ -35,6 +35,7 @@ function processData(dataStr) {
     var divTimeNow = document.getElementById("idTimeNow");
     var divLiveDataTime = document.getElementById("idLiveDataTime");
     var divCurrentPV = document.getElementById("idCurrentPV");
+    var divDailyProfit = document.getElementById("idDailyProfit");
     var divCurrentEvent = document.getElementById("idCurrentEvent");
     var divCLMTString = document.getElementById("idCLMTString");
     var divPosLastString = document.getElementById("idPosLast");
@@ -42,12 +43,13 @@ function processData(dataStr) {
     var divVixContString = document.getElementById("idVixCont");
     var divRulesString = document.getElementById("idRules");
 
-
+       
     divTitleCont.innerHTML = '<small><a href="' + data.gDocRef + '" target="_blank">(Study)</a></small>';
     divTimeNow.innerHTML = data.requestTime;
     divLiveDataTime.innerHTML = data.lastDataTime;
-    divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$ " + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank">these current positions</a> updated for ' + data.currentPVDate + ")";
-    divCurrentEvent.innerHTML = "Next trading day will be <span class=\"stci\"> " + data.currentEventName + "</span>, used STCI is <span class=\"stci\">" + data.currentSTCI + "</span>, thus leverage will be <span class=\"stci\">" + data.currentFinalWeightMultiplier + ".</span >";
+    divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$" + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank">these current positions</a> updated for ' + data.currentPVDate + ")";
+    if (data.dailyProfSig !== "N/A") { divDailyProfit.innerHTML = "Daily Profit/Loss: <span class=\"" + data.dailyProfString + "\">" + data.dailyProfSig + data.dailyProfAbs + "</span>"}
+    divCurrentEvent.innerHTML = "Next trading day will be <span class=\"stci\"> " + data.currentEventName + "</span>, used STCI is <div class=\"tooltip\"><span class=\"stci\">" + data.currentSTCI + "</span><span class=\"tooltiptext\">Second (third) month VIX futures divided by front (second) month VIX futures minus 1, with more (less) than 5-days until expiration.</span></div >, thus leverage will be <span class=\"stci\">" + data.currentFinalWeightMultiplier + ".</span >";
     divPosLastString.innerHTML = "Recent Events";
     divPosFutString.innerHTML = "Upcoming Events";
     divVixContString.innerHTML = "VIX Futures Term Structure";
@@ -135,7 +137,7 @@ function creatingTables(data) {
 
     currTableMtx += "</tr></table>";
 
-    var currTableMtx3 = "<table class=\"currData\"><tr align=\"center\"  bgcolor=\"#66CCFF\"><td rowspan=\"3\">Date</td><td colspan=\"8\">Events</td><td rowspan=\"3\">Most Significant Event</td><td rowspan=\"3\">M.S. Event Signal</td><td rowspan=\"3\">M.S. Event Leverage</td><td rowspan=\"3\">STCI</td><td rowspan=\"3\"><b>Played Event</b></td><td rowspan=\"3\"><b>Played Leveraged Signal</b></td></tr><tr align=\"center\" bgcolor=\"#66CCFF\"><td colspan=\"2\">Event 1</td><td colspan=\"2\">Event 2</td><td colspan=\"2\">Event 3</td><td colspan=\"2\">Event 4</td></tr><tr align=\"center\" bgcolor=\"#66CCFF\"><td>Name</td><td>Signal</td><td>Name</td><td>Signal</td><td>Name</td><td>Signal</td><td>Name</td><td>Signal</td></tr><tr align=\"center\">";
+    var currTableMtx3 = "<table class=\"currData\"><tr align=\"center\"  bgcolor=\"#66CCFF\"><td rowspan=\"3\">Date</td><td colspan=\"8\">Events</td><td rowspan=\"3\">Most Significant Event</td><td rowspan=\"3\">M.S. Event Signal</td><td rowspan=\"3\">M.S. Event Leverage</td><td rowspan=\"3\">Used STCI</td><td rowspan=\"3\"><b>Played Event</b></td><td rowspan=\"3\"><b>Played Leveraged Signal</b></td></tr><tr align=\"center\" bgcolor=\"#66CCFF\"><td colspan=\"2\">Event 1</td><td colspan=\"2\">Event 2</td><td colspan=\"2\">Event 3</td><td colspan=\"2\">Event 4</td></tr><tr align=\"center\" bgcolor=\"#66CCFF\"><td>Name</td><td>Signal</td><td>Name</td><td>Signal</td><td>Name</td><td>Signal</td><td>Name</td><td>Signal</td></tr><tr align=\"center\">";
     for (var i = 0; i < prevPosMtxTemp.length; i++) {
         for (var j = 0; j < 13; j++) {
             currTableMtx3 += "<td bgcolor=\"#" + prevEventColors[i] + "\">" + prevPosMtx[i][j] + "</td>";

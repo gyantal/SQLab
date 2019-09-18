@@ -108,6 +108,18 @@ table.currData2 {
     font-weight: bold;
     color: red;
 }
+.posDaily {
+    font-weight: bold;
+    color: green;
+}
+.negDaily {
+    font-weight: bold;
+    color: red;
+}
+.notDaily {
+    font-weight: bold;
+    color: blue;
+}
 .stci{
     font-weight: bold;
     color: blue;

@@ -234,8 +234,8 @@ namespace SQLab.Controllers
             
 
             int thresholdLower = 25; //Upper threshold is 100-thresholdLower.
-            int[] lookbackDays = new int[] { 60, 120, 180, 252 };
-            int volDays = 40;
+            int[] lookbackDays = new int[] { 30, 60, 120, 252 };
+            int volDays = 20;
 
            //Collecting and splitting price data got from SQL Server
             Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> dataListTupleFromSQServer = DataSQDBG(allAssetList);
