@@ -57,7 +57,9 @@ namespace SqCommon
             {
                 // 1. Get section from <thead> to </tbody> for the holidays
                 // 2. Get section from ">*", ">**", ">***" to </p> to get the 3 footnotes
-                int iTHead = webPage.IndexOf(@"<table class=""table table-data"">");        // holiday table appears twice in the HTML. One in the middle, but one at the end is shorter, cleaner, get that.
+                // 2018: holiday table appears twice in the HTML. One in the middle, but one at the end is shorter, cleaner, get that. 
+                // 2019: holiday table appears only once in the HTML.
+                int iTHead = webPage.IndexOf(@"<table class=""table table-layout-fixed"">");
                 int iTBody = webPage.IndexOf(@"</table>", iTHead);
                 string holidayTable = webPage.Substring(iTHead, iTBody - iTHead);
 
@@ -68,32 +70,32 @@ namespace SqCommon
 
                 int year1 = -1, year2 = -1;
                 var trs = holidayTable.Split(new string[] { "<tr>\n  ", "<tr>", "</tr>\n  ", "</tr>" }, StringSplitOptions.RemoveEmptyEntries);
-                var headerRow = trs[0];
-                var tdsHeader = headerRow.Split(new string[] { @"<th>", @"</th>" }, StringSplitOptions.RemoveEmptyEntries);
+                var headerRow = trs[1];
+                var tdsHeader = headerRow.Split(new string[] { @"<td>", @"</td>" }, StringSplitOptions.RemoveEmptyEntries);
                 year1 = Int32.Parse(tdsHeader[3]);
                 year2 = Int32.Parse(tdsHeader[5]);
                 //year3 = Int32.Parse(tdsHeader[7]);  // there is year3 too, but we don't need it in VBroker or healthmonitor. So, just ignore them
 
-                for (int i = 1; i < trs.Length; i++)
+                for (int i = 2; i < trs.Length; i++)
                 {
-                    if (!trs[i].TrimStart().StartsWith(@"<td><strong>"))
+                    if (!trs[i].TrimStart().StartsWith(@"<th>"))
                         continue;
 
-                    var tds = trs[i].Split(new string[] { @"<td><strong>", @"</strong></td>", @"<td>", @"</td>" }, StringSplitOptions.RemoveEmptyEntries);
+                    var tds = trs[i].Split(new string[] { @"<th>", @"</th>", @"<td>", @"</td>" }, StringSplitOptions.RemoveEmptyEntries);
                     //string holidayName = tds[1];
-                    ProcessHolidayCellInET(tds[3], year1, footnote, holidays1);
-                    ProcessHolidayCellInET(tds[5], year2, footnote, holidays2);
+                    ProcessHolidayCellInET(tds[3].Trim(), year1, footnote, holidays1);
+                    ProcessHolidayCellInET(tds[5].Trim(), year2, footnote, holidays2);
                     //ProcessHolidayCellInET(tds[5], year2, footnote, holidays2);   // there is year3 too, but we don't need it in VBroker or healthmonitor. So, just ignore them
                 }
 
             }
             catch (Exception ex)
             {
-                errorMsg = "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage. Debug it in VS, recode and redeploy. Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.  Message:" + ex.Message;                
+                errorMsg = "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage (in 2019: 09-24). Debug it in VS, recode and redeploy BOTH HealthMonitor & VBroker. Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.  Message:" + ex.Message;                
             }
 
             if (holidays1.Count == 0)
-                errorMsg = "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage. Debug it in VS, recode and redeploy. Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.";
+                errorMsg = "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage (in 2019: 09-24). Debug it in VS, recode and redeploy BOTH HealthMonitor & VBroker. Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.";
             if (errorMsg != null) {
                 //  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.
                 Utils.Logger.Error(errorMsg);
