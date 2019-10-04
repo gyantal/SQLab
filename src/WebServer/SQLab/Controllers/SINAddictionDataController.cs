@@ -18,16 +18,16 @@ namespace SQLab.Controllers
 #if !DEBUG
         [Authorize]
 #endif
-        public ActionResult Index()
+        public ActionResult Index(string commo)
         {
-            try
-            {
-                return Content(GetStr(), "text/html");
-            }
-            catch
-            {
+           try
+           {
+                return Content(GetStr(commo), "text/html");
+           }
+           catch
+           {
                 return Content(GetStr2(), "text/html");
-            }
+           }                    
         }
 
         public string GetStr2()
@@ -35,11 +35,12 @@ namespace SQLab.Controllers
             return "Error";
         }
 
+        
         //Get event, current position data from Google Spreadsheet - George
         [HttpGet]
-        public ActionResult UberTAAGChGoogleApiGsheet1(string p_usedGSheetRef)
+        public ActionResult SINGoogleApiGsheet(string p_usedGSheetRef)
         {
-            Utils.Logger.Info("UberTAAGChGoogleApiGsheet1() BEGIN");
+            Utils.Logger.Info("SINGoogleApiGsheet() BEGIN");
 
             string valuesFromGSheetStr = "Error. Make sure GoogleApiKeyKey, GoogleApiKeyKey is in SQLab.WebServer.SQLab.NoGitHub.json !";
             if (!String.IsNullOrEmpty(Utils.Configuration["GoogleApiKeyName"]) && !String.IsNullOrEmpty(Utils.Configuration["GoogleApiKeyKey"]))
@@ -48,25 +49,62 @@ namespace SQLab.Controllers
                     valuesFromGSheetStr = "Error in DownloadStringWithRetry().";
             }
             
-            Utils.Logger.Info("UberTAAGChGoogleApiGsheet1() END");
-            return Content($"<HTML><body>UberTAAGChGoogleApiGsheet1() finished OK. <br> Received data: '{valuesFromGSheetStr}'</body></HTML>", "text/html");
+            Utils.Logger.Info("SINGoogleApiGsheet() END");
+            return Content($"<HTML><body>SINGoogleApiGsheet() finished OK. <br> Received data: '{valuesFromGSheetStr}'</body></HTML>", "text/html");
         }
 
         //Selecting, splitting data got from GSheet
-        public static Tuple< int[], int[]> GSheetConverter(string p_gSheetString, string[] p_allAssetList)
+        public static Tuple< int[], string[], int[], bool[], int[], double[]> GSheetConverter(string p_gSheetString)
         {
             string[] gSheetTableRows = p_gSheetString.Split(new string[] { "[" }, StringSplitOptions.RemoveEmptyEntries);
-            string currPosRaw = gSheetTableRows[3];
-            currPosRaw = currPosRaw.Replace("\n", "").Replace("]", "").Replace("\",", "BRB").Replace("\"", "").Replace(" ", "").Replace(",", "");
-            string[] currPos = currPosRaw.Split(new string[] { "BRB" }, StringSplitOptions.RemoveEmptyEntries);
-            string[] currPosAP = new string[p_allAssetList.Length];
-            Array.Copy(currPos, 2, currPosAP, 0, p_allAssetList.Length);
-            int currPosDate = Int32.Parse(currPos[0]);
-            int currPosCash = Int32.Parse(currPos[currPos.Length - 3]);
-            int[] currPosDateCash = new int[] {currPosDate,currPosCash };
-            int[] currPosAssets = Array.ConvertAll(currPosAP, int.Parse);
+            int assNum = gSheetTableRows.Length - 9;
+            string[] assNameString = new string[assNum];
+            string[] currPosAssString = new string[assNum];
+            string[] currAssIndString = new string[assNum];
+            for (int iRows = 4; iRows < gSheetTableRows.Length-5; iRows++)
+            {
+                string currPosRaw = gSheetTableRows[iRows];
+                currPosRaw = currPosRaw.Replace("\n", "").Replace("]", "").Replace("\",", "BRB").Replace("\"", "").Replace(" ", "").Replace(",", "");
+                string[] currPos = currPosRaw.Split(new string[] { "BRB" }, StringSplitOptions.RemoveEmptyEntries);
+                assNameString[iRows - 4] = currPos[0];
+                currPosAssString[iRows-4] = currPos[1];
+                currAssIndString[iRows - 4] = currPos[2];
+            }
+
+            string currDateRaw = gSheetTableRows[2];
+            currDateRaw = currDateRaw.Replace("\n", "").Replace("]", "").Replace("\",", "BRB").Replace("\"", "").Replace(" ", "").Replace(",", "");
+            string[] currDateVec = currDateRaw.Split(new string[] { "BRB" }, StringSplitOptions.RemoveEmptyEntries);
+
+            string currDateRaw2 = gSheetTableRows[3];
+            currDateRaw2 = currDateRaw2.Replace("\n", "").Replace("]", "").Replace("\",", "BRB").Replace("\"", "").Replace(" ", "").Replace(",", "");
+            string[] currDateVec2 = currDateRaw2.Split(new string[] { "BRB" }, StringSplitOptions.RemoveEmptyEntries);
+
+            string currCashRaw = gSheetTableRows[gSheetTableRows.Length-5];
+            currCashRaw = currCashRaw.Replace("\n", "").Replace("]", "").Replace("\",", "BRB").Replace("\"", "").Replace(" ", "").Replace(",", "");
+            string[] currCashVec = currCashRaw.Split(new string[] { "BRB" }, StringSplitOptions.RemoveEmptyEntries);
                         
-            Tuple< int[], int[]> gSheetResFinal = Tuple.Create(currPosDateCash, currPosAssets);
+            string[] prevPVString = new string[4];
+            for (int iRows = 0; iRows < prevPVString.Length; iRows++)
+            {
+                string currPosRaw = gSheetTableRows[gSheetTableRows.Length-4+iRows];
+                currPosRaw = currPosRaw.Replace("\n", "").Replace("]", "").Replace("\",", "BRB").Replace("\"", "").Replace(" ", "").Replace(",", "");
+                string[] currPos = currPosRaw.Split(new string[] { "BRB" }, StringSplitOptions.RemoveEmptyEntries);
+                prevPVString[iRows] = currPos[1];
+            }
+
+            int currPosDate = Int32.Parse(currDateVec[1]);
+            int currPosCash = Int32.Parse(currCashVec[1]);
+            int[] currPosDateCash = new int[] { currPosDate, currPosCash };
+            double leverage = Double.Parse(currDateVec[2]);
+            double maxBondPerc = Double.Parse(currDateVec2[2]);
+            double[] levMaxBondPerc = new double[] {leverage, maxBondPerc};
+
+            int[] currPosAssets = Array.ConvertAll(currPosAssString, int.Parse);
+            bool[] currAssInd = currAssIndString.Select(chr => chr == "1").ToArray();
+            int[] prevPV = Array.ConvertAll(prevPVString, int.Parse);
+
+
+            Tuple< int[], string[], int[], bool[], int[], double[]> gSheetResFinal = Tuple.Create(currPosDateCash, assNameString, currPosAssets, currAssInd, prevPV, levMaxBondPerc);
 
             return gSheetResFinal;
         }
@@ -78,7 +116,7 @@ namespace SQLab.Controllers
             DateTime endTimeUtc = DateTime.UtcNow.AddDays(10);
             DateTime endTimeUtc2 = endTimeUtc.AddDays(-11);
             DateTime endTimeUtc3 = endTimeUtc.AddDays(-12);
-            DateTime startTimeUtc = endTimeUtc.AddDays(-500);
+            DateTime startTimeUtc = endTimeUtc.AddDays(-420);
 
             var getAllQuotesTask = SQLab.Controllers.QuickTester.Strategies.StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(startTimeUtc, endTimeUtc, tickersNeeded);  
             Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, TimeSpan, TimeSpan> getAllQuotesData = getAllQuotesTask.Result;
@@ -129,7 +167,7 @@ namespace SQLab.Controllers
         }
 
         //Calculating TAA weights - based on George's TAA code
-        public static Tuple<double[], double[,]> TaaWeights(IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> p_taaWeightsData, int[] p_pctChannelLookbackDays, int p_histVolLookbackDays, int p_thresholdLower)
+        public static Tuple<double[], double[,], double[]> TaaWeights(IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> p_taaWeightsData, int[] p_pctChannelLookbackDays, int p_histVolLookbackDays, int p_thresholdLower)
         {
             var dshd = p_taaWeightsData;
             int nAssets = p_taaWeightsData.Count;
@@ -205,6 +243,12 @@ namespace SQLab.Controllers
 
             }
 
+            double[] lastDayScores = new double[nAssets];
+            for (int iAsset = 0; iAsset < nAssets; iAsset++)
+            {
+                lastDayScores[iAsset] = dailyAssetScores[dailyAssetScores.GetLength(0)-1,iAsset]; ;
+            }
+
             IEnumerable<DateTime> taaWeightDateVec = p_taaWeightsData[0].GetRange(p_taaWeightsData[0].Count-nDays ,nDays).Select(r => r.Date);
             DateTime[] taaWeightDateArray = taaWeightDateVec.ToArray();
             DateTime startMatlabDate = DateTime.ParseExact("1900/01/01", "yyyy/MM/dd", CultureInfo.InvariantCulture);
@@ -215,47 +259,60 @@ namespace SQLab.Controllers
                 taaWeightMatlabDateVec[i] = (taaWeightDateArray[i] - startMatlabDate).TotalDays + 693962;
             }
 
-            Tuple<double[],double[,]> taaWeightResults = Tuple.Create(taaWeightMatlabDateVec, dailyAssetWeights);
+            Tuple<double[], double[,], double[]> taaWeightResults = Tuple.Create(taaWeightMatlabDateVec, dailyAssetWeights, lastDayScores);
             return taaWeightResults;
         }
         
        
-        public string GetStr()
+        public string GetStr(string p_user)
         {
             //Defining asset lists.
             //string[] allAssetList = new string[]{ "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ", "TLT" }; //TLT is used as a cashEquivalent
-            string[] allAssetList = new string[] { "ABEV", "ATVI", "EA", "GWPH", "KSHB", "LMT", "MJ", "MO", "MTCH", "PDRDY", "PM", "SPRWF", "STZ", "TLT" }; //TLT is used as a cashEquivalent
+            //string[] allAssetList = new string[] { "ATVI", "BA", "BTI", "BUD", "CARA", "CGC", "DEO", "EA", "GD", "GWPH", "HEI", "HEINY", "HON", "INSYQ", "LHX", "LMT", "LVS", "MO", "MTCH", "NOC", "PDRDY", "PM", "RICK", "RTN", "SCHYY", "SNE", "STZ", "TLRY", "UTX", "WYNN", "TLT" }; //TLT is used as a cashEquivalent
 
-            string titleString ="SIN, Addiction";
-            
-            string usedGSheetRef = "https://sheets.googleapis.com/v4/spreadsheets/1ugql_-IXXVrU7M2TtU4wPaDELH5M6NQXy82fwZgY2yU/values/A1:Z2000?key=";
-            string usedGSheet2Ref = "https://docs.google.com/spreadsheets/d/1ugql_-IXXVrU7M2TtU4wPaDELH5M6NQXy82fwZgY2yU/edit?usp=sharing";
+            string titleString = "";
+            string usedGSheetRef = "";
+            string usedGSheet2Ref = "";
+            if (p_user=="AGY")
+            {
+                titleString = "AGY Version";
+                usedGSheetRef = "https://sheets.googleapis.com/v4/spreadsheets/1JXMbEMAP5AOqB1FjdM8jpptXfpuOno2VaFVYK8A1eLo/values/A1:Z2000?key=";
+                usedGSheet2Ref = "https://docs.google.com/spreadsheets/d/1JXMbEMAP5AOqB1FjdM8jpptXfpuOno2VaFVYK8A1eLo/edit?usp=sharing";
+            }
+            else
+            {
+                //titleString = "SIN, Addiction";
+                usedGSheetRef = "https://sheets.googleapis.com/v4/spreadsheets/1JXMbEMAP5AOqB1FjdM8jpptXfpuOno2VaFVYK8A1eLo/values/A1:Z2000?key=";
+                usedGSheet2Ref = "https://docs.google.com/spreadsheets/d/1JXMbEMAP5AOqB1FjdM8jpptXfpuOno2VaFVYK8A1eLo/edit?usp=sharing";
+            }
             string usedGDocRef = "https://docs.google.com/document/d/1dBHg3-McaHeCtxCTZdJhTKF5NPaixXYjEngZ4F2_ZBE/edit?usp=sharing";
-            
 
+            //Get, split and convert GSheet data
+            var gSheetReadResult = SINGoogleApiGsheet(usedGSheetRef);
+            string gSheetString = ((Microsoft.AspNetCore.Mvc.ContentResult)gSheetReadResult).Content;
+            Tuple<int[], string[], int[], bool[], int[], double[]> gSheetResToFinCalc = GSheetConverter(gSheetString);
+            string[] allAssetList = gSheetResToFinCalc.Item2;
+
+            //Parameters
             int thresholdLower = 25; //Upper threshold is 100-thresholdLower.
             int[] lookbackDays = new int[] { 30, 60, 120, 252 };
             int volDays = 20;
+            int[] pastPerfDays = new int[] { 1, 5, 10, 21, 63, 126, 252};
+            string[] pastPerfDaysString = new string[] { "1-Day", "1-Week", "2-Weeks", "1-Month", "3-Months", "6-Months", "1-Year" };
+            double leverage = gSheetResToFinCalc.Item6[0];
+            double maxBondPerc = gSheetResToFinCalc.Item6[1];
 
-           //Collecting and splitting price data got from SQL Server
+            //Collecting and splitting price data got from SQL Server
             Tuple<IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>>, List<SQLab.Controllers.QuickTester.Strategies.DailyData>> dataListTupleFromSQServer = DataSQDBG(allAssetList);
 
             IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesData =dataListTupleFromSQServer.Item1;
             List<SQLab.Controllers.QuickTester.Strategies.DailyData> cashEquivalentQuotesData = dataListTupleFromSQServer.Item2;
 
             //Calculating basic weights based on percentile channels - base Varadi TAA
-            Tuple<double[], double[,]> taaWeightResultsTuple = TaaWeights(quotesData, lookbackDays, volDays, thresholdLower);
-                        
-            ////Setting last data date
-                //double lastDataDate = (clmtRes[0][clmtRes[0].Length-1] == taaWeightResultsTuple.Item1[taaWeightResultsTuple.Item1.Length-1]) ? clmtRes[0][clmtRes[0].Length-1] : 0;
-
-            //Get, split and convert GSheet data
-            var gSheetReadResult = UberTAAGChGoogleApiGsheet1(usedGSheetRef);
-            string gSheetString=((Microsoft.AspNetCore.Mvc.ContentResult)gSheetReadResult).Content;
-
-            Tuple< int[], int[]> gSheetResToFinCalc = GSheetConverter(gSheetString, allAssetList);
-
-            
+            Tuple<double[], double[,], double[]> taaWeightResultsTuple = TaaWeights(quotesData, lookbackDays, volDays, thresholdLower);
+                   
+                
+                      
             //Request time (UTC)
             DateTime liveDateTime = DateTime.UtcNow;
             string liveDate = System.String.Empty;
@@ -285,22 +342,25 @@ namespace SQLab.Controllers
             double[] currPosValue = new double[allAssetList.Length + 1];
             for (int jCols = 0; jCols < currPosValue.Length - 2; jCols++)
             {
-                currPosInt[jCols] = gSheetResToFinCalc.Item2[jCols];
+                currPosInt[jCols] = gSheetResToFinCalc.Item3[jCols];
                 currPosValue[jCols] = quotesData[jCols][quotesData[0].Count - 1].AdjClosePrice * currPosInt[jCols];
             }
-            currPosInt[currPosInt.Length - 2] = gSheetResToFinCalc.Item2[gSheetResToFinCalc.Item2.Length - 1];
+            currPosInt[currPosInt.Length - 2] = gSheetResToFinCalc.Item3[gSheetResToFinCalc.Item3.Length - 1];
             currPosInt[currPosInt.Length - 1] = gSheetResToFinCalc.Item1[1];
-            currPosValue[currPosValue.Length - 2] = cashEquivalentQuotesData[quotesData[0].Count - 1].AdjClosePrice * gSheetResToFinCalc.Item2[gSheetResToFinCalc.Item2.Length - 1];
+            currPosValue[currPosValue.Length - 2] = cashEquivalentQuotesData[quotesData[0].Count - 1].AdjClosePrice * gSheetResToFinCalc.Item3[gSheetResToFinCalc.Item3.Length - 1];
             currPosValue[currPosValue.Length - 1] = gSheetResToFinCalc.Item1[1];
             currPV = Math.Round(currPosValue.Sum());
 
             double[] nextPosValue = new double[allAssetList.Length + 1];
             for (int jCols = 0; jCols < nextPosValue.Length - 2; jCols++)
             {
-                nextPosValue[jCols] = currPV * taaWeightResultsTuple.Item2[taaWeightResultsTuple.Item2.GetLength(0) - 1, jCols];
+                nextPosValue[jCols] = (gSheetResToFinCalc.Item4[jCols])?currPV * taaWeightResultsTuple.Item2[taaWeightResultsTuple.Item2.GetLength(0) - 1, jCols]*leverage:0;
             }
-            nextPosValue[nextPosValue.Length - 2] = Math.Max(0, currPV - nextPosValue.Take(nextPosValue.Length - 2).ToArray().Sum());
+            nextPosValue[nextPosValue.Length - 2] = Math.Min(Math.Max(0, currPV - nextPosValue.Take(nextPosValue.Length - 2).ToArray().Sum()/leverage),currPV*maxBondPerc)*leverage;
             nextPosValue[nextPosValue.Length - 1] = currPV - nextPosValue.Take(nextPosValue.Length - 1).ToArray().Sum();
+
+            double currBondPerc = currPosValue[currPosValue.Length - 2] / currPV;
+            double nextBondPerc = nextPosValue[nextPosValue.Length - 2] / (currPV*leverage);
 
             double[] nextPosInt = new double[nextPosValue.Length];
             for (int jCols = 0; jCols < nextPosInt.Length - 2; jCols++)
@@ -323,65 +383,140 @@ namespace SQLab.Controllers
             }
 
 
-            //Position weights in the last 20 days
-            string[,] prevPosMtx = new string[taaWeightResultsTuple.Item2.GetLength(0) + 1, allAssetList.Length + 2];
-            for (int iRows = 0; iRows < prevPosMtx.GetLength(0) - 1; iRows++)
-            {
-                DateTime assDate = startMatlabDate.AddDays(taaWeightResultsTuple.Item1[iRows] - 693962);
-                string assDateString = System.String.Empty;
-                assDateString = assDate.ToString("yyyy-MM-dd");
-                prevPosMtx[iRows, 0] = assDateString;
 
-                double assetWeightSum = 0;
-                for (int jCols = 0; jCols < prevPosMtx.GetLength(1) - 3; jCols++)
+            //Profits
+
+            int[] prevPV = gSheetResToFinCalc.Item5;
+            int boyPV = prevPV[0] + prevPV[1];
+            int bomPV = prevPV[2] + prevPV[3];
+            double ytdProfDoll = currPV - boyPV;
+            double mtdProfDoll = currPV - bomPV;
+            double ytdProfPerc = currPV/boyPV-1;
+            double mtdProfPerc = currPV/bomPV-1;
+
+            double[] prevDayPosValue = new double[allAssetList.Length + 1];
+            for (int jCols = 0; jCols < prevDayPosValue.Length - 2; jCols++)
+            {
+                prevDayPosValue[jCols] = quotesData[jCols][quotesData[0].Count - 2].AdjClosePrice * currPosInt[jCols];
+            }
+            prevDayPosValue[currPosValue.Length - 2] = cashEquivalentQuotesData[quotesData[0].Count - 2].AdjClosePrice * gSheetResToFinCalc.Item3[gSheetResToFinCalc.Item3.Length - 1];
+            prevDayPosValue[currPosValue.Length - 1] = gSheetResToFinCalc.Item1[1];
+            double prevDayPV = Math.Round(prevDayPosValue.Sum());
+
+            double dailyProfDoll = currPV - prevDayPV;
+            double dailyProfPerc = currPV/prevDayPV - 1;
+                                 
+            string dailyProfDollString = "";
+            string dailyProfPercString = "";
+
+            string dailyProfString = "";
+            string dailyProfSign = "";
+            if ((currPosDateString != liveDateTime.ToString("yyyy-MM-dd")) && liveDateTime.ToString("yyyy-MM-dd") == quotesData[0][quotesData[0].Count - 1].Date.ToString("yyyy-MM-dd") && dailyProfDoll >= 0)
+            {
+                dailyProfString = "posDaily";
+                dailyProfSign = "+$";
+                dailyProfDollString = dailyProfDoll.ToString("#,##0");
+                dailyProfPercString = Math.Round(dailyProfPerc*100,2).ToString();
+            }
+            else if ((currPosDateString != liveDateTime.ToString("yyyy-MM-dd")) && liveDateTime.ToString("yyyy-MM-dd") == quotesData[0][quotesData[0].Count - 1].Date.ToString("yyyy-MM-dd") && dailyProfDoll < 0)
+            {
+                dailyProfString = "negDaily";
+                dailyProfSign = "-$";
+                dailyProfDollString = (-dailyProfDoll).ToString("#,##0");
+                dailyProfPercString = Math.Round(dailyProfPerc * 100, 2).ToString();
+            }
+            else
+            {
+                dailyProfString = "notDaily";
+                dailyProfSign = "N/A";
+                dailyProfDollString = "";
+                dailyProfPercString = "";
+            }
+
+
+            string monthlyProfDollString = "";
+            string monthlyProfPercString = "";
+
+            string monthlyProfString = "";
+            string monthlyProfSign = "";
+            if ((currPosDateString != liveDateTime.ToString("yyyy-MM-dd")) && mtdProfDoll >= 0)
+            {
+                monthlyProfString = "posMonthly";
+                monthlyProfSign = "+$";
+                monthlyProfDollString = mtdProfDoll.ToString("#,##0");
+                monthlyProfPercString = Math.Round(mtdProfPerc * 100, 2).ToString();
+            }
+            else if ((currPosDateString != liveDateTime.ToString("yyyy-MM-dd")) && mtdProfDoll < 0)
+            {
+                monthlyProfString = "negMonthly";
+                monthlyProfSign = "-$";
+                monthlyProfDollString = (-mtdProfDoll).ToString("#,##0");
+                monthlyProfPercString = Math.Round(mtdProfPerc * 100, 2).ToString();
+            }
+            else
+            {
+                monthlyProfString = "notMonthly";
+                monthlyProfSign = "N/A";
+                monthlyProfDollString = "";
+                monthlyProfPercString = "";
+            }
+
+
+            string yearlyProfDollString = "";
+            string yearlyProfPercString = "";
+
+            string yearlyProfString = "";
+            string yearlyProfSign = "";
+            if ((currPosDateString != liveDateTime.ToString("yyyy-MM-dd")) && ytdProfDoll >= 0)
+            {
+                yearlyProfString = "posYearly";
+                yearlyProfSign = "+$";
+                yearlyProfDollString = ytdProfDoll.ToString("#,##0");
+                yearlyProfPercString = Math.Round(ytdProfPerc * 100, 2).ToString();
+            }
+            else if ((currPosDateString != liveDateTime.ToString("yyyy-MM-dd")) && ytdProfDoll < 0)
+            {
+                yearlyProfString = "negYearly";
+                yearlyProfSign = "-$";
+                yearlyProfDollString = (-ytdProfDoll).ToString("#,##0");
+                yearlyProfPercString = Math.Round(ytdProfPerc * 100, 2).ToString();
+            }
+            else
+            {
+                yearlyProfString = "notYearly";
+                yearlyProfSign = "N/A";
+                yearlyProfDollString = "";
+                yearlyProfPercString = "";
+            }
+
+
+
+            //AssetPrice Changes in last x days
+
+            string[,] assetChangesMtx = new string[allAssetList.Length, pastPerfDays.Length];
+            for (int iRows = 0; iRows < assetChangesMtx.GetLength(0)-1; iRows++)
+            {
+                for (int jCols = 0; jCols < assetChangesMtx.GetLength(1); jCols++)
                 {
-                    assetWeightSum += taaWeightResultsTuple.Item2[iRows, jCols];
-                    prevPosMtx[iRows, jCols + 1] = Math.Round(taaWeightResultsTuple.Item2[iRows, jCols] * 100.0, 2).ToString() + "%";
-                }
-                prevPosMtx[iRows, prevPosMtx.GetLength(1) - 1] = Math.Round(Math.Max((1.0 - assetWeightSum), 0) * 100.0, 2).ToString() + "%";
-                prevPosMtx[iRows, prevPosMtx.GetLength(1) - 1] = Math.Round((1.0 - assetWeightSum - Math.Max((1.0 - assetWeightSum), 0)) * 100.0, 2).ToString() + "%";
-            }
-            prevPosMtx[prevPosMtx.GetLength(0) - 1, 0] = "";
-            for (int jCols = 0; jCols < prevPosMtx.GetLength(1) - 2; jCols++)
-            {
-                prevPosMtx[prevPosMtx.GetLength(0) - 1, jCols + 1] = allAssetList[jCols];
-            }
-            prevPosMtx[prevPosMtx.GetLength(0) - 1, prevPosMtx.GetLength(1) - 1] = "Cash";
-            
-
-            for (int iRows = 0; iRows < prevPosMtx.GetLength(0) / 2; iRows++)
-            {
-                for (int jCols = 0; jCols < prevPosMtx.GetLength(1); jCols++)
-                {
-                    string tmp = prevPosMtx[iRows, jCols];
-                    prevPosMtx[iRows, jCols] = prevPosMtx[prevPosMtx.GetLength(0) - iRows - 1, jCols];
-                    prevPosMtx[prevPosMtx.GetLength(0) - iRows - 1, jCols] = tmp;
+                    assetChangesMtx[iRows, jCols] = Math.Round((quotesData[iRows][quotesData[0].Count-1].AdjClosePrice / quotesData[iRows][quotesData[0].Count - 1-pastPerfDays[jCols]].AdjClosePrice - 1) * 100.0, 2).ToString() + "%";
                 }
             }
-
-
-            //AssetPrice Changes in last 20 days to chart
-            int assetChartLength = 20;
-            string[,] assetChangesMtx = new string[assetChartLength + 1, allAssetList.Length];
-            for (int iRows = 0; iRows < assetChangesMtx.GetLength(0); iRows++)
+            for (int jCols = 0; jCols < assetChangesMtx.GetLength(1); jCols++)
             {
-                assetChangesMtx[iRows, 0] = quotesData[0][quotesData[0].Count - 1 - assetChartLength + iRows].Date.ToString("yyyy-MM-dd");
-                for (int jCols = 0; jCols < assetChangesMtx.GetLength(1) - 1; jCols++)
-                {
-                    assetChangesMtx[iRows, jCols + 1] = Math.Round((quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength + iRows].AdjClosePrice / quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength].AdjClosePrice - 1) * 100.0, 2).ToString() + "%";
-                }
+                assetChangesMtx[assetChangesMtx.GetLength(0)-1, jCols] = Math.Round((cashEquivalentQuotesData[cashEquivalentQuotesData.Count-1].AdjClosePrice / cashEquivalentQuotesData[cashEquivalentQuotesData.Count - 1 - pastPerfDays[jCols]].AdjClosePrice - 1) * 100.0, 2).ToString() + "%";
             }
 
-            //Daily changes, currently does not used.
-            string[,] assetDailyChangesMtx = new string[assetChartLength + 1, allAssetList.Length];
-            for (int iRows = 0; iRows < assetDailyChangesMtx.GetLength(0); iRows++)
+            //Asset scores and weights on last day
+
+            string[,] assetScoresMtx = new string[allAssetList.Length, 2];
+            for (int iRows = 0; iRows < assetScoresMtx.GetLength(0) - 1; iRows++)
             {
-                assetDailyChangesMtx[iRows, 0] = quotesData[0][quotesData[0].Count - 1 - assetChartLength + iRows].Date.ToString("yyyy-MM-dd");
-                for (int jCols = 0; jCols < assetDailyChangesMtx.GetLength(1) - 1; jCols++)
-                {
-                    assetDailyChangesMtx[iRows, jCols + 1] = Math.Round((quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength + iRows].AdjClosePrice / quotesData[jCols][quotesData[jCols].Count - 1 - assetChartLength + iRows - 1].AdjClosePrice - 1) * 100.0, 2).ToString() + "%";
-                }
+                assetScoresMtx[iRows, 0] = Math.Round(taaWeightResultsTuple.Item3[iRows] * 100.0, 2).ToString() + "%";
+                assetScoresMtx[iRows, 1] = Math.Round(taaWeightResultsTuple.Item2[taaWeightResultsTuple.Item2.GetLength(0)-1,iRows] * 100.0, 2).ToString() + "%";
             }
+            assetScoresMtx[assetScoresMtx.GetLength(0) - 1, 0] = "---";
+            assetScoresMtx[assetScoresMtx.GetLength(0) - 1, 1] = Math.Round(nextBondPerc*100,2).ToString() +"%";
+
 
             //Creating input string for JavaScript.
             StringBuilder sb = new StringBuilder("{" + Environment.NewLine);
@@ -393,6 +528,25 @@ namespace SQLab.Controllers
             sb.Append(@"""," + Environment.NewLine + @"""gDocRef"": """ + usedGDocRef);
             sb.Append(@"""," + Environment.NewLine + @"""gSheetRef"": """ + usedGSheet2Ref);
 
+            sb.Append(@"""," + Environment.NewLine + @"""dailyProfSig"": """ + dailyProfSign);
+            sb.Append(@"""," + Environment.NewLine + @"""dailyProfAbs"": """ + dailyProfDollString);
+            sb.Append(@"""," + Environment.NewLine + @"""dailyProfPerc"": """ + dailyProfPercString);
+            sb.Append(@"""," + Environment.NewLine + @"""dailyProfString"": """ + dailyProfString);
+            sb.Append(@"""," + Environment.NewLine + @"""monthlyProfSig"": """ + monthlyProfSign);
+            sb.Append(@"""," + Environment.NewLine + @"""monthlyProfAbs"": """ + monthlyProfDollString);
+            sb.Append(@"""," + Environment.NewLine + @"""monthlyProfPerc"": """ + monthlyProfPercString);
+            sb.Append(@"""," + Environment.NewLine + @"""monthlyProfString"": """ + monthlyProfString);
+            sb.Append(@"""," + Environment.NewLine + @"""yearlyProfSig"": """ + yearlyProfSign);
+            sb.Append(@"""," + Environment.NewLine + @"""yearlyProfAbs"": """ + yearlyProfDollString);
+            sb.Append(@"""," + Environment.NewLine + @"""yearlyProfPerc"": """ + yearlyProfPercString);
+            sb.Append(@"""," + Environment.NewLine + @"""yearlyProfString"": """ + yearlyProfString);
+            sb.Append(@"""," + Environment.NewLine + @"""currBondPerc"": """ + Math.Round(currBondPerc*100,2).ToString()+"%");
+            sb.Append(@"""," + Environment.NewLine + @"""nextBondPerc"": """ + Math.Round(nextBondPerc * 100, 2).ToString() + "%");
+            sb.Append(@"""," + Environment.NewLine + @"""leverage"": """ + Math.Round(leverage * 100, 2).ToString() + "%");
+            sb.Append(@"""," + Environment.NewLine + @"""maxBondPerc"": """ + Math.Round(maxBondPerc * 100, 2).ToString() + "%");
+
+
+
             sb.Append(@"""," + Environment.NewLine + @"""assetNames"": """);
             for (int i = 0; i < allAssetList.Length - 1; i++)
                 sb.Append(allAssetList[i] + ", ");
@@ -402,6 +556,16 @@ namespace SQLab.Controllers
             for (int i = 0; i < allAssetList.Length; i++)
                 sb.Append(allAssetList[i] + ", ");
             sb.Append("Cash");
+
+            sb.Append(@"""," + Environment.NewLine + @"""pastPerfDaysNum"": """);
+            for (int i = 0; i < pastPerfDays.Length - 1; i++)
+                sb.Append(pastPerfDays[i].ToString() + ", ");
+            sb.Append(pastPerfDays[pastPerfDays.Length - 1].ToString());
+
+            sb.Append(@"""," + Environment.NewLine + @"""pastPerfDaysName"": """);
+            for (int i = 0; i < pastPerfDaysString.Length - 1; i++)
+                sb.Append(pastPerfDaysString[i] + ", ");
+            sb.Append(pastPerfDaysString[pastPerfDaysString.Length - 1]);
 
             sb.Append(@"""," + Environment.NewLine + @"""currPosNum"": """);
             for (int i = 0; i < currPosInt.Length - 1; i++)
@@ -436,23 +600,6 @@ namespace SQLab.Controllers
             sb.Append(@"""," + Environment.NewLine + @"""nextTradingDay"": """ + nextTradingDayString);
             sb.Append(@"""," + Environment.NewLine + @"""currPosDate"": """ + currPosDateString);
 
-            sb.Append(@"""," + Environment.NewLine + @"""prevPositionsMtx"": """);
-            for (int i = 0; i < prevPosMtx.GetLength(0); i++)
-            {
-                sb.Append("");
-                for (int j = 0; j < prevPosMtx.GetLength(1) - 1; j++)
-                {
-                    sb.Append(prevPosMtx[i, j] + ", ");
-                }
-                sb.Append(prevPosMtx[i, prevPosMtx.GetLength(1) - 1]);
-                if (i < prevPosMtx.GetLength(0) - 1)
-                {
-                    sb.Append("ß ");
-                }
-            }
-
-            sb.Append(@"""," + Environment.NewLine + @"""chartLength"": """ + assetChartLength);
-            
             sb.Append(@"""," + Environment.NewLine + @"""assetChangesToChartMtx"": """);
             for (int i = 0; i < assetChangesMtx.GetLength(0); i++)
             {
@@ -468,16 +615,16 @@ namespace SQLab.Controllers
                 }
             }
 
-            sb.Append(@"""," + Environment.NewLine + @"""assetDailyChangesToChartMtx"": """);
-            for (int i = 0; i < assetDailyChangesMtx.GetLength(0); i++)
+            sb.Append(@"""," + Environment.NewLine + @"""assetScoresMtx"": """);
+            for (int i = 0; i < assetScoresMtx.GetLength(0); i++)
             {
                 sb.Append("");
-                for (int j = 0; j < assetDailyChangesMtx.GetLength(1) - 1; j++)
+                for (int j = 0; j < assetScoresMtx.GetLength(1) - 1; j++)
                 {
-                    sb.Append(assetDailyChangesMtx[i, j] + ", ");
+                    sb.Append(assetScoresMtx[i, j] + ", ");
                 }
-                sb.Append(assetDailyChangesMtx[i, assetDailyChangesMtx.GetLength(1) - 1]);
-                if (i < assetDailyChangesMtx.GetLength(0) - 1)
+                sb.Append(assetScoresMtx[i, assetScoresMtx.GetLength(1) - 1]);
+                if (i < assetScoresMtx.GetLength(0) - 1)
                 {
                     sb.Append("ß ");
                 }

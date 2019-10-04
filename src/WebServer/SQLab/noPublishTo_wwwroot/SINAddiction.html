@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <title>SIN, Addiction Live Portfolio</title>
 
-    <link rel="stylesheet" type="text/css" href="/css/UberTAAGCh.css">
+    <link rel="stylesheet" type="text/css" href="/css/SINAddiction.css">
     <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.js"></script>
     <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.js"></script>
     <script language="javascript" type="text/javascript" src="/js/jquery.flot.axislabels.js"></script>
@@ -13,14 +13,16 @@
     <script language="javascript" type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/flot.tooltip/0.9.0/jquery.flot.tooltip.min.js"></script>
     <script type="text/javascript" src="/js/SINAddiction.js"></script>
 
-    
+    <script>
+        onHeadProcessing();
+    </script>
+
 </head>
 
 <body>
    
     <h1>SIN, Addiction Live Portfolio</h1>
-    <div class="center"><button class="button" style="background: url(/images/GameChangers.png); background-size: cover;" onClick="javascript: onHeadProcessing()"></button></div>
-    <br>
+    
 
     <div id="errorMessage" style="visibility: hidden">
         <br>
@@ -29,7 +31,7 @@
     </div>
 
     <div id="inviCharts" style="visibility: hidden">
-        
+
         <div class="h3" id="idTitleCont"></div>
 
 
@@ -40,45 +42,37 @@
             <span id="idCurrentPV"></span>
         </p>
         <p class="bottom-three">
-            <span id="idCLMTString"></span>
+            <span id="idDailyProfit"></span> &emsp;&emsp;<span id="idMonthlyProfit"></span> &emsp;&emsp;<span id="idYearlyProfit"></span>
+        </p>
+        <p class="bottom-three">
+            <span id="idBondPerc"></span>
         </p>
 
 
 
-        <span id="idCurrTableMtx"></span>
+
+
+
         <br>
-        <div class="centerMatrix">
-            <span id="idCurrTableMtx7"></span>
+
+
+
+        <div class="center">
+            <span id="idCurrTableMtx"></span>
+            <br>
         </div>
-        <br>
         <div class="demo-container">
-            <strong>Percentage Changes in the Last 20 Days</strong>
+            <span id="idChartLength"></span>
             <div id="placeholder1" class="demo-placeholder"></div>
         </div>
+        <br>
         <div class="center">
-            <p class="bottom-three">
-                <span class="clmt" id="idPosLast"></span>
-            </p>
             <span id="idCurrTableMtx3"></span>
 
-            <p class="bottom-three">
-                <span class="clmt" id="idPosFut"></span>
-            </p>
-            <span id="idCurrTableMtx5"></span>
-
-        </div>
-        <br>
-        <div class="demo-container">
-            <strong>SPX 50/200-MA Timer</strong>
-            <div id="placeholder2" class="demo-placeholder"></div>
-        </div>
-        <br>
-        <div class="demo-container">
-            <strong>XLU/VTI RSI Timer</strong>
-            <div id="placeholder3" class="demo-placeholder"></div>
         </div>
 
     </div>
+   
 
 
 

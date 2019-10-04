@@ -48,7 +48,7 @@ function processData(dataStr) {
     divTimeNow.innerHTML = data.requestTime;
     divLiveDataTime.innerHTML = data.lastDataTime;
     divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$" + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank">these current positions</a> updated for ' + data.currentPVDate + ")";
-    if (data.dailyProfSig !== "N/A") { divDailyProfit.innerHTML = "Daily Profit/Loss: <span class=\"" + data.dailyProfString + "\">" + data.dailyProfSig + data.dailyProfAbs + "</span>"}
+    if (data.dailyProfSig !== "N/A") { divDailyProfit.innerHTML = "<b>Daily Profit/Loss: <span class=\"" + data.dailyProfString + "\">" + data.dailyProfSig + data.dailyProfAbs + "</span></b>";}
     divCurrentEvent.innerHTML = "Next trading day will be <span class=\"stci\"> " + data.currentEventName + "</span>, used STCI is <div class=\"tooltip\"><span class=\"stci\">" + data.currentSTCI + "</span><span class=\"tooltiptext\">Second (third) month VIX futures divided by front (second) month VIX futures minus 1, with more (less) than 5-days until expiration.</span></div >, thus leverage will be <span class=\"stci\">" + data.currentFinalWeightMultiplier + ".</span >";
     divPosLastString.innerHTML = "Recent Events";
     divPosFutString.innerHTML = "Upcoming Events";
