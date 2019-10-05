@@ -276,8 +276,8 @@ namespace SQLab.Controllers
             if (p_user=="AGY")
             {
                 titleString = "AGY Version";
-                usedGSheetRef = "https://sheets.googleapis.com/v4/spreadsheets/1JXMbEMAP5AOqB1FjdM8jpptXfpuOno2VaFVYK8A1eLo/values/A1:Z2000?key=";
-                usedGSheet2Ref = "https://docs.google.com/spreadsheets/d/1JXMbEMAP5AOqB1FjdM8jpptXfpuOno2VaFVYK8A1eLo/edit?usp=sharing";
+                usedGSheetRef = "https://sheets.googleapis.com/v4/spreadsheets/1Rw4xge-dpUwP0l_cYZeQFpOINPST8TQKVbNjySCapfE/values/A1:Z2000?key=";
+                usedGSheet2Ref = "https://docs.google.com/spreadsheets/d/1Rw4xge-dpUwP0l_cYZeQFpOINPST8TQKVbNjySCapfE/edit?usp=sharing";
             }
             else
             {

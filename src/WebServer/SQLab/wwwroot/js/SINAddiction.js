@@ -151,7 +151,7 @@ function creatingTables(data) {
 
     currTableMtx += "</tr></table>";
 
-    var currTableMtx3 = "<table class=\"currData\"><tr align=\"center\"  bgcolor=\"#1E90FF\"><td rowspan=\"2\"></td><td rowspan=\"2\">TAA Percentile Channel Score</td><td rowspan=\"2\">Required Asset Weight</td><td colspan=\"7\">Percentage Change</td></tr><tr align=\"center\" bgcolor=\"#6EB5FF\"><td>1-Day</td><td>1-Week</td><td>2-Weeks</td><td>1-Month</td><td>3-Months</td><td>6-Months</td><td>1-Year</td></tr>";
+    var currTableMtx3 = "<table class=\"currData\"><tr align=\"center\"  bgcolor=\"#1E90FF\"><td rowspan=\"2\"></td><td rowspan=\"2\">TAA Percentile Channel Score</td><td rowspan=\"2\">Required Asset Weight</td><td colspan=\"7\">Percentage Change of Stock Price</td></tr><tr align=\"center\" bgcolor=\"#6EB5FF\"><td>1-Day</td><td>1-Week</td><td>2-Weeks</td><td>1-Month</td><td>3-Months</td><td>6-Months</td><td>1-Year</td></tr>";
     for (var i = 0; i < assetNames2Array.length-2; i++) {
         currTableMtx3 += "<tr align=\"center\">";
         currTableMtx3 += "<td bgcolor=\"#66CCFF\"><a href=https://finance.yahoo.com/quote/" + assetNames2Array[i] + ' target="_blank">' + assetNames2Array[i] + "</a></td>";
@@ -192,15 +192,34 @@ function creatingTables(data) {
     var lengthOfChart = 21;
     var indOfLength = retHistLBPeriodsNo.indexOf(lengthOfChart);
     var divChartLength = document.getElementById("idChartLength");
-    divChartLength.innerHTML = "<strong>Percentage Changes of Prices in the Last &emsp;<select id=\"limit2\"><option value=\"1\">1 Day</option><option value=\"5\">1 Week</option><option value=\"10\">2 Weeks</option><option value=\"21\" selected>1 Month</option><option value=\"63\">3 Months</option><option value=\"126\">6 Months</option><option value=\"252\">1 Year</option>" + retHistLBPeriods[indOfLength] + "</strong >";
-
+    divChartLength.innerHTML = "<div class=\"DDM\"><strong>Percentage Changes of Prices in the Last &emsp;<select class=\"DDM\" id=\"limit2\"><option value=\"1\">1 Day</option><option value=\"5\">1 Week</option><option value=\"10\">2 Weeks</option><option value=\"21\" selected>1 Month</option><option value=\"63\">3 Months</option><option value=\"126\">6 Months</option><option value=\"252\">1 Year</option>" + retHistLBPeriods[indOfLength] + "</select></strong ></div>";
     creatingChartData1();
 
-    $('#limit2').bind('change', function () {
+    $('.DDM').hover(function () {
+        var count = $(this).children().length;
+        $(this).attr('size', count);
+        
+    },
+        function () {
+            $(this).removeAttr('size');
+        });
+
+
+    $('#limit2').on('mouseenter','option', function () {
         lengthOfChart = parseInt(this.value);
         indOfLength = retHistLBPeriodsNo.indexOf(lengthOfChart);
+        //remove selected one
+        $('option:selected', this).removeAttr('selected');
+        //Using the value
+        this.selected = true;
         creatingChartData1();
     });
+
+    //$('#limit2').bind('change', function () {
+    //    lengthOfChart = parseInt(this.value);
+    //    indOfLength = retHistLBPeriodsNo.indexOf(lengthOfChart);
+    //    creatingChartData1();
+    //});
 
     function creatingChartData1() {
 
