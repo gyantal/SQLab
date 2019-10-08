@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "0bf2729579b002cb9cb7"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "4e91c16d43c4cba23c24"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -2974,7 +2974,17 @@ var QuickTesterComponent = (function () {
         var htmlElementNote = document.getElementById("idHtmlNoteFromStrategy");
         if (htmlElementNote != null)
             htmlElementNote.innerHTML = strategyResult.htmlNoteFromStrategy;
-        this.debugMessage = strategyResult.debugMessage;
+        // 2019-10-08: in Edge it was OK, but this caused Chrome: "Aw, Snap", "Debugging connection was closed. Reason. Render process gone."
+        // This is because all the HarryLong weights for all ETFs daily were sent in the 'debugMessage'. Sending is not a problem. But it was a HTML data, and Chrome crashed while trying to visualize, build up a DOM tree. 
+        // Probably because there is a threshold for max number of new HTML elements.
+        // Interestingly, Edge worked.
+        if (strategyResult.debugMessage.length > 10000) {
+            console.log("SqWarn! Too long debugMessage. Above approx 100K, it would crash Chrome (although Edge survive). Consider decreasing debugMessage size. DebugMessage is: ");
+            console.log(strategyResult.debugMessage);
+        }
+        else {
+            this.debugMessage = strategyResult.debugMessage;
+        }
         this.errorMessage = strategyResult.errorMessage;
         this.chartDataFromServer = strategyResult.chartData;
         this.chartDataToChart = [];
@@ -3002,7 +3012,7 @@ var QuickTesterComponent = (function () {
         nMonths -= this.startDateUtc.getMonth() + 1;
         nMonths += this.endDateUtc.getMonth();
         nMonths = nMonths <= 0 ? 1 : nMonths; // if month is less than 0, tell the chart to have 1 month
-        this.chartDataInStr = strategyResult.chartData.reverse().join("\n");
+        this.chartDataInStr = strategyResult.chartData.reverse().join("\n"); // This writes down the big "+ Show debug info" part. Maybe too much text.
         this.nMonthsInTimeFrame = nMonths.toString();
         //////***!!!!This is the best if we have to work with the official Chart, but postMessage works without this
         //////  Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar

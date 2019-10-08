@@ -91,11 +91,11 @@ namespace SqCommon
             }
             catch (Exception ex)
             {
-                errorMsg = "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage (in 2019: 09-24). Debug it in VS, recode and redeploy BOTH HealthMonitor & VBroker. Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.  Message:" + ex.Message;                
+                errorMsg = "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage (in 2019: 09-24). Debug it in VS, recode and redeploy 3 apps: HealthMonitor & VBroker & VBrokerManual. Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.  Message:" + ex.Message;                
             }
 
             if (holidays1.Count == 0)
-                errorMsg = "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage (in 2019: 09-24). Debug it in VS, recode and redeploy BOTH HealthMonitor & VBroker. Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.";
+                errorMsg = "This error is expected once every year. Exception in DetermineUsaMarketOpenOrCloseTimeNYSE() in String operations. Probably the structure of the page changed, re-code is needed every year when a new year appears in the Nasdaq Trading Calendar webpage (in 2019: 09-24). Debug it in VS, recode and redeploy 3 apps: HealthMonitor & VBroker & VBrokerManual. Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.";
             if (errorMsg != null) {
                 //  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.
                 Utils.Logger.Error(errorMsg);

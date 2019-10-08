@@ -191,14 +191,14 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 pv.Add(new DailyData() { Date = p_quotes[0][firstRebalancingDateInd + iDay].Date, AdjClosePrice = pvDaily });
 
                 // 2. Debug info to UI
-                sbDebugToUser.Append($"{pv[iDay].Date},{pvDaily},");
+                sbDebugToUser.Append($"{pv[iDay].Date},{pvDaily:0.##},");
                 double totalAssetPosExposure = 0.0;
                 for (int iAsset = 0; iAsset < nAssets; iAsset++)
                 {
                     totalAssetPosExposure += Math.Abs(assetPos[iAsset]);
-                    sbDebugToUser.Append($"{Math.Abs(assetPos[iAsset]) / pvDaily},");
+                    sbDebugToUser.Append($"{Math.Abs(assetPos[iAsset]) / pvDaily:0.##},");
                 }
-                sbDebugToUser.AppendLine($"{Math.Abs(totalAssetPosExposure) / pvDaily}<br>");
+                sbDebugToUser.AppendLine($"{Math.Abs(totalAssetPosExposure) / pvDaily:0.##}<br>");
 
                 // 3. On rebalancing days allocate assetPos[]. This will not change PV.
                 bool isRebalanceDay = false;
