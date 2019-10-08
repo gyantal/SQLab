@@ -46,7 +46,12 @@ function perc2color(perc, min, max) {
     return '#' + ('000000' + h.toString(16)).slice(-6);
 }
 
+
+
 function processData(dataStr) {
+
+   
+
     //Printing error message from C#.  
 
     if (dataStr == "Error")
@@ -78,7 +83,7 @@ function processData(dataStr) {
     divTitleCont.innerHTML = data.titleCont + ' <sup><small><a href="' + data.gDocRef + '" target="_blank">(Study)</a></small></sup>';
     divTimeNow.innerHTML = data.requestTime;
     divLiveDataTime.innerHTML = data.lastDataTime;
-    divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$" + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank">these current positions</a> updated for ' + data.currentPVDate + ")";
+    divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$" + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank" >these current positions</a> updated for ' + data.currentPVDate + ")";
     if (data.dailyProfSig !== "N/A") { divDailyProfit.innerHTML = "<b>Daily Profit/Loss: <span class=\"" + data.dailyProfString + "\">" + data.dailyProfSig + data.dailyProfAbs + " ("+data.dailyProfPerc+"%)</span></b>"; }
     if (data.monthlyProfSig !== "N/A") { divMonthlyProfit.innerHTML = "<b>MTD Profit/Loss: <span class=\"" + data.monthlyProfString + "\">" + data.monthlyProfSig + data.monthlyProfAbs + " (" + data.monthlyProfPerc +"%)</span></b>"; }
     if (data.yearlyProfSig !== "N/A") { divYearlyProfit.innerHTML = "<b>YTD Profit/Loss: <span class=\"" + data.yearlyProfString + "\">" + data.yearlyProfSig + data.yearlyProfAbs + " (" + data.yearlyProfPerc + "%)</span></b>"; }
@@ -192,7 +197,7 @@ function creatingTables(data) {
     var lengthOfChart = 21;
     var indOfLength = retHistLBPeriodsNo.indexOf(lengthOfChart);
     var divChartLength = document.getElementById("idChartLength");
-    divChartLength.innerHTML = "<div class=\"DDM\"><strong>Percentage Changes of Prices in the Last &emsp;<select class=\"DDM\" id=\"limit2\"><option value=\"1\">1 Day</option><option value=\"5\">1 Week</option><option value=\"10\">2 Weeks</option><option value=\"21\" selected>1 Month</option><option value=\"63\">3 Months</option><option value=\"126\">6 Months</option><option value=\"252\">1 Year</option>" + retHistLBPeriods[indOfLength] + "</select></strong ></div>";
+    divChartLength.innerHTML = "<div class=\"DDM\"><strong>in the Last &emsp;<select class=\"DDM\" id=\"limit2\"><option value=\"1\">1 Day</option><option value=\"5\">1 Week</option><option value=\"10\">2 Weeks</option><option value=\"21\" selected>1 Month</option><option value=\"63\">3 Months</option><option value=\"126\">6 Months</option><option value=\"252\">1 Year</option>" + retHistLBPeriods[indOfLength] + "</select></strong ></div>";
     creatingChartData1();
 
     $('.DDM').hover(function () {

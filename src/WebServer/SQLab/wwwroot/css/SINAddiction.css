@@ -4,6 +4,12 @@
 
 body {
     text-align: center;
+    /*margin: 0px;
+    /* originally, there is a 8px margin  */
+    overflow-y: scroll;
+    /* enable y scrollbar */
+    overflow-x: scroll;
+    /* disable x scrollbar */*/
 }
 
 h1 {
@@ -40,7 +46,8 @@ h2 {
 .center {
     text-align: center;
     border: 0;
-    font-size: 13px;
+    font-size: 13px; 
+    /*color: black;*/
 }
 
 .centerMatrix {
@@ -120,7 +127,7 @@ table.currData2 {
 
 .pv {
     font-weight: bold;
-    color: red;
+    color: royalblue;
 }
 
 .posDaily {
@@ -255,11 +262,11 @@ table.resData {
 
 .demo-container {
     box-sizing: border-box;
-    width: 800px;
-    min-height: 420px;
-    max-height: 600px;
-    padding: 10px 10px 10px 10px;
-    margin: 5px auto 10px auto;
+    width: 970px;
+    min-height: 460px;
+    max-height: 800px;
+    padding: 0px 10px 10px 10px;
+    margin: 0px auto 10px auto;
     border: 1px solid #ddd;
     /*background: #0094ff;*/
     position: relative;
@@ -268,9 +275,13 @@ table.resData {
     background: rgb(251,63,63);
     background: linear-gradient(135deg, rgba(251,63,63,1) 0%, rgba(162,164,77,1) 50%, rgba(70,93,252,0.8528362028405112) 100%);
 }
+p.demo-container {
+    margin-top: 0;
+    margin-bottom: 0;
+}
 
 .demo-placeholder {
-    width: 780px;
+    width: 860px;
     height: 400px;
     font-size: 12px;
     line-height: 1.2em;
@@ -282,8 +293,13 @@ table.resData {
     height: 95%;
     font-size: 12px;
     line-height: 1.2em;*/
+    position: absolute;
+    top: 50%;
+    left: 1%;
+    transform: translateY(-50%);
     z-index: 999;
-    position: relative;
+    /*position: relative;*/
+    /*vertical-align: central;*/
 }
 
 .DDM {
@@ -319,4 +335,51 @@ table.resData {
     font-size: 14px;
 }
 
+
+.overlap-div-inner1 {
+    position: absolute;
+}
+
+.overlap-div-inner2 {
+    position: absolute;
+    width: 100%;
+    margin-left: 20px;
+    text-align: center;
+    /*font-family: "Georgia";*/
+    color: white;
+    /*font-size: 2.5em;*/
+   
+}
+
+.not-important-section {
+    font-size: medium;
+}
+
+/* see discussion https://stackoverflow.com/questions/52886853/youtube-embed-showinfo-has-been-deprecated */
+/* https://jsfiddle.net/xcr298fu/   */
+.video-container {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    background-size: cover;
+}
+
+    .video-container iframe {
+        pointer-events: none;
+    }
+
+    .video-container iframe {
+        position: absolute;
+        /* elongate by 60px up */
+        top: -60px;
+        left: 0;
+        width: 100%;
+        /* elongate by 60px down. So, vplayer is 120 px bigger than 100%. This still indroduces black borders */
+        height: calc(100% + 120px);
+    }
+
+.video-foreground {
+    pointer-events: none;
+}
 
