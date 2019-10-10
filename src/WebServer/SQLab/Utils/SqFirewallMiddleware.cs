@@ -224,6 +224,9 @@ namespace SQLab
                 // but when the server doesn't serve it for 11sec, then client break the connection, thinking it is fail. And the client is right.
                 // actually the problem is that why sometimes GET '/dist/__webpack_hmr' takes 15 sec.
                 // at this times, server probably needs a restart. So, we are better if we leave this message to be sent to the admin.
+                // Yes. Before restart GET '/dist/__webpack_hmr' was served in 1200ms, (and 15sec rarely), after server restart it is served in 500ms. So, restart helped.
+                // What is annoying the client leaves the 'dead' tabpage open in Chrome, which consumes resources all the time. 
+                // However, with DotNet 3, and published static file Angular release, it won't be that big problem, because there is no Debug style _webpack under the published one.
                 Utils.Logger.Debug($"Warning. Connection reset by peer. Probably because of 15sec timeout on the client while serving /dist/__webpack_hmr. This is the problem, slowness of the server. Consider restarting server. ");
                 isSendable = true;
             }
