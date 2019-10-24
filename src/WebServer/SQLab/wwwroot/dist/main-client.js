@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "4e91c16d43c4cba23c24"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "d76ae47a92193bcb19e9"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -704,7 +704,7 @@
 /******/ 	__webpack_require__.h = function() { return hotCurrentHash; };
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return hotCreateRequire(63)(__webpack_require__.s = 63);
+/******/ 	return hotCreateRequire(64)(__webpack_require__.s = 64);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -792,8 +792,8 @@ var Strategy = (function () {
 
 "use strict";
 
-var Observable_1 = __webpack_require__(52);
-var map_1 = __webpack_require__(54);
+var Observable_1 = __webpack_require__(53);
+var map_1 = __webpack_require__(55);
 Observable_1.Observable.prototype.map = map_1.map;
 //# sourceMappingURL=map.js.map
 
@@ -917,8 +917,8 @@ var AppComponent = (function () {
     AppComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
             selector: 'app',
-            template: __webpack_require__(33),
-            styles: [__webpack_require__(45)]
+            template: __webpack_require__(34),
+            styles: [__webpack_require__(46)]
         }),
         __metadata("design:paramtypes", [])
     ], AppComponent);
@@ -1129,14 +1129,14 @@ module.exports = Html5Entities;
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_reflect_metadata__ = __webpack_require__(43);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_reflect_metadata__ = __webpack_require__(44);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_reflect_metadata___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_reflect_metadata__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_zone_js__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_zone_js__ = __webpack_require__(60);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_zone_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_zone_js__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_bootstrap__ = __webpack_require__(58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_bootstrap__ = __webpack_require__(59);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_bootstrap___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_bootstrap__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_platform_browser_dynamic__ = __webpack_require__(56);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_platform_browser_dynamic__ = __webpack_require__(57);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_app_browser_module__ = __webpack_require__(13);
 
 
@@ -1181,7 +1181,7 @@ var options = {
   name: ''
 };
 if (true) {
-  var querystring = __webpack_require__(42);
+  var querystring = __webpack_require__(43);
   var overrides = querystring.parse(__resourceQuery.slice(1));
   if (overrides.path) options.path = overrides.path;
   if (overrides.timeout) options.timeout = overrides.timeout;
@@ -1301,11 +1301,11 @@ if (typeof window !== 'undefined') {
 }
 
 function createReporter() {
-  var strip = __webpack_require__(44);
+  var strip = __webpack_require__(45);
 
   var overlay;
   if (typeof document !== 'undefined' && options.overlay) {
-    overlay = __webpack_require__(49);
+    overlay = __webpack_require__(50);
   }
 
   var styles = {
@@ -1358,7 +1358,7 @@ function createReporter() {
   };
 }
 
-var processUpdate = __webpack_require__(50);
+var processUpdate = __webpack_require__(51);
 
 var customHandler;
 var subscribeAllHandler;
@@ -1423,7 +1423,7 @@ if (module) {
   };
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, "?path=__webpack_hmr&dynamicPublicPath=true", __webpack_require__(51)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, "?path=__webpack_hmr&dynamicPublicPath=true", __webpack_require__(52)(module)))
 
 /***/ }),
 /* 10 */
@@ -1633,7 +1633,7 @@ module.exports = function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 /* unused harmony export getBaseUrl */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__ = __webpack_require__(60);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__ = __webpack_require__(61);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_shared_module__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__components_app_app_component__ = __webpack_require__(6);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1676,17 +1676,17 @@ function getBaseUrl() {
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModuleShared; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_common__ = __webpack_require__(62);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_common__ = __webpack_require__(63);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(56);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_router__ = __webpack_require__(57);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_router__ = __webpack_require__(58);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__components_app_app_component__ = __webpack_require__(6);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__components_navmenu_navmenu_component__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__components_home_home_component__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__components_fetchdata_fetchdata_component__ = __webpack_require__(16);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__components_counter_counter_component__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__components_healthmonitor_healthmonitor_component__ = __webpack_require__(17);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_quicktester_quicktester_component__ = __webpack_require__(25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__components_quicktester_quicktester_component__ = __webpack_require__(26);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1766,7 +1766,7 @@ var CounterComponent = (function () {
     CounterComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
             selector: 'counter',
-            template: __webpack_require__(34)
+            template: __webpack_require__(35)
         })
     ], CounterComponent);
     return CounterComponent;
@@ -1807,7 +1807,7 @@ var FetchDataComponent = (function () {
     FetchDataComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
             selector: 'fetchdata',
-            template: __webpack_require__(35)
+            template: __webpack_require__(36)
         }),
         __param(1, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Inject"])('BASE_URL')),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1__angular_http__["Http"], String])
@@ -1942,8 +1942,8 @@ var HealthMonitorComponent = (function () {
     HealthMonitorComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
             selector: 'healthmonitor',
-            template: __webpack_require__(36),
-            styles: [__webpack_require__(46)]
+            template: __webpack_require__(37),
+            styles: [__webpack_require__(47)]
         }),
         __param(1, __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Inject"])('BASE_URL')),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1__angular_http__["Http"], String])
@@ -2011,7 +2011,7 @@ var HomeComponent = (function () {
     HomeComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
             selector: 'home',
-            template: __webpack_require__(37)
+            template: __webpack_require__(38)
         })
     ], HomeComponent);
     return HomeComponent;
@@ -2039,8 +2039,8 @@ var NavMenuComponent = (function () {
     NavMenuComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
             selector: 'nav-menu',
-            template: __webpack_require__(38),
-            styles: [__webpack_require__(47)]
+            template: __webpack_require__(39),
+            styles: [__webpack_require__(48)]
         })
     ], NavMenuComponent);
     return NavMenuComponent;
@@ -2503,6 +2503,134 @@ function AngularInit_LEtf(app) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MomTF; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_add_operator_map__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_add_operator_map___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_add_operator_map__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__Strategy__ = __webpack_require__(2);
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+var MomTF = (function (_super) {
+    __extends(MomTF, _super);
+    function MomTF(p_app) {
+        var _this = _super.call(this, "MomTF", p_app) || this;
+        _this.assets = "SPY";
+        _this.assetsConstantLeverage = "1"; // "1,-1,1.5,2";
+        _this.rebalancingFrequency = "Weekly,Fridays"; // "Daily,2d"(trading days),"Weekly,Fridays", "Monthly,T-1"/"Monthly,T+0" (last/first trading day of the month)
+        _this.momOrTF = "Mom";
+        _this.lookbackDays = "240";
+        _this.excludeLastDays = "20";
+        _this.isCashAllocatedForNonActives = ""; // "Yes"
+        _this.cashEquivalentTicker = ""; // "" (default, so to measure the effect of TF, not the effect of TLT at naive running),"SHY", "TLT"  // both SHY and TLT starts on 2002-07-26. SHY is more realistic cache. However, TLT is more meaningful substitute to use in real life.
+        _this.isShortInsteadOfCash = ""; // empty string means "No", only "Yes" means "Yes"
+        _this.isVolScaledPos = ""; // empty string means "No", only "Yes" means "Yes"
+        _this.histVolLookbackDays = ""; // only if isVolScaledPos=Yes
+        _this.debugDetailToHtml = "Date,PV,AssetFinalWeights,CashWeight,AssetData"; // "Date,PV,AssetFinalWeights,AssetData"
+        _this.SetParams("idParamSetMomTF_SPY12mTFTLT"); // temporary for Development
+        return _this;
+    }
+    MomTF.prototype.IsMenuItemIdHandled = function (p_subStrategyId) {
+        return p_subStrategyId == "idMenuItemMomTF";
+    };
+    MomTF.prototype.GetHtmlUiName = function (p_subStrategyId) {
+        return "Momentum / TF: TrendFollowing";
+    };
+    MomTF.prototype.GetTradingViewChartName = function (p_subStrategyId) {
+        return "Momentum or TF";
+    };
+    MomTF.prototype.GetWebApiName = function (p_subStrategyId) {
+        return "MomTF";
+    };
+    MomTF.prototype.GetHelpUri = function (p_subStrategyId) {
+        return "https://docs.google.com/document/d/1uLm3raWgkiW6ccdC1YFpC41iFeys6fr-FLFucMz5kug";
+    };
+    MomTF.prototype.GetStrategyParams = function (p_subStrategyId) {
+        return "&Assets=" + this.assets + "&AssetsConstantLeverage=" + this.assetsConstantLeverage
+            + "&RebalancingFrequency=" + this.rebalancingFrequency + "&MomOrTF=" + this.momOrTF
+            + "&LookbackDays=" + this.lookbackDays + "&ExcludeLastDays=" + this.excludeLastDays + "&IsCashAllocatedForNonActives=" + this.isCashAllocatedForNonActives + "&CashEquivalentTicker=" + this.cashEquivalentTicker +
+            "&IsShortInsteadOfCash=" + this.isShortInsteadOfCash + "&IsVolScaledPos=" + this.isVolScaledPos + "&HistVolLookbackDays=" + this.histVolLookbackDays + "&DebugDetailToHtml=" + this.debugDetailToHtml;
+    };
+    MomTF.prototype.MenuItemParamSetsClicked = function (event) {
+        console.log("MenuItemParamSetsClicked()");
+        var target = event.target || event.srcElement || event.currentTarget;
+        var idAttr = target.attributes.id;
+        var idValue = idAttr.nodeValue;
+        this.SetParams(idValue);
+    };
+    MomTF.prototype.SetDefaultParams = function () {
+        this.assets = "";
+        this.assetsConstantLeverage = "1";
+        this.rebalancingFrequency = "Daily,1d";
+        this.momOrTF = "Mom";
+        this.lookbackDays = "240";
+        this.excludeLastDays = "20";
+        this.isCashAllocatedForNonActives = "Yes";
+        this.cashEquivalentTicker = "";
+        this.isShortInsteadOfCash = "";
+        this.isVolScaledPos = "";
+        this.histVolLookbackDays = "";
+        this.debugDetailToHtml = "Date,PV,AssetFinalWeights,CashWeight,AssetData";
+    };
+    MomTF.prototype.SetParams = function (idValue) {
+        this.SetDefaultParams();
+        switch (idValue) {
+            case "idParamSetMomTF_SPY12mMom":
+                this.assets = "SPY";
+                this.momOrTF = "Mom";
+                break;
+            case "idParamSetMomTF_SPY12mTF":
+                this.assets = "SPY";
+                this.momOrTF = "TF";
+                break;
+            case "idParamSetMomTF_SPY12mMomTLT":
+                this.assets = "SPY";
+                this.momOrTF = "Mom";
+                this.cashEquivalentTicker = "TLT";
+                break;
+            case "idParamSetMomTF_SPY12mTFTLT":
+                this.assets = "SPY";
+                this.momOrTF = "TF";
+                this.cashEquivalentTicker = "TLT";
+                break;
+            case "idParamSetMomTF_SPY12mMom0_BuyHold":// for comparing Momentum (or TF) vs. Buy&Hold
+                this.assets = "SPY";
+                this.momOrTF = "Mom";
+                this.lookbackDays = "0"; // lookback days 0 means we compare current day price >= 0 days before. It is always true, so Momentum will be bullish on every day.
+                this.excludeLastDays = "0";
+                break;
+            case "idParamSetMomTF_TAA12mMoTLT":// for comparing Momentum (or TF) vs. TAA Varadi's percentile channels
+                this.assets = "MDY,ILF,FEZ,EEM,EPP,VNQ,IBB";
+                this.assetsConstantLeverage = "2,2,2,2,2,2,2";
+                this.momOrTF = "TF";
+                this.lookbackDays = "150";
+                this.excludeLastDays = "20";
+                this.cashEquivalentTicker = "TLT";
+                this.isVolScaledPos = "Yes";
+                this.histVolLookbackDays = "20";
+                break;
+            default:
+                break;
+        }
+    }; // SetParams()
+    return MomTF;
+}(__WEBPACK_IMPORTED_MODULE_1__Strategy__["a" /* Strategy */]));
+
+
+
+/***/ }),
+/* 24 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return TotM; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_add_operator_map__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_add_operator_map___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_add_operator_map__);
@@ -2648,7 +2776,7 @@ var GlobalScopeInvertVisibilityOfTableRow_SomehowItDidntWorkYet = function (para
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2711,18 +2839,19 @@ var VXX_SPY_Controversial = (function (_super) {
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return QuickTesterComponent; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Strategies_VXX_SPY_Controversial__ = __webpack_require__(24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__Strategies_VXX_SPY_Controversial__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Strategies_LEtf__ = __webpack_require__(22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Strategies_TotM__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__Strategies_TotM__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__Strategies_AdaptiveUberVxx__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Strategies_AssetAllocation__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__Strategies_MomTF__ = __webpack_require__(23);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -2732,6 +2861,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+
 
 
 
@@ -2766,6 +2896,7 @@ var QuickTesterComponent = (function () {
         this.strategy_TotM = {};
         this.strategy_AdaptiveUberVxx = {};
         this.strategy_AssetAllocation = {};
+        this.strategy_MomTF = {};
         this.strategies = [];
         this.selectedStrategy = {};
         this.selectedSubStrategyMenuItemId = ""; // This identifies the substrategy under Strategy.  Also, the HTML hidden or visible parts are controlled by this. 
@@ -2825,9 +2956,11 @@ var QuickTesterComponent = (function () {
         this.strategy_TotM = new __WEBPACK_IMPORTED_MODULE_4__Strategies_TotM__["a" /* TotM */](this);
         this.strategy_AdaptiveUberVxx = new __WEBPACK_IMPORTED_MODULE_5__Strategies_AdaptiveUberVxx__["a" /* AdaptiveUberVxx */](this);
         this.strategy_AssetAllocation = new __WEBPACK_IMPORTED_MODULE_6__Strategies_AssetAllocation__["a" /* AssetAllocation */](this);
-        this.strategies = [this.strategy_LEtf, this.strategy_VXX_SPY_Controversial, this.strategy_TotM, this.strategy_AdaptiveUberVxx, this.strategy_AssetAllocation];
+        this.strategy_MomTF = new __WEBPACK_IMPORTED_MODULE_7__Strategies_MomTF__["a" /* MomTF */](this);
+        this.strategies = [this.strategy_LEtf, this.strategy_VXX_SPY_Controversial, this.strategy_TotM, this.strategy_AdaptiveUberVxx, this.strategy_AssetAllocation, this.strategy_MomTF];
         //this.SelectStrategy("idMenuItemAdaptiveUberVxx"); // there is no #if DEBUG in TS yet. We use TotM rarely in production anyway, so UberVXX can be the default, even while developing it.
-        this.SelectStrategy("idMenuItemTAA"); // temporary default until it is being developed
+        //this.SelectStrategy("idMenuItemTAA");   // temporary default until it is being developed
+        this.SelectStrategy("idMenuItemMomTF"); // temporary default until it is being developed
         this.TradingViewChartOnready();
     };
     QuickTesterComponent.prototype.ngAfterViewInit = function () {
@@ -3080,8 +3213,8 @@ var QuickTesterComponent = (function () {
     QuickTesterComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
             selector: 'quicktester',
-            template: __webpack_require__(39),
-            styles: [__webpack_require__(48)]
+            template: __webpack_require__(40),
+            styles: [__webpack_require__(49)]
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1__angular_http__["Http"]])
     ], QuickTesterComponent);
@@ -3097,7 +3230,7 @@ function getParameterByName(name) {
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(4)(undefined);
@@ -3111,7 +3244,7 @@ exports.push([module.i, "@media (max-width: 767px) {\r\n    /* On small screens,
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(4)(undefined);
@@ -3125,7 +3258,7 @@ exports.push([module.i, "@media (max-width: 767px) {\r\n    /* On small screens,
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(4)(undefined);
@@ -3139,7 +3272,7 @@ exports.push([module.i, "li .glyphicon {\r\n    margin-right: 10px;\r\n}\r\n\r\n
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(4)(undefined);
@@ -3153,19 +3286,19 @@ exports.push([module.i, "@media (max-width: 767px) {\r\n    /* On small screens,
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = {
-  XmlEntities: __webpack_require__(32),
-  Html4Entities: __webpack_require__(31),
+  XmlEntities: __webpack_require__(33),
+  Html4Entities: __webpack_require__(32),
   Html5Entities: __webpack_require__(7),
   AllHtmlEntities: __webpack_require__(7)
 };
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports) {
 
 var HTML_ALPHA = ['apos', 'nbsp', 'iexcl', 'cent', 'pound', 'curren', 'yen', 'brvbar', 'sect', 'uml', 'copy', 'ordf', 'laquo', 'not', 'shy', 'reg', 'macr', 'deg', 'plusmn', 'sup2', 'sup3', 'acute', 'micro', 'para', 'middot', 'cedil', 'sup1', 'ordm', 'raquo', 'frac14', 'frac12', 'frac34', 'iquest', 'Agrave', 'Aacute', 'Acirc', 'Atilde', 'Auml', 'Aring', 'Aelig', 'Ccedil', 'Egrave', 'Eacute', 'Ecirc', 'Euml', 'Igrave', 'Iacute', 'Icirc', 'Iuml', 'ETH', 'Ntilde', 'Ograve', 'Oacute', 'Ocirc', 'Otilde', 'Ouml', 'times', 'Oslash', 'Ugrave', 'Uacute', 'Ucirc', 'Uuml', 'Yacute', 'THORN', 'szlig', 'agrave', 'aacute', 'acirc', 'atilde', 'auml', 'aring', 'aelig', 'ccedil', 'egrave', 'eacute', 'ecirc', 'euml', 'igrave', 'iacute', 'icirc', 'iuml', 'eth', 'ntilde', 'ograve', 'oacute', 'ocirc', 'otilde', 'ouml', 'divide', 'oslash', 'ugrave', 'uacute', 'ucirc', 'uuml', 'yacute', 'thorn', 'yuml', 'quot', 'amp', 'lt', 'gt', 'OElig', 'oelig', 'Scaron', 'scaron', 'Yuml', 'circ', 'tilde', 'ensp', 'emsp', 'thinsp', 'zwnj', 'zwj', 'lrm', 'rlm', 'ndash', 'mdash', 'lsquo', 'rsquo', 'sbquo', 'ldquo', 'rdquo', 'bdquo', 'dagger', 'Dagger', 'permil', 'lsaquo', 'rsaquo', 'euro', 'fnof', 'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega', 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho', 'sigmaf', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi', 'omega', 'thetasym', 'upsih', 'piv', 'bull', 'hellip', 'prime', 'Prime', 'oline', 'frasl', 'weierp', 'image', 'real', 'trade', 'alefsym', 'larr', 'uarr', 'rarr', 'darr', 'harr', 'crarr', 'lArr', 'uArr', 'rArr', 'dArr', 'hArr', 'forall', 'part', 'exist', 'empty', 'nabla', 'isin', 'notin', 'ni', 'prod', 'sum', 'minus', 'lowast', 'radic', 'prop', 'infin', 'ang', 'and', 'or', 'cap', 'cup', 'int', 'there4', 'sim', 'cong', 'asymp', 'ne', 'equiv', 'le', 'ge', 'sub', 'sup', 'nsub', 'sube', 'supe', 'oplus', 'otimes', 'perp', 'sdot', 'lceil', 'rceil', 'lfloor', 'rfloor', 'lang', 'rang', 'loz', 'spades', 'clubs', 'hearts', 'diams'];
@@ -3318,7 +3451,7 @@ module.exports = Html4Entities;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports) {
 
 var ALPHA_INDEX = {
@@ -3479,49 +3612,49 @@ module.exports = XmlEntities;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports) {
 
 module.exports = "\r\n<div>\r\n    <router-outlet></router-outlet>\r\n</div>\r\n\r\n<!--<div class='container-fluid'>\r\n    <div class='row'>\r\n        <div class='col-sm-3'>\r\n            <nav-menu></nav-menu>\r\n        </div>\r\n        <div class='col-sm-9 body-content'>\r\n            <router-outlet></router-outlet>\r\n        </div>\r\n    </div>\r\n</div>-->\r\n\r\n\r\n<br /><p><small>DebugInfo: window.sqWebAppName: <strong>'{{ g_sqWebAppName }}'</strong></small></p>";
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports) {
 
 module.exports = "<h1>Counter</h1>\r\n\r\n<p>This is a simple example of an Angular component.</p>\r\n\r\n<p>Current count: <strong>{{ currentCount }}</strong></p>\r\n\r\n<button (click)=\"incrementCounter()\">Increment</button>\r\n";
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports) {
 
 module.exports = "<h1>Weather forecast</h1>\r\n\r\n<p>This component demonstrates fetching data from the server.</p>\r\n\r\n<p *ngIf=\"!forecasts\"><em>Loading...</em></p>\r\n\r\n<table class='table' *ngIf=\"forecasts\">\r\n    <thead>\r\n        <tr>\r\n            <th>Date</th>\r\n            <th>Temp. (C)</th>\r\n            <th>Temp. (F)</th>\r\n            <th>Summary</th>\r\n        </tr>\r\n    </thead>\r\n    <tbody>\r\n        <tr *ngFor=\"let forecast of forecasts\">\r\n            <td>{{ forecast.dateFormatted }}</td>\r\n            <td>{{ forecast.temperatureC }}</td>\r\n            <td>{{ forecast.temperatureF }}</td>\r\n            <td>{{ forecast.summary }}</td>\r\n        </tr>\r\n    </tbody>\r\n</table>\r\n";
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports) {
 
 module.exports = "<!--<img class=\"headerBackground\" src=\"/images/xceed.tableview.glass.theme.png\" />-->\r\n<!--<div style=\"position:absolute;top: 0px; \">-->\r\n<div class=\"mainHmDiv1\">\r\n    <div class=\"mainHmDiv2\">\r\n        <h3>{{m_title}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v. 0.2.49</h3>\r\n\r\n\r\n        <h4>1. Main HealthMonitor App</h4>\r\n\r\n        <span class=\"sqImportantError\"> &nbsp; <span *ngIf=\"m_data\" [class.sqImportantOK]=\"m_data.AppOk === 'OK'\">{{m_data.AppOk}}</span></span><br />\r\n        Response to FrontEnd:&nbsp; <span *ngIf=\"m_data\">{{m_data.ResponseToFrontEnd}}</span> <br />\r\n        Started on <span *ngIf=\"m_data\">{{m_data.StartDate}} &nbsp;&nbsp; {{m_data.StartDateTimeSpanStr}} </span>\r\n        <div>\r\n            <label>\r\n                Daily Email Report active: <span *ngIf=\"m_data\"><input #chkDailyEmail type=\"checkbox\" [checked]=\"m_data.DailyEmailReportEnabled\" (change)=\"setControlValue('chkDailyEmail', chkDailyEmail.checked)\" /></span>\r\n            </label>\r\n        </div>\r\n\r\n        <h4>2. Realtime Price Service</h4>\r\n        <span class=\"sqImportantError\"> &nbsp; <span *ngIf=\"m_data\" [class.sqImportantOK]=\"m_data.RtpsOk === 'OK'\">{{m_data.RtpsOk}}</span></span>\r\n        <div>\r\n            <label>\r\n                Realtime Price Service check timer active: <span *ngIf=\"m_data\"><input #chkRtps type=\"checkbox\" [checked]=\"m_data.RtpsTimerEnabled\" (change)=\"setControlValue('chkRtps', chkRtps.checked)\" /></span>\r\n            </label>\r\n        </div>\r\n        Timer frequency: every <span *ngIf=\"m_data\">{{m_data.RtpsTimerFrequencyMinutes}} </span>minutes. Last checks:<br />\r\n        <div class=\"lastChecksReportsDiv\" *ngIf=\"m_data\">\r\n            <ul class=\"lastChecksReportsUl\">\r\n                <li *ngFor=\"let rtps of m_data.RtpsDownloads\">\r\n                    <span>{{rtps}}</span>\r\n                </li>\r\n            </ul>\r\n        </div>\r\n        <h4>3. VBroker 1.0</h4>\r\n        <span class=\"sqImportantError\"> &nbsp; <span *ngIf=\"m_data\" [class.sqImportantOK]=\"m_data.VBrokerOk === 'OK'\">{{m_data.VBrokerOk}}</span></span>\r\n        <div>\r\n            <label>\r\n                Processing VBroker messages active: <span *ngIf=\"m_data\"><input #chkVBroker type=\"checkbox\" [checked]=\"m_data.ProcessingVBrokerMessagesEnabled\" (change)=\"setControlValue('chkVBroker', chkVBroker.checked)\" /></span>\r\n            </label>\r\n        </div>\r\n        No timer for active polling. Last received messages:<br />\r\n        <div class=\"lastChecksReportsDiv\" *ngIf=\"m_data\">\r\n            <ul class=\"lastChecksReportsUl\">\r\n                <li *ngFor=\"let report of m_data.VBrokerReports\">\r\n                    <span>{{report}}</span>\r\n                </li>\r\n            </ul>\r\n        </div>\r\n\r\n        <br />\r\n        <button class=\"sqhm-button\" (click)=\"refreshDataClicked()\">Refresh Data</button><br />\r\n        <span class=\"loginUserDiv\">Logged in as {{m_userEmail}};</span>\r\n        <hr>\r\n        <div class=\"detailedReportsSection\">\r\n            <strong>VBroker Detailed</strong><br />\r\n            <div class=\"lastChecksDetailedReportsDiv\" *ngIf=\"m_data\">\r\n                <ul class=\"lastChecksDetailedReportsUl\">\r\n                    <li *ngFor=\"let report of m_data.VBrokerDetailedReports\">\r\n                        <div [innerHTML]=\"report\"></div>\r\n                    </li>\r\n                </ul>\r\n            </div>\r\n        </div>\r\n        <br /><br /><br />\r\n        Click <a href=\"/DeveloperDashboard\">here for Developer Dashboard</a>  (Or for more VBroker details Developers can peek the Linux terminal.)<br /><br />\r\n        <div class=\"sqDebugInfo\">\r\n            <div>**************** Debug area for developers *************</div>\r\n\r\n            WebAppResponse: {{m_webAppResponse}}<br /><br />\r\n            Refresh button: {{m_wasRefreshClicked}}<br /><br />\r\n        </div>\r\n    </div>\r\n</div>\r\n";
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports) {
 
 module.exports = "<h1>Hello, world!</h1>\r\n<p>Welcome to your new single-page application, built with:</p>\r\n<ul>\r\n    <li><a href='https://get.asp.net/'>ASP.NET Core</a> and <a href='https://msdn.microsoft.com/en-us/library/67ef8sbd.aspx'>C#</a> for cross-platform server-side code</li>\r\n    <li><a href='https://angular.io/'>Angular</a> and <a href='http://www.typescriptlang.org/'>TypeScript</a> for client-side code</li>\r\n    <li><a href='https://webpack.github.io/'>Webpack</a> for building and bundling client-side resources</li>\r\n    <li><a href='http://getbootstrap.com/'>Bootstrap</a> for layout and styling</li>\r\n</ul>\r\n<p>To help you get started, we've also set up:</p>\r\n<ul>\r\n    <li><strong>Client-side navigation</strong>. For example, click <em>Counter</em> then <em>Back</em> to return here.</li>\r\n    <li><strong>Server-side prerendering</strong>. For faster initial loading and improved SEO, your Angular app is prerendered on the server. The resulting HTML is then transferred to the browser where a client-side copy of the app takes over.</li>\r\n    <li><strong>Webpack dev middleware</strong>. In development mode, there's no need to run the <code>webpack</code> build tool. Your client-side resources are dynamically built on demand. Updates are available as soon as you modify any file.</li>\r\n    <li><strong>Hot module replacement</strong>. In development mode, you don't even need to reload the page after making most changes. Within seconds of saving changes to files, your Angular app will be rebuilt and a new instance injected into the page.</li>\r\n    <li><strong>Efficient production builds</strong>. In production mode, development-time features are disabled, and the <code>webpack</code> build tool produces minified static CSS and JavaScript files.</li>\r\n</ul>\r\n";
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports) {
 
 module.exports = "<div class='main-nav'>\r\n    <div class='navbar navbar-inverse'>\r\n        <div class='navbar-header'>\r\n            <button type='button' class='navbar-toggle' data-toggle='collapse' data-target='.navbar-collapse'>\r\n                <span class='sr-only'>Toggle navigation</span>\r\n                <span class='icon-bar'></span>\r\n                <span class='icon-bar'></span>\r\n                <span class='icon-bar'></span>\r\n            </button>\r\n            <a class='navbar-brand' [routerLink]=\"['/home']\">SQLab</a>\r\n        </div>\r\n        <div class='clearfix'></div>\r\n        <div class='navbar-collapse collapse'>\r\n            <ul class='nav navbar-nav'>\r\n                <li [routerLinkActive]=\"['link-active']\">\r\n                    <a [routerLink]=\"['/home']\">\r\n                        <span class='glyphicon glyphicon-home'></span> Home\r\n                    </a>\r\n                </li>\r\n                <li [routerLinkActive]=\"['link-active']\">\r\n                    <a [routerLink]=\"['/counter']\">\r\n                        <span class='glyphicon glyphicon-education'></span> Counter\r\n                    </a>\r\n                </li>\r\n                <li [routerLinkActive]=\"['link-active']\">\r\n                    <a [routerLink]=\"['/healthmonitor']\">\r\n                        <span class='glyphicon glyphicon-education'></span> HealthMonitor\r\n                    </a>\r\n                </li>\r\n                <li [routerLinkActive]=\"['link-active']\">\r\n                    <a [routerLink]=\"['/fetch-data']\">\r\n                        <span class='glyphicon glyphicon-th-list'></span> Fetch data\r\n                    </a>\r\n                </li>\r\n            </ul>\r\n        </div>\r\n    </div>\r\n</div>\r\n";
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports) {
 
-module.exports = "<!--<img class=\"headerBackground\" src=\"/images/xceed.tableview.glass.theme.png\" />-->\r\n<!--<div style=\"position:absolute;top: 0px; \">-->\r\n<div class=\"mainHmDiv1\">\r\n    <div class=\"mainHmDiv2\">\r\n        <div class=\"divTitle\">SQ Strategy QuickTester (<span class=\"spanTitleVersionNumber\">{{m_versionShortInfo}}</span>) <span class=\"spanTitleSuperscript\">*RealTime</span> </div>\r\n        <div style=\"width: 100%; height: 2px; background: #ffffff; overflow: hidden;\"></div>\r\n        <!--//http://jsfiddle.net/rabidGadfly/f8ea6/ this was a good Angular menu, but submenus was not hovering-->\r\n        <!--// jquery horizontal menu is from here (I gave up finding Angular one): http://runnable.com/UdQdRyHniSpKAAXx/create-a-horizontal-navigation-menu-bar-using-jquery-->\r\n        <!-- Use this navigation div as your menu bar div -->\r\n        <div class=\"SqMenu2\">\r\n            <ul>\r\n                <li id=\"idStartBacktestButtonLi\">\r\n                    <span class=\"startBacktestButton\" (click)=\"MenuItemStartBacktestClicked()\">Start Backtest!</span>\r\n                </li>\r\n                <li>\r\n                    <span>Tools</span>\r\n                    <ul>\r\n                        <li><span>Copy PV to clipboard</span></li>\r\n                        <li><span (click)=\"MenuItemVersionInfoClicked()\">Version info</span></li>\r\n                    </ul>\r\n                </li>\r\n                <li>\r\n                    <span>Debug</span>\r\n                    <ul>\r\n                        <li><span>See debug info 1</span></li>\r\n                        <li><span>See debug info 2</span></li>\r\n                    </ul>\r\n                </li>\r\n                <li>\r\n                    <span>Strategies</span>\r\n                    <ul>\r\n                        <li>\r\n                            <span>Adaptive</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemAdaptiveUberVxx\" (click)=\"MenuItemStrategyClick($event)\">UberVxx</span></li>\r\n                            </ul>\r\n                        </li>\r\n                        <li>\r\n                            <span>Seasonalities</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemTotM\" (click)=\"MenuItemStrategyClick($event)\">Turn of the Month</span></li>\r\n                            </ul>\r\n                        </li>\r\n                        <li>\r\n                            <span>VIX</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemVXX_SPY_Controversial\" (click)=\"MenuItemStrategyClick($event)\">XIV width VXX-SPY Cont.Day</span></li>\r\n                            </ul>\r\n                        </li>\r\n                        <li>\r\n                            <span>L-ETF</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemLETFDiscrRebToNeutral\" (click)=\"MenuItemStrategyClick($event)\">L-ETF Discr. Reb.ToNeutral</span></li>\r\n                                <li><span id=\"idMenuItemLETFDiscrAddToWinner\" (click)=\"MenuItemStrategyClick($event)\">L-ETF Discr. AddToWinning</span></li>\r\n                                <li><span id=\"idMenuItemLETFHarryLong\" (click)=\"MenuItemStrategyClick($event)\">Harry Long</span></li>\r\n                            </ul>\r\n                        </li>\r\n                        <li>\r\n                            <span>Asset Allocation</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemTAA\" (click)=\"MenuItemStrategyClick($event)\">Tactical AA (TAA)</span></li>\r\n                            </ul>\r\n                        </li>\r\n                    </ul>\r\n                </li>\r\n            </ul>\r\n        </div>\r\n        <br>\r\n        <div style=\"width: 100%; height: 1px; background: #808080; overflow: hidden;\"></div>\r\n\r\n\r\n\r\n        <span id=\"idAlwaysVisibleSwitch0\" class=\"alwaysVisibleSwitchClass\" (click)=\"SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters')\">+ Show General Parameters</span>\r\n        <br />\r\n        <div id=\"idGeneralParameters\" style=\"display: none;\">\r\n            <table id=\"idGeneralParametersTable\">\r\n                <colgroup>\r\n                    <col class=\"column1\" />\r\n                    <col class=\"column2\" />\r\n                </colgroup>\r\n                <thead>\r\n                    <tr>\r\n                        <th>StartDateUtc*</th>\r\n                        <th>EndDateUtc*</th>\r\n                        <th class=\"xSmallComment\">*(UTC-16:00 will be converted to Exchange Time Zone)</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"inputStartDateStr\" style=\"width: 100px; padding: 1px; border: 1px solid #A0A0A0\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"inputEndDateStr\" style=\"width: 100px; padding: 1px; border: 1px solid #A0A0A0\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n        </div>\r\n\r\n\r\n\r\n\r\n        <span>SelectedStrategy:</span>\r\n        <span class=\"spanStrategyDescription\"> {{selectedSubStrategyName}} </span>\r\n        <a id=\"googleHelpHref\" target=\"_blank\" href=\"{{selectedSubStrategyHelpUri}}\"> Help</a>\r\n\r\n        <span class=\"spanTitleSuperscript\">(GoogleDoc)</span>\r\n        <div style=\"height: 1px; background: #808080; overflow: hidden;\"></div>\r\n        <!--<div style=\"width: 50%; height: 1px; background: #ffffff; overflow: hidden;\"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->    <!--// fast SSI, Server Side Include works in Azure website from 2014: http://azure.microsoft.com/blog/2014/03/26/server-side-includes-ssi-in-windows-azure-web-sites-waws/-->\r\n        <!--#include virtual=\"/SQQuickTester/Strategies/AdaptiveUberVXX/AdaptiveUberVXX.htm\"-->\r\n        <div [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'\">\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <colgroup>\r\n                    <col class=\"column1\" />\r\n                    <col class=\"column2\" />\r\n                </colgroup>\r\n                <thead>\r\n                    <tr>\r\n                        <th>Trading instrument on bullish day</th>\r\n                        <th>Param</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td>\r\n                            <select [ngModel]=\"strategy_AdaptiveUberVxx.selectedBullishTradingInstrument\" (ngModelChange)=\"strategy_AdaptiveUberVxx.bullishTradingInstrumentChanged($event)\">\r\n                                <option [value]=\"i\" *ngFor=\"let i of strategy_AdaptiveUberVxx.bullishTradingInstrument\">{{i}}</option>\r\n                            </select>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.param\" style=\"width: 280px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" />                        </td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <colgroup>\r\n                    <col class=\"column1\" />\r\n                    <col class=\"column2\" />\r\n                </colgroup>\r\n                <thead>\r\n                    <tr>\r\n                        <th>Component</th>\r\n                        <th>Priority</th>\r\n                        <th>Combination</th>\r\n                        <th>StartDate</th>\r\n                        <th>EndDate</th>\r\n                        <th>TradingStartAt</th>\r\n                        <th>Param</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td>{{strategy_AdaptiveUberVxx.fomc.Name}}</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.Priority\" style=\"width: 20px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.Combination\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.StartDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.EndDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.TradingStartAt\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.Param\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                    <tr>\r\n                        <td>{{strategy_AdaptiveUberVxx.holiday.Name}}</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.Priority\" style=\"width: 20px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.Combination\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.StartDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.EndDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.TradingStartAt\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.Param\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                    <tr>\r\n                        <td>{{strategy_AdaptiveUberVxx.totm.Name}}</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.Priority\" style=\"width: 20px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.Combination\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.StartDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.EndDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.TradingStartAt\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.Param\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                    <tr>\r\n                        <td>{{strategy_AdaptiveUberVxx.connor.Name}}</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.Priority\" style=\"width: 20px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.Combination\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.StartDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.EndDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.TradingStartAt\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.Param\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n        </div>\r\n\r\n        <!--#include virtual=\"/SQQuickTester/Strategies/TotM/TotM.htm\"-->\r\n        <table id=\"inputTable\" [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemTotM'\" align=\"left\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n            </colgroup>\r\n            <thead>\r\n                <tr>\r\n                    <th>Trading instrument<br />on bullish day</th>\r\n                    <th>Daily mask, Winter<br />(TotM, rel.to 1st day)</th>\r\n                    <th>Daily mask, Winter<br />(TotMM, rel.to 15th day)</th>\r\n                    <th>Daily mask, Summer<br />(TotM, rel.to 1st day)</th>\r\n                    <th>Daily mask, Summer<br />(TotMM, rel.to 15th day)</th>\r\n                </tr>\r\n            </thead>\r\n            <tbody>\r\n                <tr>\r\n                    <td>\r\n                        <select [ngModel]=\"strategy_TotM.selectedBullishTradingInstrument\" (ngModelChange)=\"strategy_TotM.bullishTradingInstrumentChanged($event)\">\r\n                            <option [value]=\"i\" *ngFor=\"let i of strategy_TotM.bullishTradingInstrument\">{{i}}</option>\r\n                        </select>\r\n\r\n                    </td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_TotM.dailyMarketDirectionMaskWinterTotM\" style=\"width: 140px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_TotM.dailyMarketDirectionMaskWinterTotMM\" style=\"width: 140px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_TotM.dailyMarketDirectionMaskSummerTotM\" style=\"width: 140px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_TotM.dailyMarketDirectionMaskSummerTotMM\" style=\"width: 140px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n        <div class=\"SqMenu2\" [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemTotM'\" align=\"left\">\r\n            <ul>\r\n                <li>\r\n                    <span>Masks</span>\r\n                    <ul>\r\n                        <li><span id=\"idMaskBuyHold\" (click)=\"strategy_TotM.MenuItemPresetMasksClicked($event)\">Buy&Hold</span></li>\r\n                        <li><span id=\"idMaskUberVXXOld\" (click)=\"strategy_TotM.MenuItemPresetMasksClicked($event)\">UberVXX old</span></li>\r\n                        <li><span id=\"idMaskBuyUberVXXNew\" (click)=\"strategy_TotM.MenuItemPresetMasksClicked($event)\">UberVXX new</span></li>\r\n                        <li><span id=\"idMaskSPYDerived\" (click)=\"strategy_TotM.MenuItemPresetMasksClicked($event)\">SPY derived</span></li>\r\n                    </ul>\r\n                </li>\r\n            </ul>\r\n        </div>\r\n\r\n        <!--#include virtual=\"/SQQuickTester/Strategies/VIX/VXX_SPY_Controversial.htm\"-->\r\n        <table id=\"inputTable\" [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemVXX_SPY_Controversial'\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n            </colgroup>\r\n            <thead>\r\n                <tr>\r\n                    <th>SPY Min %Change</th>\r\n                    <th>VXX Min %Change</th>\r\n                    <th>VXX Long or Short <br /> after controversial days</th>\r\n                </tr>\r\n            </thead>\r\n            <tbody>\r\n                <tr>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_VXX_SPY_Controversial.spyMinPctMove\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" />%</td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_VXX_SPY_Controversial.vxxMinPctMove\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" />%</td>\r\n                    <td>\r\n\r\n                        <select [ngModel]=\"strategy_VXX_SPY_Controversial.selectedVXXLongOrShortTrade\" (ngModelChange)=\"strategy_VXX_SPY_Controversial.vxxLongOrShortTradeChanged($event)\">\r\n                            <option [value]=\"i\" *ngFor=\"let i of strategy_VXX_SPY_Controversial.vxxLongOrShortTrade\">{{i}}</option>\r\n                        </select>\r\n                    </td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n\r\n        <div [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemLETFDiscrRebToNeutral' && selectedSubStrategyMenuItemId !== 'idMenuItemLETFDiscrAddToWinner' && selectedSubStrategyMenuItemId !== 'idMenuItemLETFHarryLong'\">\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <colgroup>\r\n                    <col class=\"column1\" />\r\n                    <col class=\"column2\" />\r\n                </colgroup>\r\n                <thead>\r\n                    <tr>\r\n                        <th>Assets</th>\r\n                        <th style=\"font-size: 70%;\">Assets Weight</th>\r\n                        <th style=\"font-size: 70%;\">Rebalance:'Daily,2d','Weekly<br />,Fridays', 'Monthly,T-1'</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_LEtf.assets\" style=\"width: 290px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_LEtf.assetsConstantWeightPct\" style=\"width: 150px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_LEtf.rebalancingFrequency\" style=\"width: 150px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <div class=\"SqMenu2\">\r\n                <ul>\r\n                    <li>\r\n                        <span>ParamSets</span>\r\n                        <ul>\r\n                            <li><span id=\"idParamSetHL_-50Comb.SQ_-120H_coctailAgy6\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%ShortVol,hedges120%**</span></li>\r\n                            <li><span id=\"idParamSetHL_-50Comb.SQ_-100H_coctailAgy6\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%ShortVol,hedges100%</span></li>\r\n                            <li><span id=\"idParamSetHL_-50Comb.SQ_-80H_coctailAgy6\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%ShortVol,hedges80%</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy5\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,c.MPT135%B</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy4\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,c.MPT135%A</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy3\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,c.MPT100%*</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy2\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,cocktail Agy2</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,cocktail Agy</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailDC\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,cocktail DC</span></li>\r\n                            <li><span id=\"idParamSetHL_-35TVIX_-25TMV_-28UNG_-8USO_-4JJC\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">35TVIX,25TMV,28UNG...*</span></li>\r\n                            <li><span id=\"idParamSetHL_-35TVIX_-65TMV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">35%TVIX - 65%TMV</span></li>\r\n                            <li><span id=\"idParamSetHL_-25TVIX_-75TMV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">HarryLong</span></li>\r\n                            <li><span id=\"idParamSetHL_50VXX_50XIV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">long VXX - long XIV</span></li>\r\n                            <li><span id=\"idParamSetHL_-50VXX.SQ_225TLT\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%VXX.SQ-225%TLT</span></li>\r\n                            <li><span id=\"idParamSetHL_-50VXX_225TLT\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%VXX - 225%TLT</span></li>\r\n                            <li><span id=\"idParamSetHL_50XIV_225TLT\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%XIV - 225%TLT</span></li>\r\n                            <li><span id=\"idParamSetHL_25XIV_112TLT\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">25%XIV - 112%TLT</span></li>\r\n                            <li><span id=\"idParamSetHL_-25TVIX_75CASH\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">25%TVIX - 75%Cash</span></li>\r\n                            <li><span id=\"idParamSetHL_25CASH_-75TMV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">25%Cash - 75%TMV</span></li>\r\n                            <li><span>*** 50%-50% shorts ***</span></li>\r\n                            <li><span id=\"idParamSetHL_-50URE_-50SRS\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">URE - SRS</span></li>\r\n                            <li><span id=\"idParamSetHL_-50DRN_-50DRV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">DRN - DRV</span></li>\r\n                            <li><span id=\"idParamSetHL_-50FAS_-50FAZ\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">FAS - FAZ</span></li>\r\n                            <li><span id=\"idParamSetHL_-50VXX_-50XIV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">VXX - XIV</span></li>\r\n                            <li><span id=\"idParamSetHL_-50VXZ_-50ZIV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">VXZ - ZIV</span></li>\r\n                        </ul>\r\n                    </li>\r\n                </ul>\r\n            </div>\r\n\r\n        </div>\r\n\r\n        <div [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemTAA'\">\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <thead>\r\n                    <tr>\r\n                        <th>Assets</th>\r\n                        <th style=\"font-size: 70%;\">Assets<br />Leverage</th>\r\n                        <th style=\"font-size: 70%;\">Rebalance:'Daily,2d','Weekly<br />,Fridays', 'Monthly,T-1'</th>\r\n                        <th style=\"font-size: 70%;\">%Channel<br /> Lookback Days</th>\r\n                        <th style=\"font-size: 70%;\">%Channel<br /> %Limits</th>\r\n                        <th style=\"font-size: 70%;\">%Channel<br /> IsActiveEveryDay</th>\r\n                        <th style=\"font-size: 70%;\">%Channel<br /> IsConditional</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.assets\" style=\"width: 250px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.assetsConstantLeverage\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.rebalancingFrequency\" style=\"width: 150px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.pctChannelLookbackDays\" style=\"width: 100px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.pctChannelPctLimits\" style=\"width: 50px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" />%</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.isPctChannelActiveEveryDay\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.isPctChannelConditional\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <thead>\r\n                    <tr>\r\n                        <th style=\"font-size: 70%;\">HV Lookback<br /> Days</th>\r\n                        <th style=\"font-size: 70%;\">Is Cash Allocated<br /> for Non-actives</th>\r\n                        <th style=\"font-size: 70%;\">Cash Equivalent<br /> Ticker</th>\r\n                        <th style=\"font-size: 70%;\">CLMT<br /> Leverage </th>\r\n                        <th style=\"font-size: 70%;\">UberVXX<br /> Events</th>\r\n                        <th style=\"font-size: 70%;\">Debug Detail<br /> To Html</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.histVolLookbackDays\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.isCashAllocatedForNonActives\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.cashEquivalentTicker\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.dynamicLeverageClmtParams\" style=\"width: 100px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.uberVxxEventsParams\" style=\"width: 100px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.debugDetailToHtml\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <div class=\"SqMenu2\">\r\n                <ul>\r\n                    <li>\r\n                        <span>ParamSets T</span>\r\n                        <ul>\r\n                            <li><span id=\"idParamSetTAA_GlobVnqIbb\" (click)=\"strategy_AssetAllocation.MenuItemParamSetsClicked($event)\">Global+VNQ+BIB Live</span></li>\r\n                            <li><span id=\"idParamSetTAA_Glob_Live\" (click)=\"strategy_AssetAllocation.MenuItemParamSetsClicked($event)\">GlobalAssets Live</span></li>\r\n                            <li><span id=\"idParamSetTAA_GC_Live\" (click)=\"strategy_AssetAllocation.MenuItemParamSetsClicked($event)\">GameChangers Live</span></li>\r\n                            <li><span id=\"idParamSetTAA_VaradiOriginal\" (click)=\"strategy_AssetAllocation.MenuItemParamSetsClicked($event)\">Varadi's original</span></li>\r\n                        </ul>\r\n                    </li>\r\n                </ul>para\r\n            </div>\r\n        </div>\r\n\r\n        <!--// How to Eliminate Whitespace around Server Side Includes when Pages are UTF-8 Encoded? http://stackoverflow.com/questions/7196993/how-to-eliminate-whitespace-around-server-side-includes-when-pages-are-utf-8-enc-->\r\n        <!--<div style=\"width: 50%; height: 1px; background: #ffffff; overflow: hidden;\"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->\r\n        <div style=\"width: 100%; height: 2px; background: #ffffff; overflow: hidden;\"></div>\r\n        <div style=\"width: 100%; height: 1px; background: #808080; overflow: hidden;\"></div>\r\n        <!--Ideas what to put here as Statistics come from Portfolio123 http://imarketsignals.com/2015/best8-sp500-min-volatility-large-cap-portfolio-management-system/-->\r\n\r\n        <table id=\"statisticsTable\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n                <col class=\"column3\" />\r\n                <col class=\"column3\" />\r\n            </colgroup>\r\n            <thead>\r\n            </thead>\r\n            <tbody>\r\n                <tr class='even'>\r\n                    <td id=\"idTdGeneral\">General:</td>\r\n                    <td>Start Date: <span> {{startDateStr}} </span></td>\r\n                    <td id=\"idTdRebalanceFrequency\">Rebalance Frequency: <span> {{rebalanceFrequencyStr}} </span></td>\r\n                    <td>Benchmark: <span> {{benchmarkStr}} </span></td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n        <span id=\"idSpanStatistics\">Statistics (as of {{endDateStr}}):</span>\r\n        <br>\r\n\r\n\r\n        <table id=\"statisticsTable\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n                <col class=\"column3\" />\r\n            </colgroup>\r\n            <thead>\r\n            </thead>\r\n            <tbody>\r\n                <tr class='even'>\r\n                    <td>PV Start Value: <span> &#36;{{pvStartValue | number:'.0-2'}} </span></td>\r\n                    <!--<td class='green' onclick=\"GlobalScopeInvertVisibilityOfTableRow('idWinter__TotMT-17')\">0.008%<span style=\"color: #2581cc; font-size: x-small; vertical-align:super;\">i</span></td>-->\r\n                    <td>PV Final Value: <span> &#36;{{pvEndValue | number:'.0-2'}} </span></td>\r\n                    <td>Total Return: <span> {{100*totalGainPct | number: '.0-2'}}&#37; </span></td>\r\n                </tr>\r\n                <tr>\r\n                    <td id=\"tdCagr\">CAGR: <span> {{100*cagr | number:'.0-2'}}% </span></td>\r\n                    <td>Annualized StDev: <span> {{100*annualizedStDev | number:'.0-2'}}% </span></td>\r\n                    <td id=\"tdSharpe\">Sharpe: <span> {{sharpeRatio | number:'.0-2'}} </span></td>\r\n                </tr>\r\n                <tr class='even'>\r\n                    <td>Max Drawdown: <span> {{100*maxDD | number:'.0-2'}}% </span></td>\r\n                    <td><a target=\"_blank\" href=\"http://en.wikipedia.org/wiki/Ulcer_index\">Ulcer</a> (Vol=qMean DD): <span> {{100*ulcerInd | number:'.0-2'}}% </span></td>\r\n                    <td>Max.TradingDays in Drawdown: <span> {{maxTradingDaysInDD}} </span></td>\r\n                    <td></td>\r\n                </tr>\r\n                <tr>\r\n                    <td>Winners: <span> {{winnersStr}} </span></td>\r\n                    <td>Losers: <span> {{losersStr}} </span></td>\r\n                    <td>Annualized <a target=\"_blank\" href=\"http://www.redrockcapital.com/Sortino__A__Sharper__Ratio_Red_Rock_Capital.pdf\">Sortino</a>: <span> {{sortinoRatio | number:'.0-2'}} </span></td>\r\n                    <td></td>\r\n                </tr>\r\n                <tr class='even'>\r\n                    <td>Benchmark CAGR: <span> {{100*benchmarkCagr | number:'.0-2'}}% </span></td>\r\n                    <td>Benchmark Max Drawdown: <span> {{100*benchmarkMaxDD | number:'.0-2'}}% </span></td>\r\n                    <td>Correlation with Benchmark: <span> {{benchmarkCorrelation | number:'.0-2'}}</span></td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n\r\n\r\n        <div style=\"width: 100%; height: 1px; background: #808080; overflow: hidden;\"></div>\r\n        <div id=\"tv_chart_container\"></div>\r\n\r\n        <span id=\"idAlwaysVisibleSwitch1\" class=\"alwaysVisibleSwitchClass\" (click)=\"SQToggle('idNoteFromStrategyDiv', 'idAlwaysVisibleSwitch1', 'note from strategy')\">+ Show General Parameters</span>\r\n\r\n        <br />\r\n        <div id=\"idNoteFromStrategyDiv\" style=\"display: block;\">\r\n            <!--<span ng-bind-html=\"htmlNoteFromStrategy\"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->\r\n            <span id=\"idHtmlNoteFromStrategy\">  </span>\r\n        </div>\r\n\r\n\r\n\r\n\r\n        <br>\r\n        <span id=\"idSpanStatistics\">Holdings (as of {{endDateStr}}):</span>\r\n        <br>\r\n        <table id=\"statisticsTable\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n                <col class=\"column3\" />\r\n            </colgroup>\r\n            <thead>\r\n            </thead>\r\n            <tbody>\r\n                <tr class='even'>\r\n                    <td>Cash: <span> ${{pvCash | number:'.0-2'}} </span></td>\r\n                    <td>Number of positions: <span> {{nPositions}} </span></td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n\r\n\r\n        Holdings List:\r\n        <span> {{holdingsListStr}} </span>\r\n        <br>\r\n        <br>\r\n        ErrorMessage:\r\n        <span> {{errorMessage}} </span>\r\n        <br>\r\n        DebugMessage:\r\n        <span> {{debugMessage}} </span>\r\n        <br>\r\n        Profiling:\r\n        <span>JS BacktestCallback: {{profilingBacktestCallbackMSec | number}}ms, BacktestAtChartReadyStart(chart removed/created): {{profilingBacktestAtChartReadyStartMSec | number}}ms, BacktestAtChartReadyEnd(TimeFrame clicked): {{profilingBacktestAtChartReadyEndMSec | number}}ms </span>\r\n        <br>\r\n\r\n        <span id=\"idAlwaysVisibleSwitchDebug\" class=\"alwaysVisibleSwitchClass\" (click)=\"SQToggle('idDebugInfoDiv', 'idAlwaysVisibleSwitchDebug', 'debug info')\">+ Show debug info</span>\r\n\r\n        <br />\r\n        <div id=\"idDebugInfoDiv\" style=\"display: none;\">\r\n            <!--<span ng-bind-html=\"htmlNoteFromStrategy\"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->\r\n            <span id=\"idDebugInfoSpan\">\r\n                <br>ChartDataInStr:\r\n                <pre>{{chartDataInStr}} </pre>\r\n                <br>\r\n            </span>\r\n        </div>\r\n\r\n\r\n        <br>\r\n        <!--<span>{{tipToUser}}</span>-->\r\n        <!--<br />\r\n    <button class=\"mymyButton1Class\" (click)=\"onClickMe()\">Click me!</button>\r\n    <br />\r\n    <br />{{clickMessage }}-->\r\n\r\n\r\n    </div>\r\n    </div>\r\n";
+module.exports = "<!--<img class=\"headerBackground\" src=\"/images/xceed.tableview.glass.theme.png\" />-->\r\n<!--<div style=\"position:absolute;top: 0px; \">-->\r\n<div class=\"mainHmDiv1\">\r\n    <div class=\"mainHmDiv2\">\r\n        <div class=\"divTitle\">SQ Strategy QuickTester (<span class=\"spanTitleVersionNumber\">{{m_versionShortInfo}}</span>) <span class=\"spanTitleSuperscript\">*RealTime</span> </div>\r\n        <div style=\"width: 100%; height: 2px; background: #ffffff; overflow: hidden;\"></div>\r\n        <!--//http://jsfiddle.net/rabidGadfly/f8ea6/ this was a good Angular menu, but submenus was not hovering-->\r\n        <!--// jquery horizontal menu is from here (I gave up finding Angular one): http://runnable.com/UdQdRyHniSpKAAXx/create-a-horizontal-navigation-menu-bar-using-jquery-->\r\n        <!-- Use this navigation div as your menu bar div -->\r\n        <div class=\"SqMenu2\">\r\n            <ul>\r\n                <li id=\"idStartBacktestButtonLi\">\r\n                    <span class=\"startBacktestButton\" (click)=\"MenuItemStartBacktestClicked()\">Start Backtest!</span>\r\n                </li>\r\n                <li>\r\n                    <span>Tools</span>\r\n                    <ul>\r\n                        <li><span>Copy PV to clipboard</span></li>\r\n                        <li><span (click)=\"MenuItemVersionInfoClicked()\">Version info</span></li>\r\n                    </ul>\r\n                </li>\r\n                <li>\r\n                    <span>Debug</span>\r\n                    <ul>\r\n                        <li><span>See debug info 1</span></li>\r\n                        <li><span>See debug info 2</span></li>\r\n                    </ul>\r\n                </li>\r\n                <li>\r\n                    <span>Strategies</span>\r\n                    <ul>\r\n                        <li>\r\n                            <span>Adaptive</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemAdaptiveUberVxx\" (click)=\"MenuItemStrategyClick($event)\">UberVxx</span></li>\r\n                            </ul>\r\n                        </li>\r\n                        <li>\r\n                            <span>Seasonalities</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemTotM\" (click)=\"MenuItemStrategyClick($event)\">Turn of the Month</span></li>\r\n                            </ul>\r\n                        </li>\r\n                        <li>\r\n                            <span>VIX</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemVXX_SPY_Controversial\" (click)=\"MenuItemStrategyClick($event)\">XIV width VXX-SPY Cont.Day</span></li>\r\n                            </ul>\r\n                        </li>\r\n                        <li>\r\n                            <span>L-ETF</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemLETFDiscrRebToNeutral\" (click)=\"MenuItemStrategyClick($event)\">L-ETF Discr. Reb.ToNeutral</span></li>\r\n                                <li><span id=\"idMenuItemLETFDiscrAddToWinner\" (click)=\"MenuItemStrategyClick($event)\">L-ETF Discr. AddToWinning</span></li>\r\n                                <li><span id=\"idMenuItemLETFHarryLong\" (click)=\"MenuItemStrategyClick($event)\">Harry Long</span></li>\r\n                            </ul>\r\n                        </li>\r\n                        <li>\r\n                            <span>Asset Allocation</span>\r\n                            <ul>\r\n                                <li><span id=\"idMenuItemTAA\" (click)=\"MenuItemStrategyClick($event)\">Tactical AA (TAA)</span></li>\r\n                                <li><span id=\"idMenuItemMomTF\" (click)=\"MenuItemStrategyClick($event)\">Momentum / TF</span></li>\r\n                            </ul>\r\n                        </li>\r\n                    </ul>\r\n                </li>\r\n            </ul>\r\n        </div>\r\n        <br>\r\n        <div style=\"width: 100%; height: 1px; background: #808080; overflow: hidden;\"></div>\r\n\r\n\r\n\r\n        <span id=\"idAlwaysVisibleSwitch0\" class=\"alwaysVisibleSwitchClass\" (click)=\"SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters')\">+ Show General Parameters</span>\r\n        <br />\r\n        <div id=\"idGeneralParameters\" style=\"display: none;\">\r\n            <table id=\"idGeneralParametersTable\">\r\n                <colgroup>\r\n                    <col class=\"column1\" />\r\n                    <col class=\"column2\" />\r\n                </colgroup>\r\n                <thead>\r\n                    <tr>\r\n                        <th>StartDateUtc*</th>\r\n                        <th>EndDateUtc*</th>\r\n                        <th class=\"xSmallComment\">*(UTC-16:00 will be converted to Exchange Time Zone)</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"inputStartDateStr\" style=\"width: 100px; padding: 1px; border: 1px solid #A0A0A0\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"inputEndDateStr\" style=\"width: 100px; padding: 1px; border: 1px solid #A0A0A0\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n        </div>\r\n\r\n\r\n\r\n\r\n        <span>SelectedStrategy:</span>\r\n        <span class=\"spanStrategyDescription\"> {{selectedSubStrategyName}} </span>\r\n        <a id=\"googleHelpHref\" target=\"_blank\" href=\"{{selectedSubStrategyHelpUri}}\"> Help</a>\r\n\r\n        <span class=\"spanTitleSuperscript\">(GoogleDoc)</span>\r\n        <div style=\"height: 1px; background: #808080; overflow: hidden;\"></div>\r\n        <!--<div style=\"width: 50%; height: 1px; background: #ffffff; overflow: hidden;\"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->    <!--// fast SSI, Server Side Include works in Azure website from 2014: http://azure.microsoft.com/blog/2014/03/26/server-side-includes-ssi-in-windows-azure-web-sites-waws/-->\r\n        <!--#include virtual=\"/SQQuickTester/Strategies/AdaptiveUberVXX/AdaptiveUberVXX.htm\"-->\r\n        <div [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemAdaptiveUberVxx'\">\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <colgroup>\r\n                    <col class=\"column1\" />\r\n                    <col class=\"column2\" />\r\n                </colgroup>\r\n                <thead>\r\n                    <tr>\r\n                        <th>Trading instrument on bullish day</th>\r\n                        <th>Param</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td>\r\n                            <select [ngModel]=\"strategy_AdaptiveUberVxx.selectedBullishTradingInstrument\" (ngModelChange)=\"strategy_AdaptiveUberVxx.bullishTradingInstrumentChanged($event)\">\r\n                                <option [value]=\"i\" *ngFor=\"let i of strategy_AdaptiveUberVxx.bullishTradingInstrument\">{{i}}</option>\r\n                            </select>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.param\" style=\"width: 280px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" />                        </td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <colgroup>\r\n                    <col class=\"column1\" />\r\n                    <col class=\"column2\" />\r\n                </colgroup>\r\n                <thead>\r\n                    <tr>\r\n                        <th>Component</th>\r\n                        <th>Priority</th>\r\n                        <th>Combination</th>\r\n                        <th>StartDate</th>\r\n                        <th>EndDate</th>\r\n                        <th>TradingStartAt</th>\r\n                        <th>Param</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td>{{strategy_AdaptiveUberVxx.fomc.Name}}</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.Priority\" style=\"width: 20px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.Combination\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.StartDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.EndDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.TradingStartAt\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.fomc.Param\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                    <tr>\r\n                        <td>{{strategy_AdaptiveUberVxx.holiday.Name}}</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.Priority\" style=\"width: 20px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.Combination\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.StartDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.EndDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.TradingStartAt\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.holiday.Param\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                    <tr>\r\n                        <td>{{strategy_AdaptiveUberVxx.totm.Name}}</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.Priority\" style=\"width: 20px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.Combination\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.StartDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.EndDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.TradingStartAt\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.totm.Param\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                    <tr>\r\n                        <td>{{strategy_AdaptiveUberVxx.connor.Name}}</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.Priority\" style=\"width: 20px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.Combination\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.StartDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.EndDate\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.TradingStartAt\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AdaptiveUberVxx.connor.Param\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n        </div>\r\n\r\n        <!--#include virtual=\"/SQQuickTester/Strategies/TotM/TotM.htm\"-->\r\n        <table id=\"inputTable\" [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemTotM'\" align=\"left\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n            </colgroup>\r\n            <thead>\r\n                <tr>\r\n                    <th>Trading instrument<br />on bullish day</th>\r\n                    <th>Daily mask, Winter<br />(TotM, rel.to 1st day)</th>\r\n                    <th>Daily mask, Winter<br />(TotMM, rel.to 15th day)</th>\r\n                    <th>Daily mask, Summer<br />(TotM, rel.to 1st day)</th>\r\n                    <th>Daily mask, Summer<br />(TotMM, rel.to 15th day)</th>\r\n                </tr>\r\n            </thead>\r\n            <tbody>\r\n                <tr>\r\n                    <td>\r\n                        <select [ngModel]=\"strategy_TotM.selectedBullishTradingInstrument\" (ngModelChange)=\"strategy_TotM.bullishTradingInstrumentChanged($event)\">\r\n                            <option [value]=\"i\" *ngFor=\"let i of strategy_TotM.bullishTradingInstrument\">{{i}}</option>\r\n                        </select>\r\n\r\n                    </td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_TotM.dailyMarketDirectionMaskWinterTotM\" style=\"width: 140px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_TotM.dailyMarketDirectionMaskWinterTotMM\" style=\"width: 140px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_TotM.dailyMarketDirectionMaskSummerTotM\" style=\"width: 140px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_TotM.dailyMarketDirectionMaskSummerTotMM\" style=\"width: 140px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n        <div class=\"SqMenu2\" [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemTotM'\" align=\"left\">\r\n            <ul>\r\n                <li>\r\n                    <span>Masks</span>\r\n                    <ul>\r\n                        <li><span id=\"idMaskBuyHold\" (click)=\"strategy_TotM.MenuItemPresetMasksClicked($event)\">Buy&Hold</span></li>\r\n                        <li><span id=\"idMaskUberVXXOld\" (click)=\"strategy_TotM.MenuItemPresetMasksClicked($event)\">UberVXX old</span></li>\r\n                        <li><span id=\"idMaskBuyUberVXXNew\" (click)=\"strategy_TotM.MenuItemPresetMasksClicked($event)\">UberVXX new</span></li>\r\n                        <li><span id=\"idMaskSPYDerived\" (click)=\"strategy_TotM.MenuItemPresetMasksClicked($event)\">SPY derived</span></li>\r\n                    </ul>\r\n                </li>\r\n            </ul>\r\n        </div>\r\n\r\n        <!--#include virtual=\"/SQQuickTester/Strategies/VIX/VXX_SPY_Controversial.htm\"-->\r\n        <table id=\"inputTable\" [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemVXX_SPY_Controversial'\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n            </colgroup>\r\n            <thead>\r\n                <tr>\r\n                    <th>SPY Min %Change</th>\r\n                    <th>VXX Min %Change</th>\r\n                    <th>VXX Long or Short <br /> after controversial days</th>\r\n                </tr>\r\n            </thead>\r\n            <tbody>\r\n                <tr>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_VXX_SPY_Controversial.spyMinPctMove\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" />%</td>\r\n                    <td><input type=\"text\" [(ngModel)]=\"strategy_VXX_SPY_Controversial.vxxMinPctMove\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" />%</td>\r\n                    <td>\r\n\r\n                        <select [ngModel]=\"strategy_VXX_SPY_Controversial.selectedVXXLongOrShortTrade\" (ngModelChange)=\"strategy_VXX_SPY_Controversial.vxxLongOrShortTradeChanged($event)\">\r\n                            <option [value]=\"i\" *ngFor=\"let i of strategy_VXX_SPY_Controversial.vxxLongOrShortTrade\">{{i}}</option>\r\n                        </select>\r\n                    </td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n\r\n        <div [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemLETFDiscrRebToNeutral' && selectedSubStrategyMenuItemId !== 'idMenuItemLETFDiscrAddToWinner' && selectedSubStrategyMenuItemId !== 'idMenuItemLETFHarryLong'\">\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <colgroup>\r\n                    <col class=\"column1\" />\r\n                    <col class=\"column2\" />\r\n                </colgroup>\r\n                <thead>\r\n                    <tr>\r\n                        <th>Assets</th>\r\n                        <th style=\"font-size: 70%;\">Assets Weight</th>\r\n                        <th style=\"font-size: 70%;\">Rebalance:'Daily,2d','Weekly<br />,Fridays', 'Monthly,T-1'</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_LEtf.assets\" style=\"width: 290px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_LEtf.assetsConstantWeightPct\" style=\"width: 150px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_LEtf.rebalancingFrequency\" style=\"width: 150px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <div class=\"SqMenu2\">\r\n                <ul>\r\n                    <li>\r\n                        <span>ParamSets</span>\r\n                        <ul>\r\n                            <li><span id=\"idParamSetHL_-50Comb.SQ_-120H_coctailAgy6\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%ShortVol,hedges120%**</span></li>\r\n                            <li><span id=\"idParamSetHL_-50Comb.SQ_-100H_coctailAgy6\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%ShortVol,hedges100%</span></li>\r\n                            <li><span id=\"idParamSetHL_-50Comb.SQ_-80H_coctailAgy6\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%ShortVol,hedges80%</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy5\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,c.MPT135%B</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy4\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,c.MPT135%A</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy3\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,c.MPT100%*</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy2\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,cocktail Agy2</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailAgy\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,cocktail Agy</span></li>\r\n                            <li><span id=\"idParamSetHL_-70VXX.SQ_-75TLT_coctailDC\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">70VXX.SQ,cocktail DC</span></li>\r\n                            <li><span id=\"idParamSetHL_-35TVIX_-25TMV_-28UNG_-8USO_-4JJC\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">35TVIX,25TMV,28UNG...*</span></li>\r\n                            <li><span id=\"idParamSetHL_-35TVIX_-65TMV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">35%TVIX - 65%TMV</span></li>\r\n                            <li><span id=\"idParamSetHL_-25TVIX_-75TMV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">HarryLong</span></li>\r\n                            <li><span id=\"idParamSetHL_50VXX_50XIV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">long VXX - long XIV</span></li>\r\n                            <li><span id=\"idParamSetHL_-50VXX.SQ_225TLT\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%VXX.SQ-225%TLT</span></li>\r\n                            <li><span id=\"idParamSetHL_-50VXX_225TLT\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%VXX - 225%TLT</span></li>\r\n                            <li><span id=\"idParamSetHL_50XIV_225TLT\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">50%XIV - 225%TLT</span></li>\r\n                            <li><span id=\"idParamSetHL_25XIV_112TLT\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">25%XIV - 112%TLT</span></li>\r\n                            <li><span id=\"idParamSetHL_-25TVIX_75CASH\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">25%TVIX - 75%Cash</span></li>\r\n                            <li><span id=\"idParamSetHL_25CASH_-75TMV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">25%Cash - 75%TMV</span></li>\r\n                            <li><span>*** 50%-50% shorts ***</span></li>\r\n                            <li><span id=\"idParamSetHL_-50URE_-50SRS\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">URE - SRS</span></li>\r\n                            <li><span id=\"idParamSetHL_-50DRN_-50DRV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">DRN - DRV</span></li>\r\n                            <li><span id=\"idParamSetHL_-50FAS_-50FAZ\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">FAS - FAZ</span></li>\r\n                            <li><span id=\"idParamSetHL_-50VXX_-50XIV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">VXX - XIV</span></li>\r\n                            <li><span id=\"idParamSetHL_-50VXZ_-50ZIV\" (click)=\"strategy_LEtf.MenuItemParamSetsClicked($event)\">VXZ - ZIV</span></li>\r\n                        </ul>\r\n                    </li>\r\n                </ul>\r\n            </div>\r\n\r\n        </div>\r\n\r\n        <div [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemTAA'\">\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <thead>\r\n                    <tr>\r\n                        <th>Assets</th>\r\n                        <th style=\"font-size: 70%;\">Assets<br />Leverage</th>\r\n                        <th style=\"font-size: 70%;\">Rebalance:'Daily,2d','Weekly<br />,Fridays', 'Monthly,T-1'</th>\r\n                        <th style=\"font-size: 70%;\">%Channel<br /> Lookback Days</th>\r\n                        <th style=\"font-size: 70%;\">%Channel<br /> %Limits</th>\r\n                        <th style=\"font-size: 70%;\">%Channel<br /> IsActiveEveryDay</th>\r\n                        <th style=\"font-size: 70%;\">%Channel<br /> IsConditional</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.assets\" style=\"width: 250px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.assetsConstantLeverage\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.rebalancingFrequency\" style=\"width: 150px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.pctChannelLookbackDays\" style=\"width: 100px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.pctChannelPctLimits\" style=\"width: 50px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" />%</td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.isPctChannelActiveEveryDay\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.isPctChannelConditional\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <thead>\r\n                    <tr>\r\n                        <th style=\"font-size: 70%;\">HV Lookback<br /> Days</th>\r\n                        <th style=\"font-size: 70%;\">Is Cash Allocated<br /> for Non-actives</th>\r\n                        <th style=\"font-size: 70%;\">Cash Equivalent<br /> Ticker</th>\r\n                        <th style=\"font-size: 70%;\">CLMT<br /> Leverage </th>\r\n                        <th style=\"font-size: 70%;\">UberVXX<br /> Events</th>\r\n                        <th style=\"font-size: 70%;\">Debug Detail<br /> To Html</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.histVolLookbackDays\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.isCashAllocatedForNonActives\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.cashEquivalentTicker\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.dynamicLeverageClmtParams\" style=\"width: 100px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.uberVxxEventsParams\" style=\"width: 100px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_AssetAllocation.debugDetailToHtml\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <div class=\"SqMenu2\">\r\n                <ul>\r\n                    <li>\r\n                        <span>ParamSets T</span>\r\n                        <ul>\r\n                            <li><span id=\"idParamSetTAA_GlobVnqIbb\" (click)=\"strategy_AssetAllocation.MenuItemParamSetsClicked($event)\">Global+VNQ+BIB Live</span></li>\r\n                            <li><span id=\"idParamSetTAA_Glob_Live\" (click)=\"strategy_AssetAllocation.MenuItemParamSetsClicked($event)\">GlobalAssets Live</span></li>\r\n                            <li><span id=\"idParamSetTAA_GC_Live\" (click)=\"strategy_AssetAllocation.MenuItemParamSetsClicked($event)\">GameChangers Live</span></li>\r\n                            <li><span id=\"idParamSetTAA_VaradiOriginal\" (click)=\"strategy_AssetAllocation.MenuItemParamSetsClicked($event)\">Varadi's original</span></li>\r\n                        </ul>\r\n                    </li>\r\n                </ul>\r\n            </div>\r\n        </div>\r\n\r\n        <div [hidden]=\"selectedSubStrategyMenuItemId !== 'idMenuItemMomTF'\">\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <thead>\r\n                    <tr>\r\n                        <th>Assets</th>\r\n                        <th style=\"font-size: 70%;\">Assets<br />Leverage</th>\r\n                        <th style=\"font-size: 70%;\">Rebalance:'Daily,2d','Weekly<br />,Fridays', 'Monthly,T-1'</th>\r\n                        <th style=\"font-size: 70%;\">Momentum<br /> or TF (SMA)</th>\r\n                        <th style=\"font-size: 70%;\">Max Lookback Days <br />(240d is 12m)</th>\r\n                        <th style=\"font-size: 70%;\">Exclude <br />Lasd Days</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.assets\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.assetsConstantLeverage\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.rebalancingFrequency\" style=\"width: 100px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.momOrTF\" style=\"width: 50px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.lookbackDays\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.excludeLastDays\" style=\"width: 60px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <table id=\"inputTable\" align=\"left\">\r\n                <thead>\r\n                    <tr>\r\n                        <th style=\"font-size: 70%;\">Is Cash Allocated<br /> for Non-actives</th>\r\n                        <th style=\"font-size: 70%;\">Cash Equivalent<br /> Ticker</th>\r\n                        <th style=\"font-size: 70%;\">Is Short<br /> Instead of Cash</th>\r\n                        <th style=\"font-size: 70%;\">Is Vol.Scaled<br /> Positions</th>\r\n                        <th style=\"font-size: 70%;\">HV Lookback<br /> Days</th>\r\n                        <th style=\"font-size: 70%;\">Debug Detail<br /> To Html</th>\r\n                    </tr>\r\n                </thead>\r\n                <tbody>\r\n                    <tr>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.isCashAllocatedForNonActives\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.cashEquivalentTicker\" style=\"width: 40px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td> \r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.isShortInsteadOfCash\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.isVolScaledPos\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.histVolLookbackDays\" style=\"width: 30px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                        <td><input type=\"text\" [(ngModel)]=\"strategy_MomTF.debugDetailToHtml\" style=\"width: 200px; padding: 2px; border: 1px solid #A0A0A0\" (keypress)=\"OnParameterInputKeypress($event)\" /></td>\r\n                    </tr>\r\n                </tbody>\r\n            </table>\r\n            <div class=\"SqMenu2\">\r\n                <ul>\r\n                    <li>\r\n                        <span>ParamSets T</span>\r\n                        <ul>\r\n                            <li><span id=\"idParamSetMomTF_SPY12mMom\" (click)=\"strategy_MomTF.MenuItemParamSetsClicked($event)\">SPY 12m Momentum</span></li>\r\n                            <li><span id=\"idParamSetMomTF_SPY12mTF\" (click)=\"strategy_MomTF.MenuItemParamSetsClicked($event)\">SPY 12m TF</span></li>\r\n                            <li><span id=\"idParamSetMomTF_SPY12mMomTLT\" (click)=\"strategy_MomTF.MenuItemParamSetsClicked($event)\">SPY 12m Momentum w. TLT</span></li>\r\n                            <li><span id=\"idParamSetMomTF_SPY12mTFTLT\" (click)=\"strategy_MomTF.MenuItemParamSetsClicked($event)\">** SPY 12m TF w. TLT</span></li>\r\n                            <li><span id=\"idParamSetMomTF_SPY12mMom0_BuyHold\" (click)=\"strategy_MomTF.MenuItemParamSetsClicked($event)\">SPY Buy&Hold</span></li>\r\n                            <li><span id=\"idParamSetMomTF_TAA12mMoTLT\" (click)=\"strategy_MomTF.MenuItemParamSetsClicked($event)\">TAA Universe</span></li>\r\n                        </ul>\r\n                    </li>\r\n                </ul>\r\n            </div>\r\n        </div>\r\n\r\n        <!--// How to Eliminate Whitespace around Server Side Includes when Pages are UTF-8 Encoded? http://stackoverflow.com/questions/7196993/how-to-eliminate-whitespace-around-server-side-includes-when-pages-are-utf-8-enc-->\r\n        <!--<div style=\"width: 50%; height: 1px; background: #ffffff; overflow: hidden;\"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->\r\n        <div style=\"width: 100%; height: 2px; background: #ffffff; overflow: hidden;\"></div>\r\n        <div style=\"width: 100%; height: 1px; background: #808080; overflow: hidden;\"></div>\r\n        <!--Ideas what to put here as Statistics come from Portfolio123 http://imarketsignals.com/2015/best8-sp500-min-volatility-large-cap-portfolio-management-system/-->\r\n\r\n        <table id=\"statisticsTable\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n                <col class=\"column3\" />\r\n                <col class=\"column3\" />\r\n            </colgroup>\r\n            <thead>\r\n            </thead>\r\n            <tbody>\r\n                <tr class='even'>\r\n                    <td id=\"idTdGeneral\">General:</td>\r\n                    <td>Start Date: <span> {{startDateStr}} </span></td>\r\n                    <td id=\"idTdRebalanceFrequency\">Rebalance Frequency: <span> {{rebalanceFrequencyStr}} </span></td>\r\n                    <td>Benchmark: <span> {{benchmarkStr}} </span></td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n        <span id=\"idSpanStatistics\">Statistics (as of {{endDateStr}}):</span>\r\n        <br>\r\n\r\n\r\n        <table id=\"statisticsTable\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n                <col class=\"column3\" />\r\n            </colgroup>\r\n            <thead>\r\n            </thead>\r\n            <tbody>\r\n                <tr class='even'>\r\n                    <td>PV Start Value: <span> &#36;{{pvStartValue | number:'.0-2'}} </span></td>\r\n                    <!--<td class='green' onclick=\"GlobalScopeInvertVisibilityOfTableRow('idWinter__TotMT-17')\">0.008%<span style=\"color: #2581cc; font-size: x-small; vertical-align:super;\">i</span></td>-->\r\n                    <td>PV Final Value: <span> &#36;{{pvEndValue | number:'.0-2'}} </span></td>\r\n                    <td>Total Return: <span> {{100*totalGainPct | number: '.0-2'}}&#37; </span></td>\r\n                </tr>\r\n                <tr>\r\n                    <td id=\"tdCagr\">CAGR: <span> {{100*cagr | number:'.0-2'}}% </span></td>\r\n                    <td>Annualized StDev: <span> {{100*annualizedStDev | number:'.0-2'}}% </span></td>\r\n                    <td id=\"tdSharpe\">Sharpe: <span> {{sharpeRatio | number:'.0-2'}} </span></td>\r\n                </tr>\r\n                <tr class='even'>\r\n                    <td>Max Drawdown: <span> {{100*maxDD | number:'.0-2'}}% </span></td>\r\n                    <td><a target=\"_blank\" href=\"http://en.wikipedia.org/wiki/Ulcer_index\">Ulcer</a> (Vol=qMean DD): <span> {{100*ulcerInd | number:'.0-2'}}% </span></td>\r\n                    <td>Max.TradingDays in Drawdown: <span> {{maxTradingDaysInDD}} </span></td>\r\n                    <td></td>\r\n                </tr>\r\n                <tr>\r\n                    <td>Winners: <span> {{winnersStr}} </span></td>\r\n                    <td>Losers: <span> {{losersStr}} </span></td>\r\n                    <td>Annualized <a target=\"_blank\" href=\"http://www.redrockcapital.com/Sortino__A__Sharper__Ratio_Red_Rock_Capital.pdf\">Sortino</a>: <span> {{sortinoRatio | number:'.0-2'}} </span></td>\r\n                    <td></td>\r\n                </tr>\r\n                <tr class='even'>\r\n                    <td>Benchmark CAGR: <span> {{100*benchmarkCagr | number:'.0-2'}}% </span></td>\r\n                    <td>Benchmark Max Drawdown: <span> {{100*benchmarkMaxDD | number:'.0-2'}}% </span></td>\r\n                    <td>Correlation with Benchmark: <span> {{benchmarkCorrelation | number:'.0-2'}}</span></td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n\r\n\r\n        <div style=\"width: 100%; height: 1px; background: #808080; overflow: hidden;\"></div>\r\n        <div id=\"tv_chart_container\"></div>\r\n\r\n        <span id=\"idAlwaysVisibleSwitch1\" class=\"alwaysVisibleSwitchClass\" (click)=\"SQToggle('idNoteFromStrategyDiv', 'idAlwaysVisibleSwitch1', 'note from strategy')\">+ Show General Parameters</span>\r\n\r\n        <br />\r\n        <div id=\"idNoteFromStrategyDiv\" style=\"display: block;\">\r\n            <!--<span ng-bind-html=\"htmlNoteFromStrategy\"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->\r\n            <span id=\"idHtmlNoteFromStrategy\">  </span>\r\n        </div>\r\n\r\n\r\n\r\n\r\n        <br>\r\n        <span id=\"idSpanStatistics\">Holdings (as of {{endDateStr}}):</span>\r\n        <br>\r\n        <table id=\"statisticsTable\">\r\n            <colgroup>\r\n                <col class=\"column1\" />\r\n                <col class=\"column2\" />\r\n                <col class=\"column3\" />\r\n            </colgroup>\r\n            <thead>\r\n            </thead>\r\n            <tbody>\r\n                <tr class='even'>\r\n                    <td>Cash: <span> ${{pvCash | number:'.0-2'}} </span></td>\r\n                    <td>Number of positions: <span> {{nPositions}} </span></td>\r\n                </tr>\r\n            </tbody>\r\n        </table>\r\n\r\n\r\n        Holdings List:\r\n        <span> {{holdingsListStr}} </span>\r\n        <br>\r\n        <br>\r\n        ErrorMessage:\r\n        <span> {{errorMessage}} </span>\r\n        <br>\r\n        DebugMessage:\r\n        <span> {{debugMessage}} </span>\r\n        <br>\r\n        Profiling:\r\n        <span>JS BacktestCallback: {{profilingBacktestCallbackMSec | number}}ms, BacktestAtChartReadyStart(chart removed/created): {{profilingBacktestAtChartReadyStartMSec | number}}ms, BacktestAtChartReadyEnd(TimeFrame clicked): {{profilingBacktestAtChartReadyEndMSec | number}}ms </span>\r\n        <br>\r\n\r\n        <span id=\"idAlwaysVisibleSwitchDebug\" class=\"alwaysVisibleSwitchClass\" (click)=\"SQToggle('idDebugInfoDiv', 'idAlwaysVisibleSwitchDebug', 'debug info')\">+ Show debug info</span>\r\n\r\n        <br />\r\n        <div id=\"idDebugInfoDiv\" style=\"display: none;\">\r\n            <!--<span ng-bind-html=\"htmlNoteFromStrategy\"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->\r\n            <span id=\"idDebugInfoSpan\">\r\n                <br>ChartDataInStr:\r\n                <pre>{{chartDataInStr}} </pre>\r\n                <br>\r\n            </span>\r\n        </div>\r\n\r\n\r\n        <br>\r\n        <!--<span>{{tipToUser}}</span>-->\r\n        <!--<br />\r\n    <button class=\"mymyButton1Class\" (click)=\"onClickMe()\">Click me!</button>\r\n    <br />\r\n    <br />{{clickMessage }}-->\r\n\r\n\r\n    </div>\r\n    </div>\r\n";
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3612,7 +3745,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3704,18 +3837,18 @@ var objectKeys = Object.keys || function (obj) {
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-exports.decode = exports.parse = __webpack_require__(40);
-exports.encode = exports.stringify = __webpack_require__(41);
+exports.decode = exports.parse = __webpack_require__(41);
+exports.encode = exports.stringify = __webpack_require__(42);
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, global) {/*! *****************************************************************************
@@ -4843,10 +4976,10 @@ var Reflect;
             Function("return this;")());
 })(Reflect || (Reflect = {}));
 //# sourceMappingURL=Reflect.js.map
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(53), __webpack_require__(61)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(54), __webpack_require__(62)))
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4857,20 +4990,6 @@ module.exports = function (str) {
 	return typeof str === 'string' ? str.replace(ansiRegex, '') : str;
 };
 
-
-/***/ }),
-/* 45 */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-        var result = __webpack_require__(26);
-
-        if (typeof result === "string") {
-            module.exports = result;
-        } else {
-            module.exports = result.toString();
-        }
-    
 
 /***/ }),
 /* 46 */
@@ -4918,6 +5037,20 @@ module.exports = function (str) {
 /* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
+
+        var result = __webpack_require__(30);
+
+        if (typeof result === "string") {
+            module.exports = result;
+        } else {
+            module.exports = result.toString();
+        }
+    
+
+/***/ }),
+/* 50 */
+/***/ (function(module, exports, __webpack_require__) {
+
 /*eslint-env browser*/
 
 var clientOverlay = document.createElement('div');
@@ -4959,7 +5092,7 @@ var colors = {
 };
 ansiHTML.setColors(colors);
 
-var Entities = __webpack_require__(30).AllHtmlEntities;
+var Entities = __webpack_require__(31).AllHtmlEntities;
 var entities = new Entities();
 
 exports.showProblems =
@@ -5000,7 +5133,7 @@ function problemType (type) {
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -5138,7 +5271,7 @@ module.exports = function(hash, moduleMap, options) {
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -5166,73 +5299,73 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(0);
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(23);
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(28);
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(38);
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(40);
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(41);
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(42);
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(47);
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(6);
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(8);
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = (__webpack_require__(0))(9);
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(10);

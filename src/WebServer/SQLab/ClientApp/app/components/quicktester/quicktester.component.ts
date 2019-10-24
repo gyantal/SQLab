@@ -7,6 +7,7 @@ import { LEtf, AngularInit_LEtf } from './Strategies/LEtf'
 import { TotM } from './Strategies/TotM'
 import { AdaptiveUberVxx } from './Strategies/AdaptiveUberVxx'
 import { AssetAllocation } from './Strategies/AssetAllocation'
+import { MomTF } from './Strategies/MomTF'
 import { StopWatch } from './Utils'
 
 declare var TradingView: any;
@@ -52,6 +53,7 @@ export class QuickTesterComponent {
     public strategy_TotM: TotM = <TotM>{};
     public strategy_AdaptiveUberVxx: AdaptiveUberVxx = <AdaptiveUberVxx>{};
     public strategy_AssetAllocation: AssetAllocation = <AssetAllocation>{};
+    public strategy_MomTF: MomTF = <MomTF>{};
 
     public strategies: Strategy[] = [];
     public selectedStrategy: Strategy = <Strategy>{};;      // Identifies the main strategy, but not the sub-strategy. 
@@ -123,10 +125,12 @@ export class QuickTesterComponent {
         this.strategy_TotM = new TotM(this);
         this.strategy_AdaptiveUberVxx = new AdaptiveUberVxx(this);
         this.strategy_AssetAllocation = new AssetAllocation(this);
+        this.strategy_MomTF = new MomTF(this);
 
-        this.strategies = [this.strategy_LEtf, this.strategy_VXX_SPY_Controversial, this.strategy_TotM, this.strategy_AdaptiveUberVxx, this.strategy_AssetAllocation];
+        this.strategies = [this.strategy_LEtf, this.strategy_VXX_SPY_Controversial, this.strategy_TotM, this.strategy_AdaptiveUberVxx, this.strategy_AssetAllocation, this.strategy_MomTF];
         //this.SelectStrategy("idMenuItemAdaptiveUberVxx"); // there is no #if DEBUG in TS yet. We use TotM rarely in production anyway, so UberVXX can be the default, even while developing it.
-        this.SelectStrategy("idMenuItemTAA");   // temporary default until it is being developed
+        //this.SelectStrategy("idMenuItemTAA");   // temporary default until it is being developed
+        this.SelectStrategy("idMenuItemMomTF");   // temporary default until it is being developed
         this.TradingViewChartOnready();
     }
 

@@ -10,36 +10,32 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace SQLab.Controllers.QuickTester.Strategies
-{
-    enum RebalancingPeriodicity { Daily, Weekly, Monthly };
-
-    enum DebugDetailToHtml { Date, PV, AssetFinalWeights, CashWeight, AssetData, PctChannels };
-
-
-    public class TAA
+{    public class MomTF
     {
+        enum SubStrategy { Momentum, TF };
         public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, Dictionary<string, StringValues> p_allParamsDict)
         {
-            if (p_strategyName != "TAA")
+            if (p_strategyName != "MomTF")
                 return null;
             Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
 
-            // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
+
             // 1. read parameter strings
+            // if parameter is not present, then it is Unexpected, it will crash, and caller Catches it. Good.
             string assetsStr = p_allParamsDict["Assets"][0];                                         // "MDY,ILF,FEZ,EEM,EPP,VNQ,TLT"
             string assetsConstantLeverageStr = p_allParamsDict["AssetsConstantLeverage"][0];         // "1,1,1,-1,1.5,2,2"
             string rebalancingFrequencyStr = p_allParamsDict["RebalancingFrequency"][0];             // "Weekly,Fridays";   // "Daily,2d"(trading days),"Weekly,Fridays", "Monthly,T-1"/"Monthly,T+0" (last/first trading day of the month)
-            string pctChannelLookbackDaysStr = p_allParamsDict["PctChannelLookbackDays"][0];         // "30-60-120-252"
-            string pctChannelPctLimitsStr = p_allParamsDict["PctChannelPctLimits"][0];               // "30-70"
-            string isPctChannelActiveEveryDayStr = p_allParamsDict["IsPctChannelActiveEveryDay"][0]; // "Yes"
-            string isPctChannelConditionalStr = p_allParamsDict["IsPctChannelConditional"][0];       // "Yes"
+            string momOrTFStr = p_allParamsDict["MomOrTF"][0];                                       // "Mom" // Mom is usually simpler and has a bit better performance.
+            string lookbackDaysStr = p_allParamsDict["LookbackDays"][0];                             // "360", EMA (12)
+            string excludeLastDaysStr = p_allParamsDict["ExcludeLastDays"][0];                 // "30" , skip last month
+            string isCashAllocatedForNonActivesStr = p_allParamsDict["IsCashAllocatedForNonActives"][0];  // "Yes"  
+            string cashEquivalentTickerStr = p_allParamsDict["CashEquivalentTicker"][0];             // "" (default) / "SHY" / "TLT"
+            string isShortInsteadOfCashStr = p_allParamsDict["IsShortInsteadOfCash"][0];             // "No"
+            string isVolScaledPosStr = p_allParamsDict["IsVolScaledPos"][0];                         // "No"
             string histVolLookbackDaysStr = p_allParamsDict["HistVolLookbackDays"][0];               // "20"
-            string isCashAllocatedForNonActivesStr = p_allParamsDict["IsCashAllocatedForNonActives"][0];  // "Yes"
-            string cashEquivalentTickerStr = p_allParamsDict["CashEquivalentTicker"][0];             // "SHY"
-            string dynamicLeverageClmtParamsStr = p_allParamsDict["DynamicLeverageClmtParams"][0];   // "SMA(SPX,50d,200d); PR(XLU,VTI,20d)";   // SPX 50/200 crossover; PR=PriceRatio of XLU/VTI for 20 days
-            string uberVxxEventsParamsStr = p_allParamsDict["UberVxxEventsParams"][0];               // "FOMC;Holidays"
             string debugDetailToHtmlStr = p_allParamsDict["DebugDetailToHtml"][0];                   // "Date,PV,AssetFinalWeights,CashWeight,AssetData,PctChannels"
 
+           
             // 2. Process parameter strings to numbers, enums; do parameter checking
             string[] tickers = assetsStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             double[] assetsConstantLeveragesInput = assetsConstantLeverageStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(r => Double.Parse(r)).ToArray();
@@ -74,19 +70,17 @@ namespace SQLab.Controllers.QuickTester.Strategies
                     break;
             }
 
-            int[] pctChannelLookbackDays = pctChannelLookbackDaysStr.Split(new char[] { '-' }, StringSplitOptions.RemoveEmptyEntries).Select(r => Int32.Parse(r)).ToArray();
-            string[] pctChannelPctLimitsStr2 = pctChannelPctLimitsStr.Split(new char[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
-            double pctChannelPctLimitLower = Double.Parse(pctChannelPctLimitsStr2[0]) / 100.0;
-            double pctChannelPctLimitUpper = Double.Parse(pctChannelPctLimitsStr2[1]) / 100.0;
-            bool isPctChannelActiveEveryDay = String.Equals(isPctChannelActiveEveryDayStr, "Yes", StringComparison.CurrentCultureIgnoreCase);
-            bool isPctChannelConditional = String.Equals(isPctChannelConditionalStr, "Yes", StringComparison.CurrentCultureIgnoreCase);
-            int histVolLookbackDays = Int32.Parse(histVolLookbackDaysStr);
-            bool isCashAllocatedForNonActives = String.Equals(isCashAllocatedForNonActivesStr, "Yes", StringComparison.CurrentCultureIgnoreCase);
+            SubStrategy subStrategy = String.Equals(momOrTFStr, "Mom", StringComparison.OrdinalIgnoreCase) ? SubStrategy.Momentum : SubStrategy.TF;
+            Int32.TryParse(lookbackDaysStr, out int lookbackDays);    // returns 0 if the conversion failed, which is OK. That is Buy&Hold.
+            Int32.TryParse(excludeLastDaysStr, out int excludeLastDays);    // returns 0 if the conversion failed, which is OK.
+            
+            Int32.TryParse(histVolLookbackDaysStr, out int histVolLookbackDays);    // returns 0 if the conversion failed, which is OK.
+            bool isCashAllocatedForNonActives = String.Equals(isCashAllocatedForNonActivesStr, "Yes", StringComparison.OrdinalIgnoreCase);
             string cashEquivalentTicker = cashEquivalentTickerStr.Trim();
-            // dynamicLeverageClmtParamsStr
-            // uberVxxEventsParamsStr
-            //Dictionary<HtmlUserNoteDetail, bool> debugDetailToHtml = new Dictionary<HtmlUserNoteDetail, bool>() { { HtmlUserNoteDetail.Date, true }, { HtmlUserNoteDetail.PV, true }, { HtmlUserNoteDetail.AssetFinalWeights, true }, { HtmlUserNoteDetail.AssetData, true }, { HtmlUserNoteDetail.PctChannels, true } };
+            bool isShortInsteadOfCash = String.Equals(isShortInsteadOfCashStr, "Yes", StringComparison.OrdinalIgnoreCase);
+            bool isVolScaledPos = String.Equals(isVolScaledPosStr, "Yes", StringComparison.OrdinalIgnoreCase);
             Dictionary<DebugDetailToHtml, bool> debugDetailToHtml = debugDetailToHtmlStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(r => (DebugDetailToHtml)Enum.Parse(typeof(DebugDetailToHtml), r, true)).ToDictionary(r => r, r => true);
+
 
             // 3. After Parameters are processed, load ticker price histories from DB and real time
             List<string> tickersNeeded = tickers.ToList();
@@ -106,18 +100,15 @@ namespace SQLab.Controllers.QuickTester.Strategies
                 cashEquivalentQuotes = getAllQuotesData.Item1[tickers.Length];
             }
 
-
             
             string errorToUser = "", warningToUser = "", noteToUser = "", debugMessage = "";
             DateTime commonAssetStartDate, commonAssetEndDate;
             StrategiesCommon.DetermineBacktestPeriodCheckDataCorrectness(quotes, tickers, ref warningToUser, out commonAssetStartDate, out commonAssetEndDate);
 
             List<DailyData> pv = new List<DailyData>();
-            DoBacktestInTheTimeInterval_TAA(p_generalParams, quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsConstantLeverages,
+            DoBacktestInTheTimeInterval_MomTF(p_generalParams, quotes, tickers, commonAssetStartDate, commonAssetEndDate, assetsConstantLeverages,
                     rebalancingPeriodicity, dailyRebalancingDays, weeklyRebalancingWeekDay, monthlyRebalancingOffset,
-                    pctChannelLookbackDays, pctChannelPctLimitLower, pctChannelPctLimitUpper, isPctChannelActiveEveryDay, isPctChannelConditional,
-                    histVolLookbackDays,
-                    isCashAllocatedForNonActives, cashEquivalentQuotes,
+                    subStrategy, lookbackDays, excludeLastDays, histVolLookbackDays, isCashAllocatedForNonActives, cashEquivalentQuotes, !isShortInsteadOfCash, isVolScaledPos,
                     debugDetailToHtml, Int32.MaxValue, "<br>", ref warningToUser, ref noteToUser, ref errorToUser, ref debugMessage, ref pv, null);
 
             stopWatchTotalResponse.Stop();
@@ -129,31 +120,31 @@ namespace SQLab.Controllers.QuickTester.Strategies
             return jsonReturn;
         }
 
-        // Others try to implement Varadi's original strategy
-        // https://www.r-bloggers.com/an-attempt-at-replicating-david-varadis-percentile-channels-strategy/ 
-        // https://quantstrattrader.wordpress.com/2015/02/20/a-closer-update-to-david-varadis-percentile-channels-strategy/
-        // not Implemented parameters: isPctChannelConditional (not necessary to implement it, it is just a wider version of the normal pctChannel), dynamicLeverageClmtParams, uberVxxEventsParams
-        private static void DoBacktestInTheTimeInterval_TAA(GeneralStrategyParameters p_generalParams, IList<List<DailyData>> p_quotes, string[] p_tickers, DateTime p_commonAssetStartDate, DateTime p_commonAssetEndDate, double[] p_assetsConstantLeverages,
+        // Implement Michael Harris's Momentum and TF. https://www.priceactionlab.com/Blog/2019/10/momentum-trend-following/
+        // The performance can be bad, based on the tested period: https://www.priceactionlab.com/Blog/2019/10/risk-market-timing/ 
+        // Volatility (risk) scaled momentum is good to avoid too many whipsaws: http://docentes.fe.unl.pt/~psc/MomentumMoments.pdf 
+        // in the current implementation p_isVolScaledPos works like in Varadi's TAA. When used in single asset, it does nothing. It will fully allocate 100% of the portfolio to that single asset.
+        // However, if two assets are used, instead of 50%-50%, the allocation varies based on their StDev(20). A bit less is given to a volatile stock. weights ratio: 1/StDev1 : 1/StDev2.
+        private static void DoBacktestInTheTimeInterval_MomTF(GeneralStrategyParameters p_generalParams, IList<List<DailyData>> p_quotes, string[] p_tickers, DateTime p_commonAssetStartDate, DateTime p_commonAssetEndDate, double[] p_assetsConstantLeverages,
                RebalancingPeriodicity p_rebalancingPeriodicity, int p_dailyRebalancingDays, DayOfWeek p_weeklyRebalancingWeekDay, int p_monthlyRebalancingOffset,
-               int[] p_pctChannelLookbackDays, double p_pctChannelPctLimitLower, double p_pctChannelPctLimitUpper, bool p_isPctChannelActiveEveryDay, bool p_isPctChannelConditional,
-               int p_histVolLookbackDays,
-               bool p_isCashAllocatedForNonActives, List<DailyData> p_cashEquivalentQuotes,
-               Dictionary<DebugDetailToHtml, bool> p_debugDetailToHtml, int p_nCalendarDaysToDebugDetailToHtml, string p_noteToUserNewLine,
+               SubStrategy p_subStrategy, int p_lookbackDays, int p_excludeLastDays, int p_histVolLookbackDays, bool p_isCashAllocatedForNonActives, List<DailyData> p_cashEquivalentQuotes, bool p_isCashInsteadOfShort, bool p_isVolScaledPos,
+               Dictionary<DebugDetailToHtml, bool> p_debugDetailToHtml, int p_nTradingDaysToDebugDetailToHtml, string p_noteToUserNewLine,
                ref string p_noteToUserCheckData, ref string p_noteToUser, ref string p_errorToUser, ref string p_debugMessage, ref List<DailyData> p_pv, double[] p_lastWeights)
         {
-            StringBuilder sbNoteToUser = new StringBuilder("DoBacktestInTheTimeInterval_TAA()");
-            DateTime nowDate = DateTime.UtcNow.Date;
-            DateTime debugDetailToHtmlMinDate = DateTime.MinValue;
-            if (p_nCalendarDaysToDebugDetailToHtml < (nowDate - DateTime.MinValue).TotalDays)
-                debugDetailToHtmlMinDate = nowDate.AddDays(-1 * p_nCalendarDaysToDebugDetailToHtml);
-            List<DailyData> pv = null;
-            // implement CLMT in a way, that those data days don't restrict Strategy StartDate. If they are not available on a day, simple 100% is used. CLMT: "SMA(SPX,50d,200d); PR(XLU,VTI,20d)"
+            // Multiple tickers: if we have 10 tickers and only 1 passes the Filter, then what should be its size? 100% weight is not OK, as PV will be volatile, and we will only use cache when All 10 tickers are bearish mode. 
+            // However, that will never happen. If there is many tickers, the user wants to allocate only 1/n-th position to one ticker. Whether it is cash or short or long. So, the many tickers will be averaged. 
+            // Imagine Nasdaq100, each played by 1/100 of the PV.
+
+            bool p_isMomTfSignalActiveEveryDay = true;     // it is only useful for calculating signals between rebalancing days. For logging purposes only. It is not used for stop-lossing position intra-month. Stop-loss occurs only on rebalacing day.
+
+            StringBuilder sbNoteToUser = new StringBuilder("DoBacktestInTheTimeInterval_MomTF()");
+            
             // 1. Determine commonAssetStartDate
             int commonAssetStartDateInd = p_quotes[0].FindIndex(r => r.Date >= p_commonAssetStartDate);
             int commonAssetEndDateInd = p_quotes[0].FindIndex(commonAssetStartDateInd, r => r.Date >= p_commonAssetEndDate);
 
-            // 2. Determine firstAllDataAvailableDate: shift StartDate when we have all the data for "Use 60,120,180, 252-day percentile channels"
-            int requiredNDays = Math.Max(p_pctChannelLookbackDays.Max(), p_histVolLookbackDays);
+            // 2. Determine firstAllDataAvailableDate: shift StartDate when we have all the data
+            int requiredNDays = Math.Max(p_lookbackDays, p_histVolLookbackDays); 
             int firstAllDataAvailableDateInd = commonAssetStartDateInd + requiredNDays;
             if (firstAllDataAvailableDateInd > commonAssetEndDateInd)
             {
@@ -207,12 +198,12 @@ namespace SQLab.Controllers.QuickTester.Strategies
             DateTime pvEndDate = p_commonAssetEndDate;
             int nDays = commonAssetEndDateInd - firstRebalancingDateInd + 1;        // startDate, endDate is included
             int nAssets = p_quotes.Count;
-            int[] iQ = new int[nAssets];
+            int[] iQ = new int[nAssets];    // iQ is the index for startdates in each asset-quote
             for (int i = 0; i < nAssets; i++)
             {
                 iQ[i] = p_quotes[i].FindIndex(r => r.Date >= pvStartDate);
             }
-            //int iCashSubst = (p_cashEquivalentQuotes == null) ? -1 : p_cashEquivalentQuotes.FindIndex(r => r.Date >= pvStartDate); 
+            DateTime debugDetailToHtmlMinDate = (p_nTradingDaysToDebugDetailToHtml >= nDays) ? pvStartDate : p_quotes[0][firstRebalancingDateInd + nDays - p_nTradingDaysToDebugDetailToHtml].Date;
 
             // QQQ starts from 1999, TLT starts from only 2002; in that case we want the backtest to start from 1999 (more useful), but for the 1999-2002 period, it will use Cash, instead of TLT. Still, it is a more meaningful, longer backtest.
             DateTime cashEqStartDate = DateTime.MinValue;
@@ -220,41 +211,33 @@ namespace SQLab.Controllers.QuickTester.Strategies
             if  (p_cashEquivalentQuotes != null) 
             {
                 cashEqRunDateInd = p_cashEquivalentQuotes.FindIndex(r => r.Date == pvStartDate); // on first day, don't calculate %change, so address the next item (++) in the price, as that will be the first index to be used.
-                if (cashEqRunDateInd != -1)
+                if (cashEqRunDateInd != -1) // if pvStartDate is found in the cash-eq-quotes, then cash-eq-quotes has a very long history. Good.
                 {
                     cashEqRunDateInd++;
                     cashEqStartDate = p_cashEquivalentQuotes[cashEqRunDateInd].Date;
                 } else
-                {
+                {   // if pvStartDate (1999 for QQQ) is not found in the cash-eq-quotes (TLT starts in 2020), then cash-eq-quotes only starts much later. We will start to use the first date when cash-eq %change is available, which is index 1. (the second item)
                     cashEqRunDateInd = 1;
                     cashEqStartDate = p_cashEquivalentQuotes[1].Date;
                 }                
             }
 
 
-
-            pv = new List<DailyData>(nDays);
-
+            List<DailyData> pv = new List<DailyData>(nDays);
             double pvDaily = 100.0;
             double cash = pvDaily;
-            double[] assetPos = new double[nAssets];    // the allocated $cash of the $PV to this asset.
-            double[] assetScores = new double[nAssets];
+            sbyte[] assetMomTfSignal = new sbyte[nAssets];  // for assets
+            double[] assetScores = new double[nAssets]; // score can be 1.0 for bullish, -1.0 bearish. 0.0. neutral.
             double[] assetHV = new double[nAssets];
-            double[] assetWeights = new double[nAssets];    // assetScores[iAsset] / assetHV[iAsset]; 
-            double[,] assetPctChannelsUpper = new double[nAssets, p_pctChannelLookbackDays.Length];  // for assets and for each 
-            double[,] assetPctChannelsLower = new double[nAssets, p_pctChannelLookbackDays.Length];  // for assets and for each
-            sbyte[,] assetPctChannelsSignal = new sbyte[nAssets, p_pctChannelLookbackDays.Length];  // for assets and for each 
+            double[] assetWeights = new double[nAssets];    // in TAA it was: assetScores[iAsset] / assetHV[iAsset];    // in MomTF it can also be the VolWeights: 100%, 0%, -100%, weighted by the HV
+            double[] assetPos = new double[nAssets];    // the allocated $cash of the $PV to this asset.
 
             for (int iAsset = 0; iAsset < nAssets; iAsset++)
             {
                 assetPos[iAsset] = 0.0;
-                for (int iChannel = 0; iChannel < p_pctChannelLookbackDays.Length; iChannel++)
-                {
-                    assetPctChannelsSignal[iAsset, iChannel] = 1;       // let all assets be active at the beginning (if they are not under 25% percentile)
-                }
             }
 
-            sbNoteToUser.AppendLine("Date, pvDaily, {assetPrice, assetPctChange, {PctChannels(Lower,Upper)}, {PctChannels(Signal)}, assetScore, assetHV, assetWeights, assetWeightsBasedOnPV}... ,cashWeight <br>");
+            sbNoteToUser.AppendLine("Date, pvDaily, {assetPrice, assetPctChange, assetScore, assetHV, assetWeights, assetWeightsBasedOnPV}... ,cashWeight <br>");
             for (int iDay = 0; iDay < nDays; iDay++)    // march for all days
             {
                 // 1. Evaluate the value of the portfolio based on assetPos and this day's %change
@@ -267,8 +250,8 @@ namespace SQLab.Controllers.QuickTester.Strategies
                         assetPos[iAsset] *= (1.0 + assetChg);
                         pvDaily += assetPos[iAsset];
                     }
-                  
-                    if (p_cashEquivalentQuotes != null && p_quotes[0][iQ[0] + iDay].Date >= cashEqStartDate)
+                 
+                    if (p_cashEquivalentQuotes != null && p_quotes[0][firstRebalancingDateInd + iDay].Date >= cashEqStartDate)
                     {
                         //int neededCashEqStartDateInd = p_cashEquivalentQuotes.FindIndex(r => r.Date == p_quotes[0][iQ[0] + iDay].Date);
                         double cashChg = 1.0;
@@ -277,12 +260,6 @@ namespace SQLab.Controllers.QuickTester.Strategies
                         cashEqRunDateInd++;
                         cash *= cashChg;
                     }
-
-                    // if (p_cashEquivalentQuotes != null)
-                    // {
-                    //     double cashChg = p_cashEquivalentQuotes[iCashSubst + iDay].AdjClosePrice / p_cashEquivalentQuotes[iCashSubst + iDay - 1].AdjClosePrice;
-                    //     cash *= cashChg;
-                    // }
                 }
                 pvDaily += cash;    // cash has to be added, on first day or on other days
                 pv.Add(new DailyData() { Date = p_quotes[0][firstRebalancingDateInd + iDay].Date, AdjClosePrice = pvDaily });
@@ -302,47 +279,52 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
                 // 2. adjust assetPctChannelsSignal[]. Most of the time it is needed on every day, even if there is no rebalancing.
                 // they can signal exit of asset intramonth, even if rebalance happens only at end of the month. (indication in the Varadi replication people that Varadi does this. Also it play short term MR, which is good.)
-                if (p_isPctChannelActiveEveryDay || isRebalanceDay)
+                if (p_isMomTfSignalActiveEveryDay || isRebalanceDay)
                 {
                     for (int iAsset = 0; iAsset < nAssets; iAsset++)
                     {
                         //if ((p_quotes[0][firstRebalancingDateInd + iDay].Date == new DateTime(2016, 11, 15) && (p_tickers[iAsset] == "TSLA")))
                         //{
                         //    int tempBlaBla = 0;
-                        //}
-                        double assetPrice = p_quotes[iAsset][iQ[iAsset] + iDay].AdjClosePrice;
-                        for (int iChannel = 0; iChannel < p_pctChannelLookbackDays.Length; iChannel++)
+                        //}         
+                        assetMomTfSignal[iAsset] = -1;  // bearish signal
+                        if (p_subStrategy == SubStrategy.Momentum)  // it uses today's one and the one 240 days ago. Altogether a span of 241 days are needed.
                         {
-                            // A long position would be initiated if the price exceeds the 75th percentile of prices over the last “n” days.The position would be closed if the price falls below the 25th percentile of prices over the last “n” days.
-                            var usedQuotes = p_quotes[iAsset].GetRange(iQ[iAsset] + iDay - (p_pctChannelLookbackDays[iChannel] - 1), p_pctChannelLookbackDays[iChannel]).Select(r => r.AdjClosePrice);
-                            assetPctChannelsLower[iAsset, iChannel] = Statistics.Quantile(usedQuotes, p_pctChannelPctLimitLower);
-                            assetPctChannelsUpper[iAsset, iChannel] = Statistics.Quantile(usedQuotes, p_pctChannelPctLimitUpper);
-                            if (assetPrice < assetPctChannelsLower[iAsset, iChannel])
-                                assetPctChannelsSignal[iAsset, iChannel] = -1;
-                            else if (assetPrice > assetPctChannelsUpper[iAsset, iChannel])
-                                assetPctChannelsSignal[iAsset, iChannel] = 1;
+                            int assetPriceCheckFromInd = iQ[iAsset] + iDay - p_lookbackDays;    // p_lookbackDays = 240
+                            int assetPriceCheckToInd = iQ[iAsset] + iDay - p_excludeLastDays;
+                            double assetPriceCheckFrom = p_quotes[iAsset][assetPriceCheckFromInd].AdjClosePrice;
+                            double assetPriceCheckTo = p_quotes[iAsset][assetPriceCheckToInd].AdjClosePrice;
+                            if (assetPriceCheckTo >= assetPriceCheckFrom)
+                                assetMomTfSignal[iAsset] = 1;
+                        } else  // it uses today's one and the one 240 days ago. Altogether a span of 241 days are needed. For SMA, we use 240 items.
+                        {
+                            //int assetTodayInd = iQ[iAsset] + iDay;
+                            int assetPriceCheckInd = iQ[iAsset] + iDay - p_excludeLastDays;
+                            int lookbackDaysAdj = p_lookbackDays - p_excludeLastDays;    // 240-20=220,  we want TF to use about the same days as Momentum. If SMA(240) is given, but we ignore the last 20 days, when SMA is calculated 20 days ago, it shouldn't use earlier data than Momentum, so, we should use SMA(220) as override
+                            double assetPrice = p_quotes[iAsset][assetPriceCheckInd].AdjClosePrice; 
+                            double movingAvg = 0.0; // SMA is used now, EMA can be used later.
+                            int nAvg = 0;
+                            for (int iMaD = assetPriceCheckInd - lookbackDaysAdj; iMaD < assetPriceCheckInd; iMaD++)    // this SMA will contain the 240 previous days, but not today
+                            {
+                                movingAvg += p_quotes[iAsset][iMaD].AdjClosePrice;
+                                nAvg++;
+                            }
+                            movingAvg /= (double)lookbackDaysAdj;
+                            if (assetPrice >= movingAvg)
+                                assetMomTfSignal[iAsset] = 1;
                         }
+                            
                     }
                 }
 
                 // 3. On rebalancing days allocate assetPos[]. This will not change PV.
                 if (isRebalanceDay)
                 {
-                    // https://docs.google.com/document/d/1kx3_UuYy_RApp6s0KmO2b4pbwQdClMuzjf6EyJynghs/edit   Clarification of the rules
-                    // 3.1 Calculate assetWeights
+                     // 3.1 Calculate assetWeights
                     double totalWeight = 0.0;
                     for (int iAsset = 0; iAsset < nAssets; iAsset++)
                     {
-                        //if ((p_quotes[0][firstRebalancingDateInd + iDay].Date == new DateTime(2016, 11, 15) && (p_tickers[iAsset] == "TSLA")))
-                        //{
-                        //    int tempBlaBla = 0;
-                        //}
-                        sbyte compositeSignal = 0;    // For every stocks, sum up the four signals every day. This sum will be -4, -2, 0, +2 or +4.
-                        for (int iChannel = 0; iChannel < p_pctChannelLookbackDays.Length; iChannel++)
-                        {
-                            compositeSignal += assetPctChannelsSignal[iAsset, iChannel];
-                        }
-                        assetScores[iAsset] = compositeSignal / 4.0;    // Divide it by 4 to get a signal between -1 and +1 (this will be the “score”).
+                        assetScores[iAsset] = assetMomTfSignal[iAsset]; // in TAA, score was signal/4.0;
 
                         double[] hvPctChg = new double[p_histVolLookbackDays];
                         for (int iHv = 0; iHv < p_histVolLookbackDays; iHv++)
@@ -350,22 +332,29 @@ namespace SQLab.Controllers.QuickTester.Strategies
                             hvPctChg[p_histVolLookbackDays - iHv - 1] = p_quotes[iAsset][iQ[iAsset] + iDay - iHv].AdjClosePrice / p_quotes[iAsset][iQ[iAsset] + iDay - iHv - 1].AdjClosePrice - 1;
                         }
                         // Balazs: uses "corrected sample standard deviation"; corrected: dividing by 19, not 20; He doesn't annualize. He uses daily StDev
+                        // if p_histVolLookbackDays == 0, it means we don't do HV weighting, we use HV = 1.0
                         assetHV[iAsset] = (p_histVolLookbackDays == 0) ? 1.0 : ArrayStatistics.StandardDeviation(hvPctChg);  // Calculate the 20-day historical volatility of daily percentage changes for every stock.
-                        assetWeights[iAsset] = assetScores[iAsset] / assetHV[iAsset];   // “Score/Vol” quotients will define the weights of the stocks. They can be 0 or negative as well. 
+                        assetWeights[iAsset] = (p_isVolScaledPos) ? assetScores[iAsset] / assetHV[iAsset] : assetScores[iAsset];   // “Score/Vol” quotients will define the weights of the stocks. They can be 0 or negative as well. 
                         // there is an interesting observation here. Actually, it is a good behavour.
                         // If assetScores[i]=0, assetWeights[i] becomes 0, so we don't use its weight when p_isCashAllocatedForNonActives => TLT will not fill its Cash-place; NO TLT will be invested (if this is the only stock with 0 score), the portfolio will be 100% in other stocks. We are more Brave.
                         // However, if assetScores[i]<0 (negative), assetWeights[i] becomes a proper negative number. It will be used in TotalWeight calculation => TLT will fill its's space. (if this is the only stock with negative score), TLT will be invested in its place; consequently the portfolio will NOT be 100% in other stocks. We are more defensive.
-                        if (p_isCashAllocatedForNonActives)    // in the original Varadi's strategy
+                        if (p_isCashAllocatedForNonActives)    // == p_is Place AllocatedForNonActives. If yes, it means we will do an average strategy over the tickers. Make sense. If false, then one ticker can consume the space left by the other ticker
                             totalWeight += Math.Abs(assetWeights[iAsset]);      // Sum up the absolute values of the “Score/Vol” quotients. TotalWeight contains even the non-active assets so have have some cash.
-                        else if (assetWeights[iAsset] > 0)      // otherwise all the capital is allocated between active assets. No cash is maintained.
-                            totalWeight += assetWeights[iAsset];
-
+                        else
+                        {
+                            if (assetWeights[iAsset] <= 0 && p_isCashInsteadOfShort)
+                            {
+                                // if bearish bet and it bearish is played as cash, weight will be 0.0. So, don't add to total.
+                            }
+                            else
+                                totalWeight += Math.Abs(assetWeights[iAsset]);  // if bullish bet, or if bearish bet and played by Shorting
+                        }
                     }
                     // 3.2 With assetWeights calculated, do the rebalancing of assetPos[]
                     cash = pvDaily; // at rebalancing, we simulate that we sell assets, so everything is converted to Cash 1 seconds before MarketClose
                     for (int iAsset = 0; iAsset < nAssets; iAsset++)
                     {
-                        double weight = (assetWeights[iAsset] > 0) ? assetWeights[iAsset] / totalWeight : 0.0;  // If the score of a stock is positive, this ratio is the weight of the given stock. Otherwise omit from portfolio.
+                        double weight = (assetWeights[iAsset] <= 0 && p_isCashInsteadOfShort) ?  0.0 : assetWeights[iAsset] / totalWeight;  // If the score of a stock is positive, this ratio is the weight of the given stock. Otherwise omit from portfolio.
                         assetPos[iAsset] = pvDaily * weight;        // weight can be 0.5 positive = 50%, or  negative = -0.5, -50%. In that case we short the asset.
                         cash -= assetPos[iAsset];    // if weight is positive, assetPos is positive, so we take it away from cash. Otherwise, we short the Asset, and cash is increased.
                     }
@@ -395,20 +384,9 @@ namespace SQLab.Controllers.QuickTester.Strategies
                             wasAnyNoteToUser = true;
                         }
 
-                        if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.PctChannels))
-                        {
-                            for (int iChannel = 0; iChannel < p_pctChannelLookbackDays.Length; iChannel++)
-                            {
-                                noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetPctChannelsLower[iAsset, iChannel]:F3}";
-                                noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetPctChannelsUpper[iAsset, iChannel]:F3}";
-                                noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetPctChannelsSignal[iAsset, iChannel]}";
-                            }
-                            wasAnyNoteToUser = true;
-                        }
-
                         if (p_debugDetailToHtml.ContainsKey(DebugDetailToHtml.AssetData))
                         {
-                            noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetScores[iAsset]},{assetHV[iAsset]:F6}, {assetWeights[iAsset]:F3}";
+                            noteToUserRow += ((wasAnyNoteToUser) ? ", " : String.Empty) + $"{assetMomTfSignal[iAsset]},{assetScores[iAsset]},{assetHV[iAsset]:F6}, {assetWeights[iAsset]:F3}";
                             wasAnyNoteToUser = true;
                         }
 
@@ -442,8 +420,7 @@ namespace SQLab.Controllers.QuickTester.Strategies
 
             p_noteToUser = sbNoteToUser.ToString();
             //noteToUser = String.Format("{0:0.00%} of trading days are controversial days", (double)nControversialDays / (double)pv.Count());
-        } // DoBacktestInTheTimeInterval_TAA
-
+        } // DoBacktestInTheTimeInterval_MomTF
 
     }   // class
 }

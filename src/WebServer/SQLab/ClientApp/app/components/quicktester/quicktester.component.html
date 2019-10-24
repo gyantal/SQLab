@@ -59,6 +59,7 @@
                             <span>Asset Allocation</span>
                             <ul>
                                 <li><span id="idMenuItemTAA" (click)="MenuItemStrategyClick($event)">Tactical AA (TAA)</span></li>
+                                <li><span id="idMenuItemMomTF" (click)="MenuItemStrategyClick($event)">Momentum / TF</span></li>
                             </ul>
                         </li>
                     </ul>
@@ -371,7 +372,69 @@
                             <li><span id="idParamSetTAA_VaradiOriginal" (click)="strategy_AssetAllocation.MenuItemParamSetsClicked($event)">Varadi's original</span></li>
                         </ul>
                     </li>
-                </ul>para
+                </ul>
+            </div>
+        </div>
+
+        <div [hidden]="selectedSubStrategyMenuItemId !== 'idMenuItemMomTF'">
+            <table id="inputTable" align="left">
+                <thead>
+                    <tr>
+                        <th>Assets</th>
+                        <th style="font-size: 70%;">Assets<br />Leverage</th>
+                        <th style="font-size: 70%;">Rebalance:'Daily,2d','Weekly<br />,Fridays', 'Monthly,T-1'</th>
+                        <th style="font-size: 70%;">Momentum<br /> or TF (SMA)</th>
+                        <th style="font-size: 70%;">Max Lookback Days <br />(240d is 12m)</th>
+                        <th style="font-size: 70%;">Exclude <br />Lasd Days</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.assets" style="width: 200px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.assetsConstantLeverage" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.rebalancingFrequency" style="width: 100px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.momOrTF" style="width: 50px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.lookbackDays" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.excludeLastDays" style="width: 60px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                    </tr>
+                </tbody>
+            </table>
+            <table id="inputTable" align="left">
+                <thead>
+                    <tr>
+                        <th style="font-size: 70%;">Is Cash Allocated<br /> for Non-actives</th>
+                        <th style="font-size: 70%;">Cash Equivalent<br /> Ticker</th>
+                        <th style="font-size: 70%;">Is Short<br /> Instead of Cash</th>
+                        <th style="font-size: 70%;">Is Vol.Scaled<br /> Positions</th>
+                        <th style="font-size: 70%;">HV Lookback<br /> Days</th>
+                        <th style="font-size: 70%;">Debug Detail<br /> To Html</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.isCashAllocatedForNonActives" style="width: 30px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.cashEquivalentTicker" style="width: 40px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td> 
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.isShortInsteadOfCash" style="width: 30px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.isVolScaledPos" style="width: 30px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.histVolLookbackDays" style="width: 30px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                        <td><input type="text" [(ngModel)]="strategy_MomTF.debugDetailToHtml" style="width: 200px; padding: 2px; border: 1px solid #A0A0A0" (keypress)="OnParameterInputKeypress($event)" /></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="SqMenu2">
+                <ul>
+                    <li>
+                        <span>ParamSets T</span>
+                        <ul>
+                            <li><span id="idParamSetMomTF_SPY12mMom" (click)="strategy_MomTF.MenuItemParamSetsClicked($event)">SPY 12m Momentum</span></li>
+                            <li><span id="idParamSetMomTF_SPY12mTF" (click)="strategy_MomTF.MenuItemParamSetsClicked($event)">SPY 12m TF</span></li>
+                            <li><span id="idParamSetMomTF_SPY12mMomTLT" (click)="strategy_MomTF.MenuItemParamSetsClicked($event)">SPY 12m Momentum w. TLT</span></li>
+                            <li><span id="idParamSetMomTF_SPY12mTFTLT" (click)="strategy_MomTF.MenuItemParamSetsClicked($event)">** SPY 12m TF w. TLT</span></li>
+                            <li><span id="idParamSetMomTF_SPY12mMom0_BuyHold" (click)="strategy_MomTF.MenuItemParamSetsClicked($event)">SPY Buy&Hold</span></li>
+                            <li><span id="idParamSetMomTF_TAA12mMoTLT" (click)="strategy_MomTF.MenuItemParamSetsClicked($event)">TAA Universe</span></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
 
