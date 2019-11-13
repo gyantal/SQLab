@@ -211,6 +211,26 @@ namespace SQLab
                 isSendable = false;
             }
 
+            if (p_exception is System.Net.Http.HttpRequestException 
+                && p_exception.InnerException != null && p_exception.InnerException is System.IO.IOException
+                && p_exception.InnerException.InnerException != null && p_exception.InnerException.InnerException is System.Net.Sockets.SocketException)
+            {
+                // "FullExceptionStr:'System.Net.Http.HttpRequestException: An error occurred while sending the request. 
+                // ---> System.IO.IOException: Unable to read data from the transport connection: Connection reset by peer. 
+                // ---> System.Net.Sockets.SocketException: Connection reset by peer"
+                // HTTP GET '/dist/__webpack_hmr' from 52.211.231.5 (u: DC)"
+                // this happens overnight, or at 5am in the morning. Probably when he left a Chrome tabpage open. The laptop went to sleep mode overnight. Webpack connection was disconnected, but the client still sometimes ask for the data.
+                // the client waits 11sec for the data, and the server usually serves this in 1.5sec. 
+                // but when the server doesn't serve it for 11sec, then client break the connection, thinking it is fail. And the client is right.
+                // actually the problem is that why sometimes GET '/dist/__webpack_hmr' takes 15 sec.
+                // at this times, server probably needs a restart. So, we are better if we leave this message to be sent to the admin.
+                // Yes. Before restart GET '/dist/__webpack_hmr' was served in 1200ms, (and 15sec rarely), after server restart it is served in 500ms. So, restart helped.
+                // What is annoying the client leaves the 'dead' tabpage open in Chrome, which consumes resources all the time. 
+                // However, with DotNet 3, and published static file Angular release, it won't be that big problem, because there is no Debug style _webpack under the published one.
+                Utils.Logger.Debug($"Warning. Connection reset by peer. Probably because of 15sec timeout on the client while serving /dist/__webpack_hmr. This is the problem, slowness of the server. Consider restarting server. ");
+                isSendable = true;
+            }
+
 
             Utils.Logger.Debug($"IsSendableToHealthMonitorForEmailing().IsSendable:{isSendable}, FullExceptionStr:'{fullExceptionStr}'");
             return isSendable;

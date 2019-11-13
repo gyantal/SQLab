@@ -92,6 +92,8 @@ namespace SQLab.Controllers
                     jsonString = (await LEtf.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
                 if (jsonString == null)
                     jsonString = (await TAA.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
+                if (jsonString == null)
+                    jsonString = (await MomTF.GenerateQuickTesterResponse(generalParams, strategyName, allParamsDict));
 
                 if (jsonString == null)
                     throw new Exception("Strategy was not found in the WebApi: " + strategyName);
