@@ -114,8 +114,8 @@ namespace SQLab.Controllers
         public string GetStr()
         {
             //Defining asset lists.
-            string[] allAssetList = new string[] { "AAPL", "AMZN", "BABA", "BIDU", "CRM", "FB", "GOOGL", "JD", "MSFT", "NFLX", "NVDA", "SQ", "TCEHY", "QQQ", "SPY" };
-            string[] allAssetList2 = new string[] { "AAPL", "AMZN", "BABA", "BIDU", "CRM", "FB", "GOOGL", "JD", "MSFT", "NFLX", "NVDA", "SQ", "TCEHY", "EqualWeighted GCh" };
+            string[] allAssetList = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NVDA", "PYPL", "QCOM", "V", "QQQ", "SPY" };
+            string[] allAssetList2 = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NVDA", "PYPL", "QCOM", "V", "EqualWeighted GCh" };
 
             //Defining lookback periods for beta calculation.                   
             int[] betaLB = new int[] { 5, 10, 21, 42, 63, 126, 252, 504, 756, 100000 };
