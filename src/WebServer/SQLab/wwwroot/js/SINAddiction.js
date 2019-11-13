@@ -83,7 +83,7 @@ function processData(dataStr) {
     divTitleCont.innerHTML = data.titleCont + ' <sup><small><a href="' + data.gDocRef + '" target="_blank">(Study)</a></small></sup>';
     divTimeNow.innerHTML = data.requestTime;
     divLiveDataTime.innerHTML = data.lastDataTime;
-    divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$" + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank" >these current positions</a> updated for ' + data.currentPVDate + ")";
+    divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$" + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank" >these current positions</a> updated on ' + data.currentPVDate + ")";
     if (data.dailyProfSig !== "N/A") { divDailyProfit.innerHTML = "<b>Daily Profit/Loss: <span class=\"" + data.dailyProfString + "\">" + data.dailyProfSig + data.dailyProfAbs + " ("+data.dailyProfPerc+"%)</span></b>"; }
     if (data.monthlyProfSig !== "N/A") { divMonthlyProfit.innerHTML = "<b>MTD Profit/Loss: <span class=\"" + data.monthlyProfString + "\">" + data.monthlyProfSig + data.monthlyProfAbs + " (" + data.monthlyProfPerc +"%)</span></b>"; }
     if (data.yearlyProfSig !== "N/A") { divYearlyProfit.innerHTML = "<b>YTD Profit/Loss: <span class=\"" + data.yearlyProfString + "\">" + data.yearlyProfSig + data.yearlyProfAbs + " (" + data.yearlyProfPerc + "%)</span></b>"; }
