@@ -101,10 +101,10 @@ namespace SqCommon
             switch (p_severity)
             {
                 //case Severity.NoException:        // not sure, it is safer if it is an Error, and HealthMonitor is always warned
-                //    Utils.Logger.Warn("*** {1}{0}Stack trace:{0}{2}", Environment.NewLine, msg, Utils.DbgAbbrev(sTrace.ToString()));    // this will not send message to HealthMonitor, only log the Warning
+                //    Utils.Logger.Warn("*** {1}{0}Stack trace:{0}{2}", Environment.NewLine, msg, sTrace);    // this will not send message to HealthMonitor, only log the Warning
                 //    break;
                 default:
-                    Utils.Logger.Error("*** {1}{0}Stack trace:{0}{2}", Environment.NewLine, msg, Utils.DbgAbbrev(sTrace.ToString()));   // Errors will be sent to HealthMonitor
+                    Utils.Logger.Error("*** {1}{0}Stack trace:{0}{2}", Environment.NewLine, msg, sTrace);   // Errors will be sent to HealthMonitor
                     break;
             }
             
