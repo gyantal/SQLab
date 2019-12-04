@@ -260,7 +260,7 @@ namespace VirtualBroker
                 maxAllowedTradeValue = p_portfolioMaxTradeValueInCurrency;
             if (estimatedTransactionValue > maxAllowedTradeValue)  // if maxFilter is breached, safer to not trade at all. Even if it is an MOC order and can be grouped with other orders. Safer this way.
             {
-                string errStr = $"Warning. MaxFilter is breached. Transaction is MaxFilter (IbAccount: ${IbAccountMaxTradeValueInCurrency:F0}, Portfolio: ${p_portfolioMaxTradeValueInCurrency:F0}) skipped: {p_contract.Symbol} {p_volume:F0}: $ {estimatedTransactionValue}";
+                string errStr = $"Warning. MaxFilter is breached. Transaction is MaxFilter (IbAccountMax: ${IbAccountMaxTradeValueInCurrency:N0}, PortfolioMax: ${p_portfolioMaxTradeValueInCurrency:N0}) skipped: {p_contract.Symbol} {p_volume:N0}: $ {estimatedTransactionValue:N0}";
                 Utils.ConsoleWriteLine(ConsoleColor.Red, true, errStr);
                 Utils.Logger.Warn(errStr);
                 return virtualOrderID;
@@ -268,7 +268,7 @@ namespace VirtualBroker
             if (estimatedTransactionValue > (maxAllowedTradeValue/1.5))
             {
                 //>When simulated order is 50% range of MaxTradeable, send a warning email to administrator to modify it in VBroker and redeploy. It is not likely that a  strategy will move 50% per day.
-                string warnStr = $"Warning. Trade will commence, but MaxFilter is 50% away to be breached. Modify MaxTradeValue params (IbAccount or Portfolio) in VBroker and redeploy. Transaction is MaxFilter (IbAccount: ${IbAccountMaxTradeValueInCurrency:F0}, Portfolio: ${p_portfolioMaxTradeValueInCurrency:F0}). Trade: {p_contract.Symbol} {p_volume:F0}: $ {estimatedTransactionValue}";
+                string warnStr = $"Warning. Trade will commence, but MaxFilter is 50% away to be breached. Modify MaxTradeValue params (IbAccount or Portfolio) in VBroker and redeploy. Transaction is MaxFilter (IbAccountMax: ${IbAccountMaxTradeValueInCurrency:N0}, PortfolioMax: ${p_portfolioMaxTradeValueInCurrency:N0}). Trade: {p_contract.Symbol} {p_volume:N0}: $ {estimatedTransactionValue:N0}";
                 StrongAssert.Fail(Severity.NoException, warnStr);
             }
 

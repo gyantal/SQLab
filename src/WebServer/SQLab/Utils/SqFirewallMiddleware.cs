@@ -72,8 +72,8 @@ namespace SQLab
             }
             catch (Exception e)
             {
-                // when NullReference exception was raised in TestHealthMonitorEmailByRaisingException(), The excption didn't fall to here. if 
-                // It was handled already and I got a nice Error page to the client. So, here, we don't have the exceptions and exception messages and the stack trace.
+                // when NullReference exception was raised in TestHealthMonitorEmailByRaisingException(), The exception didn't fall to here.
+                // If it was handled already and I got a nice Error page to the client. So, here, we don't have the exceptions and exception messages and the stack trace.
                 exception = e;
                 throw;
             }
@@ -118,14 +118,17 @@ namespace SQLab
             
         }
 
-        // crackers always try to break the server by typical vulnerability queries. It is pointless to process them. Most of the time it raises an exception.
+        // "/robots.txt", "/ads.txt": just don't want to handle search engines. Consume resources.
+        static string[] m_blacklistStarts = { "/robots.txt", "/ads.txt", "//", "/index.php", "/user/register", "/latest/dynamic", "/ws/stats", "/corporate/", "/imeges", "/remote"};
+        // hackers always try to break the server by typical vulnerability queries. It is pointless to process them. Most of the time it raises an exception.
         static bool IsHttpRequestOnBlacklist(HttpContext p_httpContext)
         {
             // 1. check request path is allowed
-            if (p_httpContext.Request.Path.StartsWithSegments("/index.php", StringComparison.OrdinalIgnoreCase))
-                return true;
-            if (p_httpContext.Request.Path.StartsWithSegments("/user/register", StringComparison.OrdinalIgnoreCase))
-                return true;
+            foreach (var blacklistStr in m_blacklistStarts)
+            {
+                if (p_httpContext.Request.Path.StartsWithSegments(blacklistStr, StringComparison.OrdinalIgnoreCase))   
+                    return true;
+            }
 
             // 2. check client IP is banned or not
             return false;
