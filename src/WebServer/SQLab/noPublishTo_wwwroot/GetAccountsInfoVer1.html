@@ -90,7 +90,7 @@
         totalMaxRiskedN = 0.0;
         betaDeltaAdjTotalMarketOrientationN = 0.0;
         totalPLTodayN = 0.0;
-        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>Cost &#8661;</th><th>Last<br/>Close &#8661;</th><th>Est &#8661;<br/>Price</th><th>Chg%<br/>Today &#8661;</th><th  id=\"idThPlToday\">P&L &#8661;<br/>Today</th><th>P&L &#8661;</th><th>MktVal &#8661;</th><th>Est &#8661;<br/>UndPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>Deliv<br/>Value &#8661;</th><th>DltAdj &#8661;<br/>DelivVal</th><th title=\"Guessed Beta (QQQ, 1 month)\">gBeta &#8661;</th><th id=\"idThBetaDltAdjMktOriVal\">BetaDltAdj &#8661;<br/>MktOriVal</th><th>Acc &#8661;</th></tr>";
+        posTableInner = "<tr><th>Symbol &#8661;</th><th>LocalSymbol &#8661;</th><th>Pos &#8661;</th><th>Cost &#8661;</th><th title=\"Data from SQL DB. Using previous trading day of 'today' (current Utc time to ET cut to date). 4h caching in web-server can keep it wrong for that time period\">Last<br/>Close &#8661;</th><th>Est &#8661;<br/>Price</th><th>Chg%<br/>Today &#8661;</th><th  id=\"idThPlToday\">P&L &#8661;<br/>Today</th><th>P&L &#8661;</th><th>MktVal &#8661;</th><th>Est &#8661;<br/>UndPr </th><th>IbComp<br/>UndPr &#8661;</th><th>IbComp<br/>Delta &#8661;</th><th>Deliv<br/>Value &#8661;</th><th>DltAdj &#8661;<br/>DelivVal</th><th title=\"Guessed Beta (QQQ, 1 month)\">gBeta &#8661;</th><th id=\"idThBetaDltAdjMktOriVal\">BetaDltAdj &#8661;<br/>MktOriVal</th><th>Acc &#8661;</th></tr>";
         for (i in accInfos) {
             if (i == "Message") {
                 document.getElementById("idMessageFromWebserverIfAny").innerHTML = accInfos[i] + "<br/><br/>";

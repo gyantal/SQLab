@@ -198,7 +198,10 @@ namespace SQLab.Controllers
                     {
                         if (accPos["SecType"] == "STK")
                         {
-                            if (!g_LastClosePrices.TryGetValue(accPos["Symbol"], out DailyData dailyData) || ((DateTime.UtcNow - dailyData.Date).TotalHours > 12.0))
+                            // UNG ClosePrice was sometimes wrong in the morning. Not IB problem. Our proper price crawler arrives to UNG usually around 10:00 next day. 
+                            // That can cause wrong UNG prices until 10:00 or until noon (especially that closePrices were cached for 12h, now I changed it to caching for 4h only).
+                            // So, if proper prices are in SQL until 10:00, even with 4h caching, we will get proper prices at 14:00
+                            if (!g_LastClosePrices.TryGetValue(accPos["Symbol"], out DailyData dailyData) || ((DateTime.UtcNow - dailyData.Date).TotalHours > 4.0))
                             {
                                 isNeedSqlDownload = true;                                
                                 symbolsNeedLastClosePrice.Add(accPos["Symbol"]);
