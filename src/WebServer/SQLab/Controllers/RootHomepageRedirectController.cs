@@ -111,9 +111,6 @@ namespace SQLab.Controllers
                 case "/gamechangerbetacalculator":
                     fileName = "GameChangerBetaCalculator.html";
                     break;
-                case "/sqstudies":
-                    fileName = "SQStudiesList.html";
-                    break;
                 default:
 #if DEBUG   // for the Index page, give Dashboard according to DEBUG or RELEASE
                     if (urlPath.EndsWith(".ts"))    // urlPath	"/app/quicktester/app.component.ts"
