@@ -21,6 +21,10 @@ namespace SqCommon
         GetHealthMonitorCurrentState,   // not used at the moment
         GetHealthMonitorCurrentStateToHealthMonitorWebsite,
         ReportErrorFromSQLabWebsite,
+        SqCoreWebOk, // SqCoreWeb can actively notify HealthMonitor that a regular event (like a trade scheduling in VBroker) was completed
+        SqCoreWebWarning, // warning will send only emails, but not Phonecalls
+        SqCoreWebError,     // C# error on the server side
+        SqCoreWebJsError,   // JavaScript error on the client side
     };
 
     public enum HealthMonitorMessageResponseFormat { None = 0, String, JSON };

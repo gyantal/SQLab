@@ -79,12 +79,13 @@ namespace HealthMonitor
                     CurrentStateToHealthMonitorWebsite(p_tcpClient, message);
                     break;
                 case HealthMonitorMessageID.ReportErrorFromSQLabWebsite:
-                    ErrorFromSqLabWebsite(p_tcpClient, message);
+                case HealthMonitorMessageID.SqCoreWebError:
+                case HealthMonitorMessageID.SqCoreWebJsError:
+                    ErrorFromWebsite(p_tcpClient, message);
                     break;
                 default:
                     StrongAssert.Fail(Severity.NoException, $"<Tcp:>ProcessTcpClient: Message ID:'{ message.ID}' is unexpected, unhandled. This probably means a serious error.");
                     break;
-
             }
 
             if (message.ResponseFormat != HealthMonitorMessageResponseFormat.None)    // if Processing needed Response to Client, we dispose here. otherwise, it was disposed before putting into processing queue

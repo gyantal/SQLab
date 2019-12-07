@@ -15,7 +15,7 @@ namespace HealthMonitor
         DateTime m_lastSqWebsiteErrorEmailTime = DateTime.MinValue;    // don't email if it was made in the last 10 minutes
         DateTime m_lastSqWebsiteErrorPhoneCallTime = DateTime.MinValue;    // don't call if it was made in the last 30 minutes
       
-        private void ErrorFromSqLabWebsite(TcpClient p_tcpClient, HealthMonitorMessage p_message)
+        private void ErrorFromWebsite(TcpClient p_tcpClient, HealthMonitorMessage p_message)
         {
             if (!m_persistedState.IsProcessingSQLabWebsiteMessagesEnabled)
                 return;
@@ -26,8 +26,23 @@ namespace HealthMonitor
                 bw.Write("FromServer: Message received, saved and starting processing: " + p_message.ParamStr);
             }
 
-            Utils.Logger.Info("ErrorFromSqLabWebsite().");
-            InformSupervisors(InformSuperVisorsUrgency.StandardWithTimer, "SQ HealthMonitor: ERROR from SQLab Website.", $"SQ HealthMonitor: ERROR from SQLab Website. MessageParamStr: { p_message.ParamStr}", null, ref m_lastSqWebsiteInformSupervisorLock, ref m_lastSqWebsiteErrorEmailTime, ref m_lastSqWebsiteErrorPhoneCallTime);
+            string from = "unknown website";
+            switch (p_message.ID)
+            {
+                case HealthMonitorMessageID.ReportErrorFromSQLabWebsite:
+                    from = "SqLab";
+                    break;
+                case HealthMonitorMessageID.SqCoreWebError:
+                    from = "SqCore.C#";
+                    break;
+                case HealthMonitorMessageID.SqCoreWebJsError:
+                    from = "SqCore.Javascript";
+                    break;
+             }
+
+            Utils.Logger.Info("ErrorFromWebsite().");
+
+            InformSupervisors(InformSuperVisorsUrgency.StandardWithTimer, $"SQ HealthMonitor: ERROR. Website: {from}.", $"SQ HealthMonitor:ERROR. Website: {from}. MessageParamStr: { p_message.ParamStr}", null, ref m_lastSqWebsiteInformSupervisorLock, ref m_lastSqWebsiteErrorEmailTime, ref m_lastSqWebsiteErrorPhoneCallTime);
         }
 
     
