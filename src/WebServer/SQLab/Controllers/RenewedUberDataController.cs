@@ -209,7 +209,7 @@ namespace SQLab.Controllers
 
             int startPosLiveDate = webpageLive.IndexOf("var time_data_var=['") + "var time_data_var=['".Length;
             int startPosLive = webpageLive.IndexOf("var last_data_var=[", startPosLiveDate) + "var last_data_var=[".Length;
-            int endPosLive = webpageLive.IndexOf("];for(var i=0;i<last_data_var.length;i++){if(last_data_var[i]<1)last_data_var[i]=null;}", startPosLive);
+            int endPosLive = webpageLive.IndexOf("];last_data_var=clean_array(last_data_var);", startPosLive);
             int startPosPrev = webpageLive.IndexOf("];var previous_close_var=[", endPosLive) + "];var previous_close_var=[".Length;
             int endPosPrev = webpageLive.IndexOf("];var contango_graph_exists=", startPosPrev);
             int nextExpLiveMonth = webpageLive.IndexOf("var mx=['", endPosLive) + "var mx=['".Length;
