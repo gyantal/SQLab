@@ -169,6 +169,7 @@ namespace VirtualBroker
         {
             var rtPrices = new Dictionary<int, PriceAndTime>() { { TickType.MID, new PriceAndTime() } };    // MID is the most honest price. LAST may happened 1 hours ago
 
+            StringBuilder sbCalcPfSize = new StringBuilder("CalcPfSizeRT(): ");
             double portfolioUsdSize = 0;
             foreach (PortfolioPosition pip in p_portfolio.TodayPositions)
             {
@@ -190,15 +191,19 @@ namespace VirtualBroker
 
                     //double rtPrice = GetAssetIDRealTimePrice(BrokerTask.TaskLogFile, p_brokerAPI, pip.AssetID);
                     double positionUsdSize = pip.Volume * rtPrice;   // pip.Volume is signed. For shorts, it is negative, but that is OK.
-                    Utils.Logger.Debug($"CalcPfSize(),{contract.Symbol}: {pip.Volume}*{rtPrice:F2}={positionUsdSize:F0}");
+                    string pfSizeStr = $"{contract.Symbol}: {pip.Volume}*{rtPrice:F2}={positionUsdSize:n0};";
+                    sbCalcPfSize.Append(pfSizeStr);
+                    Utils.Logger.Debug($"CalcPfSize():{pfSizeStr}");
                     portfolioUsdSize += positionUsdSize;
                 }
             }
             p_portfolio.PortfolioUsdSize = portfolioUsdSize;
-            if (portfolioUsdSize <= 0)
-            {
-                Utils.Logger.Warn("WARNING!. PortfolioUsdSize should be positive.");
-            }
+            // 2019-12-23, UGAZ had a 10 to 1 split, which was not in the DB. Short UGAZ was shown instead of profit, a huge loss. And negative PV. 
+            // That can cause later silly trades. We should StrongAssert it, and we might crash the application. This is an error, and the error can be fatal later.
+            // we should use user specific maximum bounds here
+            StrongAssert.True((portfolioUsdSize > 0) && (portfolioUsdSize < 3* p_portfolio.MaxTradeValueInCurrency), Severity.ThrowException,
+                $"PortfolioID '{p_portfolio.PortfolioID}', realtime PV: ${portfolioUsdSize:F0}  should be positive and less than a sensible value. Possible reason: missing split in DB. We terminate strategy execution to avoid 'silly' trades. {sbCalcPfSize.ToString()}");
+            
             string logMsg = $"{p_portfolio.IbGatewayUserToTrade.ToShortFriendlyString()}: PortfolioID '{p_portfolio.PortfolioID}': realtime PV: ${p_portfolio.PortfolioUsdSize:F0}";
             Utils.ConsoleWriteLine(null, false, logMsg);
             Utils.Logger.Info(logMsg);
