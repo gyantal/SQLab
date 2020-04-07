@@ -58,6 +58,7 @@ namespace SQLab.Controllers
         //Downloading price data from SQL Server
         public static IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> DataSQDBGmod(string[] p_allAssetList)
         {
+            Utils.Logger.Info("DataSQDBGmod() START");
             List<string> tickersNeeded = p_allAssetList.ToList();
             DateTime endTimeUtc = DateTime.UtcNow.AddDays(10);
             DateTime endTimeUtc2 = endTimeUtc.AddDays(-11);
@@ -73,7 +74,7 @@ namespace SQLab.Controllers
 
             
             IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> dataFromSQServermod = quotes;
-            
+            Utils.Logger.Info("DataSQDBGmod() END");
             return dataFromSQServermod;
         }
 

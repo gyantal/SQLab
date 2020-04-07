@@ -252,7 +252,6 @@ namespace VirtualBroker
                         //    MaxTradeValueInCurrency = 15000, // For Tu: portfolio is 5K original. Set MaxValue=15K  (assuming portfolio double in a year)
                         //    MinTradeValueInCurrency = 200,
                         //    Param = new PortfolioParamHarryLong() {
-                        //        // UWT short is changed to long DWT until UWT becomes shortable...
                         //        Tickers = new string[] { "SVXY", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] {  0.20, 0.10, 0.25, -0.85, -0.09, -0.26 } // for T. It is safer if we don't have to login and check the shortVXX position. On the top of it, VXX $pos would be under $200, not traded by VBroker.
                         //    } }
                         }
