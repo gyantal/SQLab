@@ -261,7 +261,8 @@ namespace VirtualBroker
                     {
                         AssetID = todayPos.AssetID,
                         Volume = Math.Abs(todayPos.Volume),     // Volume should be always positive
-                        TransactionType = (todayPos.Volume > 0) ? TransactionType.SellAsset : TransactionType.BuyAsset // it was Cover instead of Buy, But we decided to simplify and allow Buy
+                        TransactionType = (todayPos.Volume > 0) ? TransactionType.SellAsset : TransactionType.BuyAsset, // it was Cover instead of Buy, But we decided to simplify and allow Buy
+                        OldVolume = todayPos.Volume
                     });
                 }
                 else
@@ -273,7 +274,8 @@ namespace VirtualBroker
                         {
                             AssetID = todayPos.AssetID,
                             Volume = Math.Abs(diffVolume),     // Volume should be always positive
-                            TransactionType = (diffVolume > 0) ? TransactionType.BuyAsset : TransactionType.SellAsset
+                            TransactionType = (diffVolume > 0) ? TransactionType.BuyAsset : TransactionType.SellAsset,
+                            OldVolume = todayPos.Volume
                         });
                     }
                 }
@@ -290,15 +292,17 @@ namespace VirtualBroker
                     {
                         AssetID = proposedPos.AssetID,
                         Volume = Math.Abs(proposedPos.Volume),     // Volume should be always positive
-                        TransactionType = (proposedPos.Volume > 0) ? TransactionType.BuyAsset : TransactionType.SellAsset // it was Cover instead of Buy, But we decided to simplify and allow Buy
+                        TransactionType = (proposedPos.Volume > 0) ? TransactionType.BuyAsset : TransactionType.SellAsset, // it was Cover instead of Buy, But we decided to simplify and allow Buy
+                        OldVolume = 0
                     });
                 }
             }
 
             foreach (var transaction in transactions)
             {
-                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
-                Utils.Logger.Info($"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
+                double transactionOfOldVolumePct = (transaction.OldVolume == 0) ? 1.00 : transaction.Volume / transaction.OldVolume;
+                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ({transactionOfOldVolumePct*100:F2}%) ");
+                Utils.Logger.Info($"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ({transactionOfOldVolumePct*100:F2}%) ");
             }
 
             p_portfolio.ProposedTransactions = transactions;    // only assign at the end, if everything was right, there was no thrown Exception. It is safer to do transactions: all or nothing, not partial
@@ -333,7 +337,7 @@ namespace VirtualBroker
                 var transaction = transactions[i];
                 Utils.Logger.Info($"Placing Order {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ");
                 Contract contract = new Contract() { Symbol = Strategy.StockIdToTicker(transaction.SubTableID), SecType = "STK", Currency = "USD", Exchange = "SMART" };
-                transaction.VirtualOrderId = Controller.g_gatewaysWatcher.PlaceOrder(p_portfolio.IbGatewayUserToTrade, p_portfolio.MaxTradeValueInCurrency, p_portfolio.MinTradeValueInCurrency, contract, transaction.TransactionType, transaction.Volume, orderExecution, orderTif, null, null, isSimulatedTrades, p_detailedReportSb);
+                transaction.VirtualOrderId = Controller.g_gatewaysWatcher.PlaceOrder(p_portfolio.IbGatewayUserToTrade, p_portfolio.MaxTradeValueInCurrency, p_portfolio.MinTradeValueInCurrency, contract, transaction.TransactionType, transaction.Volume, orderExecution, orderTif, null, null, isSimulatedTrades, transaction.OldVolume, p_detailedReportSb);
             } // don't do anything here. Return, so other portfolio PlaceOrder()-s can be executed too.
         }
 
