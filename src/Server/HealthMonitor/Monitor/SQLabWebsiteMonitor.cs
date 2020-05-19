@@ -42,7 +42,7 @@ namespace HealthMonitor
 
             Utils.Logger.Info("ErrorFromWebsite().");
 
-            InformSupervisors(InformSuperVisorsUrgency.StandardWithTimer, $"SQ HealthMonitor: ERROR. Website: {from}.", $"SQ HealthMonitor:ERROR. Website: {from}. MessageParamStr: { p_message.ParamStr}", null, ref m_lastSqWebsiteInformSupervisorLock, ref m_lastSqWebsiteErrorEmailTime, ref m_lastSqWebsiteErrorPhoneCallTime);
+            InformSupervisors(InformSuperVisorsUrgency.Normal_UseTimer, $"SQ HealthMonitor: ERROR. Website: {from}.", $"SQ HealthMonitor:ERROR. Website: {from}. MessageParamStr: { p_message.ParamStr}", null, ref m_lastSqWebsiteInformSupervisorLock, ref m_lastSqWebsiteErrorEmailTime, ref m_lastSqWebsiteErrorPhoneCallTime);
         }
 
     

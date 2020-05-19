@@ -12,8 +12,8 @@ namespace HealthMonitor
     public partial class HealthMonitor
     {
         Object m_lastVbInformSupervisorLock = new Object();   // null value cannot be locked, so we have to create an object
-        DateTime m_lastVbErrorEmailTime = DateTime.MinValue;    // don't email if it was made in the last 10 minutes
-        DateTime m_lastVbErrorPhoneCallTime = DateTime.MinValue;    // don't call if it was made in the last 30 minutes
+        DateTime m_lastVbErrorInformTime = DateTime.MinValue;    // don't email if it was made in the last 10 minutes
+        // DateTime m_lastVbErrorPhoneCallTime = DateTime.MinValue;    // don't call if it was made in the last 30 minutes
         List<Tuple<DateTime, bool, string, string>> m_VbReport = new List<Tuple<DateTime, bool, string, string>>(); // List<> is not thread safe: <Date, IsOk, BriefReport, DetailedReport>
 
         // this is called every time the VirtualBroker send OK or Error: after every simulated trading
@@ -73,8 +73,9 @@ namespace HealthMonitor
             if (isErrorOrWarning)
             {
                 Utils.Logger.Info("Error or Warning FromVirtualBroker().");
-                InformSupervisors(InformSuperVisorsUrgency.UrgentInfoSendEmail, "SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { ((briefReport != null) ? briefReport : p_message.ParamStr) }", 
-                    "There is an Error in Virtual Broker. ... I repeat: Error in Virtual Broker.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
+                // Vbroker source can spam error messages every 1 second. We don't want to spam email/phonecalls every second, therefore use urgency as Normal
+                InformSupervisorsEx(DataSource.VBroker, false, "SQ HealthMonitor: ERROR from VirtualBroker.", $"SQ HealthMonitor: ERROR from VirtualBroker. MessageParamStr: { ((briefReport != null) ? briefReport : p_message.ParamStr) }", 
+                    "There is an Error in Virtual Broker. ... I repeat: Error in Virtual Broker.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorInformTime);
             }
 
             Utils.Logger.Info($"MessageFromVirtualBroker() END");
@@ -113,13 +114,13 @@ namespace HealthMonitor
 
             if (expectedMessage == null)    // Send email, make phonecall
             {
-                Utils.Logger.Debug("HmVb.CheckOKMessageArrived(): OK.");
-                InformSupervisors(InformSuperVisorsUrgency.UrgentInfoSendEmail, $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} didn't arrive.", $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} did't arrive.", $"Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive. ... I repeat: Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorEmailTime, ref m_lastVbErrorPhoneCallTime);
+                Utils.Logger.Debug("HmVb.CheckOKMessageArrived(): Message missing.");
+                InformSupervisorsEx(DataSource.VBrokerCheckOKMessageArrived, false, $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} didn't arrive.", $"SQ HealthMonitor: VirtualBroker Message from {p_triggeredTaskSchemaName} did't arrive.", $"Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive. ... I repeat: Virtual Broker message from from {p_triggeredTaskSchemaName} didn't arrive.", ref m_lastVbInformSupervisorLock, ref m_lastVbErrorInformTime);
             }
             else
             {
-                Utils.Logger.Debug("HmVb.CheckOKMessageArrived(): Message missing.");
-                // do nothing. If it was an Error message, the Phonecall was already made when the Error message arrived
+                Utils.Logger.Debug("HmVb.CheckOKMessageArrived(): OK.");
+                // do nothing. The arrived message can be either an OK or Error message. But if it was an Error message, the Phonecall was already made when the Error message arrived
             }
         }
     }

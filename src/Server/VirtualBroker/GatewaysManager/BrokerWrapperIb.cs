@@ -245,7 +245,7 @@ namespace VirtualBroker
             bool isAddOrderInfoToErrMsg = false;
 
             if (id == -1)       // -1 probably means there is no ID of the error. It is a special notation.
-            {                
+            {
                 if (errorCode == 0)
                 {
                     // Id: -1, ErrCode: 0, Msg: Warning: Approaching max rate of 50 messages per second (45)
@@ -410,6 +410,13 @@ namespace VirtualBroker
             if (errorCode == 10168) // it happened at the weekend, but IB fixed their mistake.
             {
                 //"Id: 1358, ErrCode: 10168, Msg: Requested market data is not subscribed. Delayed market data is not enabled"
+                if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
+                    return; // skip processing the error further. Don't send it to HealthMonitor.
+            }
+
+            if (errorCode == 10197)
+            {
+                //"Id: 1869, ErrCode: 10197, Msg: No market data during competing live session"   Id is the realtime price subscription per ticker. So, this error comes for all tickers that we watch real-time price of.
                 if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }

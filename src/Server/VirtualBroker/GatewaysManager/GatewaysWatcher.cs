@@ -237,10 +237,10 @@ namespace VirtualBroker
                     return false;   // if it is not Approximately around market hours => no Error
             }
 
-            if (timeTodayEt.TotalMinutes > 17 * 60)
+            if (timeTodayEt.TotalMinutes > 16 * 60 + 40)    // not executed shorting trades are cancelled 30min after market close. Monitor errors only until that.
                 return false;   // if it is not Approximately around market hours => no Error
 
-            // you can skip holiday days too later
+            // TODO: <not too important> you can skip holiday days too later; and use real trading hours, which sometimes are shortened, before or after holidays.
             return true;
         }
 

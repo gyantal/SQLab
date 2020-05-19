@@ -1,5 +1,6 @@
 ﻿using SqCommon;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +9,25 @@ using System.Threading.Tasks;
 
 namespace HealthMonitor
 {
+    public enum DataSource { HealthMonitor = 0, VBroker = 1, VBrokerCheckOKMessageArrived = 2, SqLabWebsiteCore, SqLabWebsiteApp1 }
+
+    class DelayedMessageItem
+    {
+        public string EmailSubject { get; set; }
+        public string EmailBody { get; set; }
+        public string PhoneCallText { get; set; }
+    }
+    class DelayedMessage
+    {
+        public Timer Timer { get; set; } = null;
+        public object Lock { get; set; } = null;
+        public DataSource DataSource { get; set; }
+        public List<DelayedMessageItem> MessageItems = new List<DelayedMessageItem>();
+    }
+
     [Flags]
-    public enum InformSuperVisorsUrgency { StandardWithTimer = 0, UrgentInfoSendEmail = 1, UrgentInfoMakePhonecall = 2 }
+    public enum InformSuperVisorsUrgency { Normal_UseTimer = 0, UrgentInfoSendEmail_OnlyUseIfCannotBeSpammedBySource = 1, UrgentInfoMakePhonecall_OnlyUseIfCannotBeSpammedBySource = 2 }
+
 
     public class SavedState : PersistedState   // data to persist between restarts of the crawler process
     {
@@ -49,6 +67,8 @@ namespace HealthMonitor
         Object m_lastHealthMonInformSupervisorLock = new Object();   // null value cannot be locked, so we have to create an object
         DateTime m_lastHealthMonErrorEmailTime = DateTime.MinValue;    // don't email if it was made in the last 10 minutes
         DateTime m_lastHealthMonErrorPhoneCallTime = DateTime.MinValue;    // don't call if it was made in the last 30 minutes
+
+        ConcurrentDictionary<DataSource, DelayedMessage> m_delayedMessages = new ConcurrentDictionary<DataSource, DelayedMessage>();
 
         public SavedState PersistedState
         {
@@ -127,7 +147,7 @@ namespace HealthMonitor
             catch (Exception e)
             {
                 Utils.Logger.Info(e, "ScheduleDailyTimers() Exception.");
-                InformSupervisors(InformSuperVisorsUrgency.StandardWithTimer, $"SQ HealthMonitor: ScheduleDailyTimers() Exception.", $"SQ HealthMonitor: ScheduleDailyTimers() Exception. Check log file.", $"HealthMonitor Schedule Daily Timers Exception. ... I repeat: HealthMonitor Schedule Daily Timers Exception.", ref m_lastHealthMonInformSupervisorLock, ref m_lastHealthMonErrorEmailTime, ref m_lastHealthMonErrorPhoneCallTime);
+                InformSupervisors(InformSuperVisorsUrgency.Normal_UseTimer, $"SQ HealthMonitor: ScheduleDailyTimers() Exception.", $"SQ HealthMonitor: ScheduleDailyTimers() Exception. Check log file.", $"HealthMonitor Schedule Daily Timers Exception. ... I repeat: HealthMonitor Schedule Daily Timers Exception.", ref m_lastHealthMonInformSupervisorLock, ref m_lastHealthMonErrorEmailTime, ref m_lastHealthMonErrorPhoneCallTime);
             }
             Utils.Logger.Info("ScheduleDailyTimers() END");
         }
@@ -202,7 +222,7 @@ namespace HealthMonitor
         }
 
         // called at the market close, because this is set by the MarketOpen Timer, it always use the current day proper DayLightSaving settings. Will be correct.
-        public void DailyReportTimer_Elapsed(object p_stateObj) // Timer is coming on o ThreadPool thread
+        public void DailyReportTimer_Elapsed(object p_stateObj) // Timer is coming on a ThreadPool thread
         {
             try
             {
@@ -358,11 +378,131 @@ namespace HealthMonitor
             return sb;
         }
 
+        private void InformSupervisorsEx(DataSource p_dataSource, bool p_isUrgent, string p_emailSubject, string p_emailBody, string p_phonecallText, ref Object p_informSupervisorLock, ref DateTime p_lastCallTime)
+        {
+            // group messages by p_dataSource. 
+            // 1. Always check p_lastEmailTime (even in urgent messages: don't send it every second if it is mistakenly spammed by source.)
+            // If p_lastEmailTime > 10 min in Normal, and > 2 min in Urgent case => send email instantly
+            // If p_lastEmailTime was too close, then don't spam email/phone call. 
+            //      Add message data to that group; that timer callback can use.
+            //      If timer does not exists for that source, create timer expiring in 10/2 min.
+            // Timer callback: combine emails into one and deletes msgArray
+
+            lock (p_informSupervisorLock)   // if InformSupervisors() can be called on two different threads at the same time, (if VBroker notified us twice very quickly) then one thread should wait, because we still want to inform user only once
+            {
+                TimeSpan timeFromLastInform = DateTime.UtcNow - p_lastCallTime;
+                bool doInformSupervisorsNow = (p_isUrgent && (timeFromLastInform > TimeSpan.FromMinutes(2))) ||
+                                                (!p_isUrgent && (timeFromLastInform > TimeSpan.FromMinutes(10)));
+                p_lastCallTime = DateTime.UtcNow;
+                if (doInformSupervisorsNow)
+                {
+                    SendEmailAndMakePhoneCall(p_emailSubject, p_emailBody, p_phonecallText);
+                    return;
+                }
+
+                // Delay sending info. A timer callback should send it much later.
+                var delayedMsg = m_delayedMessages.AddOrUpdate(p_dataSource,
+                    k =>    // Add new
+                    {
+                        return new DelayedMessage()
+                        {
+                            Timer = new System.Threading.Timer(new TimerCallback(InformSupervisorsTimer_Elapsed), k, TimeSpan.FromMinutes(p_isUrgent ? 2 : 10), TimeSpan.FromMilliseconds(-1)),
+                            Lock = new object(),
+                            DataSource = k,
+                            MessageItems = new List<DelayedMessageItem>() { new DelayedMessageItem() { EmailSubject = p_emailSubject, EmailBody = p_emailSubject, PhoneCallText = p_phonecallText } }
+                        };
+                    },
+                    (k, v) =>   // Update existing
+                    {
+                        lock (v.Lock)
+                        {
+                            if (v.MessageItems.Count == 0) // it means that InformSupervisorsTimer_Elapsed() already cleared it, we have to reset the timer again
+                                v.Timer.Change(TimeSpan.FromMinutes(p_isUrgent ? 2 : 10), TimeSpan.FromMilliseconds(-1));
+                            v.MessageItems.Add(new DelayedMessageItem() { EmailSubject = p_emailSubject, EmailBody = p_emailSubject, PhoneCallText = p_phonecallText });
+                        }
+                        return v;
+                    });
+
+            }   // lock (p_informSupervisorLock)
+        }
+
+
+
+        public void InformSupervisorsTimer_Elapsed(object p_stateObj) // Timer is coming on a ThreadPool thread
+        {
+            try
+            {
+                Utils.Logger.Info("InformSupervisorsTimer_Elapsed() BEGIN");
+
+                DataSource dataSource = (DataSource)p_stateObj;
+                var delayedMsg = m_delayedMessages[dataSource];
+                string emailSubject = "SQ HealthMonitor: Pooled messages"; 
+                StringBuilder emailBody = new StringBuilder();
+                lock (delayedMsg.Lock)
+                {
+                    foreach (var msg in delayedMsg.MessageItems)
+                    {
+                        emailBody.AppendLine($"Subject: {msg.EmailSubject}, Body: {msg.EmailBody}");
+                    }
+                    delayedMsg.MessageItems.Clear();
+                }
+
+                // phonecallText can be aggregated, but we intentionally leave it empty. This timer only happens if the first phonecall was already made. One phonecall per problem type should be enough.
+                SendEmailAndMakePhoneCall(emailSubject, emailBody.ToString(), String.Empty);
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "InformSupervisorsTimer_Elapsed() exception.");
+                //throw;
+            }
+            Utils.Logger.Info("InformSupervisorsTimer_Elapsed() END");
+        }
+
+
+        private static void SendEmailAndMakePhoneCall(string p_emailSubject, string p_emailBody, string p_phonecallText)
+        {
+            Utils.Logger.Info("InformSupervisors(). Sending Warning email.");
+            try
+            {
+                new Email
+                {
+                    ToAddresses = Utils.Configuration["EmailGyantal"],
+                    Subject = p_emailSubject,
+                    Body = p_emailBody,
+                    IsBodyHtml = true       // even though VBroker messages are not HTML, but text. But it works.
+                    //IsBodyHtml = false        // has problems with exceptions : /bin/bash: -c: line 1: syntax error near unexpected token `('
+                }.Send();
+            }
+            catch (Exception e)
+            {
+                Utils.Logger.Error(e, "InformSupervisors() email sending is crashed, but we still try to make the PhoneCall.");
+            }
+
+            if (!IsRunningAsLocalDevelopment() && !String.IsNullOrEmpty(p_phonecallText))
+            {
+                Utils.Logger.Info("InformSupervisors(). Making Phonecall.");
+
+                var call = new PhoneCall
+                {
+                    FromNumber = Caller.Gyantal,
+                    ToNumber = PhoneCall.PhoneNumbers[Caller.Gyantal],
+                    Message = p_phonecallText,
+                    NRepeatAll = 2
+                };
+                bool didTwilioAcceptedTheCommand = call.MakeTheCall();
+                if (didTwilioAcceptedTheCommand)
+                {
+                    Utils.Logger.Debug("PhoneCall instruction was sent to Twilio.");
+                }
+                else
+                    Utils.Logger.Error("PhoneCall instruction was NOT accepted by Twilio.");
+            }
+        }
 
         private void InformSupervisors(InformSuperVisorsUrgency p_urgency, string p_emailSubject, string p_emailBody, string p_phonecallText, ref Object p_informSupervisorLock, ref DateTime p_lastEmailTime, ref DateTime p_lastPhoneCallTime)
         {
             bool doInformSupervisors = false;
-            if (p_urgency.HasFlag(InformSuperVisorsUrgency.UrgentInfoSendEmail) || p_urgency.HasFlag(InformSuperVisorsUrgency.UrgentInfoMakePhonecall))
+            if (p_urgency.HasFlag(InformSuperVisorsUrgency.UrgentInfoSendEmail_OnlyUseIfCannotBeSpammedBySource) || p_urgency.HasFlag(InformSuperVisorsUrgency.UrgentInfoMakePhonecall_OnlyUseIfCannotBeSpammedBySource))
                 doInformSupervisors = true;
             else
             {
@@ -403,9 +543,9 @@ namespace HealthMonitor
                 Utils.Logger.Info("InformSupervisors(). Making Phonecall.");
 
                 TimeSpan timeFromLastCall = DateTime.UtcNow - p_lastPhoneCallTime;
-                TimeSpan minTimeFromLastCall = p_urgency.HasFlag(InformSuperVisorsUrgency.UrgentInfoMakePhonecall) ? TimeSpan.FromSeconds(3) : TimeSpan.FromMinutes(30);
+                TimeSpan minTimeFromLastCall = p_urgency.HasFlag(InformSuperVisorsUrgency.UrgentInfoMakePhonecall_OnlyUseIfCannotBeSpammedBySource) ? TimeSpan.FromSeconds(3) : TimeSpan.FromMinutes(30);
                 if (timeFromLastCall > minTimeFromLastCall)
-                    {
+                {
                     var call = new PhoneCall
                     {
                         FromNumber = Caller.Gyantal,
