@@ -417,6 +417,19 @@ namespace VirtualBroker
             if (errorCode == 10197)
             {
                 //"Id: 1869, ErrCode: 10197, Msg: No market data during competing live session"   Id is the realtime price subscription per ticker. So, this error comes for all tickers that we watch real-time price of.
+                
+                // https://forums.medvedtrader.com/topic/2851-interactive-brokers-updated-giving-error/  2019-04: "Interactive Brokers Software was updated and I am now getting an error"
+                // https://groups.io/g/twsapi/topic/error_10197_no_market_data/19671538?p=,,,20,0,0,0::recentpostdate%2Fsticky,,,20,2,0,19671538
+                // If it is in a live account and data appears in TWS ok the error is probably being sent incorrectly.
+                // https://groups.io/g/twsapi/topic/27821868?p=Created,,,20,2,0,0
+                // "this is for tick subscribe (lvl2 is same), both had the problem, but bar is ok " : So, data is coming correctly, in spite of error message
+                // "there doesn’t seem to be a real problem here, other than a spurious error message."
+                // "if the data continues to flow for me then I suspect it will continue to flow for everyone else"
+                // "I’m not talking about some lengthy delay until the data flows again, just a few seconds."
+                // "Once I added a line of code to ignore this error, everything was fine again"
+                
+                // So, if it is too bothering, in the future, just ignore the error. Sometimes it happens 5 seconds after market close.
+                
                 if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }

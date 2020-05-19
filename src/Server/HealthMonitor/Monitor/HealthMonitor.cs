@@ -409,7 +409,7 @@ namespace HealthMonitor
                             Timer = new System.Threading.Timer(new TimerCallback(InformSupervisorsTimer_Elapsed), k, TimeSpan.FromMinutes(p_isUrgent ? 2 : 10), TimeSpan.FromMilliseconds(-1)),
                             Lock = new object(),
                             DataSource = k,
-                            MessageItems = new List<DelayedMessageItem>() { new DelayedMessageItem() { EmailSubject = p_emailSubject, EmailBody = p_emailSubject, PhoneCallText = p_phonecallText } }
+                            MessageItems = new List<DelayedMessageItem>() { new DelayedMessageItem() { EmailSubject = p_emailSubject, EmailBody = p_emailBody, PhoneCallText = p_phonecallText } }
                         };
                     },
                     (k, v) =>   // Update existing
@@ -418,7 +418,7 @@ namespace HealthMonitor
                         {
                             if (v.MessageItems.Count == 0) // it means that InformSupervisorsTimer_Elapsed() already cleared it, we have to reset the timer again
                                 v.Timer.Change(TimeSpan.FromMinutes(p_isUrgent ? 2 : 10), TimeSpan.FromMilliseconds(-1));
-                            v.MessageItems.Add(new DelayedMessageItem() { EmailSubject = p_emailSubject, EmailBody = p_emailSubject, PhoneCallText = p_phonecallText });
+                            v.MessageItems.Add(new DelayedMessageItem() { EmailSubject = p_emailSubject, EmailBody = p_emailBody, PhoneCallText = p_phonecallText });
                         }
                         return v;
                     });
