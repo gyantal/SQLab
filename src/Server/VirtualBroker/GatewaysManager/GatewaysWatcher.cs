@@ -183,8 +183,9 @@ namespace VirtualBroker
 
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UGAZ")); // instead of UNG for DC
                 
-                // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TMF")); // needed until 2018-05-01, when this will be change back to TMV for Agy. However, TMV is not shortable for a long time.
-                // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UNG"));  // NatGas (1x) for Agy, but this can be commented out in general.
+                // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TMF")); // Can be commented out: TMF (3x) is for Agy,
+                // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UNG")); // Can be commented out: NatGas (1x) is for Agy, but this can be commented out in general.
+                // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("USO")); // Can be commented out: Agy uses partial SCO, partial USO for diversifying and because SCO is not a good tracker of USO
 
                 // for TAA, but it is only temporary. We will not stream this unnecessary data all day long, as TAA can take its time. It only trades MOC. Extra 2-3 seconds doesn't matter.
                 // "TLT"+ "MDY","ILF","FEZ","EEM","EPP","VNQ","IBB"  +  "MVV", "URE", "BIB"

@@ -206,7 +206,12 @@ namespace VirtualBroker
 
 
 
-
+            // >USO vs. SCO (2x): SCO is very badly tracking short OIL. 2020-04-22: USO:-3%, long SCO should be +6%, but instead -24%. UCO (the opposite of SCO) is -50%. 
+            // SCO.IV. Same story as XIV. It is settled when Futures close at 16:15, not at 16:00 as stocks. SCO holdings: half futures, half swaps: https://www.proshares.com/funds/sco_daily_holdings.html
+            // even USO can crash and being delisted. Imagine if Futures goes to negative as in 2020-04. then as it goes to negative from $60, it becomes $3 on day one, next day it goes up to $7.
+            // although it is only $4 move, it is +130%. That will wipe out SCO(2x). But according to the same logic, if price goes to negative in all 3 futures that USO holds, then even USO can be negative => 0
+            // still, it is safer to short USO (can only break if all 3 futures go negative, and when I short it, I will profit), than long SCO (can break, if oil futures double, which day can do if they come from negative)
+            // In the future: trade with both instruments: 50% USO, 50% SCO.
             var harryLongTaskSchema = new BrokerTaskSchema()
             {
                 Name = "HarryLong",
@@ -224,7 +229,8 @@ namespace VirtualBroker
                         //        //Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "UWT", "UNG" }, AssetsWeights = new double[] { 0.15, -0.05, -0.10, 0.25, 0.85, -0.09, -0.78 }    // 78% UNG is the official QuickTester weight. MaxRisked 227% of the PV. overleveraged.
                         //        //Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "UWT", "UNG" }, AssetsWeights = new double[] { 0.15, -0.05, -0.10, 0.30, 0.90, -0.09, -0.48 }   // 2019-02: take away 30% unleveraged from UNG (because it was risky as I have to short UNG, cannot long a short insrument), and adding 10% to QQQ, which is 3.3% TQQQ, and 20% to TLT, which is 7% TMF; this decreased the CAGR by 3%, but increased Sharpe from 1.04 to 1.11 and gives better maxDD too. It seems NatGas is too volatile (as I experienced it when I shorted UNG). MaxRisked 207% of the PV.
                         //        //Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "SCO", "UNG" }, AssetsWeights = new double[] { 0.15, -0.05, -0.10, 0.30, 0.90, 0.14, -0.48 }   // 2019-02:  MaxRisked 212% of the PV., OIL: short UWT (3x) doesn't have options.  Also, we want long position. Long SCO (2x) can be used instead. Agy: even the 48% UNG I find it quite risky (if it doubles). In practice, I try to keep this at 41% level, instead of 48%
-                        //        Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "SCO", "UNG" }, AssetsWeights = new double[] { 0.15*0.85, -0.05*0.85, -0.10*0.85, 0.30*0.85, 0.90*0.85, 0.14*0.85, -0.48*0.85 }   // 2020-03-18:  MaxRisked 212%*0.90=1.90 of the PV, 212%*0.85=1.80, in 2 years, PV grew from $50K to $150K. While the whole IB account is 210K. Leverage should be decreased, because with a $150K PV, it is dangerous to hold exposure >300K, while there are other positions in the account.
+                        //        //Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "SCO", "UNG" }, AssetsWeights = new double[] { 0.15*0.85, -0.05*0.85, -0.10*0.85, 0.30*0.85, 0.90*0.85, 0.14*0.85, -0.48*0.85 }   // 2020-03-18:  MaxRisked 212%*0.90=1.90 of the PV, 212%*0.85=1.80, in 2 years, PV grew from $50K to $150K. While the whole IB account is 210K. Leverage should be decreased, because with a $150K PV, it is dangerous to hold exposure >300K, while there are other positions in the account.
+                        //        Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "SCO", "UNG", "USO" }, AssetsWeights = new double[] { 0.15*0.85, -0.05*0.85, -0.10*0.85, 0.30*0.85, 0.90*0.85, 0.10*0.85, -0.48*0.85, -0.08*0.85,}   // 2020-05-05: start diversifying into short USO too, because SCO is a bad tracker.
                         //    // >2020-03-18 market panic: the practical lesson for the future: Do daily rebalancing, even manually (VBroker can send an email with suggestion). Do NOT overleverage it! Even rebalance it daily. 
                         //    // Keep Risked exposure leverage under x1.9 above 100K PV, <=1.8 above 150K PV (** we are here Now **), <=1.7 above 200K PV, <=1.6 above 300K PV, <=1.5 above 400K PV, <=1.4 above 1M, <=1.3 above 2M, <=1.2 above 4M
                         //    // don't trade anything manually under 2% (which is 1-2K)

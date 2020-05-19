@@ -119,6 +119,8 @@ namespace DbCommon
         {
             // TODO: at the moment: just last ClosePrice (not other prices). Later use p_sqlReturnedColumns
             // TODO: at the moment: just non-adjusted price. What if there was a split over the weekend. That splitadjustment is not handled yet. 
+            // TODO: just getting last row from StockQuote is not enough. 2020-04-09: USO had a 8:1 reverse split before market open. That should be added.
+            // need to run a parallel SQL query to get the splits, and if that split has a today date, then we should integrate it to the yesterday price.
             // TODO: at the moment: only stocks handled. Indices not.
             Utils.Logger.Info($"GetLastQuotesAsync() START (p_tickers.Count:{p_tickers.Count}), ('{ string.Join(",", p_tickers)}')");
             List<string> stockTickers = p_tickers.Where(r => !r.StartsWith("^")).ToList();
@@ -188,6 +190,9 @@ CROSS APPLY (SELECT TOP 1 Date, ClosePrice FROM StockQuote pp WHERE pp.StockID =
 @"ORDER BY Date DESC) pp
 WHERE IsAlive = 1 AND Ticker in (" +  string.Join(",", p_tickers.Select(r => "'" + r + "'")) + ")";
             sqls[sql] = null;
+            
+            // TODO: just getting last row from StockQuote is not enough. 2020-04-09: USO had a 8:1 reverse split before market open. That should be added.
+            // need to run a parallel SQL query to get the splits, and if that split has a today date, then we should integrate it to the yesterday price.
 
             var result = new List<object[]>();
             await Task.WhenAll(sqls.Select(kv => ExecuteSqlQueryAsync(kv.Key, p_canc: p_canc,
