@@ -277,7 +277,7 @@ namespace VirtualBroker
                     //IB Error. ErrId: -1, ErrCode: 2105, Msg: HMDS data farm connection is broken:ushmds
                     //IB Error. ErrId: -1, ErrCode: 1100, Msg: Connectivity between IB and Trader Workstation has been lost.
                     //IB Error. ErrId: -1, ErrCode: 1102, Msg: Connectivity between IB and Trader Workstation has been restored - data maintained.
-                    if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
+                    if (GatewaysWatcher.IgnoreErrorsBasedOnMarketTradingTime())
                         return; // skip processing the error further. Don't send it to HealthMonitor.
                     var vbServerEnvironment = Utils.Configuration["VbServerEnvironment"];
                     if (vbServerEnvironment.ToLower() == "ManualTradingServer".ToLower())
@@ -331,7 +331,7 @@ namespace VirtualBroker
                     // it is expected that for some stocks, there is no market data, but error message. Fine. Prepare for it and don't wait in that case.
                     return;
                 }
-                if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors())
+                if (GatewaysWatcher.IgnoreErrorsBasedOnMarketTradingTime())
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
@@ -382,7 +382,7 @@ namespace VirtualBroker
                     errMsg += $". Id {id} cannot be found in MktDataSubscriptions or CancelledMktDataSubscriptions.";
                 }
 
-                if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
+                if (GatewaysWatcher.IgnoreErrorsBasedOnMarketTradingTime()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
@@ -410,7 +410,7 @@ namespace VirtualBroker
             if (errorCode == 10168) // it happened at the weekend, but IB fixed their mistake.
             {
                 //"Id: 1358, ErrCode: 10168, Msg: Requested market data is not subscribed. Delayed market data is not enabled"
-                if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
+                if (GatewaysWatcher.IgnoreErrorsBasedOnMarketTradingTime()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
@@ -428,9 +428,9 @@ namespace VirtualBroker
                 // "I’m not talking about some lengthy delay until the data flows again, just a few seconds."
                 // "Once I added a line of code to ignore this error, everything was fine again"
                 
-                // So, if it is too bothering, in the future, just ignore the error. Sometimes it happens 5 seconds after market close.
+                // So, if it is too bothering, in the future, just always ignore the error (even during Regular Trading Hours). Sometimes it happens 5 seconds after market close.
                 
-                if (!GatewaysWatcher.IsApproximatelyMarketTradingTimeForIgnoringIBErrors()) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
+                if (GatewaysWatcher.IgnoreErrorsBasedOnMarketTradingTime(offsetToCloseMin : 0)) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
                     return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 

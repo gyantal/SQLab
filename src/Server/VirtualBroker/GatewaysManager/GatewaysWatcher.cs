@@ -134,7 +134,7 @@ namespace VirtualBroker
                 // on ManualTrader server failed connection is expected. Don't send Error. However, on AutoTraderServer, it is unexpected (at the moment), because IBGateways and VBrokers restarts every day.
                 var notConnectedGateways = String.Join(",", m_gateways.Where(l => !l.IsConnected).Select(r => r.GatewayUser + "/"));
                 if (!String.IsNullOrEmpty(notConnectedGateways)) {
-                     if (!IsApproximatelyMarketTradingTimeForIgnoringIBErrors(true))
+                     if (IgnoreErrorsBasedOnMarketTradingTime(offsetToOpenMin : -60))
                         return; // skip processing the error further. Don't send it to HealthMonitor.
                     HealthMonitorMessage.SendAsync($"Gateways are not connected. vbServerEnvironment: '{vbServerEnvironment}', not connected gateways {notConnectedGateways}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).ConfigureAwait(continueOnCapturedContext: false);
                 }
@@ -217,31 +217,24 @@ namespace VirtualBroker
         }
 
         // there are some weird IB errors that happen usually when IB server is down. 99% of the time it is at the weekend, or when pre or aftermarket. In this exceptional times, ignore errors.
-        public static bool IsApproximatelyMarketTradingTimeForIgnoringIBErrors(bool p_isIbNotConnectedError = false)
+        public static bool IgnoreErrorsBasedOnMarketTradingTime(int offsetToOpenMin = 0, int offsetToCloseMin = 40)
         {
             DateTime utcNow = DateTime.UtcNow;
             DateTime etNow = Utils.ConvertTimeFromUtcToEt(utcNow);
             if (etNow.DayOfWeek == DayOfWeek.Saturday || etNow.DayOfWeek == DayOfWeek.Sunday)   // if it is the weekend => no Error
-                return false;
+                return true;
 
-            // The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET.
             TimeSpan timeTodayEt = etNow - etNow.Date;
-            if (p_isIbNotConnectedError)  // "Gateways are not connected" errors handled with more strictness. We expect that there is a connection to IBGateway at least 1 hour before open. At 8:30.
-            {
-                if (timeTodayEt.TotalMinutes < 8 * 60 + 29)
-                    return false;   // if it is not Approximately around market hours => no Error
-            }
-            else
-            {
-                if (timeTodayEt.TotalMinutes < 9 * 60 + 29)
-                    return false;   // if it is not Approximately around market hours => no Error
-            }
+            // The NYSE and NYSE MKT are open from Monday through Friday 9:30 a.m. to 4:00 p.m. ET.
+            // "Gateways are not connected" errors handled with more strictness. We expect that there is a connection to IBGateway at least 1 hour before open. At 8:30.
+            if (timeTodayEt.TotalMinutes < 9 * 60 + 29 + offsetToOpenMin) // ignore errors before 9:30. 
+                return true;   // if it is not Approximately around market hours => no Error
 
-            if (timeTodayEt.TotalMinutes > 16 * 60 + 40)    // not executed shorting trades are cancelled 30min after market close. Monitor errors only until that.
-                return false;   // if it is not Approximately around market hours => no Error
+            if (timeTodayEt.TotalMinutes > 16 * 60 + offsetToCloseMin)    // IB: not executed shorting trades are cancelled 30min after market close. Monitor errors only until that.
+                return true;   // if it is not Approximately around market hours => no Error
 
             // TODO: <not too important> you can skip holiday days too later; and use real trading hours, which sometimes are shortened, before or after holidays.
-            return true;
+            return false;
         }
 
         internal bool IsGatewayConnected(GatewayUser p_ibGatewayUserToTrade)
