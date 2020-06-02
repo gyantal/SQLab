@@ -35,8 +35,10 @@ namespace SQLab
             //Singleton objects are the same for every object and every request(regardless of whether an instance is provided in ConfigureServices)
             services.AddSingleton(_ => Utils.Configuration);      // this is the proper DependenciInjection (DI) way of pushing it as a service to Controllers. So you don't have to manage the creation or disposal of instances.
             services.AddSingleton(_ => Program.g_webAppGlobals);
-    
-            if (!String.IsNullOrEmpty(Utils.Configuration["GoogleClientId"]) && !String.IsNullOrEmpty(Utils.Configuration["GoogleClientSecret"]))
+
+            string googleClientId = Utils.Configuration["GoogleClientId"];
+            string googleClientSecret = Utils.Configuration["GoogleClientSecret"];
+            if (!String.IsNullOrEmpty(googleClientId) && !String.IsNullOrEmpty(googleClientSecret))
             {
                 // The reason you have BOTH google and cookies Auth is because you're using google for identity information but using cookies for storage of the identity for only asking Google once.
                 //So AddIdentity() is not required, but Cookies Yes.
@@ -56,18 +58,32 @@ namespace SQLab
 
                     // Controls how much time the authentication ticket stored in the cookie will remain valid
                     // This is separate from the value of Microsoft.AspNetCore.Http.CookieOptions.Expires, which specifies how long the browser will keep the cookie. We will set that in OnTicketReceived()
-                    o.ExpireTimeSpan = TimeSpan.FromDays(25);
+                    o.ExpireTimeSpan = TimeSpan.FromDays(350);
                 })
                 .AddGoogle("Google", options =>
                 {
-                    options.ClientId = Utils.Configuration["GoogleClientId"];
-                    options.ClientSecret = Utils.Configuration["GoogleClientSecret"];
+                    options.ClientId = googleClientId;
+                    options.ClientSecret = googleClientSecret;
                     options.Events = new OAuthEvents
                     {
+                        // https://www.jerriepelser.com/blog/forcing-users-sign-in-gsuite-domain-account/
+                        OnRedirectToAuthorizationEndpoint = context =>
+                        {
+                            Utils.Logger.Info("GoogleAuth.OnRedirectToAuthorizationEndpoint()");
+                            //context.Response.Redirect(context.RedirectUri + "&hd=" + System.Net.WebUtility.UrlEncode("jerriepelser.com"));
+                            context.Response.Redirect(context.RedirectUri);
+                            return Task.CompletedTask;
+                        },
                         OnCreatingTicket = context =>
                         {
-                            string email = context.User.Value<Newtonsoft.Json.Linq.JArray>("emails")[0]["value"].ToString();
-                            Utils.Logger.Debug($"[Authorize] attribute forced Google auth. Email:'{email ?? "null"}', RedirectUri: '{context.Properties.RedirectUri ?? "null"}'");
+                            string email = String.Empty;
+                            var emailRec = context.User.Value<Newtonsoft.Json.Linq.JArray>("emails");
+                            if (emailRec != null)
+                                email = emailRec[0]["value"].ToString();
+                            else
+                                email = context.User.Value<string>("email");
+
+                            Utils.Logger.Debug($"GoogleAuth.OnCreatingTicket(), [Authorize] attribute forced Google auth. Email:'{email ?? "null"}', RedirectUri: '{context.Properties.RedirectUri ?? "null"}'");
 
                             if (!Utils.IsAuthorizedGoogleUsers(Utils.Configuration, email))
                                 throw new Exception($"Google Authorization Is Required. Your Google account: '{ email }' is not accepted. Logout this Google user and login with another one.");
@@ -80,11 +96,17 @@ namespace SQLab
                         },
                         OnTicketReceived = context =>
                         {
+                            Utils.Logger.Info("GoogleAuth.OnTicketReceived()");
                             // if this is not set, then the cookie in the browser expires, even though the validation-info in the cookie is still valid. By default, cookies expire: "When the browsing session ends" Expires: 'session'
                             // https://www.jerriepelser.com/blog/managing-session-lifetime-aspnet-core-oauth-providers/
                             context.Properties.IsPersistent = true;
                             context.Properties.ExpiresUtc = DateTimeOffset.UtcNow.AddDays(25);
 
+                            return Task.FromResult(0);
+                        },
+                        OnRemoteFailure = context =>
+                        {
+                            Utils.Logger.Info("GoogleAuth.OnRemoteFailure()");
                             return Task.FromResult(0);
                         }
                     };
