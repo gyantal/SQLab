@@ -9,6 +9,13 @@ import { AppModule } from './app/app.server.module';
 
 enableProdMode();
 
+// Freeze possibility: (QuickTester, HealthMonitor) Angular Developer mode problem in production environment: ngServe can be called every 5 seconds (in DEV mode) to be refreshed
+// in log files: 00:46:44.9#HTTP GET '/dist/__webpack_hmr' from 52.211.231.5 (u: ) ret: 200 in 888.63ms
+// Angular's DEV mode ngServe has memory leaks and in 2-3 days, it consumes all RAM on a small server
+// the 'nodejs' process is stalling in 'D' Disk -sleeping mode, and on the top of it, the 'dotnet' process of Kestrell busy-waits on it, doing 99% CPU utilization.
+// the whole server freezes and has to be rebooted
+// solution: don't leave the QuickTester on a Chrome tab-page. Every time it is used, close the tab-page down. (it is fixed in SqCore, because we don't use Dev mode there, only static HTML files) 
+
 declare const setImmediate: Function;
 
 export default createServerRenderer(params => {

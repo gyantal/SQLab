@@ -120,6 +120,16 @@ namespace SqCommon
             return this;
         }
 
+        // 2020-06-07: After HTTP GET '/rtp' as real-time price query message sent to Vbroker, the server slowed down with 100% CPU. 
+        // 1 minute later Kestrel logged: #Warn: Heartbeat took longer than "00:00:01"
+        // https://github.com/dotnet/aspnetcore/issues/17321    https://github.com/dotnet/aspnetcore/issues/4760
+        // this is usually happens if thread pool is starved, because it cannot find any free threads in threadpool, because each of them is blocked and waiting.
+        // It is very suspicios that somehow this Tcp connection/write/read left or the DelayTask was left on, and didn't finish properly.
+        // next time it happens check Top again, showing nTH (Number of Threads). In normal cases, there are 22-23 threads in the Threadpool waiting for connections from clients.
+        // https://www.golinuxcloud.com/check-threads-per-process-count-processes/
+        // If it goes to 50, then it shows it is really the problem that there are no free threads. Then we have to rewrite this Tcp communication code.
+        // Alternatively, it might be possible ASP.Net Core 2.0 has some bug, which was later corrected in ASP.NET core 3.0, and as we migrate from SqLab to SqCore, we don't really have to worry about this.
+        // 2020-06-09: same thing. Number of threads: 25-28, it is not excessive.
         public async Task<string> SendMessage()
         {
             string reply = null;
