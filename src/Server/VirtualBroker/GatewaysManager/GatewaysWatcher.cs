@@ -181,10 +181,10 @@ namespace VirtualBroker
                 
                 m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("SCO"));  // 2020-04-02: use SCO (2x); instead of short USO (1x), short UWT (-3x) was used, but it was delisted, because it went to penny stock
 
-                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UGAZ")); // instead of UNG for DC
-                
+                // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UGAZ")); // was used until 2020-06-24, as UGAZ will be delisted, we can remove it later
+                m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UNG")); // Can be commented out: NatGas (1x) is for Agy, but this can be commented out in general.
+
                 // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("TMF")); // Can be commented out: TMF (3x) is for Agy,
-                // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("UNG")); // Can be commented out: NatGas (1x) is for Agy, but this can be commented out in general.
                 // m_mainGateway.BrokerWrapper.ReqMktDataStream(VBrokerUtils.ParseSqTickerToContract("USO")); // Can be commented out: Agy uses partial SCO, partial USO for diversifying and because SCO is not a good tracker of USO
 
                 // for TAA, but it is only temporary. We will not stream this unnecessary data all day long, as TAA can take its time. It only trades MOC. Extra 2-3 seconds doesn't matter.
