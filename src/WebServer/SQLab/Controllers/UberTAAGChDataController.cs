@@ -425,6 +425,18 @@ namespace SQLab.Controllers
             clmtTotalResu[7] = clmtIndi;
             clmtTotalResu[8] = spxPrice;
 
+            // StringBuilder stringBuilder=new StringBuilder();
+            // foreach (var item in clmtTotalResu)
+            // {
+            //     foreach (var item2 in item)
+            //     {
+            //         stringBuilder.Append(item2 + ",");
+            //     }
+            //     stringBuilder.AppendLine("ß" + Environment.NewLine + Environment.NewLine);
+            // }
+
+            // System.IO.File.WriteAllText(@"D:\xxx.csv", stringBuilder.ToString());
+
             return clmtTotalResu;
         }
 
