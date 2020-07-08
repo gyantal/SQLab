@@ -59,7 +59,7 @@ namespace SQLab.Controllers
                 string reply = await vbMessageTask;
                 if (vbMessageTask.Exception != null || String.IsNullOrEmpty(reply))
                 {
-                    string errorMsg = $"RealtimePrice.GenerateRtpResponse(). Received Null or Empty from VBroker. Check that the VirtualBroker is listering on IP: {VirtualBrokerMessage.AtsVirtualBrokerServerPublicIpForClients}:{VirtualBrokerMessage.DefaultVirtualBrokerServerPort}";
+                    string errorMsg = $"RealtimePrice.GenerateRtpResponse(). Received Null or Empty from VBroker. This is normal at 8:00 daily, when VBroker server restarts. Otherwise, check that the VirtualBroker is listering on IP: {VirtualBrokerMessage.AtsVirtualBrokerServerPublicIpForClients}:{VirtualBrokerMessage.DefaultVirtualBrokerServerPort}";
                     Utils.Logger.Error(errorMsg);
                     return @"{ ""Message"":  """ + errorMsg + @""" }";
                 }

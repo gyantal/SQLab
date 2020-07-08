@@ -102,8 +102,11 @@ namespace DbCommon
                 // VBroker App Handler will Send Tcp Error message to HealthMonitor, but this execution continues, no Exception is thrown
                 StrongAssert.Fail(Severity.NoException, "DateProperties table in SqlDB needs update. Only average 3 nFutureUsaHolidays.");
             }
-            if (nFutureFomcMeetingDates <= 2)   // allow 3 Fomc meetings, because they don't update dates very often: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+            if (nFutureFomcMeetingDates <= 2)
             {
+                // allow 3 Fomc meetings, because they don't update dates very often: 
+                // https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+                // Only scheduled meeting, don't put unscheduled meetings into SqlDB, because backtest were not be able to be prepared for unsceduled.
                 Utils.Logger.Warn("DateProperties table in SqlDB needs update. Only average 2 nFutureFomcMeetingDates.");
                 // VBroker App Handler will Send Tcp Error message to HealthMonitor, but this execution continues, no Exception is thrown
                 StrongAssert.Fail(Severity.NoException, "DateProperties table in SqlDB needs update. Only average 2 nFutureFomcMeetingDates.");

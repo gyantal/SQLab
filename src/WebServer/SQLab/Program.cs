@@ -191,9 +191,13 @@ namespace SQLab
             //>see: my custom code hasn't been even invoked. Kestrel returns 404 not found, and my code has no chance to do anything at all.
             //>Solution: It is inevitable that crooks tries this query-and-abort and Kestrel is written badly that it doesn't handle Abortion properly.
             //So, in UnobservedTaskException() filters these aborts and don't send it to HealthMonitor.
+            Utils.Logger.Info($"TaskScheduler_UnobservedTaskException() START");
             if (SqFirewallMiddleware.IsSendableToHealthMonitorForEmailing(e.Exception))
-                HealthMonitorMessage.SendAsync($"Exception in Website.C#.TaskScheduler_UnobservedTaskException. Exception: '{ e.Exception.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).RunSynchronously();
+                HealthMonitorMessage.SendAsync($"Exception in Website.C# in TaskScheduler_UnobservedTaskException(). Exception: '{ e.Exception.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).RunSynchronously();
+
+            Utils.Logger.Info($"TaskScheduler_UnobservedTaskException() Calling e.SetObserved()");
             e.SetObserved();        //  preventing it from triggering exception escalation policy which, by default, terminates the process.
+            Utils.Logger.Info($"TaskScheduler_UnobservedTaskException() Called e.SetObserved()");
 
             Task senderTask = (Task)sender;
             if (senderTask != null)
@@ -206,6 +210,8 @@ namespace SQLab
             }
             else
                 Utils.Logger.Info("TaskScheduler_UnobservedTaskException(): sender is not a task.");
+
+            Utils.Logger.Info($"TaskScheduler_UnobservedTaskException() END");
         }
 
         internal static void StrongAssertMessageSendingEventHandler(StrongAssertMessage p_msg)
@@ -230,7 +236,7 @@ namespace SQLab
                 new Dictionary<RunningEnvironment, string>()
                 {
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/snifferquant.net.pfx" },
-                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
+                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_desktop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" }
                 }

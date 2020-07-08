@@ -132,59 +132,151 @@ namespace SqCommon
         // 2020-06-09: same thing. Number of threads: 25-28, it is not excessive.
         public async Task<string> SendMessage()
         {
+            // https://stackoverflow.com/questions/17118632/how-to-set-the-timeout-for-a-tcpclient/43237063#43237063
             string reply = null;
-
-            try {
-                TcpClient client = new TcpClient();
-                Task connectTask = client.ConnectAsync(TcpServerHost, TcpServerPort);      // usually, we create a task with a CancellationToken. However, this task is not cancellable. I cannot cancel it. I have to wait for its finish.
-
-                //https://stackoverflow.com/questions/4238345/asynchronously-wait-for-taskt-to-complete-with-timeout
-                using (var delayTaskCancellationTokenSource = new CancellationTokenSource())
+            TcpClient client = null;
+            Task connectTask = null;
+            bool wasTimeout = false;
+            try
+            {
+                client = new TcpClient();
+                connectTask = client.ConnectAsync(TcpServerHost, TcpServerPort);      // usually, we create a task with a CancellationToken. However, this task is not cancellable. I cannot cancel it. I have to wait for its finish.
+                
+                // Problem: if the timeout cancellation completes first we return to the caller the empty string. Fine.
+                // And THEN maybe 10 minutes later the connectTask really terminates with an Exception, 
+                // then, we should observe that exception, otherwise TaskScheduler.UnobservedTaskException will be raised
+                // We should ALWAYS observe the connectTask.Exception (both in timeout, and no timeout cases)
+                Task connectContinueTask = connectTask.ContinueWith(connTask =>
                 {
-                    var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(30), delayTaskCancellationTokenSource.Token));
-                    if (completedTask == connectTask)
-                    {
-                        // Task completed within timeout.
-                        // Consider that the task may have faulted or been canceled.
-                        // We re-await the task so that any exceptions/cancellation is rethrown.
-                        Utils.Logger.Debug("VirtualBrokerMessage.SendMessage(). client.ConnectAsync() completed without timeout.");
-                        delayTaskCancellationTokenSource.Cancel();  // Task.Delay task is backed by a system timer. Release those resources instead of waiting for 30sec
+                    // we should observe that exception, otherwise TaskScheduler.UnobservedTaskException will be raised
+                    Utils.Logger.Info("VirtualBrokerMessage.SendMessage(). connectContinueTask BEGIN.");
+                    if (connTask.Exception != null)
+                        Utils.Logger.Error(connTask.Exception, "Error:VirtualBrokerMessage.SendMessage(). Exception in ConnectAsync() task.");
 
-                        await connectTask;  // Very important in order to propagate exceptions
-                        // !!! IMPORTANT !!! If there is Exception here
-                        // Check that Amazon AWS Firewall let the port through
-                        // Check that Linux firewall is inactive "sudo ufw status verbose"
+                    // If there was a timeout cancellation, we try to dispose it here, because we couldn't do it in the main thread.
+                    if (wasTimeout && connTask.IsCompleted)
+                        connTask.Dispose();
+                });
 
-                        // sometimes task ConnectAsync() returns instantly (no timeout), but there is an error in it. Which results an hour later: "TaskScheduler_UnobservedTaskException. Exception. A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. "
-                        if (connectTask.Exception != null)
-                        {
-                            Utils.Logger.Error(connectTask.Exception, "Error:VirtualBrokerMessage.SendMessage(). Exception in ConnectAsync() task.");
-                        }
-                        else
-                        {
-                            BinaryWriter bw = new BinaryWriter(client.GetStream()); // sometimes "System.InvalidOperationException: The operation is not allowed on non-connected sockets." at TcpClient.GetStream()
-                            SerializeTo(bw);
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));        // timout 30sec. After which cts.Cancel() is called. That will trigger cancellation of the task
+                var taskWithTimeoutCancellation = connectContinueTask.WithCancellation(cts.Token);
+                await taskWithTimeoutCancellation;
 
-                            BinaryReader br = new BinaryReader(client.GetStream());
-                            reply = br.ReadString(); // sometimes "System.IO.EndOfStreamException: Unable to read beyond the end of the stream." at ReadString()
-                        }
-                    }
-                    else  // timeout/cancellation logic
-                    {
-                        //throw new TimeoutException("The operation has timed out.");
-                        Utils.Logger.Error("Error:VirtualBrokerMessage.SendMessage(). client.ConnectAsync() timeout.");
-                        connectTask.Dispose();  // try to Cancel the long running ConnectAsync() task, so it does'nt raise exception 2 days later.
-                    }
+                if (connectTask.Exception != null)
+                {
+                    Utils.Logger.Debug("VirtualBrokerMessage.SendMessage(). client.ConnectAsync() completed without timeout, but Exception occured.");
                 }
-
+                else
+                {
+                    Utils.Logger.Debug("VirtualBrokerMessage.SendMessage(). client.ConnectAsync() completed without timeout and no Exception occured");
+                    BinaryWriter bw = new BinaryWriter(client.GetStream()); // sometimes "System.InvalidOperationException: The operation is not allowed on non-connected sockets." at TcpClient.GetStream()
+                    SerializeTo(bw);
+                    BinaryReader br = new BinaryReader(client.GetStream());
+                    reply = br.ReadString(); // sometimes "System.IO.EndOfStreamException: Unable to read beyond the end of the stream." at ReadString()
+                }
+            }
+            catch (Exception e) // in local Win development, Exception: 'No connection could be made because the target machine actively refused it' comes here.
+            {
+                Utils.Logger.Error(e, "Error:VirtualBrokerMessage.SendMessage exception. Check both AWS and Linux firewalls!");
+                
+                if (e is OperationCanceledException) {
+                    wasTimeout = true;
+                    Utils.Logger.Error(e, "Error:VirtualBrokerMessage.SendMessage exception. connectTask was cancelled by our timeout");
+                }
+                
+                // we should observe that exception, otherwise TaskScheduler.UnobservedTaskException will be raised
+                if (connectTask != null && connectTask.Exception != null)
+                    Utils.Logger.Error(connectTask.Exception, "Error:VirtualBrokerMessage.SendMessage(). Exception in ConnectAsync() task.");
+            }
+            finally
+            {
+                // 'A task may only be disposed if it is in a completion state (RanToCompletion, Faulted or Canceled).'
+                // If there was a timeout cancellation, we cannot dispose it. It is still running and it may finish 10min later and GC will dispose it. 
+                if (connectTask != null && connectTask.IsCompleted)
+                    connectTask.Dispose();
                 Utils.TcpClientDispose(client);
             }
-            catch (Exception e)
-            {
-                Utils.Logger.Error(e, "Error:VirtualBrokerMessage.SendMessage exception. Check both AWS and Linux firewalls! ");
-            }
-            return reply; // in case of timeout, return null string to the caller.
+            return reply;  // in case of timeout, return null string to the caller.
         }
+        
+        // public async Task<string> SendMessage_202001()
+        // {
+        //     string reply = null;
+
+        //     TcpClient client = null;
+        //     Task connectTask = null;
+        //     try {
+        //         client = new TcpClient();
+        //         // connectTask = client.ConnectAsync(TcpServerHost, TcpServerPort);      // usually, we create a task with a CancellationToken. However, this task is not cancellable. I cannot cancel it. I have to wait for its finish.
+        //         connectTask = client.ConnectAsync(TcpServerHost, TcpServerPort);
+
+        //         //https://stackoverflow.com/questions/4238345/asynchronously-wait-for-taskt-to-complete-with-timeout
+        //         using (var delayTaskCancellationTokenSource = new CancellationTokenSource())
+        //         {
+        //             var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(30), delayTaskCancellationTokenSource.Token));
+        //             Utils.Logger.Debug("SendMessage(). After Task.WhenAny()");
+        //             // https://makolyte.com/how-to-set-a-timeout-for-tcpclient-connectasync/  "//double await so if cancelTask throws exception, this throws it"
+        //             await completedTask;
+        //             if (completedTask == connectTask)
+        //             {
+        //                 // Task completed within timeout.
+        //                 // Consider that the task may have faulted or been canceled.
+        //                 // We re-await the task so that any exceptions/cancellation is rethrown.
+        //                 Utils.Logger.Debug("VirtualBrokerMessage.SendMessage(). client.ConnectAsync() completed without timeout.");
+        //                 delayTaskCancellationTokenSource.Cancel();  // Task.Delay task is backed by a system timer. Release those resources instead of waiting for 30sec
+
+        //                 await connectTask;  // Very important in order to propagate exceptions
+        //                 // !!! IMPORTANT !!! If there is Exception here
+        //                 // Check that Amazon AWS Firewall let the port through
+        //                 // Check that Linux firewall is inactive "sudo ufw status verbose"
+
+        //                 // sometimes task ConnectAsync() returns instantly (no timeout), but there is an error in it. Which results an hour later: "TaskScheduler_UnobservedTaskException. Exception. A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. "
+        //                 if (connectTask.Exception != null)
+        //                 {
+        //                     Utils.Logger.Error(connectTask.Exception, "Error:VirtualBrokerMessage.SendMessage(). Exception in ConnectAsync() task.");
+        //                 }
+        //                 else
+        //                 {
+        //                     BinaryWriter bw = new BinaryWriter(client.GetStream()); // sometimes "System.InvalidOperationException: The operation is not allowed on non-connected sockets." at TcpClient.GetStream()
+        //                     SerializeTo(bw);
+
+        //                     BinaryReader br = new BinaryReader(client.GetStream());
+        //                     reply = br.ReadString(); // sometimes "System.IO.EndOfStreamException: Unable to read beyond the end of the stream." at ReadString()
+        //                 }
+        //             }
+        //             else  // timeout/cancellation logic
+        //             {
+        //                 //throw new TimeoutException("The operation has timed out.");
+        //                 Utils.Logger.Error("Error:VirtualBrokerMessage.SendMessage(). client.ConnectAsync() timeout. Wait connectTask to finish and observe its exceptions.");
+                        
+        //                 // Problem: if the timeout completes first and there is an Exception in it, we should observe that exception, otherwise TaskScheduler.UnobservedTaskException will be raised
+        //                 // Client.ConnectAsync doesn't have cancellation properties. As we cannot cancel it, we have to wait for it until it ends eventually.
+        //                 await connectTask;  // Execution will complete here. The code under this will run in the child thread later.
+        //                 Utils.Logger.Error("Error:VirtualBrokerMessage.SendMessage(). client.ConnectAsync() timeout. 'await connectTask' finished.");
+        //                 if (connectTask.Exception != null)
+        //                 {
+        //                     Utils.Logger.Error(connectTask.Exception, "Error:VirtualBrokerMessage.SendMessage(). Exception in ConnectAsync() task.");
+        //                 }
+        //             }
+        //         }
+
+                
+        //     }
+        //     catch (Exception e) // in local Win development, Exception: 'No connection could be made because the target machine actively refused it' comes here.
+        //     {
+        //         Utils.Logger.Error(e, "Error:VirtualBrokerMessage.SendMessage exception. Check both AWS and Linux firewalls! ");
+        //         // we should observe that exception, otherwise TaskScheduler.UnobservedTaskException will be raised
+        //         if (connectTask != null && connectTask.Exception != null)
+        //             Utils.Logger.Error(connectTask.Exception, "Error:VirtualBrokerMessage.SendMessage(). Exception in ConnectAsync() task.");
+        //     }
+        //     finally
+        //     {
+        //         if (connectTask != null)
+        //             connectTask.Dispose();
+        //         Utils.TcpClientDispose(client);
+        //     }
+        //     return reply; // in case of timeout, return null string to the caller.
+        // }
     }
 
 

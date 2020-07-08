@@ -35,8 +35,8 @@ namespace SQLab.Controllers
             var urlPath = (HttpContext.Request.Path.HasValue) ? HttpContext.Request.Path.Value.ToLower() : String.Empty;
             if (urlPath == "/qt")
             {
-            Tuple<string, string> contentAndType = GenerateQtResponse().Result;
-            return Content(contentAndType.Item1, contentAndType.Item2);
+                Tuple<string, string> contentAndType = GenerateQtResponse().Result; // Result is using Wait(), which is blocking the calling thread, instead of letting it return to the caller empty handed.
+                return Content(contentAndType.Item1, contentAndType.Item2);
             }
             else
                 return View();
