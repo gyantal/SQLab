@@ -50,7 +50,7 @@ namespace SQLab.Controllers
             string logLevel = jsLogMessage.Substring(0, logLevelInd);
             if (logLevel == "JsLog.Err")
             {   // notify HealthMonitor to send an email
-                HealthMonitorMessage.SendAsync(jsLogMsgWithOrigin, HealthMonitorMessageID.ReportErrorFromSQLabWebsite).RunSynchronously();   
+                HealthMonitorMessage.SendAsync(jsLogMsgWithOrigin, HealthMonitorMessageID.ReportErrorFromSQLabWebsite).TurnAsyncToSyncTask();
             }
 
 

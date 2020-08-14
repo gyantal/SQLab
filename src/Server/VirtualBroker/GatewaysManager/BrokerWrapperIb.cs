@@ -222,7 +222,7 @@ namespace VirtualBroker
                 // If it is not Expected exception => this thread will terminate, which will terminate the whole App. Send HealthMonitorMessage, if it is an active.
                 Utils.Logger.Error("Unexpected BrokerWrapperIb.error(). Exception thrown: " + e);
                 if (!Controller.IsRunningAsLocalDevelopment())
-                    HealthMonitorMessage.SendAsync($"Exception in Unexpected  BrokerWrapperIb.error(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
+                    HealthMonitorMessage.SendAsync($"Exception in Unexpected  BrokerWrapperIb.error(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
                 throw e;    
             }
         }

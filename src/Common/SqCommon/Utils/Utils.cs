@@ -363,6 +363,13 @@ namespace SqCommon
                 TaskContinuationOptions.OnlyOnFaulted);
         }
 
+        public static void TurnAsyncToSyncTask(this Task task)
+        {   // RunSynchronously may not be called on a task not bound to a delegate, such as the task returned from an asynchronous method.
+            // So for asynch Methods, use Wait(), or use ConfigureAwait() + GetResult() which is Explicit wait too.
+            // https://stackoverflow.com/questions/14485115/synchronously-waiting-for-an-async-operation-and-why-does-wait-freeze-the-pro
+            task.ConfigureAwait(continueOnCapturedContext: false).GetAwaiter().GetResult();
+        }
+
         // A Task's exception(s) were not observed either by Waiting on the Task or accessing its Exception property. 
         // http://stackoverflow.com/questions/7883052/a-tasks-exceptions-were-not-observed-either-by-waiting-on-the-task-or-accessi
         public static Task LogUnobservedTaskExceptions(this Task p_task, string p_msg)

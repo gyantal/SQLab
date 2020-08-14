@@ -136,7 +136,7 @@ namespace VirtualBroker
                 if (!String.IsNullOrEmpty(notConnectedGateways)) {
                      if (IgnoreErrorsBasedOnMarketTradingTime(offsetToOpenMin : -60))
                         return; // skip processing the error further. Don't send it to HealthMonitor.
-                    HealthMonitorMessage.SendAsync($"Gateways are not connected. vbServerEnvironment: '{vbServerEnvironment}', not connected gateways {notConnectedGateways}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).ConfigureAwait(continueOnCapturedContext: false);
+                    HealthMonitorMessage.SendAsync($"Gateways are not connected. vbServerEnvironment: '{vbServerEnvironment}', not connected gateways {notConnectedGateways}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
                 }
             }
             Utils.Logger.Info("GatewaysWatcher:ReconnectToGatewaysTimer_Elapsed() END");

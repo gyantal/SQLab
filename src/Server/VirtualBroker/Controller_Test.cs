@@ -306,7 +306,7 @@ namespace VirtualBroker
             {
                 try { throw new Exception("Test Exception in a Task"); }
                 catch (Exception e) {
-                    HealthMonitorMessage.SendAsync($"Exception in Task1 Thread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).RunSynchronously();
+                    HealthMonitorMessage.SendAsync($"Exception in Task1 Thread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
                 }
             }, TaskCreationOptions.LongRunning);
         }

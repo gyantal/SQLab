@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 
 namespace SQLab
 {
@@ -56,6 +57,45 @@ namespace SQLab
                     o.LoginPath = "/account/login";
                     o.LogoutPath = "/account/logout";
 
+                    // 2020-05-30: WARN|Microsoft.AspNetCore.Authentication.Google.GoogleHandler: '.AspNetCore.Correlation.Google.bzb7A4oxoS_pz_xQk0N4WngqgL0nyLUiT0k5QSPsD_M' cookie not found.
+                    // "Exception: Correlation failed.".
+                    // Maybe because SameSite cookies policy changed.
+                    // I suspect Bunny used an old Chrome or FFox or Edge.
+                    // "AspNetCore as a rule does not implement browser sniffing for you because User-Agents values are highly unstable"
+                    // However, if updating browser of the user to the latest Chrome doesn't solve it, we may implement these changes:
+                    // https://github.com/dotnet/aspnetcore/issues/14996
+                    // https://docs.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-3.1
+                    // "Cookies without SameSite header are treated as SameSite=Lax by default.
+                    // SameSite=None must be used to allow cross-site cookie use.
+                    // Cookies that assert SameSite=None must also be marked as Secure. (requires HTTPS)"
+                    // 2020-01: 'Correlation failed.' is a Browser Cache problem. 2020-06-03: JMC could log in. Error email 'correlation failed' arrived. When I used F12 in Chrome, disabled cache; then login went OK.
+
+                    // 2020-08: Chrome implements this default behavior as of version 84. (2020-08). Edge doesn't restrict that yet.
+                    // without any intervention, http://localhost/login returns this to the browser: ""Set-Cookie: .AspNetCore.Correlation.Google._AcFoUd0-sbBMoGfefWKA2WlqpVJwD2bGYTYs6axoBU=N; expires=Fri, 14 Aug 2020 14:45:30 GMT; path=/signin-google; samesite=none; httponly"
+                    // and Chrome throws an Error to JsConsole: "A cookie associated with a resource at http://localhost/ was set with `SameSite=None` but without `Secure`. It has been blocked"
+                    // disable this feature by going to "chrome://flags" and disabling "Cookies without SameSite must be secure", but it is good for development only
+                    // So, from now on, because we want to use Chrome84+, if we want login, we have to develop in HTTPS mode, not HTTP. We can completely forget HTTP. Just use HTTPS, even in DEV. 
+
+                    // >GoogleAuth Login system uses cookie (.AspNetCore.Correlation.Google). From 2020-08, Chrome blocks a SameSite=None, which is not Secure. 
+                    // But Secure means it is running on HTTPS. So, local development will also need to be done with HTTPS urls.
+                    // >Specify SameSite=None and Secure if the cookie should be sent in cross-site requests. This enables third-party use.
+                    // Specify SameSite=Strict or SameSite=Lax if the cookie should not be sent in cross-site requests. 
+                    // But even in this case, if we use Both HTTP, HTTPS at development, Login problems arise on HTTP.
+                    // >Chrome debug: cookie HTTP://".AspNetCore.Cookies": "This set-cookie was blocked because it was not sent over a secure connection and would have overwritten a cookie with a secure attribute.", 
+                    // but then that Secure HTTPS cookie with the same name is not sent to the non-secure HTTP request. (It is only sent to the HTTPS request).
+                    // Therefore, we should use only the HTTPS protocol, even in local development.  (except if AWS CloudFront cannot handle HTTPS to HTTPS conversions)
+
+                    // https://docs.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-3.1
+                    o.Cookie.SameSite = SameSiteMode.Lax;   // sets the cookie ".AspNetCore.Cookies"
+                    // o.Cookie.SecurePolicy = CookieSecurePolicy.Always;      // Note this will also require you to be running on HTTPS. Local development will also need to be done with HTTPS urls.
+                    // o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;   // this is the default BTW, so no need to set.
+                    // problem: if Cookie storage works in https://localhost:5001/UserAccount/login  but not in HTTP: http://localhost:5000/UserAccount/login
+                    // "Note that the http page cannot set an insecure cookie of the same name as the secure cookie."
+                    // Solution: Manually delete the cookie from Chrome. see here.  https://bugs.chromium.org/p/chromium/issues/detail?id=843371
+                    // in Production, only HTTPS is allowed anyway, so it will work. Best is not mix development in both HTTP/HTTPS (just stick to one of them). 
+                    // stick to HTTPS. Although Chrome browser-caching will not work in HTTPS (because of insecure cert), it is better to test HTTPS, because that will be the production.
+
+
                     // Controls how much time the authentication ticket stored in the cookie will remain valid
                     // This is separate from the value of Microsoft.AspNetCore.Http.CookieOptions.Expires, which specifies how long the browser will keep the cookie. We will set that in OnTicketReceived()
                     o.ExpireTimeSpan = TimeSpan.FromDays(350);
@@ -64,6 +104,8 @@ namespace SQLab
                 {
                     options.ClientId = googleClientId;
                     options.ClientSecret = googleClientSecret;
+                    options.CorrelationCookie.SameSite = SameSiteMode.Lax; // sets the cookie ".AspNetCore.Correlation.Google.*"
+
                     options.Events = new OAuthEvents
                     {
                         // https://www.jerriepelser.com/blog/forcing-users-sign-in-gsuite-domain-account/

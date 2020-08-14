@@ -75,7 +75,6 @@ namespace SqCommon
             }
             Utils.Logger.Info($"HealthMonitorMessage.SendAsync() END");
         }
-        
 
         public void SerializeTo(BinaryWriter p_binaryWriter)
         {

@@ -72,7 +72,7 @@ namespace SQLab
             }
             catch (Exception e)
             {
-                HealthMonitorMessage.SendAsync($"Exception in Website.C#.MainThread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).RunSynchronously();
+                HealthMonitorMessage.SendAsync($"Exception in Website.C#.MainThread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).TurnAsyncToSyncTask();
             }
         }
 
@@ -88,7 +88,13 @@ namespace SQLab
                 // https://github.com/aspnet/Home/issues/311
                 // A normal user is not allowed to bind sockets to TCP ports < 1024, you need more permissions than the normal user has (read: 'root'-access). The easiest and quickest solution probably is using sudo to start the process, but that's also the most frowned upon solution. The reason is that the process then has every access right on the system.
                 // The cleanest solution and the one that for which Kestrel is developed is using a front-end server / load balancer on port 80(for example nginx, or endpoints in Azure) that forwards the requests to an unprivileged Kestrel on a private port.
-                .UseUrls("http://*:80", "https://*:443", "http://localhost:5000")        // default only: "http://localhost:5000",  adding "http://*:80" will listen to clients from any IP4 or IP6 address, so Windows Firewall will prompt                 
+                // Because of Google Auth cookie usage and Chrome SameSite policy, use only the HTTPS protocol (no HTTP), even in local development. See explanation at Google Auth code.
+                // However, because of AWS CloudFront, we cannot do that. CloudFront cannot do HTTPS to HTTPS translation, because it doesn't accept our Dev-Certificate (it would work with a proper SSL certificate)
+                // So, we have to use HTTP behind CloudFront. We did set CookiePolicy to Lax (instead of None). If it is None, HTTP server doesn't send Secure attribute.
+                // But because it is Lax, HTTP server doesn't send Secure attribute, but - good news - it is not required. Lax doens't require Secure in Chrome.
+                // Ultimately we merge these tools from SqLab to SqCore, where we own the SSL cert and CloudFront is not required.
+                // Until that, we have to use HTTP.
+                .UseUrls("http://*:80", "https://*:443", "https://localhost:5000")        // default only: "http://localhost:5000",  adding "http://*:80" will listen to clients from any IP4 or IP6 address, so Windows Firewall will prompt                 
                 .UseKestrel(options =>
                 {
                     // 0. HTTPS preferable over HTTP on main webApps.
@@ -154,10 +160,14 @@ namespace SQLab
                     // So, temporary, until We can use our own HTTPS SSL certificate, we are switching off this feature.
 
                     options.Listen(IPAddress.Any, 80);
-                    options.Listen(IPAddress.Any, 5000);
                     options.Listen(IPAddress.Any, 443, listenOptions =>
                     {
-                    var serverCertificate = LoadHttpsCertificate();
+                        var serverCertificate = LoadHttpsCertificate();
+                        listenOptions.UseHttps(serverCertificate);
+                    });
+                    options.Listen(IPAddress.Any, 5000, listenOptions =>
+                    {
+                        var serverCertificate = LoadHttpsCertificate();
                         listenOptions.UseHttps(serverCertificate);
                     });
                 })
@@ -193,7 +203,7 @@ namespace SQLab
             //So, in UnobservedTaskException() filters these aborts and don't send it to HealthMonitor.
             Utils.Logger.Info($"TaskScheduler_UnobservedTaskException() START");
             if (SqFirewallMiddleware.IsSendableToHealthMonitorForEmailing(e.Exception))
-                HealthMonitorMessage.SendAsync($"Exception in Website.C# in TaskScheduler_UnobservedTaskException(). Exception: '{ e.Exception.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).RunSynchronously();
+                HealthMonitorMessage.SendAsync($"Exception in Website.C# in TaskScheduler_UnobservedTaskException(). Exception: '{ e.Exception.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromSQLabWebsite).TurnAsyncToSyncTask();
 
             Utils.Logger.Info($"TaskScheduler_UnobservedTaskException() Calling e.SetObserved()");
             e.SetObserved();        //  preventing it from triggering exception escalation policy which, by default, terminates the process.
