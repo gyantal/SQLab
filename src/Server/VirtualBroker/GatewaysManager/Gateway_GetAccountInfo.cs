@@ -108,7 +108,7 @@ namespace VirtualBroker
                         m_getAccountPosMres.Reset();        // set to unsignaled, which makes the thread to block
 
                     BrokerWrapper.ReqPositions();
-                    bool wasLightSet = m_getAccountPosMres.Wait(5000);     // timeout at 5sec
+                    bool wasLightSet = m_getAccountPosMres.Wait(10000);     // timeout at 10sec
                     if (!wasLightSet)
                         Utils.Logger.Error("ReqPositions() ended with timeout error.");
                 }
