@@ -428,11 +428,18 @@ namespace VirtualBroker
                 // "if the data continues to flow for me then I suspect it will continue to flow for everyone else"
                 // "I’m not talking about some lengthy delay until the data flows again, just a few seconds."
                 // "Once I added a line of code to ignore this error, everything was fine again"
+                // https://groups.io/g/twsapi/message/40551
+                // Yes its possible to receive live data from a single subscription in both a live and a paper account if they are logged in on the same computer. 
+                // The error "No market data during competing live session" was introduced, by request, to indicate that a paper account isn't 
+                // receiving live data because the associated live user is logged in on a different computer. Unfortunately the message is also 
+                // currently triggered inappropriately in some instances in live sessions, and returned along with live data. 
+                // (For instance, if there is a extended disconnection it does not distinguish currently between disconnection due to internet connectivity problems or competing session). 
+                // The message can just be ignored in this instance. It is a known issue under review. 
+                // >Agy: So, this comes when there is a disconnection for some seconds. Even if that disconnection is handled properly a couple of second later.
+                // Also, its intent was only to come in paper-accounts, so in live accounts, it can be ignored.
                 
                 // So, if it is too bothering, in the future, just always ignore the error (even during Regular Trading Hours). Sometimes it happens 5 seconds after market close.
-                
-                if (GatewaysWatcher.IgnoreErrorsBasedOnMarketTradingTime(offsetToCloseMin : 0)) // mktDataSubscription.MarketDataError?.Invoke() is needed, even after market closed
-                    return; // skip processing the error further. Don't send it to HealthMonitor.
+                return; // skip processing the error further. Don't send it to HealthMonitor.
             }
 
             // SERIOUS ERRORS AFTER THIS LINE. Notify HealthMonitor.
