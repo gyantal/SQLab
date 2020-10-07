@@ -1252,6 +1252,10 @@ namespace VirtualBroker
             // 1109T14:50:06.972#23#5#Debug: BrokerWrapper.error(). ErrId: -1, ErrCode: 2106, Msg: HMDS data farm connection is OK:ushmds
             // 1109T14:50:14.875#23#5#Trace: HistoricalData. 1001 - Date: 20160511, Open: 59.48, High: 61.88, Low: 58.56, Close: 61.4, Volume: 161447, Count: 167906, WAP: 60.284, HasGaps: False
             // 1109T14:50:14.875#23#5#Error: HistDataSubscriptions reqId 1001 is not expected
+            // 2020-09: On a general day, getting VXX historical data takes:
+            //          14:55: 2 sec (Historical Data farm disconnected (red), but not busy), 
+            //          20:25: 7sec (Historical Data farm goes inactive (orange) 40min After non-usage, busy servers before market close)
+            //          20:59: 1sec (Historical Data farm active (green))
             bool signalReceived = histDataSubsc.AutoResetEvent.WaitOne(TimeSpan.FromSeconds(14)); // timeout of 14 seconds
 
             // clean up resources after data arrived

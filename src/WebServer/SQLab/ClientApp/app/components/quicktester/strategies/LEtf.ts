@@ -146,7 +146,7 @@ export class LEtf extends Strategy {
                 this.assetsConstantWeightPct = "-50,-50";   // %, negative is Short
                 break;
             case "idParamSetHL_-50VXZ_-50ZIV":
-                this.assets = "VXZ,ZIV";
+                this.assets = "VXZ,ZIVZF";
                 this.assetsConstantWeightPct = "-50,-50";   // %, negative is Short
                 break;
             case "idParamSetHL_-35TVIX_-65TMV":
@@ -182,17 +182,17 @@ export class LEtf extends Strategy {
                 this.assetsConstantWeightPct = "-70,213,-21,-66,0,0,0,0";   // %, negative is Short
                 break;
             case "idParamSetHL_-50Comb.SQ_-80H_coctailAgy6":   // shortVol is 50%, Hedge: 80%
-                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,GLD,UUP,EEM";
+                this.assets = "SVXY.SQ,VXX.SQ,VXZ.SQ,TQQQ.SQ,TLT,USO,UNG,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "15,-5, 10, 20, 171,-15,-54,0,0,0";   // %, negative is Short
                 break;
             case "idParamSetHL_-50Comb.SQ_-100H_coctailAgy6":   // shortVol is 50%, Hedge: 100%
-                this.assets = "SVXY.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,GLD,UUP,EEM";
+                this.assets = "SVXY.SQ,VXX.SQ,VXZ.SQ,TQQQ.SQ,TLT,USO,UNG,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "15,-5, 10, 20, 213,-21,-66,0,0,0";   // %, negative is Short
                 break;
             case "idParamSetHL_-50Comb.SQ_-120H_coctailAgy6":   // shortVol is 55%, Hedge: 120%, introducing SVXY!Light0.5x.SQ
                 // 2018-04: JJC went to JJCTF and went to OTC. Because it is OTC, IB doesn't give realtime price, so chart will go until yesterday only. CPER has realtime price, but its history from 2011, instead of 2007. As JJCTF weight is 0, delete it from here. Backtest will be faster anyway.
             default:
-                this.assets = "SVXY!Light0.5x.SQ,VXX.SQ,ZIV.SQ,TQQQ.SQ,TLT,USO,UNG,GLD,UUP,EEM";
+                this.assets = "SVXY!Light0.5x.SQ,VXX.SQ,VXZ.SQ,TQQQ.SQ,TLT,USO,UNG,GLD,UUP,EEM";
                 this.assetsConstantWeightPct = "15,-5, 10, 25, 255,-27,-78,0,0,0";   // %, negative is Short
                 break;
         }
