@@ -425,17 +425,17 @@ namespace SQLab.Controllers
             clmtTotalResu[7] = clmtIndi;
             clmtTotalResu[8] = spxPrice;
 
-            // StringBuilder stringBuilder=new StringBuilder();
-            // foreach (var item in clmtTotalResu)
-            // {
-            //     foreach (var item2 in item)
-            //     {
-            //         stringBuilder.Append(item2 + ",");
-            //     }
-            //     stringBuilder.AppendLine("ß" + Environment.NewLine + Environment.NewLine);
-            // }
+        //     StringBuilder stringBuilder=new StringBuilder();
+        //     foreach (var item in clmtTotalResu)
+        //     {
+        //         foreach (var item2 in item)
+        //         {
+        //             stringBuilder.Append(item2 + ",");
+        //         }
+        //         stringBuilder.AppendLine("ß" + Environment.NewLine + Environment.NewLine);
+        //     }
 
-            // System.IO.File.WriteAllText(@"D:\xxx.csv", stringBuilder.ToString());
+        //     System.IO.File.WriteAllText(@"D:\xxx.csv", stringBuilder.ToString());
 
             return clmtTotalResu;
         }
@@ -626,7 +626,7 @@ namespace SQLab.Controllers
         {
             //Defining asset lists.
             string[] clmtAssetList = new string[]{ "^GSPC", "XLU", "VTI" };
-            string[] gchAssetList = new string[]{ "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NVDA", "PYPL", "QCOM", "SQ", "V", "TLT"}; //TLT is used as a cashEquivalent
+            string[] gchAssetList = new string[]{ "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NVDA", "NOW", "PYPL", "QCOM", "SQ", "V", "TLT"}; //TLT is used as a cashEquivalent
             string[] gmrAssetList = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ", "TLT" }; //TLT is used as a cashEquivalent
             string[] usedAssetList = new string[0];
             string titleString ="0";
