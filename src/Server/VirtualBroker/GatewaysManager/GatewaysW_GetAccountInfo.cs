@@ -1,5 +1,6 @@
 ﻿using DbCommon;
 using IBApi;
+using Microsoft.Extensions.Primitives;
 using SqCommon;
 using System;
 using System.Collections.Concurrent;
@@ -73,15 +74,17 @@ namespace VirtualBroker
             // 4. Fill LastPrice, LastUnderlyingPrice in all AccPos for all ibGateways. (Alternatively Calculate the MktValue, DelivValue, but better to just pass the raw data to client)
 
             var queryDict = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(p_input);     // in .NET core, this is the standard for manipulating queries
-            string verQ, secTokQ, bAccQ, dataQ, exclSymbolsQ, addPrInfoSymbolsQ;
+            string verQ, secTokQ, bAccQ, dataQ, exclSymbolsQ = string.Empty, addPrInfoSymbolsQ = string.Empty;
             try
             {
                 verQ = queryDict["v"];      // it is case sensitive and will throw Exception if not found, but it is fine, it is quick and sure
                 secTokQ = queryDict["secTok"];
                 bAccQ = queryDict["bAcc"];
                 dataQ = queryDict["data"];
-                exclSymbolsQ = queryDict["posExclSymbols"];
-                addPrInfoSymbolsQ = queryDict["addPrInfoSymbols"];
+                if (queryDict.TryGetValue("posExclSymbols", out StringValues sVexclSymbolsQ))
+                    exclSymbolsQ = sVexclSymbolsQ.ToString();
+                if (queryDict.TryGetValue("addPrInfoSymbols", out StringValues sVaddPrInfoSymbolsQ))
+                    addPrInfoSymbolsQ = sVaddPrInfoSymbolsQ.ToString();
             }
             catch (Exception e)
             {
@@ -162,12 +165,15 @@ namespace VirtualBroker
                 try
                 {
                     Stopwatch sw2 = Stopwatch.StartNew();
-                    Parallel.ForEach(allAccInfos, accInfo =>        // execute in parallel, so it is faster if DcMain and DeBlanzac are both queried at the same time.
+                    if (isNeedPos)
                     {
-                        if (accInfo.Gateway == null)
-                            return;
-                        accInfo.Gateway.GetAccountPoss(accInfo.AccPoss, exclSymbolsArr);    // takes 50msec each in local development, 90-100msec on 1-CPU (no parallelism, so not relevant) on AutoTradingServer, 3-9msec on 2-CPU fast ManualTradingServer 
-                    });
+                        Parallel.ForEach(allAccInfos, accInfo =>        // execute in parallel, so it is faster if DcMain and DeBlanzac are both queried at the same time.
+                        {
+                            if (accInfo.Gateway == null)
+                                return;
+                            accInfo.Gateway.GetAccountPoss(accInfo.AccPoss, exclSymbolsArr);    // takes 50msec each in local development, 90-100msec on 1-CPU (no parallelism, so not relevant) on AutoTradingServer, 3-9msec on 2-CPU fast ManualTradingServer 
+                        });
+                    }
                     //If client wants RT MktValue too, collect needed RT prices (stocks, options, underlying of options, futures). Use only the mainGateway to ask a realtime quote estimate. So, one stock is not queried an all gateways. Even for options
                     if (isNeedEstPr)
                     {

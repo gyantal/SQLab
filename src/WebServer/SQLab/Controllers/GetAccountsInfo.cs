@@ -181,9 +181,8 @@ namespace SQLab.Controllers
                     Utils.Logger.Error(errorMsg);
                     return @"{ ""Message"": """ + errorMsg + @""" }";
                 }
-                Utils.Logger.Info($"GetAccountsInfo.GenerateGaiResponse(). Received '{vbReplyStr}'");
-
                 vbReplyStr = vbReplyStr.Replace("\\\"", "\"");
+                Utils.Logger.Info($"GetAccountsInfo.GenerateGaiResponse(). Received '{vbReplyStr}'");
 
                 // 2019-03: After Market close: IB doesn't  give price for some 2-3 stocks (VXZ (only gives ask = -1, bid = -1), URE (only gives ask = 61, bid = -1), no open,low/high/last, not even previous Close price, nothing), these are the ideas to consider: We need some kind of estimation, even if it is not accurate.
                 //     >One idea: ask IB's historical data for those missing prices. Then price query is in one place, but we have to wait more for VBroker, and IB throttle (max n. number of queries) may cause problem, so we get data slowly.
