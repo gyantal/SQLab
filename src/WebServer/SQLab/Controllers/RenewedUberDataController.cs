@@ -222,8 +222,10 @@ namespace SQLab.Controllers
             prevFuturesData = webpageLive.Substring(startPosPrev, endPosPrev - startPosPrev);
             spotVixData = webpageLive.Substring(startSpotVix, endSpotVix - startSpotVix);
 
-            liveFuturesDataDate = liveFuturesDataDT.Substring(0, 10);
-            liveFuturesDataTime = liveFuturesDataDT.Substring(11, 5) + " EST";
+            // liveFuturesDataDate = liveFuturesDataDT.Substring(0, 10);
+            // liveFuturesDataTime = liveFuturesDataDT.Substring(11, 5) + " EST";
+            liveFuturesDataDate = "2999-12-31";
+            liveFuturesDataTime = "11:11" + " EST";
 
             string[] liveFuturesPrices = liveFuturesData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
             int lengthLiveFuturesPrices = liveFuturesPrices.Length;
