@@ -239,7 +239,8 @@ namespace SQLab.Controllers
 
             DateTime liveDateTime;
             string liveDate = System.String.Empty;
-            liveDateTime = DateTime.Parse(liveFuturesDataDate);
+            liveDateTime = p_usedDateVec[0];
+            // liveDateTime = DateTime.Parse(liveFuturesDataDate);
             liveDate = liveDateTime.ToString("yyyy-MM-dd");
 
 
