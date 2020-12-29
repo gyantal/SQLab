@@ -15,7 +15,7 @@ acceptedSubTreeRoots = ["Server\\HealthMonitor", "Common\\SqCommon"]        # ev
 serverHost = "ec2-23-20-243-199.compute-1.amazonaws.com"
 serverPort = 22
 serverUser = "ubuntu"
-serverRsaKeyFile = "g:\work\Archi-data\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"
+serverRsaKeyFile = "g:\work\Archi-data\GitHubRepos\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"
 
 excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties"])
 excludeFileExts = set(["sln", "xproj", "log", "sqlog", "ps1", "py", "sh", "user", "md"])
