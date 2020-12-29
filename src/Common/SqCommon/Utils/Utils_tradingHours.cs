@@ -162,7 +162,7 @@ namespace SqCommon
             }
 
             // p_td can be "Friday, July 4 (Observed July 3)" or "Friday, July 3 (July 4 holiday observed)" or "Friday, July 3"
-            DateTime dateHoliday;
+            DateTime dateHoliday = DateTime.MinValue;
             int indObserved = p_td.IndexOf("(Observed");
             if (indObserved != -1)
             {
@@ -177,10 +177,17 @@ namespace SqCommon
                 {
                     int indObservedStart = p_td.LastIndexOf('(', indObserved - 1, indObserved);
                     dateHoliday = DateTime.Parse(p_td.Substring(0, indObservedStart) + ", " + p_year.ToString());
-                } else
-                    dateHoliday = DateTime.Parse(p_td + ", " + p_year.ToString());
+                } else {
+                    if (p_td.Trim().ToLower() == "&#8212;") // &#8212; = "—". This means that holiday is a weekend, therefore no need to store. In some cases, this missing "NewYearsEve" it can be deducted, in other cases, Independence Day, it can be any day, so better to not invent a non-existant holiday which is at the weekend and put it into DB.
+                    {
+                        // do nothing.
+                    }
+                    else
+                        dateHoliday = DateTime.Parse(p_td + ", " + p_year.ToString());
+                }
             }
-            p_holidays.Add(new Tuple<DateTime, DateTime?>(dateHoliday, null));
+            if (dateHoliday != DateTime.MinValue)
+                p_holidays.Add(new Tuple<DateTime, DateTime?>(dateHoliday, null));
 
         }
 
