@@ -625,7 +625,8 @@
 
             var startDateInd = -1;      // do a fix StartDate, so different lookback days all start from the same Date
             //var startDateToFind = new Date(2009, 12 - 1, 31, 0, 0, 0, 0).getTime(); // new Date() is always in the Local computer time zone, so it can be different, so always use Date.UTC() instead
-            var startDateToFind = Date.UTC(2009, 12 - 1, 31, 0, 0, 0, 0); // new Date() is always in the Local computer time zone, so it can be different, so always use Date.UTC() instead
+            //var startDateToFind = Date.UTC(2009, 12 - 1, 31, 0, 0, 0, 0); // new Date() is always in the Local computer time zone, so it can be different, so always use Date.UTC() instead
+            var startDateToFind = Date.UTC(2018, 7 - 1, 2, 0, 0, 0, 0);  // the old VXX which existed from 2009 was terminated, the new VXX starts on 2018-01-25, but add an extra 110 trading days as the lookback is 100days = 2018-07-02
             for (var i = 2 + lookbackDays - 1; i < histVXXPriceWithDate.length; i++) {
                 if (histVXXPriceWithDate[i][0] == startDateToFind) {        // 200 days is 2009-11-13, so start with 2009-12-31
                     startDateInd = i;
