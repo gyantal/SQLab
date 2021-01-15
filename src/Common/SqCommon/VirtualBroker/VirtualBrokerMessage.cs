@@ -42,9 +42,9 @@ namespace SqCommon
                 {
                     var vbServerEnvironment = Utils.Configuration["VbServerEnvironment"];
                     if (vbServerEnvironment.ToLower() == "AutoTradingServer".ToLower())
-                        return "172.31.56.196";     // private IP of the VBrokerAgent Linux (where VBrokerAgen app runs)
+                        return "172.31.56.196";     // private IP of the VBroker (where VBrokerAgen app runs). Unfortunatelly this changes every time the AWS VM stopped/restarted.
                     else if (vbServerEnvironment.ToLower() == "ManualTradingServer".ToLower())
-                        return "172.31.43.137";     // private IP of the VBrokerAgent Linux (where VBrokerAgen app runs)
+                        return "172.31.32.68";     // private IP of the VBroker (where VBrokerAgen app runs). Unfortunatelly this changes every time the AWS VM stopped/restarted.
                     else
                         return "127.0.0.1";
                 }
