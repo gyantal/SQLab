@@ -167,7 +167,7 @@ namespace VirtualBroker
                 m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1] = new QuoteData() { Date = m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 1].Date, AdjClosePrice = rtPrice };   // but we use the streamed rtPrice anyway
 
                 // Check danger after stock split correctness: adjusted price from IB should match to the adjusted price of our SQL DB. Although it can happen that both data source is faulty.
-                if (Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
+                if (Utils.IsInRegularUsaTradingHoursNow())
                 {// in development, we often program code after IB market closed. Ignore this warning after market, but check it during market.
                     // 2016-06-27: VXX ClosePrice: YF historical: $16.83, all others: GF, Marketwatch, IB, YF main (not historical) page: $16.92
                     StrongAssert.True(Math.Abs(m_vxxQuotesFromSqlDB[m_vxxQuotesFromSqlDB.Count - 1].AdjClosePrice - m_vxxQuotesFromIB[m_vxxQuotesFromIB.Count - 2].AdjClosePrice) < 0.02, Severity.NoException,

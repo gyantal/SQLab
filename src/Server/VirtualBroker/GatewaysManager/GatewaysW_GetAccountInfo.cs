@@ -276,7 +276,7 @@ namespace VirtualBroker
             //Position.U407941 - Symbol: VXX, SecType: OPT, Currency: USD, Position: 3, Avg cost: 780.35113335
             //    Option.LastTradeDate: 20181221, Right: C, Strike: 37, Multiplier: 100, LocalSymbol: 'VXX   181221C00037000'
             // Contract.ConID is inique integer. But for options of the same underlying ConID is different, so we cannot use ConID. We have to group it by stocks.
-            bool isInRegularUsaTradingHoursNow = Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3));
+            bool isInRegularUsaTradingHoursNow = Utils.IsInRegularUsaTradingHoursNow();
 
             // 1. Add p_addPrInfoSymbolsArr additional tickers to the first AccInfo positions as 0 positions
             int ourFakeContractIdSeed = -1;

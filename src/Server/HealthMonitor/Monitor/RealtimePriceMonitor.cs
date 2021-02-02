@@ -135,7 +135,7 @@ namespace HealthMonitor
                 bool isVXXHasLastPrice = vxxItem.TryGetValue("Last", out vxxLastPriceStr);
                 if (!isVXXHasLastPrice)
                 {
-                    if (!Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
+                    if (!Utils.IsInRegularUsaTradingHoursNow())
                     {
                         // if it is premarket (specially on Monday), we would 
                         // accept if it does'nt have Last price "'[{"Symbol":"VXX"},{"Symbol":"^VIX"},""

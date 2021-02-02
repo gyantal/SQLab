@@ -658,9 +658,11 @@ namespace VirtualBroker
                     Utils.Logger.Warn($"Warning. Something is wrong. Price is negative. Returning False for GetAlreadyStreamedPrice().");   // however, VBroker may want to continue, so don't throw Exception or do StrongAssert()
                     isOk = false;
                 }
-                // for daily High, Daily Low, Previous Close, etc. don't check this staleness
+                // for daily High, Daily Low, Previous Close, etc. don't check this staleness; 
+                // HealthMonitor RealTime Price Service checks that it is working every 20 minutes, even OTH. 
+                // The last RT-price arrives around 19:55 ET (extended trading until 20:00ET). At 2:45 ET, it would be more than 35min stale, but that is fine OTH
                 bool doCheckDataStaleness = !Double.IsNaN(item.Value.Price) &&
-                    (item.Key != TickType.LOW && item.Key != TickType.HIGH && item.Key != TickType.CLOSE);
+                    (item.Key != TickType.LOW && item.Key != TickType.HIGH && item.Key != TickType.CLOSE) && Utils.IsInRegularUsaTradingHoursNow();
                 if (doCheckDataStaleness)
                 {
                     DateTime quoteAcquirationTime = item.Value.Time;

@@ -139,7 +139,7 @@ namespace VirtualBroker
                     else
                     {
                         bool isPreferIbAlltime = true;  // isPreferIbAlltime is used in general for functionality (RT price) development, but !isPreferIbAlltime is better for strategy developing (maybe)
-                        if (isPreferIbAlltime || Utils.IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3)))
+                        if (isPreferIbAlltime || Utils.IsInRegularUsaTradingHoursNow())
                             ibWrapper = new BrokerWrapperIb(AccSumArrived, AccSumEnd, AccPosArrived, AccPosEnd);    // when isPreferIbAlltime or when !isPreferIbAlltime, but USA market is open
                         else
                             ibWrapper = new BrokerWrapperYF();     // Before market open, or After market close. Simulated real time price is needed to determine current portfolio $size.

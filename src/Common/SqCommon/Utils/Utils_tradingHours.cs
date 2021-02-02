@@ -115,6 +115,7 @@ namespace SqCommon
             //< td > December 25(Observed December 26) ***</ td >  this has both Observed and a half-holiday too
 
             // at first 
+            string cellTrimmedLwr = p_td.Trim().ToLower();
             if (p_td.IndexOf('*') != -1)    // read the footnotes; there will be a half-holiday on the next or the previous day
             {
                 // "**Each market will close early at 1:00 p.m. on Friday, November 27, 2015 and Friday, November 25, 2016 (the day after Thanksgiving)"
@@ -178,7 +179,8 @@ namespace SqCommon
                     int indObservedStart = p_td.LastIndexOf('(', indObserved - 1, indObserved);
                     dateHoliday = DateTime.Parse(p_td.Substring(0, indObservedStart) + ", " + p_year.ToString());
                 } else {
-                    if (p_td.Trim().ToLower() == "&#8212;") // &#8212; = "—". This means that holiday is a weekend, therefore no need to store. In some cases, this missing "NewYearsEve" it can be deducted, in other cases, Independence Day, it can be any day, so better to not invent a non-existant holiday which is at the weekend and put it into DB.
+                    
+                    if (cellTrimmedLwr == "&#8212;" || cellTrimmedLwr == "—") // &#8212; = "—". This means that holiday is a weekend, therefore no need to store. In some cases, this missing "NewYearsEve" it can be deducted, in other cases, Independence Day, it can be any day, so better to not invent a non-existant holiday which is at the weekend and put it into DB.
                     {
                         // do nothing.
                     }
@@ -255,10 +257,27 @@ namespace SqCommon
             return true;
         }
 
+        public static bool IsInRegularUsaTradingHoursNow()
+        {
+            return IsInRegularUsaTradingHoursNow(TimeSpan.FromDays(3));
+        }
+
         public static bool IsInRegularUsaTradingHoursNow(TimeSpan p_maxAllowedStaleness)
         {
             DateTime utcNow = DateTime.UtcNow;
+            
+            // 1. quick response for trivial casse that works moste of the time, that don't need DetermineUsaMarketTradingHours()
+            DateTime utcNowET = Utils.ConvertTimeFromUtcToEt(utcNow).Date;
+            if (utcNowET.DayOfWeek == DayOfWeek.Saturday || utcNowET.DayOfWeek == DayOfWeek.Sunday)
+                return false;
+            DateTime openInET = new DateTime(utcNowET.Year, utcNowET.Month, utcNowET.Day, 9, 30, 0);
+            if (utcNowET < openInET)
+                return false;
+            DateTime maxPossibleCloseInET = new DateTime(utcNowET.Year, utcNowET.Month, utcNowET.Day, 16, 0, 0); // usually it is 16:00, but when half-day trading, then it is 13:00
+            if (utcNowET > openInET)
+                return false;
 
+            // 2. During RTH on weekdays, we have to be more thorough.
             bool isMarketTradingDay;
             DateTime openTimeUtc, closeTimeUtc;
             bool isTradingHoursOK = Utils.DetermineUsaMarketTradingHours(utcNow, out isMarketTradingDay, out openTimeUtc, out closeTimeUtc, p_maxAllowedStaleness);
