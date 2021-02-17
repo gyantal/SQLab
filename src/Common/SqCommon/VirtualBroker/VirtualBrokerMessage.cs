@@ -44,9 +44,13 @@ namespace SqCommon
                     if (vbServerEnvironment.ToLower() == "AutoTradingServer".ToLower())
                         return "172.31.56.196";     // private IP of the VBroker (where VBrokerAgen app runs). Unfortunatelly this changes every time the AWS VM stopped/restarted.
                     else if (vbServerEnvironment.ToLower() == "ManualTradingServer".ToLower())
-                        return "172.31.32.68";     // private IP of the VBroker (where VBrokerAgen app runs). Unfortunatelly this changes every time the AWS VM stopped/restarted.
+                        // netstat -lntp  // show listener ports.
+                        // https://unix.stackexchange.com/questions/184447/whats-the-difference-between-a-machines-ip-address-and-localhost
+                        // https://www.howtogeek.com/225487/what-is-the-difference-between-127.0.0.1-and-0.0.0.0
+                        // return "172.31.32.68";     // private IP of the VBroker (where VBrokerAgen app runs). Unfortunatelly this changes every time the AWS VM stopped/restarted.
+                        return "0.0.0.0"; // use 0.0.0.0 in Production when you want that it is accessible from the Internet (binding to all local private IPs) 
                     else
-                        return "127.0.0.1";
+                        return "127.0.0.1"; // use 127.0.0.1 in Debug when you test the service and want to achieve it from the local machine
                 }
             }
         }
