@@ -212,6 +212,8 @@ namespace VirtualBroker
             // although it is only $4 move, it is +130%. That will wipe out SCO(2x). But according to the same logic, if price goes to negative in all 3 futures that USO holds, then even USO can be negative => 0
             // still, it is safer to short USO (can only break if all 3 futures go negative, and when I short it, I will profit), than long SCO (can break, if oil futures double, which day can do if they come from negative)
             // In the future: trade with both instruments: 50% USO, 50% SCO.
+            const double cAgyLvrg = 0.803;
+            const double cDcLvrg = 0.50; // 2021-02-25: temporary leverage to 50%
             var harryLongTaskSchema = new BrokerTaskSchema()
             {
                 Name = "HarryLong",
@@ -223,14 +225,14 @@ namespace VirtualBroker
                         {
                         // new BrokerTaskPortfolio() { Name = "! HarryLong2(Contango-Bond) harvester Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
                         //    MaxTradeValueInCurrency = 110000, // For Agy: portfolio is 50K original. Set MaxValue=40K  (HarryLong shouldn't trade more than that, because it is only a small adjustment every day)
-                        //    MinTradeValueInCurrency = 100,
+                        //    MinTradeValueInCurrency = 500,
                         //    Param = new PortfolioParamHarryLong() {
                         //        // 2018-03-29: for tax reasons, change TMV to TMF, and ZIV to VXZ for 30 days. Then change it back.
                         //        //Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "UWT", "UNG" }, AssetsWeights = new double[] { 0.15, -0.05, -0.10, 0.25, 0.85, -0.09, -0.78 }    // 78% UNG is the official QuickTester weight. MaxRisked 227% of the PV. overleveraged.
                         //        //Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "UWT", "UNG" }, AssetsWeights = new double[] { 0.15, -0.05, -0.10, 0.30, 0.90, -0.09, -0.48 }   // 2019-02: take away 30% unleveraged from UNG (because it was risky as I have to short UNG, cannot long a short insrument), and adding 10% to QQQ, which is 3.3% TQQQ, and 20% to TLT, which is 7% TMF; this decreased the CAGR by 3%, but increased Sharpe from 1.04 to 1.11 and gives better maxDD too. It seems NatGas is too volatile (as I experienced it when I shorted UNG). MaxRisked 207% of the PV.
                         //        //Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "SCO", "UNG" }, AssetsWeights = new double[] { 0.15, -0.05, -0.10, 0.30, 0.90, 0.14, -0.48 }   // 2019-02:  MaxRisked 212% of the PV., OIL: short UWT (3x) doesn't have options.  Also, we want long position. Long SCO (2x) can be used instead. Agy: even the 48% UNG I find it quite risky (if it doubles). In practice, I try to keep this at 41% level, instead of 48%
                         //        //Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "SCO", "UNG" }, AssetsWeights = new double[] { 0.15*0.85, -0.05*0.85, -0.10*0.85, 0.30*0.85, 0.90*0.85, 0.14*0.85, -0.48*0.85 }   // 2020-03-18:  MaxRisked 212%*0.90=1.90 of the PV, 212%*0.85=1.80, in 2 years, PV grew from $50K to $150K. While the whole IB account is 210K. Leverage should be decreased, because with a $150K PV, it is dangerous to hold exposure >300K, while there are other positions in the account.
-                        //        Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "SCO", "UNG", "USO" }, AssetsWeights = new double[] { 0.15*0.803, -0.05*0.803, -0.10*0.803, 0.30*0.803, 0.90*0.803, 0.08*0.803, -0.48*0.803, -0.12*0.803,}   // 2020-05-05: start diversifying into short USO too, because SCO is a bad tracker.
+                        //        Tickers = new string[] { "SVXY", "VXX", "VXZ", "TQQQ", "TMF", "SCO", "UNG", "USO" }, AssetsWeights = new double[] { 0.15*cAgyLvrg, -0.05*cAgyLvrg, -0.10*cAgyLvrg, 0.30*cAgyLvrg, 0.90*cAgyLvrg, 0.08*cAgyLvrg, -0.48*cAgyLvrg, -0.12*cAgyLvrg,}   // 2020-05-05: start diversifying into short USO too, because SCO is a bad tracker.
                         //    // >2020-03-18 market panic: the practical lesson for the future: Do daily rebalancing, even manually (VBroker can send an email with suggestion). Do NOT overleverage it! Even rebalance it daily. 
                         //    // Keep Risked exposure leverage under x1.9  (0.90multiplier) above 100K PV, <=1.8 (0.85multiplier) above 150K PV, 
                         //    // <=1.7 (0.803multiplier) above 200K-220K PV, (** we are here Now **)
@@ -252,10 +254,10 @@ namespace VirtualBroker
                         // 2018-02-06: when VIX went to 50 in market panic, XIV was terminated, I thought it is better to retire this for DC. 200K portfolio ended in 130K. About -70K loss. He wouldn't like to continue that.
                         // 2018-03-28: we restarted HL. PV was 135K, but restarted with 150K. However, HL made safer, because we halved all weights. CAGR: 60% to 31%; maxDD: -53% to -30%. Sharpe: 1.17 to 1.20. Good.
                         new BrokerTaskPortfolio() { Name = "! Harry Long2(Contango-Bond) harvester Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
-                            MaxTradeValueInCurrency = 400000, // For Mr.C.: portfolio is 150K original. + 2019-03: +150K = 300K, Set MaxValue=400K  (assuming portfolio double in a year)
-                            MinTradeValueInCurrency = 200,  //50% allocation to all assets
+                            MaxTradeValueInCurrency = 500000, // For Mr.C.: portfolio is 150K original. + 2019-03: +150K = 300K, Set MaxValue=400K  (assuming portfolio double in a year)
+                            MinTradeValueInCurrency = 1000,  //50% allocation to all assets
                             // Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.075, -0.025, 0.05, 0.125, -0.425, -0.045, -0.13 }  } }
-                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "VXZ", "TQQQ", "TMV", "SCO", "UNG" }, AssetsWeights = new double[] { 0.075, -0.025, -0.05, 0.125, -0.425, 0.0675, -0.39 }  } }  // 2020-04-02: UWT, DWT was delisted because it went to penny stock
+                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "VXZ", "TQQQ", "TMV", "SCO", "UNG" }, AssetsWeights = new double[] { 0.075*cDcLvrg, -0.025*cDcLvrg, -0.05*cDcLvrg, 0.125*cDcLvrg, -0.425*cDcLvrg, 0.0675*cDcLvrg, -0.39*cDcLvrg }  } }  // 2020-04-02: UWT, DWT was delisted because it went to penny stock
                         //new BrokerTaskPortfolio() { Name = "! IB T. Risky 2 Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.TuSecondary,
                         //    MaxTradeValueInCurrency = 15000, // For Tu: portfolio is 5K original. Set MaxValue=15K  (assuming portfolio double in a year)
                         //    MinTradeValueInCurrency = 200,
