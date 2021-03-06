@@ -84,33 +84,34 @@ namespace SQLab.Controllers
         {
             //Defining asset lists.
             string[] volAssetList = new string[] { "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ"};
-            string[] volAssetListNN = new string[] { "SVXY_Light", "VXX", "VXZ"};
+            string[] volAssetListNN = new string[] { "SVXY", "VXX", "VXZ"};
 
             //string[] volAssetList = new string[] { "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ" };
             //string[] volAssetListNN = new string[] { "SVXY_Light", "VXX", "VXZ", "UVXY_Light", "TVIX_Better" };
 
-            string[] etpAssetList = new string[] { "SPY", "UPRO.SQ", "QQQ", "TQQQ.SQ", "FAS.SQ", "TMV", "UCO", "UGLD"};
-           string[] etpAssetListNN = new string[] { "SPY", "UPRO", "QQQ", "TQQQ", "FAS", "TMV", "UCO", "UGLD" };
+            string[] etpAssetList = new string[] { "SPY", "UPRO.SQ", "QQQ", "TQQQ.SQ", "TLT", "TMV", "UCO", "SO", "UNG"};
+            string[] etpAssetListNN = new string[] { "SPY", "UPRO", "QQQ", "TQQQ", "TLT", "TMV", "UCO", "SO", "UNG"};
 
             //string[] etpAssetList = new string[] { "SPY", "UPRO.SQ", "QQQ", "TQQQ.SQ", "FAS.SQ", "TMV", "UGAZ", "UWT", "UGLD" };
             //string[] etpAssetListNN = new string[] { "SPY", "UPRO", "QQQ", "TQQQ", "FAS", "TMV", "UGAZ", "UWT", "UGLD" };
 
-            string[] gchAssetList = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NVDA", "PYPL", "QCOM", "V" };
-            string[] gchAssetListNN = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NVDA", "PYPL", "QCOM", "V" };
+            string[] gchAssetList = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SQ", "V" };
+            string[] gchAssetListNN = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SQ", "V" };
 
             string[] gmAssetList = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ"};
             string[] gmAssetListNN = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ" };
 
             string[] vixAssetList = new string[] { "^VIX" };
 
-            string[] defaultCheckedList = new string[] { "SPY", "QQQ", "VXX", "AAPL", "AMZN", "FB", "GOOGL" }; 
+            string[] defaultCheckedList = new string[] { "SPY", "QQQ", "VXX", "TMV", "UCO", "UNG" }; 
 
             var allAssetList = etpAssetList.Union(volAssetList).Union(gchAssetList).Union(gmAssetList).Union(vixAssetList).ToArray();
             var usedAssetList = etpAssetListNN.Union(volAssetListNN).Union(gchAssetListNN).Union(gmAssetListNN).ToArray();
 
 
-            //string[] allAssetList = new string[]{ "SPY", "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ", "UVXY!Light1.5x.SQ", "TVIX!Better1.SQ", "TQQQ.SQ", "TCEHY", "^VIX" };
-            //string[] usedAssetList = new string[] { "SPY", "SVXY_Light", "VXX", "VXZ", "UVXY_Light", "TVIX_Better", "TQQQ", "TCEHY"};
+            // string[] allAssetList = new string[]{ "SPY", "QQQ", "SVXY!Light0.5x.SQ", "VXX.SQ", "VXZ.SQ", "UVXY!Light1.5x.SQ", "TQQQ.SQ", "^VIX" };
+            // string[] usedAssetList = new string[] { "SPY", "QQQ", "SVXY_Light", "VXX", "VXZ", "UVXY_Light", "TQQQ"};
+            // string[] defaultCheckedList = new string[] { "SPY", "QQQ", "VXX"};
 
             int volLBPeriod = p_lbP;
             int[] retLB = new int[] {1, 3, 5, 10, 20, 63, 126, 252};
