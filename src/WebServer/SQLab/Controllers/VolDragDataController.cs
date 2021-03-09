@@ -103,7 +103,7 @@ namespace SQLab.Controllers
 
             string[] vixAssetList = new string[] { "^VIX" };
 
-            string[] defaultCheckedList = new string[] { "SPY", "QQQ", "VXX", "TMV", "UCO", "UNG" }; 
+            string[] defaultCheckedList = new string[] { "SPY", "QQQ", "TQQQ", "VXX", "TMV", "UCO", "UNG" }; 
 
             var allAssetList = etpAssetList.Union(volAssetList).Union(gchAssetList).Union(gmAssetList).Union(vixAssetList).ToArray();
             var usedAssetList = etpAssetListNN.Union(volAssetListNN).Union(gchAssetListNN).Union(gmAssetListNN).ToArray();
