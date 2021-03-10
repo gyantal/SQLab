@@ -9,7 +9,6 @@ import { NavMenuComponent } from './components/navmenu/navmenu.component';
 import { HomeComponent } from './components/home/home.component';
 import { FetchDataComponent } from './components/fetchdata/fetchdata.component';
 import { CounterComponent } from './components/counter/counter.component';
-import { HealthMonitorComponent } from './components/healthmonitor/healthmonitor.component';
 import { QuickTesterComponent } from './components/quicktester/quicktester.component';
 
 @NgModule({
@@ -18,7 +17,6 @@ import { QuickTesterComponent } from './components/quicktester/quicktester.compo
         NavMenuComponent,
         CounterComponent,
         FetchDataComponent,
-        HealthMonitorComponent,
         QuickTesterComponent,
         HomeComponent
     ],
@@ -30,8 +28,6 @@ import { QuickTesterComponent } from './components/quicktester/quicktester.compo
             { path: '', redirectTo: 'home', pathMatch: 'full' },
             { path: 'home', component: HomeComponent },
             { path: 'counter', component: CounterComponent },
-            { path: 'healthmonitor', component: HealthMonitorComponent },
-            { path: 'HealthMonitor', component: HealthMonitorComponent },
             { path: 'quicktester', component: QuickTesterComponent },
             { path: 'QuickTester', component: QuickTesterComponent },
             { path: 'fetch-data', component: FetchDataComponent },

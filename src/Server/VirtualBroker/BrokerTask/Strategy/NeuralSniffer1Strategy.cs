@@ -136,7 +136,7 @@ namespace VirtualBroker
                 forecast = 1;
                 Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"Bullish Holiday Range[-3,+3 days] around NewYear, GoodFriday, Thanksgiving, Xmas. Final RUT Forecast: { forecast * 100}%");
                 Utils.Logger.Info($"Bullish Holiday Range[-3,+3 days] around NewYear, GoodFriday, Thanksgiving, Xmas. Final RUT Forecast: { forecast * 100}%");
-                m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">Bullish Holiday Range[-3, +3 days] around NewYear, GoodFriday, Thanksgiving, Xmas.Final RUT Forecast: { forecast * 100}%</font>");
+                m_detailedReportSb.AppendLine($"<font color=\"#105A10\">Bullish Holiday Range[-3, +3 days] around NewYear, GoodFriday, Thanksgiving, Xmas.Final RUT Forecast: { forecast * 100}%</font>");
             }
             else
             {
@@ -222,7 +222,7 @@ namespace VirtualBroker
 
                 Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"RUT % Chg:{ dailyPercentChange * 100.0:F2}%, Final RUT Forecast: { forecast * 100}%");
                 Utils.Logger.Info($"RUT %Chg:{dailyPercentChange * 100.0:F2}%, Final RUT Forecast:{forecast * 100}%");
-                m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">RUT %Chg:{dailyPercentChange * 100.0:F2}%, Final RUT Forecast:{forecast * 100}%</font>");
+                m_detailedReportSb.AppendLine($"<font color=\"#105A10\">RUT %Chg:{dailyPercentChange * 100.0:F2}%, Final RUT Forecast:{forecast * 100}%</font>");
             }
 
             List<PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();

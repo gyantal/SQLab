@@ -34,7 +34,7 @@ namespace VirtualBroker
 
             Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"Connor: VXX %Chg:{dailyPercentChange * 100.0:F2}%,ProbFT:{m_probDailyFT * 100.0}%,Regime:{((isFTRegime) ? "FT" : "MR")},Forecast:{forecast * 100}%");
             Utils.Logger.Info($"VXX %Chg:{dailyPercentChange * 100.0:F2}%,ProbFT:{m_probDailyFT * 100.0}%,Regime:{((isFTRegime) ? "FT" : "MR")},Forecast:{forecast * 100}%");
-            m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">Connor: VXX %Chg:{dailyPercentChange * 100.0:F2}%,ProbFT:{m_probDailyFT * 100.0}%,Regime:{((isFTRegime) ? "FT" : "MR")},Forecast:{forecast * 100}%</font>");
+            m_detailedReportSb.AppendLine($"<font color=\"#105A10\">Connor: VXX %Chg:{dailyPercentChange * 100.0:F2}%,ProbFT:{m_probDailyFT * 100.0}%,Regime:{((isFTRegime) ? "FT" : "MR")},Forecast:{forecast * 100}%</font>");
             return forecast;
         }
     }

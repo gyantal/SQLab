@@ -17,20 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="ClientApp\app\components\healthmonitor\HMData.ts" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Common\DbCommon\DbCommon.csproj" />
     <ProjectReference Include="..\..\Common\SqCommon\SqCommon.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Views\Account\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <TypeScriptCompile Include="ClientApp\app\components\healthmonitor\HMData.ts" />
   </ItemGroup>
 
   <Target Name="DebugRunWebpack" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('wwwroot\dist') ">

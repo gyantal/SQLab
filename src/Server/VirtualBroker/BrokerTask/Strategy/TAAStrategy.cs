@@ -122,7 +122,7 @@ namespace VirtualBroker
             string consoleMsg = consoleMsgSb.ToString();
             Utils.ConsoleWriteLine(ConsoleColor.Green, false, consoleMsg);
             Utils.Logger.Info(consoleMsg);
-            m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">{consoleMsg}</font>");
+            m_detailedReportSb.AppendLine($"<font color=\"#105A10\">{consoleMsg}</font>");
 
             return specs;
         }

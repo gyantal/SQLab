@@ -98,7 +98,7 @@ namespace VirtualBroker
 
             Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"Final VXX Forecast:{forecast * 100}%");
             Utils.Logger.Info($"Final VXX Forecast:{forecast * 100}%");
-            m_detailedReportSb.AppendLine($"<font color=\"#10ff10\">Final VXX Forecast:{forecast * 100}%</font>");
+            m_detailedReportSb.AppendLine($"<font color=\"#105A10\">Final VXX Forecast:{forecast * 100}%</font>");
 
             List <PortfolioPositionSpec> specs = new List<PortfolioPositionSpec>();
             if (forecast > 0)   // bullish on VXX: buy VXX or UVXY/TVIX
