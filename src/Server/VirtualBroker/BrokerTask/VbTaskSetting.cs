@@ -111,23 +111,6 @@ namespace VirtualBroker
 
     }
 
-  
-    public enum BrokerTaskState : byte { NeverStarted, StartedButNotYetInitialized, StartedAndInitialized, Working, Finished, Crashed, Unknown };
-
-    // Schema is like a Class for BrokerTasks. The instances of this class is the BrokerTasks or we called it before: BrokerTaskExecutions
-    // If a BrokerTaskSchema specifies a Task that runs every 5 minutes, many parallel BrokerTasks of the same Type/Schema can exist at the same time
-    public class BrokerTaskSchema : TriggeredTaskSchema
-    {
-        public Dictionary<object, object> Settings { get; set; } = new Dictionary<object, object>();
-
-        public List<BrokerTask> BrokerTasks { get; set; } = new List<BrokerTask>();      // if we Execute the task every 5 minutes than these 2 executions can live in parallel
-
-        public Func<BrokerTask> BrokerTaskFactory { get; set; }
-
-        public BrokerTaskSchema()
-        {
-        }
-    }
 
     
 }

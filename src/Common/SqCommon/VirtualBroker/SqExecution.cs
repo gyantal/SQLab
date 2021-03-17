@@ -1,0 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace SqCommon
+{
+    public enum ExecutionState : byte { NeverStarted, Working, FinishedOk, FinishedError, Unknown };
+    public class SqExecution
+    {
+        public SqTask BrokerTaskSchema { get; set; }
+        public SqTrigger Trigger { get; set; }
+        public ExecutionState BrokerTaskState { get; set; } = ExecutionState.NeverStarted; 
+
+        public virtual void Run()
+        {
+            
+        }
+    }
+}

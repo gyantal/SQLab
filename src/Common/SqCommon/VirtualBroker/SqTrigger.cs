@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 // A common base used both in VBroker and HealthMonitor (E.g. HealthMonitor checks that VBroker OK message arrived properly from the Expected Strategy at the expected time. If not, it sends warning email.)
 namespace SqCommon
 {
+    
     public enum TriggerType : byte
     {   // similar to Windows TaskScheduler
         // On a schedule: 
@@ -16,19 +17,7 @@ namespace SqCommon
     };
     public enum StartTimeBase : byte { BaseOnAbsoluteTime, BaseOnUsaMarketOpen, BaseOnUsaMarketClose, Unknown };
 
-    public class TriggeredTaskSchema
-    {
-        public string Name { get; set; }
-        string m_nameForTextToSpeech = null;
-        public string NameForTextToSpeech  // "UberVXX" is said as 'bsxxx' by Twilio on the phonecall, which is unrecognisable
-        {
-            get { return (String.IsNullOrEmpty(m_nameForTextToSpeech)) ? Name : m_nameForTextToSpeech; }
-            set { m_nameForTextToSpeech = value; }
-        }
-        public List<TriggerBase> Triggers { get; set; } = new List<TriggerBase>();
-    }
-
-    public class TriggerBase
+    public class SqTrigger
     {
         public bool Enabled { get; set; }
         public TriggerType TriggerType { get; set; }   // currently only Daily supported
@@ -41,9 +30,9 @@ namespace SqCommon
         public DateTime? NextScheduleTimeUtc { get; set; }
         public Timer Timer { get; set; }
 
-        public TriggeredTaskSchema TriggeredTaskSchema { get; set; }
+        public SqTask SqTask { get; set; }
 
-        public TriggerBase()
+        public SqTrigger()
         {
             Timer = new System.Threading.Timer(new TimerCallback(Timer_Elapsed), null, TimeSpan.FromMilliseconds(-1.0), TimeSpan.FromMilliseconds(-1.0));
         }
@@ -60,5 +49,49 @@ namespace SqCommon
                 throw;
             }
         }
+        public void BrokerTaskExecutionThreadRun()
+        {
+            try
+            {
+                SqExecution brokerTask = ((SqTask)SqTask).BrokerTaskFactory();
+                brokerTask.BrokerTaskSchema = (SqTask)SqTask;
+                brokerTask.Trigger = this;
+                brokerTask.Run();
+            }
+            catch (Exception e)
+            {                
+                HealthMonitorMessage.SendAsync($"Exception in BrokerTaskExecutionThreadRun(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
+            }
+        }
     }
+
+    public class VbTrigger : SqTrigger
+    {
+        public VbTrigger() : base()
+        {
+        }
+
+        public override void Timer_Elapsed(object state)    // Timer is coming on a ThreadPool thread
+        {
+            Utils.Logger.Info("Trigger.Timer_Elapsed() ");
+            NextScheduleTimeUtc = null;
+
+            bool isMarketTradingDay;
+            DateTime marketOpenTimeUtc, marketCloseTimeUtc;
+            bool isTradingHoursOK = Utils.DetermineUsaMarketTradingHours(DateTime.UtcNow, out isMarketTradingDay, out marketOpenTimeUtc, out marketCloseTimeUtc, TimeSpan.FromDays(3));
+            if (!isTradingHoursOK)
+            {
+                Utils.Logger.Error("DetermineUsaMarketTradingHours() was not ok.");
+            }
+            else
+            {
+                SqTaskScheduler.g_brokerScheduler.ScheduleTrigger(this, isMarketTradingDay, marketOpenTimeUtc, marketCloseTimeUtc);
+            }
+
+            Task.Factory.StartNew(BrokerTaskExecutionThreadRun, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("VbTrigger.Timer_Elapsed()");  // a separate thread. Not on ThreadPool, because it may take 30+ seconds
+        }
+
+    }
+
+
 }

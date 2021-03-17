@@ -226,7 +226,7 @@ namespace VirtualBroker
         {
             StringBuilder sb = new StringBuilder();
             DateTime utcNow = DateTime.UtcNow;
-            foreach (var taskSchema in g_taskSchemas)
+            foreach (var taskSchema in SqTaskScheduler.g_taskSchemas)
             {
                 DateTime nextTimeUtc = DateTime.MaxValue;
                 foreach (var trigger in taskSchema.Triggers)
@@ -242,7 +242,7 @@ namespace VirtualBroker
 
         internal void TestElapseFirstTriggerWithSimulation(string p_taskSchemaName)
         {
-            var taskSchema = g_taskSchemas.Find(r => r.Name == p_taskSchemaName);
+            var taskSchema = SqTaskScheduler.g_taskSchemas.Find(r => r.Name == p_taskSchemaName);
             if (taskSchema == null)
             {
                 Console.WriteLine("No such taskschema.");

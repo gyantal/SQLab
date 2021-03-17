@@ -11,16 +11,16 @@ using Utils = SqCommon.Utils;
 
 namespace VirtualBroker
 {
-    public class BrokerTaskTradeStrategy : BrokerTask
+    public class VbTradeStrategyExecution : SqExecution
     {
         public IBrokerStrategy Strategy { get; set; }
 
-        public static BrokerTask BrokerTaskFactoryCreate()
+        public static SqExecution BrokerTaskFactoryCreate()
         {
-            return new BrokerTaskTradeStrategy();
+            return new VbTradeStrategyExecution();
         }
 
-        internal override void Run()
+        public override void Run()
         {
             Console.WriteLine();
             Utils.Logger.Info($"****  StrategyBrokerTask.Run() starts. BrokerTask Name: {BrokerTaskSchema.Name}");
