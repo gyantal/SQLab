@@ -32,7 +32,7 @@ namespace VirtualBroker
 
             g_gatewaysWatcher.Init();
             BuildTasks();
-            SqTaskScheduler.g_brokerScheduler.Init();
+            SqTaskScheduler.gTaskScheduler.Init();
 
             m_tcpListener = new ParallelTcpListener(VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener, VirtualBrokerMessage.DefaultVirtualBrokerServerPort, ProcessTcpClient);
             Console.WriteLine($"VBroker is listening on privateIP: {VirtualBrokerMessage.VirtualBrokerServerPrivateIpForListener}:{VirtualBrokerMessage.DefaultVirtualBrokerServerPort}");
@@ -68,7 +68,7 @@ namespace VirtualBroker
             //var neuralSniffer1TaskSchema = new BrokerTaskSchema()
             //{
             //    Name = "NeuralSniffer1",
-            //    BrokerTaskFactory = BrokerTaskTradeStrategy.BrokerTaskFactoryCreate,
+            //    BrokerTaskFactory = BrokerTaskTradeStrategy.ExecutionFactoryCreate,
             //    Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
             //        { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(NeuralSniffer1Strategy.StrategyFactoryCreate) },
             //        { BrokerTaskSetting.OrderExecution, OrderExecution.MarketOnClose },
@@ -110,7 +110,7 @@ namespace VirtualBroker
             //var taaTaskSchema = new BrokerTaskSchema()
             //{
             //    Name = "TAA",
-            //    BrokerTaskFactory = BrokerTaskTradeStrategy.BrokerTaskFactoryCreate,
+            //    BrokerTaskFactory = BrokerTaskTradeStrategy.ExecutionFactoryCreate,
             //    Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
             //        { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(TAAStrategy.StrategyFactoryCreate) },
             //        { BrokerTaskSetting.OrderExecution, OrderExecution.MarketOnClose },
@@ -151,10 +151,10 @@ namespace VirtualBroker
             //g_taskSchemas.Add(taaTaskSchema);
 
 
-            var uberVxxTaskSchema = new SqTask()
+            var uberVxxTask = new SqTask()
             {
                 Name = "UberVXX",
-                BrokerTaskFactory = VbTradeStrategyExecution.BrokerTaskFactoryCreate,
+                ExecutionFactory = VbTradeStrategyExecution.ExecutionFactoryCreate,
                 Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
                     { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(UberVxxStrategy.StrategyFactoryCreate)  },
                     { BrokerTaskSetting.OrderExecution, OrderExecution.Market },
@@ -177,31 +177,31 @@ namespace VirtualBroker
                     }
                 }
             };
-            uberVxxTaskSchema.Triggers.Add(new VbTrigger()
+            uberVxxTask.Triggers.Add(new SqTrigger()
             {
-                SqTask = uberVxxTaskSchema,
+                SqTask = uberVxxTask,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
                 StartTimeOffset = TimeSpan.FromMinutes(25),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
-            uberVxxTaskSchema.Triggers.Add(new VbTrigger()
+            uberVxxTask.Triggers.Add(new SqTrigger()
             {
-                SqTask = uberVxxTaskSchema,
+                SqTask = uberVxxTask,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
                 StartTimeOffset = TimeSpan.FromMinutes(-35),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
-            uberVxxTaskSchema.Triggers.Add(new VbTrigger()
+            uberVxxTask.Triggers.Add(new SqTrigger()
             {
-                SqTask = uberVxxTaskSchema,
+                SqTask = uberVxxTask,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
                 StartTimeOffset = TimeSpan.FromSeconds(-15),    // from -20sec to -15sec. From start, the trade executes in 2seconds
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, false } }
             });
-            SqTaskScheduler.g_taskSchemas.Add(uberVxxTaskSchema);
+            SqTaskScheduler.gSqTasks.Add(uberVxxTask);
 
 
 
@@ -214,10 +214,10 @@ namespace VirtualBroker
             // In the future: trade with both instruments: 50% USO, 50% SCO.
             const double cAgyLvrg = 0.803;
             const double cDcLvrg = 0.50; // 2021-02-25: temporary leverage to 50%
-            var harryLongTaskSchema = new SqTask()
+            var harryLongTask = new SqTask()
             {
                 Name = "HarryLong",
-                BrokerTaskFactory = VbTradeStrategyExecution.BrokerTaskFactoryCreate,
+                ExecutionFactory = VbTradeStrategyExecution.ExecutionFactoryCreate,
                 Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
                     { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(HarryLongStrategy.StrategyFactoryCreate) },
                     { BrokerTaskSetting.OrderExecution, OrderExecution.Market },
@@ -268,31 +268,31 @@ namespace VirtualBroker
                     }
                 }
             };
-            harryLongTaskSchema.Triggers.Add(new VbTrigger()
+            harryLongTask.Triggers.Add(new SqTrigger()
             {
-                SqTask = harryLongTaskSchema,
+                SqTask = harryLongTask,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketOpen,
                 StartTimeOffset = TimeSpan.FromMinutes(30),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
-            harryLongTaskSchema.Triggers.Add(new VbTrigger()
+            harryLongTask.Triggers.Add(new SqTrigger()
             {
-                SqTask = harryLongTaskSchema,
+                SqTask = harryLongTask,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
                 StartTimeOffset = TimeSpan.FromMinutes(-31),
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, true } }
             });
-            harryLongTaskSchema.Triggers.Add(new VbTrigger()
+            harryLongTask.Triggers.Add(new SqTrigger()
             {
-                SqTask = harryLongTaskSchema,
+                SqTask = harryLongTask,
                 TriggerType = TriggerType.DailyOnUsaMarketDay,
                 StartTimeBase = StartTimeBase.BaseOnUsaMarketClose,
                 StartTimeOffset = TimeSpan.FromSeconds(-11),    // Give UberVXX priority (executing at -15sec). That is more important because that can change from full 100% long to -200% short. This Harry Long strategy just slowly modifies weights, so if one trade is missed, it is not a problem.
                 TriggerSettings = new Dictionary<object, object>() { { BrokerTaskSetting.IsSimulatedTrades, false } }
             });
-            SqTaskScheduler.g_taskSchemas.Add(harryLongTaskSchema);
+            SqTaskScheduler.gSqTasks.Add(harryLongTask);
 
         }
 
@@ -301,7 +301,7 @@ namespace VirtualBroker
         internal void Exit() // in general exit should happen in the opposite order as Init()
         {
             m_tcpListener.StopTcpMessageListener();
-            SqTaskScheduler.g_brokerScheduler.Exit();
+            SqTaskScheduler.gTaskScheduler.Exit();
             g_gatewaysWatcher.Exit();
         }
         

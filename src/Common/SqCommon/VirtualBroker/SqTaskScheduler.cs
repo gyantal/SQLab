@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,8 +10,8 @@ namespace SqCommon
     
     public class SqTaskScheduler
     {
-        public static SqTaskScheduler g_brokerScheduler = new SqTaskScheduler();    // this is the Boss of the Virtual Broker bees. It schedules them.
-        public static List<SqTask> g_taskSchemas = new List<SqTask>();  // the worker bees, the Trading Agents
+        public static SqTaskScheduler gTaskScheduler = new SqTaskScheduler();    // this is the Boss of the Virtual Broker bees. It schedules them.
+        public static List<SqTask> gSqTasks = new List<SqTask>();  // the worker bees, the Trading Agents
     
         public void Init()
         {
@@ -28,8 +29,10 @@ namespace SqCommon
                 // maybe loop is not required.
                 // in the past we try to get UsaMarketOpenOrCloseTime() every 30 minutes. It was determined from YFinance intrady. "sleep 30 min for DetermineUsaMarketOpenOrCloseTime()"
                 // however, it may be a good idea that the Scheduler periodically wakes up and check Tasks
+                const int cVbSchedulerSleepMinutes = 30;
                 while (true) 
                 {
+                    Utils.Logger.Info($"SchedulerThreadRun() loop BEGIN. Awake at every {cVbSchedulerSleepMinutes}min.");
                     bool isMarketTradingDay;
                     DateTime marketOpenTimeUtc, marketCloseTimeUtc;
                     //  Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.
@@ -40,26 +43,26 @@ namespace SqCommon
                     }
                     else
                     {
-                        foreach (SqTask taskSchema in g_taskSchemas)
+                        foreach (SqTask taskSchema in gSqTasks)
                         {
-                            foreach (VbTrigger trigger in taskSchema.Triggers)
+                            foreach (SqTrigger trigger in taskSchema.Triggers)
                             {
                                 ScheduleTrigger(trigger, isMarketTradingDay, marketOpenTimeUtc, marketCloseTimeUtc);
                             }
                         }
                     }
 
-                    Thread.Sleep(TimeSpan.FromMinutes(30));     // try reschedulement in 30 minutes
+                    Thread.Sleep(TimeSpan.FromMinutes(cVbSchedulerSleepMinutes));     // try reschedulement in 30 minutes
                 }
             }
             catch (Exception e)
             {
                 //  Utils.DetermineUsaMarketTradingHours():  may throw an exception once per year, when Nasdaq page changes. BrokerScheduler.SchedulerThreadRun() catches it and HealthMonitor notified in VBroker.               
-                HealthMonitorMessage.SendAsync($"Exception in BrokerScheduler.RecreateTasksAndLoopThread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
+                HealthMonitorMessage.SendAsync($"Exception in Scheduler.RecreateTasksAndLoopThread. Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
             }
         }
 
-        internal void ScheduleTrigger(SqTrigger p_trigger, bool p_isMarketTradingDay, DateTime p_marketOpenTimeUtc, DateTime p_marketCloseTimeUtc)
+        public void ScheduleTrigger(SqTrigger p_trigger, bool p_isMarketTradingDay, DateTime p_marketOpenTimeUtc, DateTime p_marketCloseTimeUtc)
         {
             DateTime? proposedTime = CalcNextTriggerTime(p_trigger, p_isMarketTradingDay, p_marketOpenTimeUtc, p_marketCloseTimeUtc);
             if (proposedTime != null)
@@ -107,6 +110,24 @@ namespace SqCommon
                     return proposedTime;
             }
             return null;
+        }
+
+        public StringBuilder GetNextScheduleTimes(bool p_isHtml)
+        {
+            StringBuilder sb = new StringBuilder();
+            DateTime utcNow = DateTime.UtcNow;
+            foreach (var taskSchema in gSqTasks)
+            {
+                DateTime nextTimeUtc = DateTime.MaxValue;
+                foreach (var trigger in taskSchema.Triggers)
+                {
+                    if ((trigger.NextScheduleTimeUtc != null) && (trigger.NextScheduleTimeUtc > utcNow) && (trigger.NextScheduleTimeUtc < nextTimeUtc))
+                        nextTimeUtc = (DateTime)trigger.NextScheduleTimeUtc;
+                }
+
+                sb.AppendLine($"{taskSchema.Name}: {nextTimeUtc.ToString("MM-dd HH:mm:ss")}{((p_isHtml) ? "<br>" : String.Empty)}");
+            }
+            return sb;
         }
 
         public void Exit()

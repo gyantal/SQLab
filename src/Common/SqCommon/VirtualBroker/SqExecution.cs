@@ -9,7 +9,7 @@ namespace SqCommon
     public enum ExecutionState : byte { NeverStarted, Working, FinishedOk, FinishedError, Unknown };
     public class SqExecution
     {
-        public SqTask BrokerTaskSchema { get; set; }
+        public SqTask SqTask { get; set; }
         public SqTrigger Trigger { get; set; }
         public ExecutionState BrokerTaskState { get; set; } = ExecutionState.NeverStarted; 
 

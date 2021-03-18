@@ -12,7 +12,6 @@ namespace VirtualBroker
     // TODO: read this and throw out that we don't use
     public enum BrokerTaskSetting
     {
-        Name,
         ActionType,     // LeverageCheckerAlert, MarketFallMoreThan2PercentAlert, etc.
         ActionParams,   // global for all portfolios
         Portfolios,

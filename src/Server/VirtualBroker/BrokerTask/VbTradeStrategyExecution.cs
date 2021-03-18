@@ -15,7 +15,7 @@ namespace VirtualBroker
     {
         public IBrokerStrategy Strategy { get; set; }
 
-        public static SqExecution BrokerTaskFactoryCreate()
+        public static SqExecution ExecutionFactoryCreate()
         {
             return new VbTradeStrategyExecution();
         }
@@ -23,18 +23,18 @@ namespace VirtualBroker
         public override void Run()
         {
             Console.WriteLine();
-            Utils.Logger.Info($"****  StrategyBrokerTask.Run() starts. BrokerTask Name: {BrokerTaskSchema.Name}");
-            Utils.ConsoleWriteLine(ConsoleColor.Cyan, true, $"****  BrokerTask starts: '{BrokerTaskSchema.Name}'");
+            Utils.Logger.Info($"****  StrategyBrokerTask.Run() starts. BrokerTask Name: {SqTask.Name}");
+            Utils.ConsoleWriteLine(ConsoleColor.Cyan, true, $"****  BrokerTask starts: '{SqTask.Name}'");
             StringBuilder detailedReportSb = new StringBuilder();
-            detailedReportSb.AppendLine($"<font color=\"#000080\"><strong>{DateTime.UtcNow.ToString("MM-dd'T'HH':'mm':'ss': '")}'{BrokerTaskSchema.Name}'</strong></font>");
+            detailedReportSb.AppendLine($"<font color=\"#000080\"><strong>{DateTime.UtcNow.ToString("MM-dd'T'HH':'mm':'ss': '")}'{SqTask.Name}'</strong></font>");
 
             //************************* 0. Initializations
-            var strategyFactoryCreate = (Func<IBrokerStrategy>)BrokerTaskSchema.Settings[BrokerTaskSetting.StrategyFactory];
+            var strategyFactoryCreate = (Func<IBrokerStrategy>)SqTask.Settings[BrokerTaskSetting.StrategyFactory];
             Strategy = strategyFactoryCreate();
 
 
             //************************* 1. Get currentPortfolios for all users from sql DB
-            List<BrokerTaskPortfolio> portfolios = (List<BrokerTaskPortfolio>)BrokerTaskSchema.Settings[BrokerTaskSetting.Portfolios];
+            List<BrokerTaskPortfolio> portfolios = (List<BrokerTaskPortfolio>)SqTask.Settings[BrokerTaskSetting.Portfolios];
             // http://stackoverflow.com/questions/1817300/convert-listderivedclass-to-listbaseclass
             if (!SqlTools.LoadHistoricalPipsFromDbAndCalculateTodayPips(portfolios.Cast<DbPortfolio>().ToList()).Result) // shallow Copy the list with Pointers. Fine. It has only 1 or 2 portfolios
                 return;
@@ -146,7 +146,7 @@ namespace VirtualBroker
             // ******************* 6. send OK or Error reports to HealthMonitor
             if (!Controller.IsRunningAsLocalDevelopment())      // When VBroker.exe is developed, we don't want to run HealthMonitor.exe every time on localhost
             {
-                string briefReport = (wasAllOrdersOk) ? $"BrokerTask {BrokerTaskSchema.Name} was OK." : $"BrokerTask {BrokerTaskSchema.Name} had ERROR. {errorStr.ToString()} Inform supervisors to investigate log files for more detail. ";
+                string briefReport = (wasAllOrdersOk) ? $"BrokerTask {SqTask.Name} was OK." : $"BrokerTask {SqTask.Name} had ERROR. {errorStr.ToString()} Inform supervisors to investigate log files for more detail. ";
                 string healthMonitorMsg = $"<BriefReport>{briefReport}</BriefReport><DetailedReport>{detailedReportSb.ToString().Replace(Environment.NewLine, "<br>")}</DetailedReport>";
 
                 if (!new HealthMonitorMessage()
@@ -160,7 +160,7 @@ namespace VirtualBroker
 
 
             Utils.Logger.Info($"StrategyBrokerTask.Run() ends.");
-            Utils.ConsoleWriteLine(ConsoleColor.Yellow, true, $"****  BrokerTask ends: '{BrokerTaskSchema.Name}'");
+            Utils.ConsoleWriteLine(ConsoleColor.Yellow, true, $"****  BrokerTask ends: '{SqTask.Name}'");
         }
 
 
@@ -324,10 +324,10 @@ namespace VirtualBroker
             // apparently ,the exchanges close the time window 2 minutes before market open. So, if IB is quick enough, it can accept trades even in the last 5 minutes (once I tried with 3 minutes manually, and was successfull)
             // so: with IB: try: 5 minutes, and increase it 1 minute every time it failed. (at the end, we will get to 20 minutes). It may depend on the stock exchange. There are more lenient stock exchanges
             // An MOC (Market on Close) order must be  submitted no later than 15  minutes prior to the close of  the market.
-            object orderExecutionObj = BrokerTaskSchema.Settings[BrokerTaskSetting.OrderExecution]; // "MKT", "LMT", "MOC"
+            object orderExecutionObj = SqTask.Settings[BrokerTaskSetting.OrderExecution]; // "MKT", "LMT", "MOC"
             OrderExecution orderExecution = (orderExecutionObj != null) ? (OrderExecution)orderExecutionObj : OrderExecution.Market;    // Market is the default
             object orderTifObj = null;
-            OrderTimeInForce orderTif = (BrokerTaskSchema.Settings.TryGetValue(BrokerTaskSetting.OrderTimeInForce, out orderTifObj)) ? (OrderTimeInForce)orderTifObj : OrderTimeInForce.Day;     // Day is the default
+            OrderTimeInForce orderTif = (SqTask.Settings.TryGetValue(BrokerTaskSetting.OrderTimeInForce, out orderTifObj)) ? (OrderTimeInForce)orderTifObj : OrderTimeInForce.Day;     // Day is the default
             StrongAssert.True(orderExecution == OrderExecution.Market || orderExecution == OrderExecution.MarketOnClose, Severity.ThrowException, $"Non supported OrderExecution: {orderExecution}");
             StrongAssert.True(orderTif == OrderTimeInForce.Day, Severity.ThrowException, $"Non supported OrderTimeInForce: {orderTif}");
 

@@ -39,40 +39,6 @@ namespace SqCommon
 
         public virtual void Timer_Elapsed(object state)    // Timer is coming on a ThreadPool thread
         {
-            try
-            {
-                Utils.Logger.Warn("TriggerBase.Timer_Elapsed(). You shouldn't be here. Timer_Elapsed() virtual method should be called in the derived class.");
-            }
-            catch (Exception e)
-            {
-                Utils.Logger.Error(e, "TriggerBase.Timer_Elapsed() exception.");
-                throw;
-            }
-        }
-        public void BrokerTaskExecutionThreadRun()
-        {
-            try
-            {
-                SqExecution brokerTask = ((SqTask)SqTask).BrokerTaskFactory();
-                brokerTask.BrokerTaskSchema = (SqTask)SqTask;
-                brokerTask.Trigger = this;
-                brokerTask.Run();
-            }
-            catch (Exception e)
-            {                
-                HealthMonitorMessage.SendAsync($"Exception in BrokerTaskExecutionThreadRun(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
-            }
-        }
-    }
-
-    public class VbTrigger : SqTrigger
-    {
-        public VbTrigger() : base()
-        {
-        }
-
-        public override void Timer_Elapsed(object state)    // Timer is coming on a ThreadPool thread
-        {
             Utils.Logger.Info("Trigger.Timer_Elapsed() ");
             NextScheduleTimeUtc = null;
 
@@ -80,18 +46,24 @@ namespace SqCommon
             DateTime marketOpenTimeUtc, marketCloseTimeUtc;
             bool isTradingHoursOK = Utils.DetermineUsaMarketTradingHours(DateTime.UtcNow, out isMarketTradingDay, out marketOpenTimeUtc, out marketCloseTimeUtc, TimeSpan.FromDays(3));
             if (!isTradingHoursOK)
-            {
                 Utils.Logger.Error("DetermineUsaMarketTradingHours() was not ok.");
-            }
             else
+                SqTaskScheduler.gTaskScheduler.ScheduleTrigger(this, isMarketTradingDay, marketOpenTimeUtc, marketCloseTimeUtc);
+
+            try
             {
-                SqTaskScheduler.g_brokerScheduler.ScheduleTrigger(this, isMarketTradingDay, marketOpenTimeUtc, marketCloseTimeUtc);
+                if (SqTask != null)
+                {
+                    SqExecution sqExecution = ((SqTask)SqTask).ExecutionFactory();
+                    sqExecution.SqTask = (SqTask)SqTask;
+                    sqExecution.Trigger = this;
+                    sqExecution.Run();
+                }
             }
-
-            Task.Factory.StartNew(BrokerTaskExecutionThreadRun, TaskCreationOptions.LongRunning).LogUnobservedTaskExceptions("VbTrigger.Timer_Elapsed()");  // a separate thread. Not on ThreadPool, because it may take 30+ seconds
+            catch (Exception e)
+            {                
+                HealthMonitorMessage.SendAsync($"Exception in BrokerTaskExecutionThreadRun(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
+            }
         }
-
     }
-
-
 }

@@ -219,43 +219,22 @@ namespace VirtualBroker
             }
         }
 
-        
-        
-
-        internal StringBuilder GetNextScheduleTimes(bool p_isHtml)
+        internal void TestElapseFirstTriggerWithSimulation(string p_taskName)
         {
-            StringBuilder sb = new StringBuilder();
-            DateTime utcNow = DateTime.UtcNow;
-            foreach (var taskSchema in SqTaskScheduler.g_taskSchemas)
+            var sqTask = SqTaskScheduler.gSqTasks.Find(r => r.Name == p_taskName);
+            if (sqTask == null)
             {
-                DateTime nextTimeUtc = DateTime.MaxValue;
-                foreach (var trigger in taskSchema.Triggers)
-                {
-                    if ((trigger.NextScheduleTimeUtc != null) && (trigger.NextScheduleTimeUtc > utcNow) && (trigger.NextScheduleTimeUtc < nextTimeUtc))
-                        nextTimeUtc = (DateTime)trigger.NextScheduleTimeUtc;
-                }
-
-                sb.AppendLine($"{taskSchema.Name}: {nextTimeUtc.ToString("MM-dd HH:mm:ss")}{((p_isHtml) ? "<br>" : String.Empty)}");
-            }
-            return sb;
-        }
-
-        internal void TestElapseFirstTriggerWithSimulation(string p_taskSchemaName)
-        {
-            var taskSchema = SqTaskScheduler.g_taskSchemas.Find(r => r.Name == p_taskSchemaName);
-            if (taskSchema == null)
-            {
-                Console.WriteLine("No such taskschema.");
+                Console.WriteLine("No such SqTask.");
                 return;
             }
 
-            foreach (var trigger in taskSchema.Triggers)
+            foreach (var trigger in sqTask.Triggers)
             {
                 if (trigger.TriggerSettings.TryGetValue(BrokerTaskSetting.IsSimulatedTrades, out object isSimulationObj))
                 {
                     if ((bool)isSimulationObj)  // execute only if isSimulation  of the Trigger == True
                     {
-                        ((VbTrigger)trigger).Timer_Elapsed(null);
+                        ((SqTrigger)trigger).Timer_Elapsed(null);
                         break;  // just elapse the first one
                     }
                 }

@@ -84,7 +84,7 @@ namespace VirtualBroker
                             Controller.g_controller.TestSqlDb();
                             break;
                         case "7":
-                            Console.WriteLine(Controller.g_controller.GetNextScheduleTimes(false).ToString());
+                            Console.WriteLine(SqTaskScheduler.gTaskScheduler.GetNextScheduleTimes(false).ToString());
                             break;
                         case "8":
                             Controller.g_controller.TestElapseFirstTriggerWithSimulation("NeuralSniffer1");
