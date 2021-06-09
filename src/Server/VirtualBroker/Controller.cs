@@ -213,13 +213,16 @@ namespace VirtualBroker
             // still, it is safer to short USO (can only break if all 3 futures go negative, and when I short it, I will profit), than long SCO (can break, if oil futures double, which day can do if they come from negative)
             // In the future: trade with both instruments: 50% USO, 50% SCO.
             const double cAgyLvrg = 0.803;
-            const double cDcLvrg = 0.50; // 2021-02-25: temporary leverage to 50%
+            const double cDcLvrg = 0.25; // 2021-02-25: temporary leverage to 50%, // 2021-05-05: another temporary leverage to 25%
+
+            // 2021-05-05: Inflation scare. DC preferred to decrease the TMV position to 1/3rd of previous. We decreased DCLeverage from 50% to 25%. TMV should be decreased by another 2/3rd to achieve the intended 1/3 TMV position. 1/3 = 2/6 = 1/2 * 2/3
+            const double cDcTmvLvrg = 0.67;
             var harryLongTask = new SqTask()
             {
                 Name = "HarryLong",
                 ExecutionFactory = VbTradeStrategyExecution.ExecutionFactoryCreate,
                 Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
-                    { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(HarryLongStrategy.StrategyFactoryCreate) },
+                    { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(SobekStrategy.StrategyFactoryCreate) },
                     { BrokerTaskSetting.OrderExecution, OrderExecution.Market },
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
@@ -253,11 +256,12 @@ namespace VirtualBroker
                         //    } },
                         // 2018-02-06: when VIX went to 50 in market panic, XIV was terminated, I thought it is better to retire this for DC. 200K portfolio ended in 130K. About -70K loss. He wouldn't like to continue that.
                         // 2018-03-28: we restarted HL. PV was 135K, but restarted with 150K. However, HL made safer, because we halved all weights. CAGR: 60% to 31%; maxDD: -53% to -30%. Sharpe: 1.17 to 1.20. Good.
+
                         new BrokerTaskPortfolio() { Name = "! Harry Long2(Contango-Bond) harvester Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
                             MaxTradeValueInCurrency = 500000, // For Mr.C.: portfolio is 150K original. + 2019-03: +150K = 300K, Set MaxValue=400K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 1000,  //50% allocation to all assets
                             // Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.075, -0.025, 0.05, 0.125, -0.425, -0.045, -0.13 }  } }
-                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "VXZ", "TQQQ", "TMV", "SCO", "UNG" }, AssetsWeights = new double[] { 0.075*cDcLvrg, -0.025*cDcLvrg, -0.05*cDcLvrg, 0.125*cDcLvrg, -0.425*cDcLvrg, 0.0675*cDcLvrg, -0.39*cDcLvrg }  } }  // 2020-04-02: UWT, DWT was delisted because it went to penny stock
+                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "VXZ", "TQQQ", "TMV", "SCO", "UNG" }, AssetsWeights = new double[] { 0.075*cDcLvrg, -0.025*cDcLvrg, -0.05*cDcLvrg, 0.125*cDcLvrg, -0.425*cDcLvrg*cDcTmvLvrg, 0.0675*cDcLvrg, -0.39*cDcLvrg }  } }  // 2020-04-02: UWT, DWT was delisted because it went to penny stock
                         //new BrokerTaskPortfolio() { Name = "! IB T. Risky 2 Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.TuSecondary,
                         //    MaxTradeValueInCurrency = 15000, // For Tu: portfolio is 5K original. Set MaxValue=15K  (assuming portfolio double in a year)
                         //    MinTradeValueInCurrency = 200,

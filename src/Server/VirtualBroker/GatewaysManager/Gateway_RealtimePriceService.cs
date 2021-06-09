@@ -64,7 +64,6 @@ namespace VirtualBroker
 
                 string[] inputParams = input.Split(new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries);
 
-                string jsonpPrefix = null;
                 List<Tuple<string, Dictionary<int, PriceAndTime>, int>> tickerList = new List<Tuple<string, Dictionary<int, PriceAndTime>, int>>();
                 int nTempTickers = 0;
                 foreach (var inputParam in inputParams)
@@ -105,7 +104,7 @@ namespace VirtualBroker
 
                     if (inputParam.StartsWith("JSONP=", StringComparison.CurrentCultureIgnoreCase))    // symbols
                     {
-                        jsonpPrefix = inputParam.Substring(6);
+                        string jsonpPrefix = inputParam.Substring(6);
                         resultPrefix = jsonpPrefix + "(";
                         resultPostfix = ")";  // semicolon; ';' is not required in JS, because of semicolon auto-insertion
                     }

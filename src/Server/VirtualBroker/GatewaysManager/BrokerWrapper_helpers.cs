@@ -73,7 +73,7 @@ namespace VirtualBroker
     {
         public Contract Contract { get; set; }
         public AutoResetEvent AutoResetEvent { get; set; } = new AutoResetEvent(false);
-        public List<QuoteData> QuoteData { get; set; } = new List<VirtualBroker.QuoteData>();
+        public List<QuoteData> QuoteData { get; set; } = new List<QuoteData>();
     }
 
     public class OrderSubscription

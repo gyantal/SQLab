@@ -165,10 +165,10 @@ namespace VirtualBroker
         }
 
         // Exception thrown: System.IO.EndOfStreamException: Unable to read beyond the end of the stream.     (if IBGateways are crashing down.)
+        // These are BrokerApi runtime Exceptions in our C# code, caught by catch (Exception ex). These are Not Errors sent by IbGateway
         public virtual void error(Exception e)
         {
-            //Console.WriteLine("BrokerWrapperIb.error(). Exception: " + e);    // Utils.Logger.Error() will write to console anyway
-            Utils.Logger.Info("BrokerWrapperIb.error(). Exception: " + e);  // exception.ToString() writes the Stacktrace, not only the Message, which is OK.
+            Utils.Logger.Info("BrokerWrapperIb.error(). Client code C# runtime Exception: " + e);  // exception.ToString() writes the Stacktrace, not only the Message, which is OK.
 
             bool isExpectedException = false;
             // Expect no connection at ManualTraderServer, don't clutter the Console, but save it to log file.
@@ -222,26 +222,15 @@ namespace VirtualBroker
                 // If it is not Expected exception => this thread will terminate, which will terminate the whole App. Send HealthMonitorMessage, if it is an active.
                 Utils.Logger.Error("Unexpected BrokerWrapperIb.error(). Exception thrown: " + e);
                 if (!Controller.IsRunningAsLocalDevelopment())
-                    HealthMonitorMessage.SendAsync($"Exception in Unexpected  BrokerWrapperIb.error(). Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
+                    HealthMonitorMessage.SendAsync($"Exception in Unexpected  SqCore.BrokerWrapperIb.error(). Client code C# runtime Exception: '{ e.ToStringWithShortenedStackTrace(400)}'", HealthMonitorMessageID.ReportErrorFromVirtualBroker).TurnAsyncToSyncTask();
                 throw e;    
             }
         }
 
-        public virtual void error(string p_str)
-        {
-            string errMsg = "BrokerWrapper.error(str). " + p_str;
-            Console.WriteLine(errMsg);
-            Utils.Logger.Error(errMsg);
-            if (!Controller.IsRunningAsLocalDevelopment())
-                HealthMonitorMessage.SendAsync($"Msg from BrokerWrapperIb.error(). {errMsg}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).FireParallelAndForgetAndLogErrorTask();
-            //If there is a single trading error, we may want to continue, so don't terminate the thread or the App, just inform HealthMonitor.
-            //throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
-        }
-
         public virtual void error(int id, int errorCode, string errorMsg)
         {
-            string errMsg = "Id: " + id + ", ErrCode: " + errorCode + ", Msg: " + errorMsg;
-            Utils.Logger.Debug("BrokerWrapper.error(id,errCode,errMsg). " + errMsg); // even if we return and continue, Log it, so it is conserved in the log file.
+            string errMsg = "BrokerWrapper.error(id, code, msg). IbGateway sent error with msgVersion >= 2. Id: " + id + ", ErrCode: " + errorCode + ", Msg: " + errorMsg;
+            Utils.Logger.Debug(errMsg); // even if we return and continue, Log it, so it is conserved in the log file.
             bool isAddOrderInfoToErrMsg = false;
 
             if (id == -1)       // -1 probably means there is no ID of the error. It is a special notation.
@@ -255,8 +244,8 @@ namespace VirtualBroker
                     // Id: 1, ErrCode: 100, Msg: Max rate of messages per second has been exceeded:max=50 rec=651 (1)
                     // If that error happens, we have to investigate logs (are messages lost?), and if necessary write code to slow the query down.
                     // 2018-12: GetAccountInfoPos(): we query 113 RT prices, even without options underlyings. "Waiting for RT prices: 1297.74 ms. Queried: 113, ReceivedOk: 113, ReceivedErr: 0, Missing: 0"
-                    Utils.Logger.Warn("Strong Warning. BrokerWrapper.error(id,errCode,errMsg). " + errMsg);
-                    Console.WriteLine("Strong Warning. BrokerWrapper.error(id,errCode,errMsg). " + errMsg);
+                    Utils.Logger.Warn("Strong Warning. " + errMsg);
+                    Console.WriteLine("Strong Warning. " + errMsg);
                     return; // skip processing the error further. Don't send it to HealthMonitor.
                 }
                 if (errorCode == 2104 || errorCode == 2106 || errorCode == 2107 || errorCode == 2108 || errorCode == 2119 || errorCode == 2158)
@@ -457,6 +446,18 @@ namespace VirtualBroker
                 }
             }
             error(errMsg);
+        }
+
+        
+        public virtual void error(string p_str)
+        {
+            string errMsg = "BrokerWrapper.error(str). IbGateway sent error. " + p_str;
+            Console.WriteLine(errMsg);
+            Utils.Logger.Error(errMsg);
+            if (!Controller.IsRunningAsLocalDevelopment())
+                HealthMonitorMessage.SendAsync($"Msg from SqLab.BrokerWrapperIb.error(). {errMsg}", HealthMonitorMessageID.ReportErrorFromVirtualBroker).FireParallelAndForgetAndLogErrorTask();
+            //If there is a single trading error, we may want to continue, so don't terminate the thread or the App, just inform HealthMonitor.
+            //throw e;    // this thread will terminate. Because we don't expect this exception. Safer to terminate thread, which will terminate App. The user probably has to restart IBGateways manually anyway.
         }
 
         static string GetUsefulAccountSummaryTags()

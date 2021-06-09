@@ -12,7 +12,15 @@ using Utils = SqCommon.Utils;
 namespace VirtualBroker
 {
 
-    public partial class HarryLongStrategy : IBrokerStrategy
+// We have to name something in the code "Sobek, the Almighty" (the Egyptian crocodile god), to remember him, as almighty, all powerful god. 
+// See Harari's book Homo Deus. Sobek the Almighty is so powerful he can predict the future. Also he was like Google or big firms now. 
+// Servants collected money in his name. He become very rich. As rich and as powerful as the pharao.
+// >https://simple.wikipedia.org/wiki/Sobek
+// >Maybe the TaskScheduler, or the
+// >TransactionAccumulator, or 
+// >just something on the UI. On UI it can have a crocodile icon. Or the portfolio Connor can be transformed to almighty Sobek. That is a good idea. Rename it in SqDesktop portfolio as "Sobek (old Connor)". I don't have a Connor strategy in code, because we call it UberVXX.
+// >HarryLong can be renamed to Sobek. Because in 20 years, when I develop my own strategy I don't want to call it "HarryLong", the guy. As it will be completely different from his old idea. It is also better to call it with a cryptic name that nobady can search on the internet.
+    public partial class SobekStrategy : IBrokerStrategy
     {
         StringBuilder m_detailedReportSb;
 
@@ -25,7 +33,7 @@ namespace VirtualBroker
 
         public static IBrokerStrategy StrategyFactoryCreate()
         {
-            return new HarryLongStrategy();
+            return new SobekStrategy();
         }
 
         public void Init(StringBuilder p_detailedReportSb)

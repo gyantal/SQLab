@@ -20,6 +20,12 @@ namespace VirtualBroker
         public Gateway Gateway { get; set; }
         public List<AccSum> AccSums = new List<AccSum>();   // AccSummary
         public List<AccPos> AccPoss = new List<AccPos>();   // Positions
+
+        public AccInfo(string brAccStr, Gateway gateway)
+        {
+            BrAccStr = brAccStr;
+            Gateway = gateway;
+        }
     }
 
     public class AccSum
@@ -120,23 +126,23 @@ namespace VirtualBroker
 
             foreach (var bAcc in bAccArr)
             {
-                AccInfo accSumPos = new AccInfo { BrAccStr = bAcc };
+                Gateway gw = null;
                 switch (bAcc.ToUpper())
                 {
                     case "GYANTAL":
-                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.GyantalMain, GatewayUser.GyantalSecondary }, accSumPos);
+                        gw = FindFirstConnectedGateway(new GatewayUser[] { GatewayUser.GyantalMain, GatewayUser.GyantalSecondary });
                         break;
                     case "CHARMAT":
-                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.CharmatMain, GatewayUser.CharmatSecondary }, accSumPos);
+                        gw = FindFirstConnectedGateway(new GatewayUser[] { GatewayUser.CharmatMain, GatewayUser.CharmatSecondary });
                         break;
                     case "DEBLANZAC":
-                        FindGatewayAndAdd(new GatewayUser[] { GatewayUser.DeBlanzacMain }, accSumPos);
+                        gw = FindFirstConnectedGateway(new GatewayUser[] { GatewayUser.DeBlanzacMain });
                         break;
                     default:
                         Utils.Logger.Error($"GetAccountsInfo() error. Unrecognized brokeraccount '{bAcc.ToUpper()}'");
                         continue;
                 }
-
+                AccInfo accSumPos = new AccInfo(bAcc, gw);
                 allAccInfos.Add(accSumPos);
             }
 
@@ -721,6 +727,19 @@ namespace VirtualBroker
                     return;
                 }
             }
+        }
+
+        private Gateway FindFirstConnectedGateway(GatewayUser[] p_possibleGwUsers)
+        {
+            foreach (var gwUser in p_possibleGwUsers)
+            {
+                Gateway gw = m_gateways.Find(r => r.GatewayUser == gwUser);
+                if (gw != null && gw.IsConnected)   // only add the connected gateways
+                {
+                    return gw;
+                }
+            }
+            return null;
         }
     }
 }

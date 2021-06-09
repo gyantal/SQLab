@@ -12,7 +12,7 @@ using Utils = SqCommon.Utils;
 
 namespace VirtualBroker
 {
-    public class SavedState : PersistedState   // data to persist between restarts of the crawler process
+    public class SavedState : PersistedState   // data to persist between restarts of the vBroker process: settings that was set up by client, or OptionCrawler tickerList left to crawl
     {
         public bool IsSendErrorEmailAtGracefulShutdown { get; set; } = true;   // switch this off before deployment, and switch it on after deployment; make functionality on the WebSite
     }
@@ -23,10 +23,8 @@ namespace VirtualBroker
     {
         const double cReconnectTimerFrequencyMinutes = 15; 
         System.Threading.Timer m_reconnectTimer = null;
-        SavedState m_persistedState = null;
+        SavedState m_persistedState = new SavedState();
         List<Gateway> m_gateways = new List<Gateway>();
-
-        GatewayUser m_mainGatewayUser;
         Gateway m_mainGateway = null;
 
         bool m_isSupportPreStreamRealtimePrices;        
@@ -46,7 +44,6 @@ namespace VirtualBroker
         public void Init()
         {
             Utils.Logger.Info("***GatewaysWatcher:Init()");
-            PersistedState = new SavedState();
 
             string isSupportPreStreamRealtimePricesStr = Utils.Configuration["SupportPreStreamRealtimePrices"];
             Console.WriteLine($"SupportPreStreamRealtimePrices: {isSupportPreStreamRealtimePricesStr ?? "False"}");
@@ -56,7 +53,7 @@ namespace VirtualBroker
             if (Controller.IsRunningAsLocalDevelopment())
             {
                 gateway1 = new Gateway(GatewayUser.GyantalMain, p_accountMaxTradeValueInCurrency: 100000 /* UberVXX is 12K, 2xleveraged=24K, double=48K*/, p_accountMaxEstimatedValueSumRecentlyAllowed: 160000) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41 };
-                m_mainGatewayUser = GatewayUser.GyantalMain;
+                m_mainGateway = gateway1;
             }
             else
             {
@@ -70,14 +67,13 @@ namespace VirtualBroker
                     gateway2 = new Gateway(GatewayUser.CharmatSecondary, p_accountMaxTradeValueInCurrency: 600000.0 /* HarryLong is played 400K*70%=300K, double it */, p_accountMaxEstimatedValueSumRecentlyAllowed: 1000000  /* 1M */ ) { VbAccountsList = "U988767", SocketPort = (int)GatewayUserPort.CharmatSecondary, BrokerConnectionClientID = 42 };
                     //gateway3 = new Gateway(GatewayUser.TuSecondary, p_accountMaxTradeValueInCurrency: 15000.0 /* HarryLong is played 10K*70%=7K, double it */, p_accountMaxEstimatedValueSumRecentlyAllowed: 20000  /* 20K */ ) { VbAccountsList = "U1156489", SocketPort = (int)GatewayUserPort.TuSecondary, BrokerConnectionClientID = 43 };
                     //Gateway gateway2 = new Gateway() { GatewayUser = GatewayUser.CharmatWifeMain, VbAccountsList = "U1034066", SocketPort = 7302 };
-                    m_mainGatewayUser = GatewayUser.CharmatSecondary;
+                    m_mainGateway = gateway2;
                 }
                 else if (vbServerEnvironment.ToLower() == "ManualTradingServer".ToLower())
                 {
                     gateway1 = new Gateway(GatewayUser.CharmatMain, p_accountMaxTradeValueInCurrency: 1.0 /* don't trade here */, p_accountMaxEstimatedValueSumRecentlyAllowed: 10) { VbAccountsList = "U988767", SocketPort = (int)GatewayUserPort.CharmatMain, BrokerConnectionClientID = 142 };
                     gateway2 = new Gateway(GatewayUser.DeBlanzacMain, p_accountMaxTradeValueInCurrency: 1.0 /* don't trade here */, p_accountMaxEstimatedValueSumRecentlyAllowed: 10) { VbAccountsList = "U1146158", SocketPort = (int)GatewayUserPort.DeBlanzacMain, BrokerConnectionClientID = 144 };
-
-                    m_mainGatewayUser = GatewayUser.CharmatMain;
+                    m_mainGateway = gateway1;
                 }
                 else
                     StrongAssert.Fail(Severity.Halt, "Configuration['VbServerEnvironment'] is not recognized. It is safer to terminate.");
@@ -88,8 +84,6 @@ namespace VirtualBroker
                 m_gateways.Add(gateway2);
             if (gateway3 != null)   // sometimes (for development), 1 gateway is used only
                 m_gateways.Add(gateway3);
-
-            m_mainGateway = m_gateways.Find(r => r.GatewayUser == m_mainGatewayUser);
 
             m_reconnectTimer = new System.Threading.Timer(new TimerCallback(ReconnectToGatewaysTimer_Elapsed), null, TimeSpan.Zero, TimeSpan.FromMinutes(cReconnectTimerFrequencyMinutes));
         }
