@@ -312,7 +312,8 @@ function creatingTables(data) {
                 },
                 legend: {
                     position: "nw",
-                    noColumns: noAssets,
+                    // noColumns: noAssets,
+                    noColumns: 11,
                     backgroundColor: "#F4F6F6"
                 },
                 grid: {
