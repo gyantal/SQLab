@@ -610,7 +610,8 @@ namespace SqCommon
                     p_config["EmailCharmat3"].ToLower(),
                     p_config["EmailJCharmat1"].ToLower(),
                     p_config["EmailBrooke1"].ToLower(),
-                    p_config["EmailDinah1"].ToLower()
+                    p_config["EmailDinah1"].ToLower(),
+                    p_config["EmailDaya1"].ToLower()
                 };
             }
             bool isUserOK = g_authorizedGoogleUsers.Contains(p_email.ToLower());
