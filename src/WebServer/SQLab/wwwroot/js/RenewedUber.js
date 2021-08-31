@@ -50,7 +50,7 @@ function processData(dataStr) {
     divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$" + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank">these current positions</a> updated for ' + data.currentPVDate + ")";
     if (data.dailyProfSig !== "N/A") { divDailyProfit.innerHTML = "<b>Daily Profit/Loss: <span class=\"" + data.dailyProfString + "\">" + data.dailyProfSig + data.dailyProfAbs + "</span></b>";}
     divCurrentEvent.innerHTML = "Next trading day will be <span class=\"stci\"> " + data.currentEventName + "</span>, <div class=\"tooltip\">used STCI is <span class=\"stci\">" + data.currentSTCI + "</span><span class=\"tooltiptext\">Second (third) month VIX futures divided by front (second) month VIX futures minus 1, with more (less) than 5-days until expiration.</span></div > and used VIX is <span class=\"stci\">"+data.currentVIX+"</span>, thus leverage will be <span class=\"stci\">" + data.currentFinalWeightMultiplier + ".</span >";
-    divPosLastString.innerHTML = "Recent Events";
+    // divPosLastString.innerHTML = "Recent Events";
     divPosFutString.innerHTML = "Upcoming Events";
     divVixContString.innerHTML = "VIX Futures Term Structure";
     divRulesString.innerHTML = "<u>Current trading rules:</u> <ul><li>Play with 100% of PV on FOMC days (as this is the strongest part of the strategy), with 85% on Holiday days, with 70% on VIXFUTEX, OPEX, TotM and TotMM days, while with only 50% of PV on pure bullish STCI days. These deleveraging percentages have to be played both on bullish and bearish days.</li><li><ul><li>All of the FOMC and Holiday signals have to be played, regardless the STCI;</li><li>on weaker bullish days (OPEX, VIXFUTEX, TotM and TotMM) play the UberMix basket if and only if the STCI closed above +2% contango (25th percentile) on previous day (so, stay in cash if contango is not big enough);</li><li>on weaker bearish days (OPEX, VIXFUTEX, TotM and TotMM) play long VXX if and only if the STCI closed below +9% contango (75th percentile) on previous day (so, stay in cash if the contango is too deep).</li></ul></li><li>Bullish STCI threshold on non-event days is +7.5%, which is the 67th percentile of historical value of the STCI.</li><li>VIX Based Leverage Indicator: <ul><li>If VIX<21:&emsp; leverage = 100%;</li><li>If 21<=VIX<30:&emsp; leverage = 100%-(VIX-21)*10%;</li><li>If 30<=VIX:&emsp; leverage = 10%.</li></ul></li></ul>";
@@ -163,8 +163,8 @@ function creatingTables(data) {
     //"Sending" data to HTML file.
     var currTableMtx2 = document.getElementById("idCurrTableMtx");
     currTableMtx2.innerHTML = currTableMtx;
-    var currTableMtx4 = document.getElementById("idCurrTableMtx3");
-    currTableMtx4.innerHTML = currTableMtx3;
+    // var currTableMtx4 = document.getElementById("idCurrTableMtx3");
+    // currTableMtx4.innerHTML = currTableMtx3;
     var currTableMtx6 = document.getElementById("idCurrTableMtx5");
     currTableMtx6.innerHTML = currTableMtx5;
     var currTableMtx8 = document.getElementById("idCurrTableMtx7");

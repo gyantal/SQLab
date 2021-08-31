@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Globalization;
 using SQCommon.MathNet;
 using System.Numerics;
+using System.Net.Http;
 
 namespace SQLab.Controllers
 {
@@ -184,6 +185,22 @@ namespace SQLab.Controllers
         public Tuple<DateTime[], double[], Tuple<double[], double[], double[], double[], double[], double>> STCIdata(DateTime[] p_usedDateVec)
         {
 
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept","application/json");
+            client.DefaultRequestHeaders.Add("Accept","text/javascript");
+            client.DefaultRequestHeaders.Add("Accept","*/*");
+            client.DefaultRequestHeaders.Add("AcceptEncoding","gzip deflate");
+            client.DefaultRequestHeaders.Add("Host","vixcentral.com");
+            client.DefaultRequestHeaders.Add("Connection","keep-alive");
+            client.DefaultRequestHeaders.Add("X-Requested-With","XMLHttpRequest");
+            var resu = client.GetStringAsync("http://vixcentral.com/ajax_update").Result;
+            string[] resuRows = resu.Split(new string[] { "[", "]" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] liveFuturesPrices = resuRows[4].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+            string[] spotVixPrices = resuRows[16].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+            double spotVixValue = Double.Parse(spotVixPrices[0]);
+            string[] futuresNextExps = resuRows[0].Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+            string liveFuturesNextExp = futuresNextExps[0].Substring(1,3);
+
             //Downloading historical data from vixcentral.com.
             string webpageHist;
             bool isOk = Utils.DownloadStringWithRetry(out webpageHist, "http://vixcentral.com/historical/?days=100", 3, TimeSpan.FromSeconds(2), true);
@@ -196,42 +213,43 @@ namespace SQLab.Controllers
             //if (!isOkLive)
             //    return "Error in live data";
 
-            //Selecting data from live data string.
+            // Selecting data from live data string.
             string[] tableRows = webpageHist.Split(new string[] { "<tr>", "</tr>" }, StringSplitOptions.RemoveEmptyEntries);
             int nHistoricalRec = tableRows.Length - 2;
 
-            string liveFuturesDataDT = System.String.Empty;
+            // string liveFuturesDataDT = System.String.Empty;
             string liveFuturesDataDate = System.String.Empty;
             string liveFuturesDataTime = System.String.Empty;
-            string liveFuturesData = System.String.Empty;
+            // string liveFuturesData = System.String.Empty;
             string prevFuturesData = System.String.Empty;
-            string liveFuturesNextExp = System.String.Empty;
-            string spotVixData = System.String.Empty;
+            // string liveFuturesNextExp = System.String.Empty;
+            // string spotVixData = System.String.Empty;
 
-            int startPosLiveDate = webpageLive.IndexOf("var time_data_var=['") + "var time_data_var=['".Length;
-            int startPosLive = webpageLive.IndexOf("var last_data_var=[", startPosLiveDate) + "var last_data_var=[".Length;
-            int endPosLive = webpageLive.IndexOf("];last_data_var=clean_array(last_data_var);", startPosLive);
-            int startPosPrev = webpageLive.IndexOf("];var previous_close_var=[", endPosLive) + "];var previous_close_var=[".Length;
+            // int startPosLiveDate = webpageLive.IndexOf("var time_data_var=['") + "var time_data_var=['".Length;
+            // int startPosLive = webpageLive.IndexOf("var last_data_var=[", startPosLiveDate) + "var last_data_var=[".Length;
+            // int endPosLive = webpageLive.IndexOf("];last_data_var=clean_array(last_data_var);", startPosLive);
+            int startPosPrev = webpageLive.IndexOf("];var previous_close_var=[", 0) + "];var previous_close_var=[".Length;
             int endPosPrev = webpageLive.IndexOf("];var contango_graph_exists=", startPosPrev);
-            int nextExpLiveMonth = webpageLive.IndexOf("var mx=['", endPosLive) + "var mx=['".Length;
-            int startSpotVix = webpageLive.IndexOf("{id:'VIX_Index',name:'VIX Index',legendIndex:9,lineWidth:2,color:'green',dashStyle:'LongDash',marker:{enabled:false},dataLabels:{enabled:true,align:'left',x:5,y:4,formatter:function(){if(this.point.x==this.series.data.length-1){return Highcharts.numberFormat(this.y,2);}else{return null;}}},data:[", nextExpLiveMonth) + "{id:'VIX_Index',name:'VIX Index',legendIndex:9,lineWidth:2,color:'green',dashStyle:'LongDash',marker:{enabled:false},dataLabels:{enabled:true,align:'left',x:5,y:4,formatter:function(){if(this.point.x==this.series.data.length-1){return Highcharts.numberFormat(this.y,2);}else{return null;}}},data:[".Length;
-            int endSpotVix = webpageLive.IndexOf("]},{id:'VXV_Index',name:'VXV Index',legendIndex:10,lineWidth:2", startSpotVix);
-            liveFuturesDataDT = webpageLive.Substring(startPosLiveDate, 16);
-            liveFuturesNextExp = webpageLive.Substring(nextExpLiveMonth, 3);
-            liveFuturesData = webpageLive.Substring(startPosLive, endPosLive - startPosLive);
+            // int nextExpLiveMonth = webpageLive.IndexOf("var mx=['", 0) + "var mx=['".Length;
+            // int startSpotVix = webpageLive.IndexOf("{id:'VIX_Index',name:'VIX Index',legendIndex:9,lineWidth:2,color:'green',dashStyle:'LongDash',marker:{enabled:false},dataLabels:{enabled:true,align:'left',x:5,y:4,formatter:function(){if(this.point.x==this.series.data.length-1){return Highcharts.numberFormat(this.y,2);}else{return null;}}},data:[", nextExpLiveMonth) + "{id:'VIX_Index',name:'VIX Index',legendIndex:9,lineWidth:2,color:'green',dashStyle:'LongDash',marker:{enabled:false},dataLabels:{enabled:true,align:'left',x:5,y:4,formatter:function(){if(this.point.x==this.series.data.length-1){return Highcharts.numberFormat(this.y,2);}else{return null;}}},data:[".Length;
+            // int endSpotVix = webpageLive.IndexOf("]},{id:'VXV_Index',name:'VXV Index',legendIndex:10,lineWidth:2", startSpotVix);
+            // liveFuturesDataDT = webpageLive.Substring(startPosLiveDate, 16);
+            // liveFuturesNextExp = webpageLive.Substring(nextExpLiveMonth, 3);
+            // liveFuturesData = webpageLive.Substring(startPosLive, endPosLive - startPosLive);
             prevFuturesData = webpageLive.Substring(startPosPrev, endPosPrev - startPosPrev);
-            spotVixData = webpageLive.Substring(startSpotVix, endSpotVix - startSpotVix);
+            // spotVixData = webpageLive.Substring(startSpotVix, endSpotVix - startSpotVix);
 
             // liveFuturesDataDate = liveFuturesDataDT.Substring(0, 10);
             // liveFuturesDataTime = liveFuturesDataDT.Substring(11, 5) + " EST";
             liveFuturesDataDate = "2999-12-31";
             liveFuturesDataTime = "11:11" + " EST";
 
-            string[] liveFuturesPrices = liveFuturesData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+            // string[] liveFuturesPrices = liveFuturesData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
             int lengthLiveFuturesPrices = liveFuturesPrices.Length;
             string[] prevFuturesPrices = prevFuturesData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-            string[] spotVixPrices = spotVixData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-            double spotVixValue = Double.Parse(spotVixPrices[0]);
+            int lengthPrevFuturesPrices = prevFuturesPrices.Length;
+            // string[] spotVixPrices = spotVixData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+            // double spotVixValue = Double.Parse(spotVixPrices[0]);
 
             string[] monthsNumList = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
             int monthsNum = Array.IndexOf(monthsNumList, liveFuturesNextExp) + 1;
@@ -243,65 +261,94 @@ namespace SQLab.Controllers
             // liveDateTime = DateTime.Parse(liveFuturesDataDate);
             liveDate = liveDateTime.ToString("yyyy-MM-dd");
 
+            VixCentralRec[] vixCentralRec = new VixCentralRec[2];
+            vixCentralRec[0].Date = DateTime.Parse(liveDate);
+            vixCentralRec[0].FirstMonth = monthsNum;
+            vixCentralRec[0].F1 = Double.Parse(liveFuturesPrices[0]);
+            vixCentralRec[0].F2 = Double.Parse(liveFuturesPrices[1]);
+            vixCentralRec[0].F3 = Double.Parse(liveFuturesPrices[2]);
+            vixCentralRec[0].F4 = Double.Parse(liveFuturesPrices[3]);
+            vixCentralRec[0].F5 = Double.Parse(liveFuturesPrices[4]);
+            vixCentralRec[0].F6 = Double.Parse(liveFuturesPrices[5]);
+            vixCentralRec[0].F7 = Double.Parse(liveFuturesPrices[6]);
+            vixCentralRec[0].F8 = (lengthLiveFuturesPrices == 8) ? Double.Parse(liveFuturesPrices[7]) : 0;
+            vixCentralRec[0].STCont = vixCentralRec[0].F2 / vixCentralRec[0].F1 - 1;
+            vixCentralRec[0].LTCont = vixCentralRec[0].F7 / vixCentralRec[0].F4 - 1;
 
-            string[] firstTableCells = tableRows[2].Split(new string[] { "<td>", "</td>" }, StringSplitOptions.RemoveEmptyEntries);
-            DateTime histStartDay;
-            string histStartDate = System.String.Empty;
-            histStartDay = DateTime.Parse(firstTableCells[0]);
-            histStartDate = histStartDay.ToString("yyyy-MM-dd");
-            bool isExtraDay = !string.Equals(liveDate, histStartDate);
+            vixCentralRec[1].Date = DateTime.Parse(liveDate);
+            vixCentralRec[1].FirstMonth = monthsNum;
+            vixCentralRec[1].F1 = Double.Parse(prevFuturesPrices[0]);
+            vixCentralRec[1].F2 = Double.Parse(prevFuturesPrices[1]);
+            vixCentralRec[1].F3 = Double.Parse(prevFuturesPrices[2]);
+            vixCentralRec[1].F4 = Double.Parse(prevFuturesPrices[3]);
+            vixCentralRec[1].F5 = Double.Parse(prevFuturesPrices[4]);
+            vixCentralRec[1].F6 = Double.Parse(prevFuturesPrices[5]);
+            vixCentralRec[1].F7 = Double.Parse(prevFuturesPrices[6]);
+            vixCentralRec[1].F8 = (lengthPrevFuturesPrices == 8) ? Double.Parse(prevFuturesPrices[7]) : 0;
+            vixCentralRec[1].STCont = vixCentralRec[1].F2 / vixCentralRec[1].F1 - 1;
+            vixCentralRec[1].LTCont = vixCentralRec[1].F7 / vixCentralRec[1].F4 - 1;
 
-            //Sorting historical data.
-            int nRec = (isExtraDay) ? nHistoricalRec + 1 : nHistoricalRec;
-            VixCentralRec[] vixCentralRec = new VixCentralRec[nRec - 2];
 
 
-            for (int iRows = 2; iRows < tableRows.Length - 2; iRows++)
-            {
-                string[] tableCells = tableRows[iRows].Split(new string[] { "<td>", "</td>" }, StringSplitOptions.RemoveEmptyEntries);
-                int iRec = (isExtraDay) ? iRows - 1 : iRows - 2;
-                vixCentralRec[iRec].Date = DateTime.Parse(tableCells[0]);
-                vixCentralRec[iRec].FirstMonth = Int32.Parse(tableCells[1]);
-                vixCentralRec[iRec].F1 = Double.Parse(tableCells[2]);
-                vixCentralRec[iRec].F2 = Double.Parse(tableCells[3]);
-                vixCentralRec[iRec].F3 = Double.Parse(tableCells[4]);
-                vixCentralRec[iRec].F4 = Double.Parse(tableCells[5]);
-                vixCentralRec[iRec].F5 = Double.Parse(tableCells[6]);
-                vixCentralRec[iRec].F6 = Double.Parse(tableCells[7]);
-                vixCentralRec[iRec].F7 = Double.Parse(tableCells[8]);
-                vixCentralRec[iRec].F8 = (tableCells[9] == "0") ? vixCentralRec[iRec].F7 : Double.Parse(tableCells[9]);
-                vixCentralRec[iRec].STCont = vixCentralRec[iRec].F2 / vixCentralRec[iRec].F1 - 1;
-                vixCentralRec[iRec].LTCont = vixCentralRec[iRec].F7 / vixCentralRec[iRec].F4 - 1;
-            }
+            // string[] firstTableCells = tableRows[2].Split(new string[] { "<td>", "</td>" }, StringSplitOptions.RemoveEmptyEntries);
+            // DateTime histStartDay;
+            // string histStartDate = System.String.Empty;
+            // histStartDay = DateTime.Parse(firstTableCells[0]);
+            // histStartDate = histStartDay.ToString("yyyy-MM-dd");
+            // bool isExtraDay = !string.Equals(liveDate, histStartDate);
 
-            if (isExtraDay)
-            {
-                vixCentralRec[0].Date = DateTime.Parse(liveDate);
-                vixCentralRec[0].FirstMonth = monthsNum;
-                vixCentralRec[0].F1 = Double.Parse(liveFuturesPrices[0]);
-                vixCentralRec[0].F2 = Double.Parse(liveFuturesPrices[1]);
-                vixCentralRec[0].F3 = Double.Parse(liveFuturesPrices[2]);
-                vixCentralRec[0].F4 = Double.Parse(liveFuturesPrices[3]);
-                vixCentralRec[0].F5 = Double.Parse(liveFuturesPrices[4]);
-                vixCentralRec[0].F6 = Double.Parse(liveFuturesPrices[5]);
-                vixCentralRec[0].F7 = Double.Parse(liveFuturesPrices[6]);
-                vixCentralRec[0].F8 = (lengthLiveFuturesPrices == 8) ? Double.Parse(liveFuturesPrices[7]) : 0;
-                vixCentralRec[0].STCont = vixCentralRec[0].F2 / vixCentralRec[0].F1 - 1;
-                vixCentralRec[0].LTCont = vixCentralRec[0].F7 / vixCentralRec[0].F4 - 1;
+            // //Sorting historical data.
+            // int nRec = (isExtraDay) ? nHistoricalRec + 1 : nHistoricalRec;
+            // VixCentralRec[] vixCentralRec = new VixCentralRec[nRec - 2];
 
-            }
+
+            // for (int iRows = 2; iRows < tableRows.Length - 2; iRows++)
+            // {
+            //     string[] tableCells = tableRows[iRows].Split(new string[] { "<td>", "</td>" }, StringSplitOptions.RemoveEmptyEntries);
+            //     int iRec = (isExtraDay) ? iRows - 1 : iRows - 2;
+            //     vixCentralRec[iRec].Date = DateTime.Parse(tableCells[0]);
+            //     vixCentralRec[iRec].FirstMonth = Int32.Parse(tableCells[1]);
+            //     vixCentralRec[iRec].F1 = Double.Parse(tableCells[2]);
+            //     vixCentralRec[iRec].F2 = Double.Parse(tableCells[3]);
+            //     vixCentralRec[iRec].F3 = Double.Parse(tableCells[4]);
+            //     vixCentralRec[iRec].F4 = Double.Parse(tableCells[5]);
+            //     vixCentralRec[iRec].F5 = Double.Parse(tableCells[6]);
+            //     vixCentralRec[iRec].F6 = Double.Parse(tableCells[7]);
+            //     vixCentralRec[iRec].F7 = Double.Parse(tableCells[8]);
+            //     vixCentralRec[iRec].F8 = (tableCells[9] == "0") ? vixCentralRec[iRec].F7 : Double.Parse(tableCells[9]);
+            //     vixCentralRec[iRec].STCont = vixCentralRec[iRec].F2 / vixCentralRec[iRec].F1 - 1;
+            //     vixCentralRec[iRec].LTCont = vixCentralRec[iRec].F7 / vixCentralRec[iRec].F4 - 1;
+            // }
+
+            // if (isExtraDay)
+            // {
+            //     vixCentralRec[0].Date = DateTime.Parse(liveDate);
+            //     vixCentralRec[0].FirstMonth = monthsNum;
+            //     vixCentralRec[0].F1 = Double.Parse(liveFuturesPrices[0]);
+            //     vixCentralRec[0].F2 = Double.Parse(liveFuturesPrices[1]);
+            //     vixCentralRec[0].F3 = Double.Parse(liveFuturesPrices[2]);
+            //     vixCentralRec[0].F4 = Double.Parse(liveFuturesPrices[3]);
+            //     vixCentralRec[0].F5 = Double.Parse(liveFuturesPrices[4]);
+            //     vixCentralRec[0].F6 = Double.Parse(liveFuturesPrices[5]);
+            //     vixCentralRec[0].F7 = Double.Parse(liveFuturesPrices[6]);
+            //     vixCentralRec[0].F8 = (lengthLiveFuturesPrices == 8) ? Double.Parse(liveFuturesPrices[7]) : 0;
+            //     vixCentralRec[0].STCont = vixCentralRec[0].F2 / vixCentralRec[0].F1 - 1;
+            //     vixCentralRec[0].LTCont = vixCentralRec[0].F7 / vixCentralRec[0].F4 - 1;
+
+            // }
 
             //Calculating futures expiration dates.
 
-            var firstDataDay = vixCentralRec[nRec - 3].Date;
-            int firstDataYear = firstDataDay.Year;
-            string firstData = firstDataDay.ToString("yyyy-MM-dd");
+            // var firstDataDay = vixCentralRec[nRec - 3].Date;
+            // int firstDataYear = firstDataDay.Year;
+            // string firstData = firstDataDay.ToString("yyyy-MM-dd");
 
             var lastDataDay = vixCentralRec[0].Date;
             int lastDataYear = lastDataDay.Year;
             string lastData = lastDataDay.ToString("yyyy-MM-dd");
 
-            var lengthExps = (lastDataYear - firstDataYear + 2) * 12;
+            // var lengthExps = (lastDataYear - firstDataYear + 2) * 12;
+            var lengthExps = (lastDataYear - 2020 + 2) * 12;
             int[,] expDatesDat = new int[lengthExps, 2];
 
             expDatesDat[0, 0] = lastDataYear + 1;
@@ -346,23 +393,35 @@ namespace SQLab.Controllers
                 dateVixVec[iRec] = vixCentralRec[iRec].Date;
             }
 
-            int[] usedDateIndexVec = new int[p_usedDateVec.Length];
-            for (int iRows = 0; iRows < usedDateIndexVec.Length; iRows++)
-            {
-                usedDateIndexVec[iRows] = Array.FindIndex(dateVixVec, item => item <= p_usedDateVec[iRows]);
-            }
+            // int[] usedDateIndexVec = new int[p_usedDateVec.Length];
+            // for (int iRows = 0; iRows < usedDateIndexVec.Length; iRows++)
+            // {
+            //     usedDateIndexVec[iRows] = Array.FindIndex(dateVixVec, item => item <= p_usedDateVec[iRows]);
+            // }
             DateTime[] stciDateVec = new DateTime[15];
             double[] stciValue = new double[15];
-            for (int iRow = 0; iRow < stciDateVec.Length; iRow++)
+            // for (int iRow = 0; iRow < stciDateVec.Length; iRow++)
+            // {
+            //     stciDateVec[iRow] = vixCentralRec[usedDateIndexVec[iRow]].Date;
+            //     if (vixCentralRec[usedDateIndexVec[iRow]].F1expDays > 5)
+            //     {
+            //         stciValue[iRow] = vixCentralRec[usedDateIndexVec[iRow]].STCont;
+            //     }
+            //     else
+            //     {
+            //         stciValue[iRow] = vixCentralRec[usedDateIndexVec[iRow]].F3/ vixCentralRec[usedDateIndexVec[iRow]].F2-1;
+            //     }
+            // }
+            for (int iRow = 0; iRow < 2; iRow++)
             {
-                stciDateVec[iRow] = vixCentralRec[usedDateIndexVec[iRow]].Date;
-                if (vixCentralRec[usedDateIndexVec[iRow]].F1expDays > 5)
+                stciDateVec[iRow] = vixCentralRec[iRow].Date;
+                if (vixCentralRec[iRow].F1expDays > 5)
                 {
-                    stciValue[iRow] = vixCentralRec[usedDateIndexVec[iRow]].STCont;
+                    stciValue[iRow] = vixCentralRec[iRow].STCont;
                 }
                 else
                 {
-                    stciValue[iRow] = vixCentralRec[usedDateIndexVec[iRow]].F3/ vixCentralRec[usedDateIndexVec[iRow]].F2-1;
+                    stciValue[iRow] = vixCentralRec[iRow].F3/ vixCentralRec[iRow].F2-1;
                 }
             }
 
