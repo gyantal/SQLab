@@ -173,6 +173,7 @@ namespace DbCommon
         Veterans = 10,          // as of 2016, this is not a stock market holiday, only civil holiday
         Thanksgiving = 11,
         Xmas = 12,
+        Juneteenth = 13,    // Emancipation (slave freedom) day. The day was recognized as a federal holiday on June 17, 2021 by Joe Biden 
         // The above names are not in any particular order. New ones should be added - not inserted (avoid changing existing values).
         _KindOfUsaHoliday = 15,
         // New flags should be added BELOW the existing ones until the ↑two↓ abuts each other

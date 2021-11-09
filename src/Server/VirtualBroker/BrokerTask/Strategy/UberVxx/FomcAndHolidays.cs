@@ -119,6 +119,8 @@ namespace VirtualBroker
                     break;
                 case DatePropertiesFlags.Memorial:
                     break;
+                case DatePropertiesFlags.Juneteenth:
+                    break;
                 case DatePropertiesFlags.Independence:
                     if (p_offsetInd == -1 || p_offsetInd == -2 || p_offsetInd == -3 || p_offsetInd == -4 || p_offsetInd == -5)
                         return -1.0;    // VXX negative short forecast, which is bullish for the market
