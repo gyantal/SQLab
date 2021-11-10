@@ -44,6 +44,10 @@ namespace SQLab
             if (httpContext == null)
                 throw new ArgumentNullException(nameof(httpContext));
 
+            // TEMP for Debugging. when is the request HTTP or HTTPS. 
+            // decomment the forced "context.Request.Scheme = "https";" in Startup.cs if you want to test it.
+            // Utils.Logger.Info($"SqFirewallMiddleware hook: Scheme: {httpContext.Request.Scheme}:// Host: {httpContext.Request.Host}, RequestProtocol:{httpContext.Request.Protocol}, Path:{httpContext.Request.Path.ToString()}");
+
 
             // Don't push it to the next Middleware if the path or IP is on the blacklist. In the future, implement a whitelist too, and only allow  requests explicitely on the whitelist.
             if (IsHttpRequestOnBlacklist(httpContext))

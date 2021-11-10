@@ -37,7 +37,7 @@ namespace SQLab
             services.AddSingleton(_ => Utils.Configuration);      // this is the proper DependenciInjection (DI) way of pushing it as a service to Controllers. So you don't have to manage the creation or disposal of instances.
             services.AddSingleton(_ => Program.g_webAppGlobals);
 
-            string googleClientId = Utils.Configuration["GoogleClientId"];
+            string googleClientId = Utils.Configuration["GoogleClientId"];  // console.developers.google.com  project: SnifferQuant
             string googleClientSecret = Utils.Configuration["GoogleClientSecret"];
             if (!String.IsNullOrEmpty(googleClientId) && !String.IsNullOrEmpty(googleClientSecret))
             {
@@ -111,9 +111,31 @@ namespace SQLab
                         // https://www.jerriepelser.com/blog/forcing-users-sign-in-gsuite-domain-account/
                         OnRedirectToAuthorizationEndpoint = context =>
                         {
-                            Utils.Logger.Info("GoogleAuth.OnRedirectToAuthorizationEndpoint()");
+                            // context.RedirectUri = "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id= ...redirect_uri=https://..../signin-google"
+                            // https://github.com/googleapis/google-api-dotnet-client/issues/1899  "redirect_uri should use https:// instead of http://"
+                            // using app.UseHttpsRedirection(); fixed that HTTPS is used now instead of HTTP (later it was not the case)
+                            
+                            // https://stackoverflow.com/questions/49189883/how-to-set-redirect-uri-protocol-to-https-in-azure-web-apps
+                            // "I took a deep dive into Microsoft's Microsoft.AspNetCore.Authentication and found out how they constructed the redirect url:
+                            // protected string BuildRedirectUri(string targetPath)
+                            //   => Request.Scheme + "://" + Request.Host + OriginalPathBase + targetPath;"
+
+                            // Problem is that SqLab is behind AWS.CloudFront. (to serve HTTPS SSL certs) So, it is possible that Cloudfront convert every HTTPS request to HTTP to the server.
+                            // Yes. Confirmed. That is the problem: httpContext.Request.Scheme = "http", not "https"
+                            // the https://www.snifferquant.net/ requests are converted to http://www.snifferquant.net/ by Cloudfront.
+                            // the reason, is that otherwise, the SqLab server doesn't process correctly (cannot let through a HTTPS)
+                            // the https://direct.snifferquant.net works, because it is not converted by CloudFront.
+                            Utils.Logger.Info($"GoogleAuth.OnRedirectToAuthorizationEndpoint(), RedirectUri: '{context.RedirectUri ?? "null"}'");
                             //context.Response.Redirect(context.RedirectUri + "&hd=" + System.Net.WebUtility.UrlEncode("jerriepelser.com"));
-                            context.Response.Redirect(context.RedirectUri);
+
+                            // If I do this, then later: "error": "redirect_uri_mismatch", System.Exception: OAuth token endpoint failure: Status: BadRequest;Headers:
+                            // string oldRedirectUi = context.RedirectUri;
+                            // string newRedirectUi = oldRedirectUi.Replace("23.20.243.199", "www.snifferquant.net"); // hack
+                            // string newRedirectUi2 = newRedirectUi.Replace("http%3A%2F%2Fwww.snifferquant.net%2Fsignin-google", "https%3A%2F%2Fwww.snifferquant.net%2Fsignin-google"); // hack
+                            // context.Response.Redirect(newRedirectUi2, false);
+
+                            // The working, but hacky solution was: forced "context.Request.Scheme = "https";" in Startup.cs
+                            context.Response.Redirect(context.RedirectUri, false);
                             return Task.CompletedTask;
                         },
                         OnCreatingTicket = context =>
@@ -217,6 +239,27 @@ namespace SQLab
             {
                 app.UseExceptionHandler("/Home/Error");     // ExceptionHandlers will swallow the Exceptions. It will not be rolled further.
             }
+
+            app.Use(async (context, next) =>
+            {
+                // redirect_uri=https://..../signin-google is calculated as Request.Scheme + "://" + Request.Host + OriginalPathBase + targetPath;
+
+                // HACK: rewrite HTTP requests to simulated HTTPS
+                // the HTTPS://www.snifferquant.net/ requests are converted to HTTP://www.snifferquant.net/ by AWS.Cloudfront.
+                // the reason, is that otherwise, the SqLab server doesn't process correctly (cannot let through a HTTPS)
+                // the https://direct.snifferquant.net works, because it is not converted by CloudFront. (But that shows a red unsecure lock)
+                // while https://www.snifferquant.net shows a green secure lock in Chrome. (because of AWS SSL cert)
+
+                // we only nead this for /login requests, but can leave it here for everything.
+                // the SqLab code is dead, anyway. Migrating to SqCore.
+                context.Request.Scheme = "https";
+                await next();
+            });
+
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
+            // GoogleAuth needs HTTPS, https://developers.google.com/api-client-library/dotnet/guide/aaa_oauth#configure-your-application-to-use-google.apis.auth.aspnetcore3
+            app.UseHttpsRedirection();     // Chrome Caching warning! If you are developing using a self-signed certificate over https and there is an issue with the certificate then google will not cache the response
 
             app.UseMiddleware<SqFirewallMiddleware>();  // For this to catch Exceptions, it should come after UseExceptionHadlers(), because those will swallow exceptions and generates nice ErrPage.
 
