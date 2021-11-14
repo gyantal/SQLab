@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using NetworkPorts;
 using System.Threading;
 using SqCommon;
 using System.Security.Cryptography.X509Certificates;
@@ -160,8 +161,8 @@ namespace SQLab
                     // but with https://www.snifferquant.net/HealthMonitor which goes through AWS Cloudfront, it is 'redirected you too many times.'
                     // So, temporary, until We can use our own HTTPS SSL certificate, we are switching off this feature.
 
-                    options.Listen(IPAddress.Any, 80);
-                    options.Listen(IPAddress.Any, 443, listenOptions =>
+                    options.Listen(IPAddress.Any, NetworkPort.Http);
+                    options.Listen(IPAddress.Any, NetworkPort.Https, listenOptions =>
                     {
                         var serverCertificate = LoadHttpsCertificate();
                         listenOptions.UseHttps(serverCertificate);
