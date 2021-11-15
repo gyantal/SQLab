@@ -626,15 +626,17 @@ namespace SQLab.Controllers
         {
             //Defining asset lists.
             string[] clmtAssetList = new string[]{ "^GSPC", "XLU", "VTI" };
-            string[] gchAssetList = new string[]{ "AAPL", "ADBE", "AMZN", "BABA", "CRM", "CRWD", "ETSY", "FB", "GOOGL", "ISRG", "MA", "MELI", "MSFT", "NFLX", "NOW", "NVDA", "PYPL", "QCOM", "ROKU", "SE", "SHOP", "SQ", "TDOC", "TWLO", "V", "ZM", "TLT"}; //TLT is used as a cashEquivalent
+            string[] gchAssetList = new string[]{ "AAPL", "ADBE", "AMZN", "CRM", "CRWD", "ETSY", "FB", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SE", "SHOP", "SQ", "V", "TLT"}; //TLT is used as a cashEquivalent
             string[] gmrAssetList = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ", "TLT" }; //TLT is used as a cashEquivalent
             string[] usedAssetList = new string[0];
             string titleString ="0";
+            string warningGCh ="";
             switch (p_basketSelector)
             {
                 case 1:
                     usedAssetList = gchAssetList;
                     titleString = "GameChangers";
+                    warningGCh ="WARNING! Trading rules have been changed! Only live positions are valid, required trades are not!";
                     break;
                 case 2:
                     usedAssetList = gmrAssetList;
@@ -1031,6 +1033,7 @@ namespace SQLab.Controllers
             //Creating input string for JavaScript.
             StringBuilder sb = new StringBuilder("{" + Environment.NewLine);
             sb.Append(@"""titleCont"": """ + titleString);
+            sb.Append(@"""," + Environment.NewLine + @"""warningCont"": """ + warningGCh);
             sb.Append(@"""," + Environment.NewLine + @"""requestTime"": """ + liveDateString);
             sb.Append(@"""," + Environment.NewLine + @"""lastDataTime"": """ + lastDataTimeString);
             sb.Append(@"""," + Environment.NewLine + @"""currentPV"": """ + currPV.ToString("#,##0"));

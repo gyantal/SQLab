@@ -33,6 +33,7 @@ function processData(dataStr) {
 
     //Creating first rows of webpage.
     var divTitleCont = document.getElementById("idTitleCont");
+    var divWarningCont = document.getElementById("idWarningCont");
     var divTimeNow = document.getElementById("idTimeNow");
     var divLiveDataTime = document.getElementById("idLiveDataTime");
     var divCurrentPV = document.getElementById("idCurrentPV");
@@ -42,6 +43,7 @@ function processData(dataStr) {
     
 
     divTitleCont.innerHTML = data.titleCont + ' <sup><small><a href="' + data.gDocRef + '" target="_blank">(Study)</a></small></sup>';
+    divWarningCont.innerHTML = data.warningCont;
     divTimeNow.innerHTML = data.requestTime;
     divLiveDataTime.innerHTML = data.lastDataTime;
     divCurrentPV.innerHTML = "Current PV: <span class=\"pv\">$ " + data.currentPV + "</span> (based on <a href=" + data.gSheetRef + '" target="_blank">these current positions</a> updated for ' + data.currentPVDate + ")";
