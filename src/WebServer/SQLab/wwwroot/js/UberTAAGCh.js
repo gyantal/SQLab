@@ -41,7 +41,7 @@ function processData(dataStr) {
     var divPosLastString = document.getElementById("idPosLast");
     var divPosFutString = document.getElementById("idPosFut");
     
-
+    
     divTitleCont.innerHTML = data.titleCont + ' <sup><small><a href="' + data.gDocRef + '" target="_blank">(Study)</a></small></sup>';
     divWarningCont.innerHTML = data.warningCont;
     divTimeNow.innerHTML = data.requestTime;
@@ -52,7 +52,11 @@ function processData(dataStr) {
     divPosFutString.innerHTML = "Future events:";
     //$('#my-link1').html('<a href="' + data.gDocRef + '" target="_blank">Study</a>'); - currently not used
     //$('#my-link2').html('<a href="' + data.gSheetRef + '" target="_blank">Live spreadsheet</a>'); - currently not used
-
+    var warnLength = data.warningCont.length;
+    if (warnLength>0){
+        divWarningCont.innerHTML = data.warningCont + '<br> <a href="https://docs.google.com/spreadsheets/d/1fmvGBi2Q6MxnB_8AjUedy1QVTOlWE7Ck1rICjYSSxyY" target="_blank">Google sheet with current positions</a> and <a href="https://docs.google.com/document/d/1_m3MMGag7uBZSdvc4IgXKMvj3d4kzLxwvnW14RkCyco" target="_blank">the latest study in connection with the strategy</a>';
+    }
+    
     creatingTables(data);
 
     //Setting charts visible after getting data.
