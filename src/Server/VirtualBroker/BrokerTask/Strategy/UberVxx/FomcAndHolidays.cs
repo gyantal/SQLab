@@ -89,6 +89,50 @@ namespace VirtualBroker
             DatePropertiesFlags holidayFlagOnly = p_holiday.Flags & DatePropertiesFlags._KindOfUsaHoliday;
             // Holiday days was revised in 2015-11, based on that here is the latest in 2016-04: https://docs.google.com/document/d/1Kaazv6gjDfffHG3cjNgSMuseoe45UftMKiZP8XPO2pA/edit
             // Holiday days was revised in 2017-02: https://docs.google.com/document/d/1OAMwErTzAxezrqcgyan4kgapF5OcG3VFF6Y5zpm5Xkk
+            
+            // If NewYearEve is Saturday, then officially there is no USA holiday, and there is no [observed] holiday either on Monday or Friday.
+            // According to this federal law, we have the following in SQL:
+            // SELECT *  FROM [dbo].[DateProperties]  WHERE [Flags]&(15) = 1
+            // 1990-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 1991-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 1992-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 1993-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // // 1994 - missing: Saturday.
+            // 1995-01-02	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 1996-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 1997-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 1998-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 1999-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // //2000  - missing: Saturday.
+            // 2001-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2002-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2003-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2004-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // //2005  - missing: Saturday.
+            // 2006-01-02	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2007-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2008-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2009-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2010-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // // 2011  - missing: Saturday.
+            // 2012-01-02	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2013-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2014-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2015-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2016-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2017-01-02	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2018-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2019-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2020-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // 2021-01-01	1	16385	NULL	|StockMarketClosed|NewYear|
+            // // 2022 - missing: Saturday.
+            // SqLab:UberVxx strategy uses: SQL: "SELECT * FROM [dbo].[DateProperties]" as a base for holiday.
+            // So, in any backtest (or VirtualBroker real-time strategy trade), those quasy-holiday days are missing.
+            // Right or wrong? Interesting.
+            // In the future, in the new RedisDb, we might design that we have these exceptional dates too, with "NewYear|" flag.
+            // Otherwise, every C# code has to be ready to consider these exceptional cases. (which will be forgotten for sure)
+            // But at the moment, I don't want to poke with (and potentially ruin) the SqFramework SQL.
+
             switch (holidayFlagOnly)
             {
                 case DatePropertiesFlags.NewYear:
