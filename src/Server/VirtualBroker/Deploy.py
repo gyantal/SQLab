@@ -11,20 +11,20 @@ from colorama import Fore, Back, Style
 vbServerEnvironment = "AutoTradingServer"
 #vbServerEnvironment = "ManualTradingServer"
 
-rootLocalDir = "g:/work/Archi-data/GitHubRepos/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
+rootLocalDir = "c:/agy/GitHub/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
 acceptedSubTreeRoots = ["Server\\VirtualBroker", "Common\\SqCommon", "Common\\DbCommon", "Common\\RxCommon", "ThirdParty\\Reactive\\System.Reactive.Interfaces", "ThirdParty\\Reactive\\System.Reactive.Core", "ThirdParty\\Reactive\\System.Reactive.Linq", "ThirdParty\\Reactive\\System.Reactive.PlatformServices", "ThirdParty\\IbApiSocketClient"]        # everything under these relPaths is traversed: files or folders too
 
 if vbServerEnvironment == "AutoTradingServer":
     serverHost = "ec2-52-203-240-30.compute-1.amazonaws.com"
     serverPort = 22
     serverUser = "ubuntu"
-    serverRsaKeyFile = "g:\work\Archi-data\GitHubRepos\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerAgentKeyPairName.pem"
+    serverRsaKeyFile = "c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbAgent/HQaVirtualBrokerAgentKeyPairName.pem"
     rootRemoteDir = "/home/ubuntu/SQ/Server/VirtualBroker/src"
 else:
     serverHost = "ec2-34-251-1-119.eu-west-1.compute.amazonaws.com"
     serverPort = 22
     serverUser = "sq-vnc-client"
-    serverRsaKeyFile = "g:\work\Archi-data\GitHubRepos\HedgeQuant\src\Server\AmazonAWS\AwsMTrader\AwsMTrader,sq-vnc-client.pem"
+    serverRsaKeyFile = "c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsSqCore/AwsSqCore,sq-vnc-client.pem"
     rootRemoteDir = "/home/sq-vnc-client/SQ/Server/VirtualBroker/src"
 
 excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties"])
@@ -97,6 +97,10 @@ print(Fore.MAGENTA + Style.BRIGHT  +  "Start deploying '" + acceptedSubTreeRoots
 #command = "ls " + rootRemoteDir
 command = "rm -rf " + rootRemoteDir
 print("SSHClient. Executing remote command: " + command)
+# >SqCore server: all paramiko version works. Even paramiko 2.9.1
+# >VirtualBrokerAgent server: ssh works, but paramiko 2.9.1 gives "paramiko.ssh_exception.AuthenticationException: Authentication failed.", 
+# but paramiko 2.7.2 works. Install that specific version of paramiko with "pip install paramiko==2.7.2" and everything is fine.
+# In the future we will not have VbAgent server.
 sshClient = paramiko.SSHClient()
 sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 sshClient.connect(serverHost, serverPort, username = serverUser, pkey = paramiko.RSAKey.from_private_key_file(serverRsaKeyFile))
