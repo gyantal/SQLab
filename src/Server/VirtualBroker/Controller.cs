@@ -116,7 +116,7 @@ namespace VirtualBroker
             //        { BrokerTaskSetting.OrderExecution, OrderExecution.MarketOnClose },
             //        { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
             //            {
-            //            new BrokerTaskPortfolio() { Name = "! Advanced UberTAA with Global Assets Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
+            //            new BrokerTaskPortfolio() { Name = "!IB-S Advanced UberTAA with Global Assets Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
             //                MaxTradeValueInCurrency = 15000, // portfolio is 10K original, but it has 7assets+TLT in it.  If everything is Cash (not likely), TLT is used as 10K. So, set it up as 15K just to think about the future.
             //                MinTradeValueInCurrency = 100,
             //                Param = new PortfolioParamTAA() { } }
@@ -160,7 +160,7 @@ namespace VirtualBroker
                     { BrokerTaskSetting.OrderExecution, OrderExecution.Market },
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
-                        //new BrokerTaskPortfolio() { Name = "! AdaptiveConnor,VXX autocorrelation (VXX-XIV, stocks, noHedge) Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
+                        //new BrokerTaskPortfolio() { Name = "!IB-V AdaptiveConnor (UberVXX), isFT Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
                         //    MaxTradeValueInCurrency = 48000, // portfolio is 5K original, 8K is 2017-01, but it plays double leverage: 16K-20K. 20K is possible. So, almost double the range to 35K too.
                         //    MinTradeValueInCurrency = 100,
                         //    //Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 2.0 } },
@@ -226,7 +226,7 @@ namespace VirtualBroker
                     { BrokerTaskSetting.OrderExecution, OrderExecution.Market },
                     { BrokerTaskSetting.Portfolios, new List<BrokerTaskPortfolio>()
                         {
-                        // new BrokerTaskPortfolio() { Name = "! HarryLong2(Contango-Bond) harvester Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
+                        // new BrokerTaskPortfolio() { Name = "!IB-V Sobek-HL(Contango-Bond) harvester Agy Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.GyantalMain,
                         //    MaxTradeValueInCurrency = 110000, // For Agy: portfolio is 50K original. Set MaxValue=40K  (HarryLong shouldn't trade more than that, because it is only a small adjustment every day)
                         //    MinTradeValueInCurrency = 500,
                         //    Param = new PortfolioParamHarryLong() {
