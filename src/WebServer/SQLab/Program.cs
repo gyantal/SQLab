@@ -238,7 +238,7 @@ namespace SQLab
                 new Dictionary<RunningEnvironment, string>()
                 {
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/SQLab.WebServer.SQLab.NoGitHub.json" },
-                    { RunningEnvironment.WindowsAGy, "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsAGy, "c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_desktop, "d:/GDrive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_laptop, "d:/GDrive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" }
                 }

@@ -40,7 +40,7 @@ namespace VirtualBroker
 
             string configFullPath = null;
             if (Utils.RunningPlatform() == Platform.Windows)
-                configFullPath = "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.VirtualBroker.NoGitHub.json";
+                configFullPath = "c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.VirtualBroker.NoGitHub.json";
             else  // BaseDirectory = "/home/<LinuxUser>/SQ/Server/VirtualBroker/src/Server/VirtualBroker/bin/Release/netcoreapp2.1/"
                 configFullPath = AppDomain.CurrentDomain.BaseDirectory + "../../../../../../SQLab.VirtualBroker.NoGitHub.json";
 
