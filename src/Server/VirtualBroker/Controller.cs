@@ -261,7 +261,7 @@ namespace VirtualBroker
                             MaxTradeValueInCurrency = 500000, // For Mr.C.: portfolio is 150K original. + 2019-03: +150K = 300K, Set MaxValue=400K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 1000,  //50% allocation to all assets
                             // Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.075, -0.025, 0.05, 0.125, -0.425, -0.045, -0.13 }  } }
-                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "VXZ", "TQQQ", "TMV", "SCO", "UNG" }, AssetsWeights = new double[] { 0.075*cDcLvrg, -0.025*cDcLvrg, -0.05*cDcLvrg, 0.125*cDcLvrg, -0.425*cDcLvrg*cDcTmvLvrg, 0.0675*cDcLvrg, -0.39*cDcLvrg }  } }  // 2020-04-02: UWT, DWT was delisted because it went to penny stock
+                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VIXY", "VXZ", "TQQQ", "TMV", "SCO", "UNG" }, AssetsWeights = new double[] { 0.075*cDcLvrg, -0.025*cDcLvrg, -0.05*cDcLvrg, 0.125*cDcLvrg, -0.425*cDcLvrg*cDcTmvLvrg, 0.0675*cDcLvrg, -0.39*cDcLvrg }  } }  // 2020-04-02: UWT, DWT was delisted because it went to penny stock
                         //new BrokerTaskPortfolio() { Name = "! IB T. Risky 2 Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.TuSecondary,
                         //    MaxTradeValueInCurrency = 15000, // For Tu: portfolio is 5K original. Set MaxValue=15K  (assuming portfolio double in a year)
                         //    MinTradeValueInCurrency = 200,

@@ -34,6 +34,8 @@ namespace VirtualBroker
 
     public partial class UberVxxStrategy : IBrokerStrategy
     {
+        const string longVixTicker = "VIXY";    // 2022-03-17: when VXX issuance stopped we migrated from VXX to VIXY
+        const string shortVixTicker = "SVXY";
         StringBuilder m_detailedReportSb;
 
         Task<Dictionary<string, Tuple<IAssetID, string>>> m_loadAssetIdTask = null;
@@ -60,7 +62,7 @@ namespace VirtualBroker
         public void Init(StringBuilder p_detailedReportSb)
         {
             m_detailedReportSb = p_detailedReportSb;
-            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(new List<string>() {"VXX", "SVXY" }));   // task will start to run on another thread (in the threadpool)
+            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(new List<string>() {longVixTicker, shortVixTicker }));   // task will start to run on another thread (in the threadpool)
         }
 
         public string StockIdToTicker(int p_stockID)
@@ -81,7 +83,7 @@ namespace VirtualBroker
         {
             PortfolioParamUberVXX param = (PortfolioParamUberVXX)p_param;
             // the strategy knows that p_suggestedPortfItems only has 1 row, either VXX (for long VXX) or SVXY (for short VXX)
-            if (p_suggestedPortfItems[0].Ticker == "VXX")
+            if (p_suggestedPortfItems[0].Ticker == longVixTicker)
                 return param.PlayingInstrumentVixLongLeverage;
             else
                 return param.PlayingInstrumentVixShortLeverage;
@@ -106,11 +108,11 @@ namespace VirtualBroker
                 // IBrokerStrategy should not really know about the Trading Execution, or the proper trading instrument of the user or leverage of the user. 
                 // The BrokerTask should overwrite the trading instrument if it wants that suits to the different portfolios
                 // but we want to Calculate this complex Strategy only once, just giving a guideline for the BrokerTask
-                specs.Add(new PortfolioPositionSpec() { Ticker = "VXX", PositionType = PositionType.Long, Size = WeightedSize.Create(1.0) });
+                specs.Add(new PortfolioPositionSpec() { Ticker = longVixTicker, PositionType = PositionType.Long, Size = WeightedSize.Create(1.0) });
             }
             else if (forecast < 0)  // bearish on VXX: short VXX or UVXY/TVIX
             {
-                specs.Add(new PortfolioPositionSpec() { Ticker = "SVXY", PositionType = PositionType.Long, Size = WeightedSize.Create(1.0) });
+                specs.Add(new PortfolioPositionSpec() { Ticker = shortVixTicker, PositionType = PositionType.Long, Size = WeightedSize.Create(1.0) });
             }
             else
                 Utils.Logger.Warn("Stay in cash");
@@ -138,7 +140,7 @@ namespace VirtualBroker
             //var p_sqlConn = new SqlConnection("ConnectionString");
             int vxxLookbackWindowSize = 102;
             m_vxxQuotesFromSqlDB = SqlTools.LoadHistoricalQuotesAsync(new[] {
-                    new QuoteRequest { Ticker = "VXX", nQuotes = vxxLookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
+                    new QuoteRequest { Ticker = longVixTicker, nQuotes = vxxLookbackWindowSize }}, DbCommon.AssetType.Stock).Result.
                     Select(row => new QuoteData { Date = (DateTime)row[1], AdjClosePrice = (double)Convert.ToDecimal(row[2]) }).OrderBy(row => row.Date).ToList(); // stocks come as double objects: (double)row[2], indexes as floats  (double)(float)row[2]
 
             // check that the last date in the CSV is what we expect: the previous market Open day
@@ -150,7 +152,7 @@ namespace VirtualBroker
             //m_vxx = vxxQuotesFromSqlDB.Select(item => new QuoteData() { Date = item.Date, AdjClosePrice = item.AdjClosePrice }).ToList(); // Clone the SQL version, not YF
 
             // so, for VXX, for which there is no dividend, I can use the split-adjusted IB prices, but for other cases, I will have to use our SQL database (or YF or GF or all)
-            Contract contract = VBrokerUtils.ParseSqTickerToContract("VXX");
+            Contract contract = VBrokerUtils.ParseSqTickerToContract(longVixTicker);
             if (!Controller.g_gatewaysWatcher.ReqHistoricalData(DateTime.UtcNow, vxxLookbackWindowSize, "TRADES", contract, out m_vxxQuotesFromIB))   // real trades, not the MidPoint = AskBidSpread
             {
                 isOkGettingHistoricalData = false;
