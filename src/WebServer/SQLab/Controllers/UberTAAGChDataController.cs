@@ -198,6 +198,7 @@ namespace SQLab.Controllers
             int nAssets = p_taaWeightsData.Count;
 
             double[] assetScores = new double[nAssets];
+            double[] assetScoresMod = new double[nAssets];
             double[] assetHV = new double[nAssets];
             double[] assetWeights = new double[nAssets];
             double[] assetWeights2 = new double[nAssets];
@@ -211,6 +212,7 @@ namespace SQLab.Controllers
             int nDays = p_taaWeightsData[0].Count - startNumDay;
             double[,] dailyAssetWeights = new double[nDays,nAssets];
             double[,] dailyAssetScores = new double[nDays, nAssets];
+            double[,] dailyAssetScoresMod = new double[nDays, nAssets];
             double[,] dailyAssetHv = new double[nDays, nAssets];
             for (int iDay = 0; iDay < nDays; iDay++)
             {
@@ -243,6 +245,7 @@ namespace SQLab.Controllers
                         compositeSignal += assetPctChannelsSignal[iAsset, iChannel];
                     }
                     assetScores[iAsset] = compositeSignal / 4.0;    // Divide it by 4 to get a signal between -1 and +1 (this will be the “score”).
+                    assetScoresMod[iAsset] = compositeSignal / 8.0 + 0.5;    // Divide it by 4 to get a signal between -1 and +1 (this will be the “score”).
 
                     double[] hvPctChg = new double[p_histVolLookbackDays];
                     for (int iHv = 0; iHv < p_histVolLookbackDays; iHv++)
@@ -264,6 +267,7 @@ namespace SQLab.Controllers
                     dailyAssetWeights[iDay, iAsset] = assetWeights2[iAsset]/totalWeight;
                     dailyAssetScores[iDay, iAsset] = assetScores[iAsset];
                     dailyAssetHv[iDay, iAsset] = assetHV[iAsset];
+                    dailyAssetScoresMod[iDay, iAsset] = assetScoresMod[iAsset];
                 }
 
             }
@@ -279,6 +283,7 @@ namespace SQLab.Controllers
             }
 
             Tuple<double[],double[,]> taaWeightResults = Tuple.Create(taaWeightMatlabDateVec, dailyAssetWeights);
+            //Tuple<double[],double[,]> taaWeightResults = Tuple.Create(taaWeightMatlabDateVec, dailyAssetScoresMod);
             return taaWeightResults;
         }
         
