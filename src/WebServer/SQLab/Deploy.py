@@ -22,10 +22,10 @@ import platform
 runningEnvironmentComputerName = platform.node()    # 'gyantal-PC' or Balazs
 if runningEnvironmentComputerName == 'gyantal-PC':
     rootLocalDir = "c:/agy/GitHub/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
-    serverRsaKeyFile = "c:\agy\Google Drive\GDriveHedgeQuant\shared\GitHubRepos\NonCommitedSensitiveData\cert\AwsVbDev\HQaVirtualBrokerDevKeyPairName.pem"  # Dev server
+    serverRsaKeyFile = 'c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbDev/HQaVirtualBrokerDevKeyPairName.pem'  # Dev server
 else:
-    rootLocalDir = "d:\GitHub/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
-    serverRsaKeyFile = "d:\SVN\HedgeQuant\src\Server\AmazonAWS\HQaVirtualBrokerDevKeyPairName.pem"  # Dev server
+    rootLocalDir = "d:/GitHub/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
+    serverRsaKeyFile = "d:/SVN/HedgeQuant/src/Server/AmazonAWS/HQaVirtualBrokerDevKeyPairName.pem"  # Dev server
 
 rootRemoteDir = "/home/ubuntu/SQ/WebServer/SQLab/src"
 acceptedSubTreeRoots = ["WebServer\\SQLab", "Common\\SqCommon", "Common\\DbCommon"]        # everything under these relPaths is traversed: files or folders too
