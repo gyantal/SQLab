@@ -26,6 +26,7 @@ namespace SqCommon
         WindowsAGy,
         WindowsBL_desktop,
         WindowsBL_laptop,
+        WindowsDaya_laptop
     }
 
     public interface IConfigurationSection : IConfiguration
@@ -167,6 +168,8 @@ namespace SqCommon
                         RunningEnvironment = RunningEnvironment.WindowsBL_laptop;
                     else if (Environment.MachineName == "Balazswork2-PC".ToUpper())
                         RunningEnvironment = RunningEnvironment.WindowsBL_laptop;
+                    else if (Environment.MachineName == "DAYA-PC".ToUpper())
+                        RunningEnvironment = RunningEnvironment.WindowsDaya_laptop;
                     else
                     {
                         Console.WriteLine($"ERROR!. Environment.MachineName ('{Environment.MachineName}') is not expected. Assuming GYANTAL-PC.");

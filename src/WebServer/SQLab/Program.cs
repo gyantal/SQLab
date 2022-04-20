@@ -94,9 +94,8 @@ namespace SQLab
                 // But because it is Lax, HTTP server doesn't send Secure attribute, but - good news - it is not required. Lax doens't require Secure in Chrome.
                 // Ultimately we merge these tools from SqLab to SqCore, where we own the SSL cert and CloudFront is not required.
                 // Until that, we have to use HTTP.
-                .UseUrls()  // this empties what was set by config files. If it is not emptied, there is a console warning: "Overriding address(es) .... Binding to endpoints defined in UseKestrel() instead."
-                //.UseUrls("http://*:80", "https://*:443", "https://localhost:5000")        // default only: "http://localhost:5000",  adding "http://*:80" will listen to clients from any IP4 or IP6 address, so Windows Firewall will prompt                 
-                .UseKestrel(options =>  // UseUrls() is not needed any more because .UseKestrel() trumps every other settings.
+                .UseUrls("http://*:80", "https://*:443", "https://localhost:5000")        // default only: "http://localhost:5000",  adding "http://*:80" will listen to clients from any IP4 or IP6 address, so Windows Firewall will prompt                 
+                .UseKestrel(options =>
                 {
                     // 0. HTTPS preferable over HTTP on main webApps.
                     //But there are valid cases when HTTP should be allowed, and faster. When a trusted, local other server (HealthMonitor on a specific IP) asks something, there is no point of encrypting it.
@@ -238,7 +237,8 @@ namespace SQLab
                 new Dictionary<RunningEnvironment, string>()
                 {
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/SQLab.WebServer.SQLab.NoGitHub.json" },
-                    { RunningEnvironment.WindowsAGy, "c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsAGy, "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsDaya_laptop, "c:/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_desktop, "d:/GDrive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_laptop, "d:/GDrive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" }
                 }
@@ -248,6 +248,7 @@ namespace SQLab
                 {
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
+                    { RunningEnvironment.WindowsDaya_laptop, @"c:\Google Drive\GDriveHedgeQuant\shared\GitHubRepos\NonCommitedSensitiveData\cert\AwsVbDev\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_desktop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" }
                 }
@@ -257,6 +258,7 @@ namespace SQLab
                 {
                     { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/WebServer/SQLab/src/WebServer/SQLab/noPublishTo_wwwroot/" },
                     { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
+                    { RunningEnvironment.WindowsDaya_laptop, @"c:\GitHubRepos\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
                     { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" }
                 }
@@ -266,6 +268,7 @@ namespace SQLab
                 {
                     { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/WebServer/SQLab/src/WebServer/SQLab/" },
                     { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\" },
+                    { RunningEnvironment.WindowsDaya_laptop, @"c:\GitHubRepos\SQLab\src\WebServer\SQLab\" },
                     //{ RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\" },  // this will be the new after migration to NetCore2
                     { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\WebServer\SQLab\" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\WebServer\SQLab\" }
