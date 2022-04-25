@@ -34,6 +34,7 @@
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
+            // IMPORTANT! you have to do 'npm install' where project.json is. Only once. To create the 'node_modules' folder. Otherwise Error: Cannot find module 'aspnet-webpack'
             "name": "WebServerSqLab",
             "type": "coreclr",
             "request": "launch",

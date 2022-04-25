@@ -301,7 +301,9 @@ namespace VirtualBroker
             foreach (var transaction in transactions)
             {
                 double transactionOfOldVolumePct = (transaction.OldVolume == 0) ? 1.00 : transaction.Volume / transaction.OldVolume;
-                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ({transactionOfOldVolumePct*100:F2}%) ");
+                double neededVolume = Math.Abs(transaction.OldVolume) - Math.Abs(transaction.Volume);
+                double currentOverLvg = (transaction.OldVolume == 0) ? 0.00 : Math.Abs(transaction.OldVolume) / neededVolume;
+                Utils.ConsoleWriteLine(ConsoleColor.Green, false, $"**Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} (OfOldVal:{transactionOfOldVolumePct*100:F2}%, CurrOvLev:{currentOverLvg*100:F2}%) ");
                 Utils.Logger.Info($"***Proposed transaction: {transaction.TransactionType} {Strategy.StockIdToTicker(transaction.SubTableID)}: {transaction.Volume} ({transactionOfOldVolumePct*100:F2}%) ");
             }
 

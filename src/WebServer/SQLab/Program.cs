@@ -237,7 +237,7 @@ namespace SQLab
                 new Dictionary<RunningEnvironment, string>()
                 {
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/SQLab.WebServer.SQLab.NoGitHub.json" },
-                    { RunningEnvironment.WindowsAGy, "g:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsAGy, "c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsDaya_laptop, "c:/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_desktop, "d:/GDrive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_laptop, "d:/GDrive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" }
@@ -247,7 +247,7 @@ namespace SQLab
                 new Dictionary<RunningEnvironment, string>()
                 {
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/snifferquant.net.pfx" },
-                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
+                    { RunningEnvironment.WindowsAGy, @"c:\agy\GitHub\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsDaya_laptop, @"c:\Google Drive\GDriveHedgeQuant\shared\GitHubRepos\NonCommitedSensitiveData\cert\AwsVbDev\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_desktop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" }
@@ -257,7 +257,7 @@ namespace SQLab
                 new Dictionary<RunningEnvironment, string>()
                 {
                     { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/WebServer/SQLab/src/WebServer/SQLab/noPublishTo_wwwroot/" },
-                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
+                    { RunningEnvironment.WindowsAGy, @"c:\agy\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
                     { RunningEnvironment.WindowsDaya_laptop, @"c:\GitHubRepos\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
                     { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" }
@@ -267,7 +267,7 @@ namespace SQLab
                 new Dictionary<RunningEnvironment, string>()
                 {
                     { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/WebServer/SQLab/src/WebServer/SQLab/" },
-                    { RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\" },
+                    { RunningEnvironment.WindowsAGy, @"c:\agy\GitHub\SQLab\src\WebServer\SQLab\" },
                     { RunningEnvironment.WindowsDaya_laptop, @"c:\GitHubRepos\SQLab\src\WebServer\SQLab\" },
                     //{ RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\" },  // this will be the new after migration to NetCore2
                     { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\WebServer\SQLab\" },
