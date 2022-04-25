@@ -213,7 +213,8 @@ namespace VirtualBroker
             // still, it is safer to short USO (can only break if all 3 futures go negative, and when I short it, I will profit), than long SCO (can break, if oil futures double, which day can do if they come from negative)
             // In the future: trade with both instruments: 50% USO, 50% SCO.
             const double cAgyLvrg = 0.803;
-            const double cDcLvrg = 0.25; // 2021-02-25: temporary leverage to 50%, // 2021-05-05: another temporary leverage to 25%
+            // const double cDcLvrg = 0.25; // 2021-02-25: temporary leverage to 50%, // 2021-05-05: another temporary leverage to 25%
+            const double cDcLvrg = 1.0; // 2022-04-25: DC wanted to decrease to 10-20K. Instead of DeLeveraging even further it is a better idea to remove cash (-$460K), and do full 1.0 leverage. We will be able to see the CAGR better in the TWR chart, as it goes up in the future.
 
             // 2021-05-05: Inflation scare. DC preferred to decrease the TMV position to 1/3rd of previous. We decreased DCLeverage from 50% to 25%. TMV should be decreased by another 2/3rd to achieve the intended 1/3 TMV position. 1/3 = 2/6 = 1/2 * 2/3
             const double cDcTmvLvrg = 0.67;

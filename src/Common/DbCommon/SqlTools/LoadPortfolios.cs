@@ -264,12 +264,14 @@ FROM (SELECT * FROM Stock INNER JOIN
                     switch (transactionType)
                     {
                         case TransactionType.Deposit:
+                        case TransactionType.WithdrawFromPortfolio:
                             if (pipT == null)
                             {
                                 pipT = new PortfolioPosition() { AssetID = assetID };
                                 portf.TodayPositions.Add(pipT);
                             }
-                            pipT.Volume += (assetType == AssetType.HardCash) ? volume * price : volume;    // for Cash, Volume = 1, Price = $5000. The reason was, because in DB, the Volume was Int32, so the Price as Double was used to store non-Integer values
+                            double depWithdrVolumeMultiplier = (transactionType == TransactionType.Deposit) ? 1.0 : -1.0;
+                            pipT.Volume += depWithdrVolumeMultiplier * ((assetType == AssetType.HardCash) ? volume * price : volume);    // for Cash, Volume = 1, Price = $5000. The reason was, because in DB, the Volume was Int32, so the Price as Double was used to store non-Integer values
                             pipT.LastTransactionTimeUtc = trTime;
                             pipT.LastSplitAdjustedTransactionPrice = price;
                             break;
