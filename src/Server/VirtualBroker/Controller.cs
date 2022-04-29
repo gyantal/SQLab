@@ -217,10 +217,11 @@ namespace VirtualBroker
             const double cDcLvrg = 1.0; // 2022-04-25: DC wanted to decrease to 10-20K. Instead of DeLeveraging even further it is a better idea to remove cash (-$460K), and do full 1.0 leverage. We will be able to see the CAGR better in the TWR chart, as it goes up in the future.
 
             // 2021-05-05: Inflation scare. DC preferred to decrease the TMV position to 1/3rd of previous. We decreased DCLeverage from 50% to 25%. TMV should be decreased by another 2/3rd to achieve the intended 1/3 TMV position. 1/3 = 2/6 = 1/2 * 2/3
-            const double cDcTmvLvrg = 0.67;
+            const double cDcTmvLvrg = 0.5;
             var harryLongTask = new SqTask()
             {
                 Name = "HarryLong",
+                
                 ExecutionFactory = VbTradeStrategyExecution.ExecutionFactoryCreate,
                 Settings = new Dictionary<object, object>() {  //not necessary, because VBrokerTask can have local parameters inside itself
                     { BrokerTaskSetting.StrategyFactory, new Func<IBrokerStrategy>(SobekStrategy.StrategyFactoryCreate) },
@@ -262,7 +263,7 @@ namespace VirtualBroker
                             MaxTradeValueInCurrency = 500000, // For Mr.C.: portfolio is 150K original. + 2019-03: +150K = 300K, Set MaxValue=400K  (assuming portfolio double in a year)
                             MinTradeValueInCurrency = 1000,  //50% allocation to all assets
                             // Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VXX", "ZIV", "TQQQ", "TMV", "UWT", "UGAZ" }, AssetsWeights = new double[] { 0.075, -0.025, 0.05, 0.125, -0.425, -0.045, -0.13 }  } }
-                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VIXY", "VXZ", "TQQQ", "TMV", "SCO", "UNG" }, AssetsWeights = new double[] { 0.075*cDcLvrg, -0.025*cDcLvrg, -0.05*cDcLvrg, 0.125*cDcLvrg, -0.425*cDcLvrg*cDcTmvLvrg, 0.0675*cDcLvrg, -0.39*cDcLvrg }  } }  // 2020-04-02: UWT, DWT was delisted because it went to penny stock
+                            Param = new PortfolioParamHarryLong() { Tickers = new string[] {"SVXY", "VIXY", "VXZ", "TQQQ", "TMV", "SCO", "UNG" }, AssetsWeights = new double[] { 0.15*cDcLvrg, -0.05*cDcLvrg, -0.10*cDcLvrg, 0.25*cDcLvrg, -0.85*cDcLvrg*cDcTmvLvrg, 0.13*cDcLvrg, -0.39*cDcLvrg }  } }  // 2020-04-02: UWT, DWT was delisted because it went to penny stock
                         //new BrokerTaskPortfolio() { Name = "! IB T. Risky 2 Live", HQUserID = HQUserID.gyantal, IbGatewayUserToTrade = GatewayUser.TuSecondary,
                         //    MaxTradeValueInCurrency = 15000, // For Tu: portfolio is 5K original. Set MaxValue=15K  (assuming portfolio double in a year)
                         //    MinTradeValueInCurrency = 200,
