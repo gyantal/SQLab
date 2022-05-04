@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using System.Globalization;
@@ -307,6 +308,33 @@ namespace SQLab.Controllers
 
             IList<List<SQLab.Controllers.QuickTester.Strategies.DailyData>> quotesData =dataListTupleFromSQServer.Item1;
             List<SQLab.Controllers.QuickTester.Strategies.DailyData> cashEquivalentQuotesData = dataListTupleFromSQServer.Item2;
+
+                        // below commented code is for validation purpose Sin SqCore vs SqLab
+            // StringBuilder sbDebugData = new();
+            // try
+            // {
+            //     StreamWriter sw = new StreamWriter("C:\\temp\\quotesData_SqLab.txt", true, Encoding.ASCII);
+            //     for (int i = 0; i < allAssetList.Length - 1; i++)
+            //     {
+            //         sw.Write(allAssetList[i] + ": " + Environment.NewLine);
+            //         List<SQLab.Controllers.QuickTester.Strategies.DailyData> prices = dataListTupleFromSQServer.Item1[i];
+            //         string priceStr = String.Join('\t', prices.Select(r => r.Date.ToString() + ", " + r.AdjClosePrice.ToString() + Environment.NewLine));
+            //         sw.Write(priceStr + Environment.NewLine);
+            //     }
+            //     sw.Close();
+            // }
+            // catch(Exception e)
+            // {
+            //     Console.WriteLine("Exception: " + e.Message);
+            // }
+
+            // ///....
+            // StreamWriter sw1 = new StreamWriter("C:\\temp\\quotescashEquivalentQuotesData_SqLab.txt", true, Encoding.ASCII);
+            // sw1.Write(allAssetList[allAssetList.Length - 1] + ": " + Environment.NewLine);
+            // List<SQLab.Controllers.QuickTester.Strategies.DailyData> prices1 = dataListTupleFromSQServer.Item2;
+            // string priceStr1 = String.Join('\t', prices1.Select(r => r.Date.ToString() + ", " + r.AdjClosePrice.ToString() + Environment.NewLine));
+            // sw1.Write(priceStr1 + Environment.NewLine);
+            // Debug.WriteLine(sbDebugData.ToString());
 
             //Calculating basic weights based on percentile channels - base Varadi TAA
             Tuple<double[], double[,], double[]> taaWeightResultsTuple = TaaWeights(quotesData, lookbackDays, volDays, thresholdLower);

@@ -238,7 +238,7 @@ namespace SQLab
                 {
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsAGy, "c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
-                    { RunningEnvironment.WindowsDaya_laptop, "c:/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsDaya_laptop, "g:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_desktop, "d:/GDrive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_laptop, "d:/GDrive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" }
                 }
@@ -248,7 +248,7 @@ namespace SQLab
                 {
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsAGy, @"c:\agy\GitHub\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
-                    { RunningEnvironment.WindowsDaya_laptop, @"c:\Google Drive\GDriveHedgeQuant\shared\GitHubRepos\NonCommitedSensitiveData\cert\AwsVbDev\snifferquant.net.pfx" },
+                    { RunningEnvironment.WindowsDaya_laptop, @"g:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbDev/snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_desktop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\SVN\HedgeQuant\src\Server\AmazonAWS\certification\snifferquant.net.pfx" }
                 }
