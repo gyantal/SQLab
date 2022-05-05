@@ -310,10 +310,10 @@ namespace SQLab.Controllers
             List<SQLab.Controllers.QuickTester.Strategies.DailyData> cashEquivalentQuotesData = dataListTupleFromSQServer.Item2;
 
                         // below commented code is for validation purpose Sin SqCore vs SqLab
-            // StringBuilder sbDebugData = new();
+            // // StringBuilder sbDebugData = new();
             // try
             // {
-            //     StreamWriter sw = new StreamWriter("C:\\temp\\quotesData_SqLab.txt", true, Encoding.ASCII);
+            //     StreamWriter sw = new StreamWriter("C:\\temp\\quotesData_SqLab.csv");
             //     for (int i = 0; i < allAssetList.Length - 1; i++)
             //     {
             //         sw.Write(allAssetList[i] + ": " + Environment.NewLine);
@@ -329,12 +329,12 @@ namespace SQLab.Controllers
             // }
 
             // ///....
-            // StreamWriter sw1 = new StreamWriter("C:\\temp\\quotescashEquivalentQuotesData_SqLab.txt", true, Encoding.ASCII);
+            // StreamWriter sw1 = new StreamWriter("C:\\temp\\quotescashEquivalentQuotesData_SqLab.csv");
             // sw1.Write(allAssetList[allAssetList.Length - 1] + ": " + Environment.NewLine);
             // List<SQLab.Controllers.QuickTester.Strategies.DailyData> prices1 = dataListTupleFromSQServer.Item2;
             // string priceStr1 = String.Join('\t', prices1.Select(r => r.Date.ToString() + ", " + r.AdjClosePrice.ToString() + Environment.NewLine));
             // sw1.Write(priceStr1 + Environment.NewLine);
-            // Debug.WriteLine(sbDebugData.ToString());
+            // // Debug.WriteLine(sbDebugData.ToString());
 
             //Calculating basic weights based on percentile channels - base Varadi TAA
             Tuple<double[], double[,], double[]> taaWeightResultsTuple = TaaWeights(quotesData, lookbackDays, volDays, thresholdLower);
