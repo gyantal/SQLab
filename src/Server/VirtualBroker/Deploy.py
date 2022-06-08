@@ -18,13 +18,13 @@ if vbServerEnvironment == "AutoTradingServer":
     serverHost = "ec2-52-203-240-30.compute-1.amazonaws.com"
     serverPort = 22
     serverUser = "ubuntu"
-    serverRsaKeyFile = "c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbAgent/HQaVirtualBrokerAgentKeyPairName.pem"
+    serverRsaKeyFile = "h:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbAgent/HQaVirtualBrokerAgentKeyPairName.pem"
     rootRemoteDir = "/home/ubuntu/SQ/Server/VirtualBroker/src"
 else:
     serverHost = "ec2-34-251-1-119.eu-west-1.compute.amazonaws.com"
     serverPort = 22
     serverUser = "sq-vnc-client"
-    serverRsaKeyFile = "c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsSqCore/AwsSqCore,sq-vnc-client.pem"
+    serverRsaKeyFile = "h:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsSqCore/AwsSqCore,sq-vnc-client.pem"
     rootRemoteDir = "/home/sq-vnc-client/SQ/Server/VirtualBroker/src"
 
 excludeDirs = set(["bin", "obj", ".vs", "artifacts", "Properties"])

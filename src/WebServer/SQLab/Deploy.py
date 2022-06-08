@@ -22,7 +22,7 @@ import platform
 runningEnvironmentComputerName = platform.node()    # 'gyantal-PC' or Balazs
 if runningEnvironmentComputerName == 'gyantal-PC':
     rootLocalDir = "c:/agy/GitHub/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
-    serverRsaKeyFile = 'c:/agy/Google Drive/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbDev/HQaVirtualBrokerDevKeyPairName.pem'  # Dev server
+    serverRsaKeyFile = 'h:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbDev/HQaVirtualBrokerDevKeyPairName.pem'  # Dev server
 else:
     rootLocalDir = "d:/GitHub/SQLab/src"       #os.walk() gives back in a way that the last character is not slash, so do that way
     serverRsaKeyFile = "d:/SVN/HedgeQuant/src/Server/AmazonAWS/HQaVirtualBrokerDevKeyPairName.pem"  # Dev server
