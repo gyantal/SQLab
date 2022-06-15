@@ -98,8 +98,8 @@ namespace SQLab.Controllers
             // 2022-05: BABA has 2 days less prices then everything else. Just ignore BABA
             // string[] gchAssetList = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SQ", "V" };
             // string[] gchAssetListNN = new string[] { "AAPL", "ADBE", "AMZN", "BABA", "CRM", "FB", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SQ", "V" };
-            string[] gchAssetList = new string[] { "AAPL", "ADBE", "AMZN", "CRM", "FB", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SQ", "V" };
-            string[] gchAssetListNN = new string[] { "AAPL", "ADBE", "AMZN", "CRM", "FB", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SQ", "V" };
+            string[] gchAssetList = new string[] { "AAPL", "ADBE", "AMZN", "CRM", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SQ", "V" };
+            string[] gchAssetListNN = new string[] { "AAPL", "ADBE", "AMZN", "CRM", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SQ", "V" };
 
             string[] gmAssetList = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ"};
             string[] gmAssetListNN = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ" };
