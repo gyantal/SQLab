@@ -631,7 +631,7 @@ namespace SQLab.Controllers
         {
             //Defining asset lists.
             string[] clmtAssetList = new string[]{ "^GSPC", "XLU", "VTI" };
-            string[] gchAssetList = new string[]{ "AAPL", "ADBE", "AMZN", "CRM", "CRWD", "ETSY", "FB", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SE", "SHOP", "SQ", "V", "TLT"}; //TLT is used as a cashEquivalent
+            string[] gchAssetList = new string[]{ "AAPL", "ADBE", "AMZN", "CRM", "CRWD", "ETSY", "META", "GOOGL", "MA", "MSFT", "NOW", "NVDA", "PYPL", "QCOM", "SE", "SHOP", "SQ", "V", "TLT"}; //TLT is used as a cashEquivalent
             string[] gmrAssetList = new string[] { "MDY", "ILF", "FEZ", "EEM", "EPP", "VNQ", "TLT" }; //TLT is used as a cashEquivalent
             string[] usedAssetList = new string[0];
             string titleString ="0";
