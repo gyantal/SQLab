@@ -239,6 +239,7 @@ namespace SQLab
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsAGy, "h:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsDaya_laptop, "g:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
+                    { RunningEnvironment.WindowsDaya_desktop, "g:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_desktop, "h:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" },
                     { RunningEnvironment.WindowsBL_laptop, "h:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/SQLab.WebServer.SQLab.NoGitHub.json" }
                 }
@@ -249,6 +250,7 @@ namespace SQLab
                     { RunningEnvironment.LinuxServer, "/home/ubuntu/SQ/WebServer/SQLab/snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsAGy, @"h:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbDev/snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsDaya_laptop, @"g:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbDev/snifferquant.net.pfx" },
+                    { RunningEnvironment.WindowsDaya_desktop, @"g:/.shortcut-targets-by-id/0BzxkV1ug5ZxvVmtic1FsNTM5bHM/GDriveHedgeQuant/shared/GitHubRepos/NonCommitedSensitiveData/cert/AwsVbDev/snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_desktop, @"h:\.shortcut-targets-by-id\0BzxkV1ug5ZxvVmtic1FsNTM5bHM\GDriveHedgeQuant\shared\GitHubRepos\NonCommitedSensitiveData\cert\AwsVbDev\snifferquant.net.pfx" },
                     { RunningEnvironment.WindowsBL_laptop, @"h:\.shortcut-targets-by-id\0BzxkV1ug5ZxvVmtic1FsNTM5bHM\GDriveHedgeQuant\shared\GitHubRepos\NonCommitedSensitiveData\cert\AwsVbDev\snifferquant.net.pfx" }
                 }
@@ -259,6 +261,7 @@ namespace SQLab
                     { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/WebServer/SQLab/src/WebServer/SQLab/noPublishTo_wwwroot/" },
                     { RunningEnvironment.WindowsAGy, @"c:\agy\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
                     { RunningEnvironment.WindowsDaya_laptop, @"c:\GitHubRepos\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // TEMPORARY
+                    { RunningEnvironment.WindowsDaya_desktop, @"c:\GitHubRepos\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },   // Desktop
                     { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\WebServer\SQLab\noPublishTo_wwwroot\" }
                 }
@@ -269,6 +272,7 @@ namespace SQLab
                     { RunningEnvironment.LinuxServer, $"/home/ubuntu/SQ/WebServer/SQLab/src/WebServer/SQLab/" },
                     { RunningEnvironment.WindowsAGy, @"c:\agy\GitHub\SQLab\src\WebServer\SQLab\" },
                     { RunningEnvironment.WindowsDaya_laptop, @"c:\GitHubRepos\SQLab\src\WebServer\SQLab\" },
+                    { RunningEnvironment.WindowsDaya_desktop, @"c:\GitHubRepos\SQLab\src\WebServer\SQLab\" },
                     //{ RunningEnvironment.WindowsAGy, @"g:\work\Archi-data\GitHubRepos\SQLab\src\WebServer\SQLab\" },  // this will be the new after migration to NetCore2
                     { RunningEnvironment.WindowsBL_desktop, @"d:\GitHub\SQLab\src\WebServer\SQLab\" },
                     { RunningEnvironment.WindowsBL_laptop, @"d:\GitHub\SQLab\src\WebServer\SQLab\" }
