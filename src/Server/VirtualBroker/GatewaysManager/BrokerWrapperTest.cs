@@ -67,7 +67,7 @@ namespace VirtualBroker
             throw new NotImplementedException();
         }
 
-        public bool Connect(GatewayUser p_gatewayUser, int p_socketPort, int p_brokerConnectionClientID)
+        public bool Connect(GatewayUser p_gatewayUser, string host, int p_socketPort, int p_brokerConnectionClientID)
         {
             //Utils.Logger.Warn($"WARNING!!! This fake BrokerWrapper is only for DEV. Use the IB BrokerWrapper in production.");
             m_socketPort = p_socketPort;

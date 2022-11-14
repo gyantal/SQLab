@@ -99,7 +99,7 @@ namespace VirtualBroker
     {
         string IbAccountsList { get; set; }
 
-        bool Connect(GatewayUser p_gatewayUser, int p_socketPort, int p_brokerConnectionClientID);
+        bool Connect(GatewayUser p_gatewayUser, string host, int p_socketPort, int p_brokerConnectionClientID);
         void Disconnect();
         bool IsConnected();
 

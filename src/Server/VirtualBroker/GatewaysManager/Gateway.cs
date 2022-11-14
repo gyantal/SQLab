@@ -61,6 +61,7 @@ namespace VirtualBroker
     {
         public GatewayUser GatewayUser { get;  }
         public string VbAccountsList { get; set; }
+        public string Host { get; set; }
         public int SocketPort { get; set; }
         public int BrokerConnectionClientID { get; set; }
         public bool IsConnected
@@ -144,9 +145,9 @@ namespace VirtualBroker
                         else
                             ibWrapper = new BrokerWrapperYF();     // Before market open, or After market close. Simulated real time price is needed to determine current portfolio $size.
                     }
-                    if (!ibWrapper.Connect(GatewayUser, SocketPort, BrokerConnectionClientID))
+                    if (!ibWrapper.Connect(GatewayUser, Host, SocketPort, BrokerConnectionClientID))
                     {
-                        Utils.Logger.Info($"No connection to IB {GatewayUser}, port {SocketPort}. Trials: {nConnectionRetry}/{nMaxRetry}");
+                        Utils.Logger.Info($"No connection to IB {GatewayUser}, host: {Host}, port {SocketPort}. Trials: {nConnectionRetry}/{nMaxRetry}");
                         if (nConnectionRetry == nMaxRetry)
                             Console.WriteLine($"*{DateTime.UtcNow.ToString("dd'T'HH':'mm':'ss")}: No connection to IB {GatewayUser}. Trials: {nConnectionRetry}/{nMaxRetry}");
                         continue;

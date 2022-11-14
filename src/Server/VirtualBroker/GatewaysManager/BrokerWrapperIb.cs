@@ -85,11 +85,11 @@ namespace VirtualBroker
         }
 
 
-        public virtual bool Connect(GatewayUser p_gatewayUser, int p_socketPort, int p_brokerConnectionClientID)
+        public virtual bool Connect(GatewayUser p_gatewayUser, string host, int p_socketPort, int p_brokerConnectionClientID)
         {
             m_gatewayUser = p_gatewayUser;
-            Utils.Logger.Info($"ClientSocket.eConnect(127.0.0.1, {p_socketPort}, {p_brokerConnectionClientID}, false)");
-            ClientSocket.eConnect("127.0.0.1", p_socketPort, p_brokerConnectionClientID, false);
+            Utils.Logger.Info($"ClientSocket.eConnect({host}, {p_socketPort}, {p_brokerConnectionClientID}, false)");
+            ClientSocket.eConnect(host, p_socketPort, p_brokerConnectionClientID, false);
             //Create a reader to consume messages from the TWS. The EReader will consume the incoming messages and put them in a queue
             m_eReader = new EReader(ClientSocket, Signal);
             m_eReader.Start();
