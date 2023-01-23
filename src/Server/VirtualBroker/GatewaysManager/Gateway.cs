@@ -85,7 +85,7 @@ namespace VirtualBroker
         public List<RealOrder> RealOrders { get; set; } = new List<RealOrder>();
 
 
-        double m_allowedMinUsdTransactionValue = 200.0;
+        double m_allowedMinUsdTransactionValue = 600.0; // 2023-01-23: changed from 200 to 600. To trade less. Lower trading frictions.
         public double AllowedMinUsdTransactionValue
         {
             get { return m_allowedMinUsdTransactionValue; }
@@ -275,7 +275,7 @@ namespace VirtualBroker
 
             if (estimatedTransactionValue < p_portfolioMinTradeValueInCurrency)
             {
-                Utils.Logger.Info("p_portfolioMinTradeValueInCurrency usage is not implemented yet.");
+                Utils.Logger.Info("Gateway.PlaceOrder(): p_portfolioMinTradeValueInCurrency usage is not implemented yet."); // Probably it is not worth spending time here in SqLab. We should implement this in SqCore.
             }
 
             DateTime utcNow = DateTime.UtcNow;

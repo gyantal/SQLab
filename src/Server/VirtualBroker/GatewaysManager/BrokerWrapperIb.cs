@@ -1248,7 +1248,10 @@ namespace VirtualBroker
 
             //durationString = "5 D";
 
-            ClientSocket.reqHistoricalData(histDataId, p_contract, p_endDateTime.ToString("yyyyMMdd HH:mm:ss"), durationString, "1 day", p_whatToShow, 1, 1, null);    // with daily data formatDate is always "yyyyMMdd", no seconds, and param=2 doesn't give seconds
+            // IB TWS version 10.20 (2023-01): p_endDateTime.ToString("yyyyMMdd HH:mm:ss") "You submitted request with date-time attributes without explicit time zone. 
+            // Please switch to use yyyymmdd-hh:mm:ss in UTC or use instrument time zone, like US/Eastern. Implied time zone functionality will be removed in the next API release"
+            // There was a space between date and time. Now they prefer a - hyphen.
+            ClientSocket.reqHistoricalData(histDataId, p_contract, p_endDateTime.ToString("yyyyMMdd-HH:mm:ss"), durationString, "1 day", p_whatToShow, 1, 1, null);    // with daily data formatDate is always "yyyyMMdd", no seconds, and param=2 doesn't give seconds
 
             // wait here with timeout of 14seconds. In general it is only 1 second, but it took 13sec when  HMDS data farm was disconnected
             // 1109T14:50:02.192#91#5#Info: ReqHistoricalData() for SVXY, reqId: 1001

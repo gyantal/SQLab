@@ -34,8 +34,14 @@ namespace VirtualBroker
 
     public partial class UberVxxStrategy : IBrokerStrategy
     {
-        const string longVixTicker = "VIXY";    // 2022-03-17: when VXX issuance stopped we migrated from VXX to VIXY
-        const string shortVixTicker = "SVXY";
+        // 2022-03-17: VXX to VIXY: when VXX issuance stopped we migrated from VXX to VIXY
+        // 2023-01-04: VIXY to VXX: because of PTP -10% tax witholding, we cannot trade UNG,UCO, SVXY, VIXY on DcMain (or DeBlanzac). Although we can trade VXX.
+        const string longVixTicker = "VXX";
+        const PositionType longVixTickerPositionType = PositionType.Long;
+
+        // 2023-01-04: SVXY to VXX: because of PTP -10% tax witholding, we cannot trade UNG,UCO, SVXY, VIXY on DcMain (or DeBlanzac). Although we can trade VXX.
+        const string shortVixTicker = "VXX";
+        const PositionType shortVixTickerPositionType = PositionType.Short;
         StringBuilder m_detailedReportSb;
 
         Task<Dictionary<string, Tuple<IAssetID, string>>> m_loadAssetIdTask = null;
@@ -62,7 +68,8 @@ namespace VirtualBroker
         public void Init(StringBuilder p_detailedReportSb)
         {
             m_detailedReportSb = p_detailedReportSb;
-            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(new List<string>() {longVixTicker, shortVixTicker }));   // task will start to run on another thread (in the threadpool)
+            var usedTickers = longVixTicker == shortVixTicker ? new List<string>() { longVixTicker } : new List<string>() { longVixTicker, shortVixTicker };
+            m_loadAssetIdTask = Task.Run(() => DbCommon.SqlTools.LoadAssetIdsForTickers(usedTickers));   // task will start to run on another thread (in the threadpool)
         }
 
         public string StockIdToTicker(int p_stockID)
@@ -83,7 +90,7 @@ namespace VirtualBroker
         {
             PortfolioParamUberVXX param = (PortfolioParamUberVXX)p_param;
             // the strategy knows that p_suggestedPortfItems only has 1 row, either VXX (for long VXX) or SVXY (for short VXX)
-            if (p_suggestedPortfItems[0].Ticker == longVixTicker)
+            if (p_suggestedPortfItems[0].Ticker == longVixTicker && p_suggestedPortfItems[0].PositionType == PositionType.Long)
                 return param.PlayingInstrumentVixLongLeverage;
             else
                 return param.PlayingInstrumentVixShortLeverage;
@@ -108,11 +115,11 @@ namespace VirtualBroker
                 // IBrokerStrategy should not really know about the Trading Execution, or the proper trading instrument of the user or leverage of the user. 
                 // The BrokerTask should overwrite the trading instrument if it wants that suits to the different portfolios
                 // but we want to Calculate this complex Strategy only once, just giving a guideline for the BrokerTask
-                specs.Add(new PortfolioPositionSpec() { Ticker = longVixTicker, PositionType = PositionType.Long, Size = WeightedSize.Create(1.0) });
+                specs.Add(new PortfolioPositionSpec() { Ticker = longVixTicker, PositionType = longVixTickerPositionType, Size = WeightedSize.Create(1.0) });
             }
             else if (forecast < 0)  // bearish on VXX: short VXX or UVXY/TVIX
             {
-                specs.Add(new PortfolioPositionSpec() { Ticker = shortVixTicker, PositionType = PositionType.Long, Size = WeightedSize.Create(1.0) });
+                specs.Add(new PortfolioPositionSpec() { Ticker = shortVixTicker, PositionType = shortVixTickerPositionType, Size = WeightedSize.Create(1.0) });
             }
             else
                 Utils.Logger.Warn("Stay in cash");
