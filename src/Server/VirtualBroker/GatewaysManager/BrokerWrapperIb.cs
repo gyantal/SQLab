@@ -393,7 +393,17 @@ namespace VirtualBroker
 
             if (errorCode == 2129)
             {
-                //"Id: -1, ErrCode: 2129, Msg: The product INNL.CVR is provided on an indicative and informational basis only. IB does not represent that the valuation for this instrument is accurate. The basis for the calculation may change at any time. Traders are responsible for understanding the contract details and details of deliverable instruments independently of IB sources, which are provided on a best efforts basis only."
+                // "Id: -1, ErrCode: 2129, Msg: The product INNL.CVR is provided on an indicative and informational basis only. IB does not represent that the valuation for this instrument is accurate. The basis for the calculation may change at any time. Traders are responsible for understanding the contract details and details of deliverable instruments independently of IB sources, which are provided on a best efforts basis only."
+                return;
+            }
+
+            if (errorCode == 2176)
+            {
+                // IB Error. "Id: -1, Code: 2176, Msg: Warning: Your API version does not support fractional share size rules. Please upgrade to a minimum version 163. Trimmed value 4087.96 to 4087"
+                // It appears from TWS 21. When we ask ReqHistoricalData() for VXX, reqId: 1002,
+                // it returns a fractional volume for VXX. HistoricalData. 1002 - Date: 20220912, Open: 73, High: 73.36, Low: 72.12, Close: 72.6, Volume: 4087, Count: 7996
+                // 4087.96 is trimmed to 4087, which is fine for us. We don't use historical Volume data. (btw. note that daily volume is around was 475,350 according to YF)
+                // We don't care about this. We don't want to upgrade IB API for 163 (to support crypto), because we are abandonding the SqLab code anyway.
                 return;
             }
 
