@@ -153,7 +153,7 @@ export class LEtf extends Strategy {
                 this.assets = "TVIX,TMV";
                 this.assetsConstantWeightPct = "-35,-65";   // %, negative is Short
                 break;
-            case "idParamSetHL_-35TVIX_-25TMV_-28UNG_-8USO_-4JJC":
+            case "idParamSetHL_-35TVIX_-25TMV_-28UNG_-8USO_-4JJCTF":
                 this.assets = "TVIX,TMV,UNG,USO,JJCTF";
                 this.assetsConstantWeightPct = "-35,-25,-28,-8,-4";   // %, negative is Short
                 break;

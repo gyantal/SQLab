@@ -224,7 +224,7 @@ namespace VirtualBroker
                 {
                     Contract contract = new Contract() { Symbol = r.Ticker, SecType = "STK", Currency = "USD", Exchange = "SMART" };
                     double rtPrice = 0.0;
-                    StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, $"Warning. Realtime price for {r.Ticker} is misssing. For safety reasons, we can use volume=0 as targetVolume, but it means we would sell the current positions. Better to not continue.");
+                    StrongAssert.True(Controller.g_gatewaysWatcher.GetAlreadyStreamedPrice(contract, ref rtPrices), Severity.ThrowException, $"Warning. Realtime price for {r.Ticker} is missing. For safety reasons, we can use volume=0 as targetVolume, but it means we would sell the current positions. Better to not continue.");
                     rtPrice = rtPrices[TickType.MID].Price;
                     volume = (int)((r.Size as WeightedSize).Weight * totalRiskedCapital / rtPrice) * (r.IsShort ? -1 : 1);
                 }
