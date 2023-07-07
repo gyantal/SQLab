@@ -170,7 +170,7 @@ namespace VirtualBroker
                         //    //Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 2.0 } },    // 2017-11-16: back to normal as we have 29K available funds now
                         //    Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 1.5 } },    // 20178-01-03: After having 100+% in 2017, prefer safer play now. IB margin handling is still bad. 100% maintenance margin and 110% initial margin. Calculated from yesterday closePrice. In case of -20% intraday VXX spike, these margin can be reached. Only have 15K available funds. On top of it: realized that in case of XIV termination event, portfolio can lose more than its value. Not losing 100% and going to Zero, but losing an extra -100%. That shouldn't be allowed. In 2018, let's play safer and only 150% shorts, not 200%.
                         new BrokerTaskPortfolio() { Name = "! AdaptiveConnor,VXX autocorrelation (VXX-XIV, stocks, noHedge) Live", HQUserID = HQUserID.drcharmat, IbGatewayUserToTrade = GatewayUser.CharmatSecondary,
-                            MaxTradeValueInCurrency = 180000, // >For DC (10K original, 27K now, set MaxValue=80K (assuming portfolio double in a year)) If going from ShortVXX longVXX, it trades 2x the PV
+                            MaxTradeValueInCurrency = 300000, // >For DC (10K original, 27K now, set MaxValue=80K (assuming portfolio double in a year)) If going from ShortVXX longVXX, it trades 2x the PV
                             MinTradeValueInCurrency = 500,
                             Param = new PortfolioParamUberVXX() { PlayingInstrumentVixLongLeverage = 1.0, PlayingInstrumentVixShortLeverage = 1.0 } }
                         }
@@ -217,7 +217,7 @@ namespace VirtualBroker
             const double cDcLvrg = 1.0; // 2022-04-25: DC wanted to decrease to 10-20K. Instead of DeLeveraging even further it is a better idea to remove cash (-$460K), and do full 1.0 leverage. We will be able to see the CAGR better in the TWR chart, as it goes up in the future.
 
             // 2021-05-05: Inflation scare. DC preferred to decrease the TMV position to 1/3rd of previous. We decreased DCLeverage from 50% to 25%. TMV should be decreased by another 2/3rd to achieve the intended 1/3 TMV position. 1/3 = 2/6 = 1/2 * 2/3
-            const double cDcTmvLvrg = 0.5;
+            const double cDcTmvLvrg = 0.75; // 2023-06-07: 0.5=>0.75, because now that inflation is going down, bonds should be good in the future. Plan to increase it to 1.00 in the future.
             var harryLongTask = new SqTask()
             {
                 Name = "HarryLong",
