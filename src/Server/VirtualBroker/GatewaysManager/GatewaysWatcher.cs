@@ -53,7 +53,7 @@ namespace VirtualBroker
             if (Controller.IsRunningAsLocalDevelopment())
             {
                 gateway1 = new Gateway(GatewayUser.GyantalMain, p_accountMaxTradeValueInCurrency: 100000 /* UberVXX is 12K, 2xleveraged=24K, double=48K*/, p_accountMaxEstimatedValueSumRecentlyAllowed: 160000) 
-                    { VbAccountsList = "U407941", Host = "127.0.0.1", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41 };
+                    { VbAccountsList = "U13045369,U407941,", Host = "127.0.0.1", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41 };
                 m_mainGateway = gateway1;
             }
             else
@@ -64,7 +64,7 @@ namespace VirtualBroker
                 StrongAssert.True(vbServerEnvironment != null, Severity.Halt, "Configuration['VbServerEnvironment'] is missing. It is safer to terminate.");
                 if (vbServerEnvironment.ToLower() == "AutoTradingServer".ToLower())
                 {
-                    // gateway1 = new Gateway(GatewayUser.GyantalMain, p_accountMaxTradeValueInCurrency: 100000 /* UberVXX is 12K, 2xleveraged=24K, double=48K*/, p_accountMaxEstimatedValueSumRecentlyAllowed: 160000) { VbAccountsList = "U407941", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41 };
+                    // gateway1 = new Gateway(GatewayUser.GyantalMain, p_accountMaxTradeValueInCurrency: 100000 /* UberVXX is 12K, 2xleveraged=24K, double=48K*/, p_accountMaxEstimatedValueSumRecentlyAllowed: 160000) { VbAccountsList = "U13045369,U407941,", SocketPort = (int)GatewayUserPort.GyantalMain, BrokerConnectionClientID = 41 };
                     gateway1 = new Gateway(GatewayUser.CharmatSecondary, p_accountMaxTradeValueInCurrency: 600000.0 /* HarryLong is played 400K*70%=300K, double it */, p_accountMaxEstimatedValueSumRecentlyAllowed: 1000000  /* 1M */ ) 
                         { VbAccountsList = "U988767", Host = VirtualBrokerMessage.MtsVirtualBrokerServerPublicIpForClients, SocketPort = (int)GatewayUserPort.CharmatSecondary, BrokerConnectionClientID = 89 };
                     //gateway3 = new Gateway(GatewayUser.TuSecondary, p_accountMaxTradeValueInCurrency: 15000.0 /* HarryLong is played 10K*70%=7K, double it */, p_accountMaxEstimatedValueSumRecentlyAllowed: 20000  /* 20K */ ) { VbAccountsList = "U1156489", SocketPort = (int)GatewayUserPort.TuSecondary, BrokerConnectionClientID = 43 };

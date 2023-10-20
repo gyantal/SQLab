@@ -7,6 +7,8 @@
 # !!!!!!!!!!!!!     DO a FULL       BUILD ALL  before deploying to Linux
 # !!!!!!!!!!!!!     DO a FULL       BUILD ALL  before deploying to Linux 
 
+# Note: If any TS file was changed, before deploying to Linux, you have to run this locally in Debug first.
+# SQLab.csproj contains the section that compiles the TS files to JS into the wwwroot/dist directory.
 
 import platform
 print("Python version: " + platform.python_version() + " (" + platform.architecture()[0] + ")")
