@@ -153,7 +153,7 @@ namespace VirtualBroker
                         continue;
                     }
 
-                    StrongAssert.Equal(ibWrapper.IbAccountsList, VbAccountsList, Severity.ThrowException, $"Expected IbAccount {VbAccountsList} is not found: { ibWrapper.IbAccountsList}.");
+                    StrongAssert.Equal(ibWrapper.IbAccountsList, VbAccountsList, Severity.ThrowException, $"Expected IbAccounts {VbAccountsList} are not found. IB gave the following accounts: {ibWrapper.IbAccountsList}.");
 
                     // after this line, we are really connected
                     BrokerWrapper = ibWrapper;

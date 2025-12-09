@@ -214,7 +214,10 @@ namespace VirtualBroker
             // In the future: trade with both instruments: 50% USO, 50% SCO.
             const double cAgyLvrg = 0.803;
             // const double cDcLvrg = 0.25; // 2021-02-25: temporary leverage to 50%, // 2021-05-05: another temporary leverage to 25%
-            const double cDcLvrg = 1.0; // 2022-04-25: DC wanted to decrease to 10-20K. Instead of DeLeveraging even further it is a better idea to remove cash (-$460K), and do full 1.0 leverage. We will be able to see the CAGR better in the TWR chart, as it goes up in the future.
+            
+            // 2022-04-25: DC wanted to decrease to 10-20K. Instead of DeLeveraging even further it is a better idea to remove cash (-$460K), and do full 1.0 leverage. We will be able to see the CAGR better in the TWR chart, as it goes up in the future.
+            // 2024-11-18: DC wanted to deleverage. PV is 420K. We about half it by Withdraw cash from portfolio (-$200K). The PV started with 100K initial deposit and we already took 460K + 200K = 660K cash out, and it is 220K now. That is a 880-100 = 780K net profit.
+            const double cDcLvrg = 1.0;
 
             // 2021-05-05: Inflation scare. DC preferred to decrease the TMV position to 1/3rd of previous. We decreased DCLeverage from 50% to 25%. TMV should be decreased by another 2/3rd to achieve the intended 1/3 TMV position. 1/3 = 2/6 = 1/2 * 2/3
             const double cDcTmvLvrg = 0.75; // 2023-06-07: 0.5=>0.75, because now that inflation is going down, bonds should be good in the future. Plan to increase it to 1.00 in the future.
