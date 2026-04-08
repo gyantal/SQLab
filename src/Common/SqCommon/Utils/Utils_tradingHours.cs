@@ -61,10 +61,9 @@ namespace SqCommon
                 // 2019: holiday table appears only once in the HTML.
                 // 2022: table class is changed from 'table table-layout-fixed' to 'table-data table-fixed table-border-rows'
                 // 2025: table class is changed from 'table-data table-fixed table-border-rows' to 'table-data w-full table-fixed table-condensed table-border-rows'
-                int iTHead = webPage.IndexOf(@"<table class=""table-data w-full table-fixed table-condensed table-border-rows"">");
+                int iTHead = webPage.IndexOf(@"<table class=""table-data w-full table-fixed table-striped table-condensed table-border-rows"">");
                 int iTBody = webPage.IndexOf(@"</table>", iTHead);
                 string holidayTable = webPage.Substring(iTHead, iTBody - iTHead);
-
 
                 int iFootnoteStart = webPage.IndexOf("<div", iTBody, StringComparison.CurrentCultureIgnoreCase);   // 2017-02-08: a ">*Each" got a space as ">* Each"
                 int iFootnoteEnd = webPage.IndexOf(@"</div>", iFootnoteStart); // in 2017: Footnote section is was Before the second-holiday-table in the html source, in 2018: no
@@ -74,17 +73,25 @@ namespace SqCommon
                 string[] trs = holidayTable.Split(new string[] { "<tr>\n  ", "<tr>", "<tr style=", "</tr>\n  ", "</tr>" }, StringSplitOptions.RemoveEmptyEntries);
                 string headerRow = trs[1];
                 string[] tdsHeader = headerRow.Split(new string[] { @"<th>", @"</th>" }, StringSplitOptions.RemoveEmptyEntries); // 2023-12-28: a "<th>" => "<td>", 2025-12-28: a "<td>" => "<th>"
-                year1 = Int32.Parse(tdsHeader[1]);
-                year2 = Int32.Parse(tdsHeader[2]);
+                year1 = Int32.Parse(tdsHeader[2]);
+                year2 = Int32.Parse(tdsHeader[3]);
                 // year3 = Int32.Parse(tdsHeader[7]);  // there is year3 too, but we don't need it in VBroker or healthmonitor. So, just ignore them
 
                 for (int i = 2; i < trs.Length; i++)
                 {
-                    if (!trs[i].TrimStart().StartsWith(@"<td>"))
+                    if (!(trs[i].TrimStart().StartsWith(@"<th>") || trs[i].TrimStart().StartsWith(@"<td>"))) // should start with <th> or <td>
                         continue;
 
                     var tds = trs[i].Split(new string[] { @"<th>", @"</th>", @"<td>", @"</td>" }, StringSplitOptions.RemoveEmptyEntries);
-                    // string holidayName = tds[1];
+
+                    // TEMP
+                    // There is a mistake on website https://www.nyse.com/trade/hours-calendars
+                    // *** Each market will close early at 1:00 p.m. (1:15 p.m. for eligible options) on Wednesday, December 24, 2025, and Thursday, December 24, 2026. NYSE American Equities, NYSE Arca Equities, NYSE National, and NYSE Texas late trading sessions will close at 5:00 p.m. All times are Eastern Time.
+                    // it should be 2026 and 2027. and we search that year (2027) in the text, which fails.
+                    // string holidayName = tds[0].Trim();
+                    // if (holidayName == "Thanksgiving Day" || holidayName == "Christmas Day")
+                    //     continue; // TEMP: skip these 2 holidays, because *** footnote errors on page: https://www.nyse.com/trade/hours-calendars
+
                     ProcessHolidayCellInET(tds[1].Trim(), year1, footnote, holidays1);
                     ProcessHolidayCellInET(tds[2].Trim(), year2, footnote, holidays2);
                     // ProcessHolidayCellInET(tds[5], year2, footnote, holidays2);   // there is year3 too, but we don't need it in VBroker or healthmonitor. So, just ignore them
