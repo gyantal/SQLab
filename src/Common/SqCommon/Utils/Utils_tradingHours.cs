@@ -28,7 +28,7 @@ namespace SqCommon
             // using http://www.thestreet.com/stock-market-news/11771386/market-holidays-2015.html is not recommended, 
             //because for 20x pages it does an Adver redirection instead of giving back the proper info the returned page 
             // is an advert. So, stick to the official NYSE website.
-            bool isDownloaded = Utils.DownloadStringWithRetry(out webPage, "https://www.nyse.com/markets/hours-calendars", 5, TimeSpan.FromSeconds(2), false);
+            bool isDownloaded = Utils.DownloadStringWithRetry(out webPage, "https://www.nyse.com/trade/hours-calendars", 5, TimeSpan.FromSeconds(2), false);
             if (!isDownloaded)
             {
                 if ((g_holidays != null))
