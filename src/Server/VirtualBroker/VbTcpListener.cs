@@ -17,23 +17,45 @@ namespace VirtualBroker
 
         void ProcessTcpClient(TcpClient p_tcpClient)
         {
+            Utils.Logger.Info($"ProcessTcpClient() START");
             VirtualBrokerMessage message = null;
             try
             {
                 BinaryReader br = new BinaryReader(p_tcpClient.GetStream());
                 message = (new VirtualBrokerMessage()).DeserializeFrom(br);
-                //Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg.ID:{message.ID}, Param:{message.ParamStr}");  // user can quickly check from Console the messages. It is good in HealthMonitor, but in VBroker we don't want to clutter the Console.
-                Utils.Logger.Info($"Controller.ProcessTcpClient(): Message ID:'{ message.ID}', ParamStr: '{ message.ParamStr}', ResponseFormat: '{message.ResponseFormat}'");
-                if (message.ResponseFormat == VirtualBrokerMessageResponseFormat.None)
-                {
-                    Utils.TcpClientDispose(p_tcpClient);
-                }
+                Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $"TcpServerHost:{message.TcpServerHost}, TcpServerPort:{message.TcpServerPort}, ID:{message.ID}, Param:{(String.IsNullOrEmpty(message.ParamStr)?"NULL": message.ParamStr)}, ResponseFormat:{message.ResponseFormat}");  // user can quickly check from Console the messages
+                Utils.Logger.Info($"<Tcp:>ProcessTcpClient: TcpServerHost:\"{message.TcpServerHost}\", TcpServerPort:\"{message.TcpServerPort}\", ID:\"{ message.ID}\", ParamStr: \"{(String.IsNullOrEmpty(message.ParamStr)?"NULL": message.ParamStr)}\", ResponseFormat: \"{message.ResponseFormat}\"");
             }
             catch (Exception e) // Background thread can crash application. A background thread does not keep the managed execution environment running.
             {
                 Console.WriteLine($"Expected Exception: 'InnerException: Connection reset by peer'. We don't rethrow it. Occurs daily when client VBroker VM server reboots. Unfortunatelly, it happens once a year at 12:30 UTC on normal trading day, which should be handled properly in the future. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
                 Utils.Logger.Info($"Expected Exception. 'InnerException: Connection reset by peer'. We don't rethrow it. Occurs daily when client VBroker VM server reboots. Unfortunatelly, it happens once a year at 12:30 UTC on normal trading day, which should be handled properly in the future. ReadTcpClientStream(BckgTh:{Thread.CurrentThread.IsBackground}). {e.Message}, InnerException: " + ((e.InnerException != null) ? e.InnerException.Message : "null"));
             }
+
+            if (message == null)
+            {
+                Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" Msg: NULL");  // user can quickly check from Console the messages
+                Utils.Logger.Info($"<Tcp:>ProcessTcpClient: Message: NULL");
+                return;
+            }
+
+            // rarely random servers spam HealthMonitor with messages (Message ID:"16817152") not intended for it, so we filter by TcpServerHost.
+            // SqCore apps always put ServerIp.HealthMonitorPublicIp as the TcpServerHost for messages intended for HealthMonitor.
+            // SqLab.VirtualBroker leaves as empty string.
+            if (message.TcpServerHost != ServerIp.HealthMonitorPublicIp && message.TcpServerHost != "")
+            {
+                Console.WriteLine("<Tcp:>" + DateTime.UtcNow.ToString("MM-dd HH:mm:ss") + $" TcpServerHost:{message.TcpServerHost}, ID:{message.ID}, Param:{(String.IsNullOrEmpty(message.ParamStr)?"NULL": message.ParamStr)}");  // user can quickly check from Console the messages
+                Utils.Logger.Info($"<Tcp:>ProcessTcpClient: TcpServerHost:\"{message.TcpServerHost}\", ID:\"{message.ID}\", Param:\"{(String.IsNullOrEmpty(message.ParamStr)?"NULL": message.ParamStr)}\", message.TcpServerHost not recognized");
+                return;
+            }
+            if (message.ResponseFormat > VirtualBrokerMessageResponseFormat.JSON) // to avoid this spam: <Tcp:>ProcessTcpClient: TcpServerHost:"", ID:"1342177540", ParamStr: "NULL", ResponseFormat: "65536" 
+            {
+                Utils.Logger.Info($"<Tcp:>ProcessTcpClient: ResponseFormat '{message.ResponseFormat}' not supported");
+                return;
+            }
+
+            if (message.ResponseFormat == VirtualBrokerMessageResponseFormat.None)  // if not required to answer message, then dispose tcpClient quickly to release resources
+                Utils.TcpClientDispose(p_tcpClient);
 
             string reply = null;
             try
